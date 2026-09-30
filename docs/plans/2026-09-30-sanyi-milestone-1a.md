@@ -20,7 +20,9 @@
 - Chunk 3：服务端接口。
 - Chunk 4A：前端基础（字体、视觉令牌、数据客户端与最近记录）。
 - Chunk 4B：前端基础（付款、首页与 hash 路由）。
-- Chunk 5：前端结果页。
+- Chunk 5A：结果页状态、六掷与首屏卦象（Task 27–28）。
+- Chunk 5B：三家、排盘、五行、术语与事项修改（Task 29）。
+- Chunk 5C：奇门、黄历、复算、页面编排与交叉验收（Task 30–31）。
 - Chunk 6：清理与验收。
 
 ## 文件结构
@@ -5005,7 +5007,9 @@ async function webSources(root = "web"): Promise<string[]> {
 test("毛笔体字表确定、有关键字且没有假名", () => {
   const charset = buildFontCharset();
   assert.equal(charset, [...charset].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join(""));
-  for (const value of ["泰", "巽", "螣", "勾", "程"]) assert.match(charset, new RegExp(value));
+  for (const value of ["泰", "巽", "螣", "勾", "程", "世", "应"]) {
+    assert.match(charset, new RegExp(value));
+  }
   assert.doesNotMatch(charset, /[\u3040-\u30ff]/u);
 });
 test("字体只从站内 woff2 提供", async () => {
@@ -5047,6 +5051,7 @@ const EIGHT_SPIRITS = "值符腾蛇螣蛇太阴六合白虎玄武九地九天勾
 const SIX_SPIRITS = "青龙朱雀勾陈腾蛇白虎玄武";
 const SIX_RELATIONS = "父母兄弟子孙妻财官鬼";
 const STEMS_BRANCHES = "甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥";
+const SHI_YING = "世应";
 const FIXED_COPY = [
   "三易", "所问之事", "三家断语", "六爻排盘", "奇门时盘", "当日黄历", "卦历",
   "公历", "农历", "四柱", "节气", "月建日辰", "值日", "最近所问", "问卦",
@@ -5061,6 +5066,7 @@ export function buildFontCharset(): string {
     SIX_SPIRITS,
     SIX_RELATIONS,
     STEMS_BRANCHES,
+    SHI_YING,
     ...FIXED_COPY,
   ].join("");
   return [...new Set(source)].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join("");
@@ -5274,7 +5280,7 @@ button, a, input, select {
   font-family: var(--brush);
   font-size: 24px;
 }
-.brand, h1, h2 {
+.brand, .panel-head h2 {
   font-family: var(--brush);
   font-weight: 400;
   letter-spacing: 0.08em;
@@ -6383,3 +6389,2218 @@ Run: `! rg 'fonts\.(googleapis|gstatic)\.com|易者|押钱|赔付|封存|・|[�
 - [ ] 核对 OpenSpec：`unified-question-entry` 的分类可改、`paid-oracle-flow` 的全付费入口、
 `wallet-signed-divination` 的余额与网络门禁、`reading-archive` 的本机最近 20 条、`ink-night-theme` 的
 水墨夜令牌与文化守卫均有测试或人工验收对应项。`tasks.md` 仅在实现和上述验收全部完成后更新。
+
+## Chunk 5A: 结果页状态、六掷与首屏卦象
+
+> 本 Chunk 以已确认的水墨夜样稿为视觉基线，完成 OpenSpec 任务 1.12 的问事结果页。纯状态函数不得
+> 依赖 React、DOM、钱包配置或系统时钟；组件只消费 Chunk 3 的 `PublicReading`。先锁定阶段与六掷状态机，
+> 再实现交互和展示。旧站说明文字的唯一移植来源是基线 `310afdc:web/app.tsx` 第 415–740 行；移植后
+> 使用中文间隔号「·」，不得保留旧产品称谓。
+
+### Task 27: 建立结果页阶段与六掷纯状态机
+
+**Files:**
+- Create: `web/lib/reading-state.ts`
+- Create: `web/lib/throw-machine.ts`
+- Create: `tests/frontend-reading-state.test.ts`
+- Create: `tests/frontend-throw-machine.test.ts`
+
+- [ ] **Step 1: 写结果页阶段失败测试**
+
+```ts
+// tests/frontend-reading-state.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import type { PublicReading } from "../web/lib/api.js";
+import {
+  consensusTenths,
+  readingStage,
+  shouldPollReading,
+} from "../web/lib/reading-state.js";
+
+function reading(
+  status: PublicReading["status"],
+  schoolStatuses: readonly [string, string, string],
+): PublicReading {
+  const school = (index: number, confidenceTenths?: number) => ({
+    status: schoolStatuses[index],
+    retries: 0,
+    ...(confidenceTenths === undefined
+      ? {}
+      : {
+          output: {
+            verdict: "平",
+            confidenceTenths,
+            headline: "静待其时",
+            reason: "盘面尚需合看",
+            sections: [{ title: "卦义", text: "守正" }],
+            advice: ["先核对条件"],
+            evidence: [{ ref: "day", claim: "日辰" }],
+          },
+        }),
+  });
+  return {
+    id: "abcdefghijklmnopqrstuvwxyz",
+    kind: "question",
+    createdAt: "2026-09-30T12:15:00.000Z",
+    question: "这次面试能过吗",
+    subject: {
+      suggestedKey: "career",
+      finalKey: "career",
+      overridden: false,
+      changes: 0,
+    },
+    payment: { firstHash: `0x${"11".repeat(32)}` },
+    throws: [],
+    schools: {
+      chengyi: school(0, 6),
+      jingfang: school(1, 3),
+      shaoyong: school(2, 4),
+    },
+    status,
+  } as PublicReading;
+}
+
+test("阶段由 reading 与三家状态共同确定", () => {
+  assert.equal(readingStage(reading("awaiting-throws", ["pending", "pending", "pending"])),
+    "awaiting-throws");
+  assert.equal(readingStage(reading("charting", ["pending", "pending", "pending"])), "charting");
+  assert.equal(readingStage(reading("writing", ["done", "writing", "pending"])), "writing");
+  assert.equal(readingStage(reading("done", ["done", "done", "done"])), "done");
+  assert.equal(readingStage(reading("failed", ["done", "failed", "done"])), "failed");
+});
+
+test("排盘或任一家仍落笔时需要轮询", () => {
+  assert.equal(shouldPollReading(reading("charting", ["pending", "pending", "pending"])), true);
+  assert.equal(shouldPollReading(reading("done", ["done", "writing", "done"])), true);
+  assert.equal(shouldPollReading(reading("done", ["done", "done", "done"])), false);
+  assert.equal(shouldPollReading(reading("failed", ["done", "failed", "rejected"])), false);
+});
+
+test("合议只平均已完成且有输出的家", () => {
+  const value = reading("writing", ["done", "failed", "done"]);
+  assert.equal(consensusTenths(value.schools), 5);
+  const none = reading("writing", ["pending", "failed", "rejected"]);
+  assert.equal(consensusTenths(none.schools), undefined);
+});
+```
+
+- [ ] **Step 2: 写六掷状态机失败测试**
+
+```ts
+// tests/frontend-throw-machine.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  initialThrowState,
+  reduceThrow,
+  type ThrowMachineState,
+} from "../web/lib/throw-machine.js";
+import type { RecordedThrow } from "../src/sanyi/throws.js";
+
+const result: RecordedThrow = {
+  index: 1,
+  coins: [1, 0, 0] as const,
+  backs: 1,
+  value: 7,
+  name: "单" as const,
+  moving: false,
+  blockNumber: "8",
+  blockHash: `0x${"ab".repeat(32)}` as `0x${string}`,
+  blockTimestamp: "1790770501",
+};
+
+test("按住、松开、落钱与记录依次推进", () => {
+  let state: ThrowMachineState = initialThrowState([]);
+  state = reduceThrow(state, { type: "press" });
+  assert.equal(state.phase, "shaking");
+  state = reduceThrow(state, { type: "release" });
+  assert.equal(state.phase, "landing");
+  state = reduceThrow(state, { type: "resolved", result });
+  assert.equal(state.phase, "recorded");
+  assert.equal(state.throws.length, 1);
+  state = reduceThrow(state, { type: "ready" });
+  assert.equal(state.phase, "idle");
+  assert.equal(state.nextIndex, 2);
+});
+
+test("第六掷后完成，完成态不能再摇", () => {
+  const previous = Array.from({ length: 5 }, (_, index) => ({
+    ...result,
+    index: index + 1,
+  }));
+  let state = reduceThrow(initialThrowState(previous), { type: "press" });
+  state = reduceThrow(state, { type: "release" });
+  state = reduceThrow(state, { type: "resolved", result: { ...result, index: 6 } });
+  assert.equal(state.phase, "complete");
+  assert.equal(reduceThrow(state, { type: "press" }), state);
+});
+
+test("Arc 不可用时暂停并从原掷序恢复", () => {
+  let state = reduceThrow(initialThrowState([result]), { type: "press" });
+  state = reduceThrow(state, { type: "release" });
+  state = reduceThrow(state, { type: "pause", message: "未能取得天时" });
+  assert.equal(state.phase, "paused");
+  assert.equal(state.nextIndex, 2);
+  state = reduceThrow(state, { type: "resume" });
+  assert.equal(state.phase, "idle");
+  assert.equal(state.throws.length, 1);
+});
+
+test("过期响应与非法转换不改状态", () => {
+  const state = initialThrowState([]);
+  assert.equal(reduceThrow(state, { type: "release" }), state);
+  const landing = reduceThrow(reduceThrow(state, { type: "press" }), { type: "release" });
+  assert.equal(reduceThrow(landing, { type: "resolved", result: { ...result, index: 2 } }), landing);
+});
+```
+
+- [ ] **Step 3: 运行 RED**
+
+Run: `node --import tsx --test tests/frontend-reading-state.test.ts \
+  tests/frontend-throw-machine.test.ts`
+
+Expected: FAIL，两个纯逻辑模块尚不存在。
+
+- [ ] **Step 4: 实现结果页阶段纯函数**
+
+```ts
+// web/lib/reading-state.ts
+import type { PublicReading } from "./api.js";
+
+export type ReadingStage = "awaiting-throws" | "charting" | "writing" | "done" | "failed";
+type Schools = PublicReading["schools"];
+
+export function readingStage(reading: PublicReading): ReadingStage {
+  if (reading.status === "awaiting-throws") {
+    return "awaiting-throws";
+  }
+  if (reading.status === "charting") {
+    return "charting";
+  }
+  if (reading.status === "failed") {
+    return "failed";
+  }
+  const states = Object.values(reading.schools).map((school) => school.status);
+  if (states.some((status) => status === "pending" || status === "writing")) {
+    return "writing";
+  }
+  return reading.status === "done" ? "done" : "writing";
+}
+
+export function shouldPollReading(reading: PublicReading): boolean {
+  if (reading.status === "charting" || reading.status === "writing") {
+    return true;
+  }
+  return Object.values(reading.schools).some((school) => {
+    return school.status === "pending" || school.status === "writing";
+  });
+}
+
+export function consensusTenths(schools: Schools): number | undefined {
+  const values = Object.values(schools).flatMap((school) => {
+    return school.status === "done" && school.output
+      ? [school.output.confidenceTenths]
+      : [];
+  });
+  if (!values.length) {
+    return undefined;
+  }
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+```
+
+- [ ] **Step 5: 实现六掷纯状态机**
+
+```ts
+// web/lib/throw-machine.ts
+import type { ThrowResult } from "./api.js";
+
+export type ThrowPhase =
+  | "idle"
+  | "shaking"
+  | "landing"
+  | "recorded"
+  | "paused"
+  | "complete";
+
+export interface ThrowMachineState {
+  phase: ThrowPhase;
+  throws: readonly ThrowResult[];
+  nextIndex: number;
+  message?: string;
+}
+
+export type ThrowAction =
+  | { type: "press" }
+  | { type: "release" }
+  | { type: "resolved"; result: ThrowResult }
+  | { type: "ready" }
+  | { type: "pause"; message: string }
+  | { type: "resume" };
+
+export function initialThrowState(throws: readonly ThrowResult[]): ThrowMachineState {
+  const ordered = [...throws].sort((left, right) => left.index - right.index);
+  return {
+    phase: ordered.length >= 6 ? "complete" : "idle",
+    throws: ordered,
+    nextIndex: Math.min(ordered.length + 1, 6),
+  };
+}
+
+export function reduceThrow(
+  state: ThrowMachineState,
+  action: ThrowAction,
+): ThrowMachineState {
+  if (action.type === "press" && state.phase === "idle") {
+    const next = { ...state };
+    delete next.message;
+    return { ...next, phase: "shaking" };
+  }
+  if (action.type === "release" && state.phase === "shaking") {
+    return { ...state, phase: "landing" };
+  }
+  if (action.type === "resolved" && state.phase === "landing") {
+    if (action.result.index !== state.nextIndex) {
+      return state;
+    }
+    const throws = [...state.throws, action.result];
+    return {
+      phase: throws.length === 6 ? "complete" : "recorded",
+      throws,
+      nextIndex: Math.min(throws.length + 1, 6),
+    };
+  }
+  if (action.type === "ready" && state.phase === "recorded") {
+    return { ...state, phase: "idle" };
+  }
+  if (action.type === "pause" && state.phase === "landing") {
+    return { ...state, phase: "paused", message: action.message };
+  }
+  if (action.type === "resume" && state.phase === "paused") {
+    const next = { ...state };
+    delete next.message;
+    return { ...next, phase: "idle" };
+  }
+  return state;
+}
+```
+
+- [ ] **Step 6: GREEN 与严格类型检查**
+
+Run: `node --import tsx --test tests/frontend-reading-state.test.ts \
+  tests/frontend-throw-machine.test.ts && npm run typecheck`
+
+Expected: 7 tests PASS；纯逻辑文件不导入 React、DOM 或 `web/lib/wagmi.ts`。
+
+### Task 28: 实现六掷交互、罗盘与卦象首屏
+
+**Files:**
+- Create: `web/components/CoinThrow.tsx`
+- Create: `web/components/Luopan.tsx`
+- Create: `web/components/HexagramFigure.tsx`
+- Create: `web/components/FiveHexagrams.tsx`
+- Create: `web/components/ThrowRecord.tsx`
+- Create: `web/components/TermDisclosure.tsx`
+- Create: `web/lib/term-definitions.ts`
+- Create: `tests/frontend-luopan.test.ts`
+
+- [ ] **Step 1: 写罗盘常量失败测试**
+
+```ts
+// tests/frontend-luopan.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { BAGUA, MOUNTAINS } from "../web/components/Luopan.js";
+
+test("二十四山自午顺时针且恰为二十四个", () => {
+  assert.equal(MOUNTAINS[0], "午");
+  assert.equal(MOUNTAINS.length, 24);
+  assert.equal(MOUNTAINS.join(""), "午丁未坤申庚酉辛戌乾亥壬子癸丑艮寅甲卯乙辰巽巳丙");
+});
+
+test("后天八卦离南在上并按顺时针排列", () => {
+  assert.deepEqual(BAGUA.map(([name]) => name), ["离", "坤", "兑", "乾", "坎", "艮", "震", "巽"]);
+});
+```
+
+- [ ] **Step 2: 实现 SVG 罗盘；不得从 DOM 命令式补画**
+
+```tsx
+// web/components/Luopan.tsx
+import { createElement } from "react";
+
+export const MOUNTAINS = [..."午丁未坤申庚酉辛戌乾亥壬子癸丑艮寅甲卯乙辰巽巳丙"] as const;
+export const BAGUA = [
+  ["离", "101"],
+  ["坤", "000"],
+  ["兑", "110"],
+  ["乾", "111"],
+  ["坎", "010"],
+  ["艮", "001"],
+  ["震", "100"],
+  ["巽", "011"],
+] as const;
+
+const CENTER = 160;
+
+function Trigram({ bits, index }: { bits: string; index: number }) {
+  return (
+    <g transform={`rotate(${index * 45} ${CENTER} ${CENTER})`}>
+      {[...bits].map((bit, line) => {
+        const y = CENTER - 108 - line * 6;
+        return bit === "1" ? (
+          <rect className="luopan-stroke" height="3" key={y} width="22" x="149" y={y} />
+        ) : (
+          <g key={y}>
+            <rect className="luopan-stroke" height="3" width="9" x="149" y={y} />
+            <rect className="luopan-stroke" height="3" width="9" x="162" y={y} />
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+export function Luopan() {
+  return (
+    <svg aria-hidden="true" className="luopan" viewBox="0 0 320 320">
+      <g className="luopan-rotor">
+        {[150, 126, 100].map((radius) => (
+          <circle className="luopan-ring" cx={CENTER} cy={CENTER} key={radius} r={radius} />
+        ))}
+        {MOUNTAINS.map((mountain, index) => {
+          const rotation = index * 15;
+          return createElement(
+            "g",
+            { key: `${mountain}-${index}` },
+            <text
+              className={"子午卯酉".includes(mountain) ? "luopan-cardinal" : ""}
+              dominantBaseline="central"
+              textAnchor="middle"
+              transform={`rotate(${rotation} ${CENTER} ${CENTER})`}
+              x={CENTER}
+              y="22"
+            >
+              {mountain}
+            </text>,
+            <line
+              className="luopan-tick"
+              transform={`rotate(${rotation + 7.5} ${CENTER} ${CENTER})`}
+              x1={CENTER}
+              x2={CENTER}
+              y1="10"
+              y2="34"
+            />,
+          );
+        })}
+        {BAGUA.map(([name, bits], index) => (
+          <Trigram bits={bits} index={index} key={name} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+```
+
+- [ ] **Step 3: 实现可复用卦画、五卦和六掷记录**
+
+先建立五卦所需的就地说明最小边界；Task 29 会在同一字典补齐排盘术语。
+
+```ts
+// web/lib/term-definitions.ts
+// 原文移植自基线 310afdc:web/app.tsx 第 415–740 行。
+// 已统一中文间隔号并删除旧产品表述。
+export const FIGURE_DEFINITIONS = {
+  primary: "本卦由起出的六爻直接组成，用来陈列当前问题的起点。",
+  mutual: "互卦抽取本卦二至五爻重新成卦，用来换一个角度看内部结构。",
+  derived: "变卦只翻转老阴与老阳，呈现动爻改变后的结构。",
+  opposite: "错卦把本卦每爻阴阳全反，作为反面条件的参照。",
+  reversed: "综卦把六爻次序上下颠倒，作为位置互换后的参照。",
+} as const;
+```
+
+```tsx
+// web/components/TermDisclosure.tsx
+export function TermDisclosure(props: {
+  term: string;
+  value?: string;
+  definition: string;
+  actual: string;
+}) {
+  return (
+    <details className="term-disclosure">
+      <summary>
+        <span>{props.term}</span>
+        {props.value ? <strong>{props.value}</strong> : null}
+      </summary>
+      <div>
+        <p><b>是什么：</b>{props.definition}</p>
+        <p><b>这一卦里：</b>{props.actual}</p>
+      </div>
+    </details>
+  );
+}
+```
+
+```tsx
+// web/components/HexagramFigure.tsx
+export function HexagramFigure(props: {
+  lines: readonly boolean[];
+  moving?: readonly number[];
+  label: string;
+  compact?: boolean;
+}) {
+  const moving = new Set(props.moving ?? []);
+  return (
+    <span
+      aria-label={props.label}
+      className={`hexagram-figure${props.compact ? " compact" : ""}`}
+      role="img"
+    >
+      {[...props.lines].reverse().map((yang, index) => {
+        const position = 6 - index;
+        const classes = [yang ? "yang" : "yin", moving.has(position) ? "moving" : ""];
+        return <i className={classes.filter(Boolean).join(" ")} key={position} />;
+      })}
+    </span>
+  );
+}
+```
+
+```tsx
+// web/components/FiveHexagrams.tsx
+import type { FiveHexagrams as Figures } from "../../src/oracle/liuyao-chart.js";
+import { FIGURE_DEFINITIONS } from "../lib/term-definitions.js";
+import { HexagramFigure } from "./HexagramFigure.js";
+import { TermDisclosure } from "./TermDisclosure.js";
+
+const ORDER = ["primary", "mutual", "derived", "opposite", "reversed"] as const;
+const MOTTO = {
+  primary: "为体",
+  mutual: "探隐",
+  derived: "测果",
+  opposite: "警变",
+  reversed: "观反",
+} as const;
+
+export function FiveHexagrams(props: {
+  figures: Figures;
+  moving: readonly number[];
+}) {
+  return (
+    <div aria-label="本互变错综五卦" className="five-hexagrams">
+      {ORDER.map((kind) => {
+        const figure = props.figures[kind];
+        return (
+          <figure className={kind === "primary" ? "active" : ""} key={kind}>
+            <HexagramFigure
+              compact
+              label={`${figure.label}${figure.name}`}
+              lines={figure.yangLines}
+              moving={kind === "primary" ? props.moving : []}
+            />
+            <figcaption>
+              {figure.name}
+              <small>{figure.label} · {MOTTO[kind]}</small>
+            </figcaption>
+            <TermDisclosure
+              actual={`${figure.derivation}；这一卦为${figure.name}。`}
+              definition={FIGURE_DEFINITIONS[kind]}
+              term={figure.label}
+            />
+          </figure>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+```tsx
+// web/components/ThrowRecord.tsx
+import type { ThrowResult } from "../lib/api.js";
+
+function lineName(index: number): string {
+  return index === 1 ? "初爻" : index === 6 ? "上爻" : `${"一二三四五六"[index - 1]}爻`;
+}
+
+export function ThrowRecord({ throws }: { throws: readonly ThrowResult[] }) {
+  return (
+    <div aria-label="铜钱六掷记录" className="throw-record">
+      <span className="label">铜钱六掷 · 火珠林法</span>
+      {[...throws].reverse().map((item) => (
+        <div className={item.moving ? "throw moving" : "throw"} key={item.index}>
+          <span>{lineName(item.index)}</span>
+          <span aria-label={`${item.backs}背`} className="coins">
+            {item.coins.map((coin, index) => (
+              <i className={coin === 1 ? "coin back" : "coin face"} key={index} />
+            ))}
+          </span>
+          <span>
+            {item.backs}背 · {item.name} · {item.value % 2 ? "阳" : "阴"}
+            {item.moving ? " · 动" : ""}
+          </span>
+        </div>
+      ))}
+      <p className="legend">
+        实心为背，空心为字。一背为单（少阳），二背为拆（少阴），
+        三背为重（老阳，动），三字为交（老阴，动）。
+      </p>
+    </div>
+  );
+}
+```
+
+- [ ] **Step 4: 实现按住摇、松开落钱；指针和键盘共用同一状态机**
+
+```tsx
+// web/components/CoinThrow.tsx
+import { useEffect, useReducer, useRef, type KeyboardEvent } from "react";
+import { ApiError, api, type PublicReading } from "../lib/api.js";
+import {
+  initialThrowState,
+  reduceThrow,
+} from "../lib/throw-machine.js";
+import { HexagramFigure } from "./HexagramFigure.js";
+import { ThrowRecord } from "./ThrowRecord.js";
+
+const ARC_MESSAGE = "未能取得天时（Arc 网络无响应），稍后可继续";
+
+export function CoinThrow(props: {
+  reading: PublicReading;
+  onReading: (reading: PublicReading) => void;
+}) {
+  const [state, dispatch] = useReducer(
+    reduceThrow,
+    props.reading.throws,
+    initialThrowState,
+  );
+  const held = useRef(false);
+  const release = async () => {
+    if (!held.current || state.phase !== "shaking") {
+      return;
+    }
+    held.current = false;
+    dispatch({ type: "release" });
+    try {
+      const result = await api.throwCoin(props.reading.id, state.nextIndex);
+      dispatch({ type: "resolved", result });
+      const reading = await api.getReading(props.reading.id);
+      props.onReading(reading);
+    } catch (caught) {
+      const message = caught instanceof ApiError && [409, 503].includes(caught.status)
+        ? caught.message || ARC_MESSAGE
+        : ARC_MESSAGE;
+      dispatch({ type: "pause", message });
+    }
+  };
+  const press = () => {
+    if (state.phase !== "idle") {
+      return;
+    }
+    held.current = true;
+    dispatch({ type: "press" });
+  };
+  const keyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+      event.preventDefault();
+      press();
+    }
+  };
+  const keyUp = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      void release();
+    }
+  };
+  useEffect(() => {
+    if (state.phase !== "recorded") {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => dispatch({ type: "ready" }), 500);
+    return () => window.clearTimeout(timer);
+  }, [state.phase]);
+  const lines = state.throws.map((item) => item.value % 2 === 1);
+  const moving = state.throws.filter((item) => item.moving).map((item) => item.index);
+  return (
+    <section aria-live="polite" className="panel coin-throw">
+      <h1>亲手六掷</h1>
+      <p className="hint">卦从初爻向上长出；按住摇，松开落钱。</p>
+      <HexagramFigure label={`已成${lines.length}爻`} lines={lines} moving={moving} />
+      <button
+        className={`throw-button ${state.phase === "shaking" ? "shaking" : ""}`}
+        disabled={state.phase === "landing" || state.phase === "complete"}
+        onKeyDown={keyDown}
+        onKeyUp={keyUp}
+        onPointerCancel={() => void release()}
+        onPointerDown={press}
+        onPointerUp={() => void release()}
+        type="button"
+      >
+        {state.phase === "shaking" ? "松手落钱" : `摇 · 第${state.nextIndex}掷`}
+      </button>
+      {state.phase === "paused" ? (
+        <div className="throw-pause">
+          <p className="error">{state.message}</p>
+          <button
+            className="button"
+            onClick={() => dispatch({ type: "resume" })}
+            type="button"
+          >
+            继续摇
+          </button>
+        </div>
+      ) : null}
+      {state.phase === "complete" ? <p className="good-text">六爻已成，正在排盘。</p> : null}
+      <ThrowRecord throws={state.throws} />
+    </section>
+  );
+}
+```
+
+- [ ] **Step 5: GREEN**
+
+Run: `node --import tsx --test tests/frontend-luopan.test.ts && npm run typecheck`
+
+Expected: 2 tests PASS；罗盘清单与样稿逐字符一致；六掷按钮的指针与键盘路径都只调用一次接口。
+
+## Chunk 5B: 三家、排盘、五行、术语与事项修改
+
+### Task 29: 实现结果页核心面板和旧说明文字移植
+
+**Files:**
+- Modify: `web/lib/term-definitions.ts`
+- Modify: `web/components/TermDisclosure.tsx`
+- Create: `web/components/SchoolCard.tsx`
+- Create: `web/components/ConsensusTrack.tsx`
+- Create: `web/components/LiuyaoTable.tsx`
+- Create: `web/components/FiveElementsDetail.tsx`
+- Create: `web/components/SubjectChange.tsx`
+
+- [ ] **Step 1: 建立术语定义与阅读引导纯函数**
+
+```ts
+// web/lib/term-definitions.ts
+import type {
+  LiuyaoChart,
+  LiuyaoChartRow,
+  SixRelation,
+} from "../../src/oracle/liuyao-chart.js";
+
+// 原文移植自基线 310afdc:web/app.tsx 第 415–740 行。
+// 已统一中文间隔号并删除旧产品表述。
+export const FIGURE_DEFINITIONS = {
+  primary: "本卦由起出的六爻直接组成，用来陈列当前问题的起点。",
+  mutual: "互卦抽取本卦二至五爻重新成卦，用来换一个角度看内部结构。",
+  derived: "变卦只翻转老阴与老阳，呈现动爻改变后的结构。",
+  opposite: "错卦把本卦每爻阴阳全反，作为反面条件的参照。",
+  reversed: "综卦把六爻次序上下颠倒，作为位置互换后的参照。",
+} as const;
+
+export const TERM_DEFINITIONS = {
+  卦宫: "八宫法把六十四卦归入乾坎艮震巽离坤兑，并标记本宫、世数、游魂或归魂。",
+  宫序: "宫序记录本卦从本宫卦逐爻变化所得的位置，并据此确定世应。",
+  世应: "世爻代表提问者自己，应爻代表与之相对的对象、环境或外部条件。",
+  六神: "青龙、朱雀、勾陈、螣蛇、白虎、玄武随日干轮排，是传统象征名。",
+  六亲: "父母、子孙、官鬼、妻财、兄弟由爻支五行与卦宫五行的生克关系确定。",
+  伏神: "本卦缺少某类六亲时，按本宫首卦相同爻位补出的隐藏六亲。",
+  旬空: "六十甲子每旬有两个未配到天干的地支，称旬空；这里只作排盘标记。",
+  月建: "月建按太阳节气划月，不按公历每月一日切换，用来判断月令强弱与月破。",
+  旺衰: "旺相休囚死是节气月下的五级强弱标签，不单独等于吉凶。",
+  冲破: "月建冲爻为月破；日辰冲休囚静爻为日破，冲旺相静爻为暗动。",
+  动变: "动爻翻转阴阳形成变爻，并可出现回头生克和固定进退神关系。",
+} as const;
+
+export const RELATION_DEFINITIONS: Record<SixRelation, string> = {
+  父母: "六亲之一，常用于房产、单位与文书契约。",
+  子孙: "六亲之一，常用于技术、医药、解忧与子女。",
+  官鬼: "六亲之一，常用于工作、官职、疾病与忧虑。",
+  妻财: "六亲之一，常用于钱财、物价、货品与债务。",
+  兄弟: "六亲之一，常用于同辈、朋友、同事与竞争者。",
+};
+
+export function lineName(position: number): string {
+  return position === 1 ? "初爻" : position === 6 ? "上爻" : `${"一二三四五六"[position - 1]}爻`;
+}
+
+function positions(rows: readonly LiuyaoChartRow[]): string {
+  return rows.length ? rows.map((row) => lineName(row.position)).join("、") : "本卦明爻未出现";
+}
+
+export function readingGuide(chart: LiuyaoChart): readonly { title: string; text: string }[] {
+  const focus = chart.focus;
+  const useRows = chart.rows.filter((row) => row.primary.relation === focus?.useGod);
+  const strong = chart.rows.filter((row) => ["旺", "相"].includes(row.primary.strength));
+  const role = (relation?: SixRelation) => positions(
+    chart.rows.filter((row) => row.primary.relation === relation),
+  );
+  const movement = chart.rows.filter((row) => row.changing || row.isHiddenMoving).map((row) => {
+    const suffix = [row.advanceRetreat, row.returnEffect].filter(Boolean).join("、");
+    return `${lineName(row.position)}${row.isHiddenMoving ? "暗动" : "动"}${suffix ? `，${suffix}` : ""}`;
+  });
+  return [
+    {
+      title: "用神",
+      text: `本题先看${focus?.useGod ?? "未定用神"}：${positions(useRows)}。`,
+    },
+    {
+      title: "旺衰",
+      text: `${chart.month.branch}月属${chart.month.element}，旺相爻在${positions(strong)}；强弱不单独等于吉凶。`,
+    },
+    {
+      title: "原神、忌神、仇神",
+      text: `原神在${role(focus?.originalGod)}；忌神在${role(focus?.tabooGod)}；仇神在${role(focus?.enemyGod)}。`,
+    },
+    {
+      title: "世应",
+      text: `世在${lineName(chart.shiPosition)}，应在${lineName(chart.yingPosition)}，先比较两处再下判断。`,
+    },
+    {
+      title: "动变",
+      text: movement.length ? movement.join("；") : "本卦无动爻或暗动爻，按静卦读取。",
+    },
+  ];
+}
+```
+
+```tsx
+// web/components/TermDisclosure.tsx
+export function TermDisclosure(props: {
+  term: string;
+  value?: string;
+  definition: string;
+  actual: string;
+}) {
+  return (
+    <details className="term-disclosure">
+      <summary>
+        <span>{props.term}</span>
+        {props.value ? <strong>{props.value}</strong> : null}
+      </summary>
+      <div>
+        <p><b>是什么：</b>{props.definition}</p>
+        <p><b>这一卦里：</b>{props.actual}</p>
+      </div>
+    </details>
+  );
+}
+```
+
+- [ ] **Step 2: 实现三家卡片与合议线**
+
+```tsx
+// web/components/SchoolCard.tsx
+import type { PublicReading } from "../lib/api.js";
+
+type School = PublicReading["schools"][keyof PublicReading["schools"]];
+const META = {
+  chengyi: { seal: "程", name: "程颐", school: "义理派" },
+  jingfang: { seal: "京", name: "京房", school: "纳甲六爻" },
+  shaoyong: { seal: "邵", name: "邵雍", school: "梅花易数" },
+} as const;
+
+export function SchoolCard(props: {
+  schoolKey: keyof typeof META;
+  school: School;
+  onRetry: () => void;
+}) {
+  const meta = META[props.schoolKey];
+  const remaining = Math.max(0, 2 - props.school.retries);
+  if (props.school.status === "pending" || props.school.status === "writing") {
+    return (
+      <article className="school-card pending">
+        <span className="seal">{meta.seal}</span>
+        <p>落笔中</p>
+      </article>
+    );
+  }
+  if (props.school.status === "failed" || props.school.status === "rejected") {
+    const message = props.school.status === "failed"
+      ? "此家暂未落笔"
+      : "此家断语未通过盘面核对，暂不展示";
+    return (
+      <article className="school-card failed">
+        <span className="seal">{meta.seal}</span>
+        <div>
+          <h3>{meta.name}<small>{meta.school}</small></h3>
+          <p>{message}</p>
+          <button className="button" disabled={remaining === 0} onClick={props.onRetry} type="button">
+            {remaining ? `重试（还可 ${remaining} 次）` : "重试次数已用尽"}
+          </button>
+        </div>
+      </article>
+    );
+  }
+  const output = props.school.output;
+  if (!output) {
+    return null;
+  }
+  const tone = ["大吉", "吉"].includes(output.verdict)
+    ? "good"
+    : ["凶", "大凶"].includes(output.verdict) ? "bad" : "plain";
+  return (
+    <article className="school-card">
+      <span className="seal">{meta.seal}</span>
+      <div className="school-copy">
+        <h3>{meta.name}<small>{meta.school}</small></h3>
+        <p className={`school-verdict ${tone}`}>
+          {output.verdict} · {output.headline}
+          <small>{output.confidenceTenths}成</small>
+        </p>
+        <p className="school-reason">{output.reason}</p>
+        <details>
+          <summary>展开详断</summary>
+          {output.sections.map((section) => (
+            <section key={section.title}>
+              <h4>{section.title}</h4>
+              <p>{section.text}</p>
+            </section>
+          ))}
+          {output.timing ? (
+            <p><b>应期：</b>{output.timing.window}；条件：{output.timing.condition}</p>
+          ) : null}
+          <div><b>建议：</b><ul>{output.advice.map((item) => <li key={item}>{item}</li>)}</ul></div>
+        </details>
+      </div>
+    </article>
+  );
+}
+```
+
+```tsx
+// web/components/ConsensusTrack.tsx
+import type { PublicReading } from "../lib/api.js";
+import { consensusTenths } from "../lib/reading-state.js";
+
+const META = { chengyi: "程", jingfang: "京", shaoyong: "邵" } as const;
+
+export function ConsensusTrack({ schools }: { schools: PublicReading["schools"] }) {
+  const values = Object.entries(schools).flatMap(([key, school]) => {
+    return school.status === "done" && school.output
+      ? [{ key: key as keyof typeof META, value: school.output.confidenceTenths }]
+      : [];
+  });
+  const average = consensusTenths(schools);
+  return (
+    <div aria-label="三家合议" className="consensus">
+      <div className="consensus-track">
+        {average === undefined ? null : (
+          <span className="mean" style={{ left: `${average * 10}%` }}>
+            <span>合议 约{average.toFixed(1)}成</span>
+          </span>
+        )}
+        {values.map((item) => (
+          <span className="pin" key={item.key} style={{ left: `${item.value * 10}%` }}>
+            {META[item.key]}
+          </span>
+        ))}
+      </div>
+      <div className="consensus-scale"><span>断不成</span><span>断必成</span></div>
+    </div>
+  );
+}
+```
+
+- [ ] **Step 3: 实现六爻宽表、标签和阅读引导**
+
+```tsx
+// web/components/LiuyaoTable.tsx
+import type { LiuyaoChart, LiuyaoChartRow } from "../../src/oracle/liuyao-chart.js";
+import {
+  lineName,
+  readingGuide,
+  TERM_DEFINITIONS,
+} from "../lib/term-definitions.js";
+import { HexagramFigure } from "./HexagramFigure.js";
+import { TermDisclosure } from "./TermDisclosure.js";
+
+function tags(row: LiuyaoChartRow, chart: LiuyaoChart): readonly string[] {
+  const focus = chart.focus;
+  return [
+    row.primary.strength,
+    row.primary.relation === focus?.useGod ? "用神" : "",
+    row.primary.relation === focus?.originalGod ? "原神" : "",
+    row.primary.relation === focus?.tabooGod ? "忌神" : "",
+    row.primary.relation === focus?.enemyGod ? "仇神" : "",
+    row.primary.isVoid ? "旬空" : "",
+    row.primary.isMonthBroken ? "月破" : "",
+    row.isDayBroken ? "日破" : "",
+    row.isHiddenMoving ? "暗动" : "",
+  ].filter(Boolean);
+}
+
+export function LiuyaoTable({ chart }: { chart: LiuyaoChart }) {
+  const moving = chart.rows.filter((row) => row.changing).map((row) => row.position);
+  const termItems = [
+    [
+      "卦宫",
+      `${chart.palace.name}宫`,
+      `本卦归${chart.palace.name}宫，宫五行为${chart.palace.element}。`,
+    ],
+    ["宫序", chart.palace.sequence, `本卦宫序为${chart.palace.sequence}。`],
+    [
+      "世应",
+      `${lineName(chart.shiPosition)}、${lineName(chart.yingPosition)}`,
+      "世应位置由宫序确定。",
+    ],
+    ["六神", chart.rows.map((row) => row.sixSpirit).join("、"), `${chart.day.stem}日起六神。`],
+    ["六亲", "逐爻纳甲", `以${chart.palace.element}为我比较逐爻五行。`],
+    ["伏神", chart.rows.some((row) => row.hidden) ? "有" : "无", "按本宫首卦同位补取。"],
+    ["旬空", chart.day.voidBranches.join("、"), `${chart.day.ganzhi}日旬空如此。`],
+    ["月建", `${chart.month.branch}月`, `${chart.month.range}，属${chart.month.element}。`],
+    ["旺衰", "旺相休囚死", "逐爻标签来自当前节气月。"],
+    ["冲破", "月破、日破、暗动", "三类标记分别计算，不互相替代。"],
+    [
+      "动变",
+      moving.length ? moving.map(lineName).join("、") : "无动爻",
+      "化出、回头生克与进退神见表。",
+    ],
+  ] as const;
+  return (
+    <section aria-labelledby="liuyao-title" className="panel liuyao-panel">
+      <header className="panel-head">
+        <h2 id="liuyao-title">六爻排盘</h2>
+        <p>京房纳甲 · 八宫世应 · {chart.day.stem}日起六神</p>
+      </header>
+      <ol className="reading-guide">
+        {readingGuide(chart).map((item) => (
+          <li key={item.title}><strong>{item.title}</strong><p>{item.text}</p></li>
+        ))}
+      </ol>
+      <div className="term-grid">
+        {termItems.map(([term, value, actual]) => (
+          <TermDisclosure
+            actual={actual}
+            definition={TERM_DEFINITIONS[term]}
+            key={term}
+            term={term}
+            value={value}
+          />
+        ))}
+      </div>
+      <div aria-label="六爻排盘表，可横向滚动" className="chart-scroll" tabIndex={0}>
+        <table className="chart">
+          <thead>
+            <tr>
+              <th>六神</th><th>伏神</th><th>六亲纳甲</th><th>卦画</th>
+              <th>世应</th><th>旺衰与角色</th><th>动变</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...chart.rows].reverse().map((row) => (
+              <tr className={row.primary.relation === chart.focus?.useGod ? "use" : ""} key={row.position}>
+                <td>{row.sixSpirit}</td>
+                <td>
+                  {row.hidden
+                    ? `${row.hidden.relation}${row.hidden.stemBranch}${row.hidden.element}`
+                    : "—"}
+                </td>
+                <td><b>{row.primary.relation}</b> {row.primary.stemBranch}{row.primary.element}</td>
+                <td>
+                  <HexagramFigure
+                    compact
+                    label={`${lineName(row.position)}${row.primaryYang ? "阳" : "阴"}`}
+                    lines={[row.primaryYang]}
+                    moving={row.changing ? [1] : []}
+                  />
+                </td>
+                <td className="mark">{row.marker ?? "·"}</td>
+                <td>
+                  <span className="state">
+                    {tags(row, chart).map((tag) => <i key={tag}>{tag}</i>)}
+                  </span>
+                </td>
+                <td className="change">
+                  {row.changing
+                    ? `化出${row.changed.relation}${row.changed.stemBranch}${row.changed.element}`
+                    : "—"}
+                  {row.returnEffect ? ` · ${row.returnEffect}` : ""}
+                  {row.advanceRetreat ? ` · ${row.advanceRetreat}` : ""}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <footer className="provenance">
+        京房纳甲 · 八宫世应 · 六甲旬空；UTC+8 零点换日；月建按节气月；
+        旺相休囚死依《三命通会》。排盘只陈列事实，不以单一标签直接判断吉凶。
+      </footer>
+    </section>
+  );
+}
+```
+
+- [ ] **Step 4: 移植五行相生环、相克星与逐爻来源说明**
+
+```tsx
+// web/components/FiveElementsDetail.tsx
+import type { FiveElement, LiuyaoChart } from "../../src/oracle/liuyao-chart.js";
+import { lineName } from "../lib/term-definitions.js";
+import { TermDisclosure } from "./TermDisclosure.js";
+
+// 原文与结构移植自基线 310afdc:web/app.tsx 第 552–646 行。
+const POINTS: Record<FiveElement, { x: number; y: number }> = {
+  木: { x: 140, y: 24 },
+  火: { x: 238, y: 95 },
+  土: { x: 201, y: 210 },
+  金: { x: 79, y: 210 },
+  水: { x: 42, y: 95 },
+};
+const GENERATES = [
+  ["木", "火", "木生火"], ["火", "土", "火生土"], ["土", "金", "土生金"],
+  ["金", "水", "金生水"], ["水", "木", "水生木"],
+] as const;
+const OVERCOMES = [
+  ["木", "土", "木克土"], ["土", "水", "土克水"], ["水", "火", "水克火"],
+  ["火", "金", "火克金"], ["金", "木", "金克木"],
+] as const;
+
+function relation(self: FiveElement, other: FiveElement): { name: string; explanation: string } {
+  const generates = Object.fromEntries(GENERATES.map(([from, to]) => [from, to]));
+  const overcomes = Object.fromEntries(OVERCOMES.map(([from, to]) => [from, to]));
+  if (self === other) return { name: "兄弟", explanation: "与我同五行" };
+  if (generates[other] === self) return { name: "父母", explanation: `${other}生${self}，是“生我”` };
+  if (generates[self] === other) return { name: "子孙", explanation: `${self}生${other}，是“我生”` };
+  if (overcomes[other] === self) return { name: "官鬼", explanation: `${other}克${self}，是“克我”` };
+  return { name: "妻财", explanation: `${self}克${other}，是“我克”` };
+}
+
+export function FiveElementsDetail({ chart }: { chart: LiuyaoChart }) {
+  return (
+    <details className="panel five-elements-detail">
+      <summary>五行生克与逐爻六亲来源</summary>
+      <p>卦宫五行为{chart.palace.element}，在六亲比较里称“我”。</p>
+      <svg aria-label="五行相生环与相克星" role="img" viewBox="0 0 280 238">
+        <defs>
+          <marker id="generate-arrow" markerHeight="7" markerWidth="7" orient="auto" refX="6" refY="3.5">
+            <path d="M0,0 L7,3.5 L0,7 Z" />
+          </marker>
+          <marker id="overcome-arrow" markerHeight="7" markerWidth="7" orient="auto" refX="6" refY="3.5">
+            <path d="M0,0 L7,3.5 L0,7 Z" />
+          </marker>
+        </defs>
+        {GENERATES.map(([from, to, label]) => (
+          <line
+            className="generate-edge"
+            key={label}
+            markerEnd="url(#generate-arrow)"
+            x1={POINTS[from].x}
+            x2={POINTS[to].x}
+            y1={POINTS[from].y}
+            y2={POINTS[to].y}
+          />
+        ))}
+        {OVERCOMES.map(([from, to, label]) => (
+          <line
+            className="overcome-edge"
+            key={label}
+            markerEnd="url(#overcome-arrow)"
+            x1={POINTS[from].x}
+            x2={POINTS[to].x}
+            y1={POINTS[from].y}
+            y2={POINTS[to].y}
+          />
+        ))}
+        {(Object.keys(POINTS) as FiveElement[]).map((element) => (
+          <g key={element} transform={`translate(${POINTS[element].x} ${POINTS[element].y})`}>
+            <circle className={element === chart.palace.element ? "active" : ""} r="20" />
+            <text dy="5" textAnchor="middle">{element}</text>
+          </g>
+        ))}
+      </svg>
+      <div className="term-grid">
+        {[...chart.rows].reverse().map((row) => {
+          const item = relation(chart.palace.element, row.primary.element);
+          const focus = chart.focus;
+          const role = row.primary.relation === focus?.useGod
+            ? "用神自身"
+            : row.primary.relation === focus?.originalGod ? "原神"
+              : row.primary.relation === focus?.tabooGod ? "忌神"
+                : row.primary.relation === focus?.enemyGod ? "仇神" : "一般爻";
+          return (
+            <TermDisclosure
+              actual={`${lineName(row.position)}纳${row.primary.stemBranch}${row.primary.element}；${item.explanation}，`
+                + `故为${item.name}。月令为${row.primary.strength}，本题作${role}观察；强弱不单独等于吉凶。`}
+              definition="先以纳甲地支取得五行，再与卦宫之“我”比较，并接到节气月旺衰。"
+              key={row.position}
+              term={`${lineName(row.position)} · ${row.primary.element}`}
+              value={`${row.primary.relation} · ${row.primary.strength}`}
+            />
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+```
+
+- [ ] **Step 5: 实现事项修改**
+
+```tsx
+// web/components/SubjectChange.tsx
+import { useState } from "react";
+import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
+import { api, type PublicReading } from "../lib/api.js";
+
+export function SubjectChange(props: {
+  reading: PublicReading;
+  onReading: (reading: PublicReading) => void;
+}) {
+  const [selected, setSelected] = useState(props.reading.subject.finalKey);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const remaining = Math.max(0, 3 - props.reading.subject.changes);
+  const jingfangBusy = ["pending", "writing"].includes(props.reading.schools.jingfang.status);
+  const disabled = busy || remaining === 0 || jingfangBusy || selected === props.reading.subject.finalKey;
+  const changeSelected = (value: string) => {
+    const subject = QUESTION_SUBJECTS.find((item) => item.key === value);
+    if (subject) {
+      setSelected(subject.key);
+    }
+  };
+  const submit = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      props.onReading(await api.changeSubject(props.reading.id, selected));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "事项未能修改");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="subject-change">
+      <label htmlFor="subject-change">事项修改（还可 {remaining} 次）</label>
+      <select
+        id="subject-change"
+        onChange={(event) => changeSelected(event.target.value)}
+        value={selected}
+      >
+        {QUESTION_SUBJECTS.map((item) => (
+          <option key={item.key} value={item.key}>{item.label}</option>
+        ))}
+      </select>
+      <button
+        className="button"
+        disabled={disabled}
+        onClick={() => void submit()}
+        type="button"
+      >
+        确认修改
+      </button>
+      {jingfangBusy ? <p className="hint">京房正在落笔，完成后才可改事项。</p> : null}
+      {remaining === 0 ? <p className="hint">本卦三次事项修改已用尽。</p> : null}
+      {error ? <p className="error">{error}</p> : null}
+    </section>
+  );
+}
+```
+
+- [ ] **Step 6: 先不单独运行组件测试；Task 30 用真实引擎数据统一 RED/GREEN**
+
+检查：本 Task 的 `.tsx` 组件只导入 `web/lib/api.ts` 类型和纯逻辑，不导入 `app.tsx`、
+`PaymentButton.tsx`、Providers 或任何牵出 `web/lib/wagmi.ts` 的模块。
+
+## Chunk 5C: 奇门、黄历、复算、页面编排与交叉验收
+
+### Task 30: 实现附属面板并用真实引擎数据做组件回归
+
+**Files:**
+- Create: `web/components/QimenBoard.tsx`
+- Create: `web/components/AlmanacPanel.tsx`
+- Create: `web/components/VerifyPanel.tsx`
+- Create: `tests/frontend-reading-components.test.ts`
+
+- [ ] **Step 1: 实现奇门九宫；组件只展示服务端事实**
+
+```tsx
+// web/components/QimenBoard.tsx
+import type { QimenResult } from "../../src/calendar/qimen.js";
+const GRID = [
+  "巽四", "离九", "坤二", "震三", "中五", "兑七", "艮八", "坎一", "乾六",
+] as const;
+const GOOD = new Set(["开门", "休门", "生门"]);
+const BAD = new Set(["伤门", "死门", "惊门"]);
+const HORSE_PALACE: Record<string, string> = { 寅: "艮八", 申: "坤二", 巳: "巽四", 亥: "乾六" };
+const BRANCH_PALACE: Record<string, string> = {
+  子: "坎一", 丑: "艮八", 寅: "艮八", 卯: "震三", 辰: "巽四", 巳: "巽四",
+  午: "离九", 未: "坤二", 申: "坤二", 酉: "兑七", 戌: "乾六", 亥: "乾六",
+};
+function palaceLabel(value: string): string {
+  return value === "中五" ? "中五（寄坤二）" : value;
+}
+function doorTone(door?: string): string {
+  return door && GOOD.has(door) ? "good" : door && BAD.has(door) ? "bad" : "plain";
+}
+export function QimenBoard({ value }: { value: QimenResult }) {
+  return (
+    <section aria-labelledby="qimen-title" className="panel">
+      <header className="panel-head">
+        <h2 id="qimen-title">奇门时盘</h2>
+        <p>
+          {value.layout} · {value.method} · 值符{value.chiefStar}落{palaceLabel(value.chiefStarPalace)}
+          · 值使{value.chiefDoor}落{palaceLabel(value.chiefDoorPalace)}
+        </p>
+      </header>
+      <p className="hint">奇门按子时换日；仅作显示，不输入三家断语。</p>
+      <div aria-label="奇门九宫，南上北下" className="qimen-board">
+        {GRID.map((palace) => {
+          const cell = value.palaces[palace];
+          const voids = `${value.dayVoid}${value.hourVoid}`;
+          const branches = Object.entries(BRANCH_PALACE)
+            .filter(([, target]) => target === palace)
+            .map(([branch]) => branch);
+          const isVoid = branches.some((branch) => voids.includes(branch));
+          const flags = [
+            value.chiefStarPalace === palace || (value.chiefStarPalace === "中五" && palace === "坤二")
+              ? "值符" : "",
+            value.chiefDoorPalace === palace || (value.chiefDoorPalace === "中五" && palace === "坤二")
+              ? "值使" : "",
+            HORSE_PALACE[value.horse] === palace ? "驿马" : "",
+            isVoid ? "空亡" : "",
+          ].filter(Boolean);
+          if (palace === "中五") {
+            return (
+              <div className="qimen-cell center" data-gua="中" key={palace}>
+                <b>中五（寄坤二）</b>
+                <small>天盘{cell.heavenStem ?? "—"} · 地盘{cell.earthStem}</small>
+              </div>
+            );
+          }
+          return (
+            <div className="qimen-cell" data-gua={palace[0]} key={palace}>
+              <span className={cell.god === "值符" ? "god chief" : "god"}>{cell.god}</span>
+              <span className="heaven">{cell.heavenStem ?? "—"}</span>
+              <span className="star">{cell.star}<small>{palace}宫</small></span>
+              <span className="qimen-flags">{flags.map((flag) => <i key={flag}>{flag}</i>)}</span>
+              <span className={`door ${doorTone(cell.door)}`}>{cell.door}</span>
+              <span className="earth">{cell.earthStem}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="qimen-legend">
+        吉门：开、休、生 · 凶门：伤、死、惊 · 平门：杜、景
+        · 右上天盘干 · 右下地盘干
+      </p>
+    </section>
+  );
+}
+```
+- [ ] **Step 2: 实现黄历与复算面板**
+```tsx
+// web/components/AlmanacPanel.tsx
+import type { AlmanacResult } from "../../src/calendar/almanac.js";
+export function AlmanacPanel({ value }: { value: AlmanacResult }) {
+  const rows = [
+    ["建除 · 值神", `${value.dayOfficers.officer}日 · ${value.dayOfficers.deity}（${value.dayOfficers.path}）`],
+    ["二十八宿", `${value.mansion.name} · ${value.mansion.palace}${value.mansion.guardian}`],
+    ["冲煞", `${value.clash.description} · 煞${value.clash.direction}`],
+    ["日家九星", value.almanac.nineStar],
+    ["吉神方位", `喜神${value.almanac.joy} · 财神${value.almanac.wealth} · 福神${value.almanac.fortune}`],
+    ["宜", value.almanac.suitable.join(" ")],
+    ["忌", value.almanac.avoid.join(" ")],
+    ["彭祖百忌", value.almanac.pengZu.join("；")],
+  ] as const;
+  return (
+    <section aria-labelledby="almanac-title" className="panel">
+      <header className="panel-head">
+        <h2 id="almanac-title">当日黄历</h2>
+        <p>{value.lunar.date} · {value.cycle.day}日</p>
+      </header>
+      <div className="almanac-grid">
+        {rows.map(([label, text]) => (
+          <div key={label}>
+            <span className="label">{label}</span>
+            <b className={label === "宜" ? "good" : label === "忌" ? "bad" : ""}>{text}</b>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+```tsx
+// web/components/VerifyPanel.tsx
+import type { PublicReading } from "../lib/api.js";
+function explorer(path: string): string {
+  return `${__ARC_EXPLORER__.replace(/\/$/u, "")}/${path}`;
+}
+export function VerifyPanel({ reading }: { reading: PublicReading }) {
+  return (
+    <details className="panel verify-panel">
+      <summary>复算信息</summary>
+      <dl>
+        <div><dt>规范化问题</dt><dd>{reading.question}</dd></div>
+        <div>
+          <dt>付款首笔交易</dt>
+          <dd>
+            <a href={explorer(`tx/${reading.payment.firstHash}`)} rel="noreferrer" target="_blank">
+              Arcscan 查看
+            </a>
+          </dd>
+        </div>
+        {reading.throws.map((item) => (
+          <div key={item.index}>
+            <dt>第 {item.index} 掷区块 #{item.blockNumber}</dt>
+            <dd>
+              <a href={explorer(`block/${item.blockNumber}`)} rel="noreferrer" target="_blank">
+                Arcscan 查看
+              </a>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p>
+        复算公式：keccak256(encodePacked("sanyi-throw-v1", 付款首笔交易哈希，
+        区块哈希，规范化问题，掷序))，取最低三位；1 为背、0 为字。
+      </p>
+    </details>
+  );
+}
+```
+- [ ] **Step 3: 写完整组件回归测试**
+```ts
+// tests/frontend-reading-components.test.ts
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
+import type { QimenResult } from "../src/calendar/qimen.js";
+import type { PublicReading } from "../web/lib/api.js";
+import { ConsensusTrack } from "../web/components/ConsensusTrack.js";
+import { FiveElementsDetail } from "../web/components/FiveElementsDetail.js";
+import { FiveHexagrams } from "../web/components/FiveHexagrams.js";
+import { LiuyaoTable } from "../web/components/LiuyaoTable.js";
+import { QimenBoard } from "../web/components/QimenBoard.js";
+import { SchoolCard } from "../web/components/SchoolCard.js";
+import { TermDisclosure } from "../web/components/TermDisclosure.js";
+import { LINES, baseOutput, chart } from "./helpers/sample-question.js";
+const forbidden = /易者|押钱|赔付|封存|・|[ぁ-ヿ]/u;
+function school(status: string, confidenceTenths = 5) {
+  return {
+    status,
+    retries: 0,
+    output: { ...baseOutput, confidenceTenths },
+  } as PublicReading["schools"]["chengyi"];
+}
+test("六爻表与五行详情锁定已核验第二爻", () => {
+  const html = renderToStaticMarkup(createElement(
+    "main",
+    null,
+    createElement(LiuyaoTable, { chart }),
+    createElement(FiveElementsDetail, { chart }),
+  ));
+  assert.match(html, /官鬼/u);
+  assert.match(html, /甲寅/u);
+  assert.match(html, /旬空/u);
+  assert.match(html, /克我/u);
+  assert.match(html, /强弱不单独等于吉凶/u);
+  assert.doesNotMatch(html, forbidden);
+});
+test("真实五卦和术语说明完整渲染", () => {
+  const html = renderToStaticMarkup(createElement(
+    "main",
+    null,
+    createElement(FiveHexagrams, {
+      figures: deriveFiveHexagrams(LINES),
+      moving: [1],
+    }),
+    createElement(TermDisclosure, {
+      term: "旬空",
+      value: "寅卯",
+      definition: "六十甲子的空支。",
+      actual: "这一卦为寅卯空。",
+    }),
+  ));
+  assert.match(html, /本卦 · 为体/u);
+  assert.match(html, /互卦 · 探隐/u);
+  assert.match(html, /变卦 · 测果/u);
+  assert.match(html, /错卦 · 警变/u);
+  assert.match(html, /综卦 · 观反/u);
+  assert.match(html, /是什么/u);
+  assert.match(html, /这一卦里/u);
+  assert.doesNotMatch(html, forbidden);
+});
+test("奇门 fixture 按南上北下渲染关键宫", () => {
+  const path = new URL("./fixtures/qimen/20260930-2015.json", import.meta.url);
+  const fixture = JSON.parse(readFileSync(path, "utf8")) as QimenResult;
+  const html = renderToStaticMarkup(createElement(QimenBoard, { value: fixture }));
+  assert.match(html, /data-gua="巽"[\s\S]*死门/u);
+  assert.match(html, /data-gua="坤"[\s\S]*值符/u);
+  assert.match(html, /data-gua="兑"[\s\S]*九天/u);
+  assert.match(html, /奇门按子时换日/u);
+  assert.doesNotMatch(html, forbidden);
+});
+test("合议线保留三家原始位置并显示算术平均", () => {
+  const schools = {
+    chengyi: school("done", 6),
+    jingfang: school("done", 3),
+    shaoyong: school("done", 4),
+  } as PublicReading["schools"];
+  const html = renderToStaticMarkup(createElement(ConsensusTrack, { schools }));
+  assert.match(html, /left:60%/u);
+  assert.match(html, /left:30%/u);
+  assert.match(html, /left:40%/u);
+  assert.match(html, /合议 约4\.3成/u);
+});
+test("SchoolCard 覆盖完成、落笔、失败和拒绝四种状态", () => {
+  const html = [
+    school("done"),
+    school("writing"),
+    school("failed"),
+    school("rejected"),
+  ].map((value) => renderToStaticMarkup(createElement(SchoolCard, {
+    schoolKey: "chengyi",
+    school: value,
+    onRetry() {},
+  }))).join("");
+  assert.match(html, /展开详断/u);
+  assert.match(html, /落笔中/u);
+  assert.match(html, /此家暂未落笔/u);
+  assert.match(html, /此家断语未通过盘面核对，暂不展示/u);
+  assert.match(html, /还可 2 次/u);
+  assert.doesNotMatch(html, forbidden);
+});
+```
+- [ ] **Step 4: 运行 RED/GREEN 与类型检查**
+Run: `node --import tsx --test tests/frontend-reading-components.test.ts && npm run typecheck`
+Expected: 5 tests PASS；测试文件扩展名为 `.ts`，所有组件均以 `createElement` 创建，且没有导入任何会牵出
+`web/lib/wagmi.ts` 的模块。
+
+### Task 31: 编排完整结果页、补齐样式并交叉验收
+
+**Files:**
+- Modify: `web/pages/Reading.tsx`
+- Modify: `web/styles/components.css`
+
+- [ ] **Step 1: 用完整实现替换占位结果页**
+
+```tsx
+// web/pages/Reading.tsx
+import { useCallback, useEffect, useState } from "react";
+import { deriveFiveHexagrams } from "../../src/oracle/liuyao-chart.js";
+import { AlmanacPanel } from "../components/AlmanacPanel.js";
+import { CoinThrow } from "../components/CoinThrow.js";
+import { ConsensusTrack } from "../components/ConsensusTrack.js";
+import { FiveElementsDetail } from "../components/FiveElementsDetail.js";
+import { FiveHexagrams } from "../components/FiveHexagrams.js";
+import { HexagramFigure } from "../components/HexagramFigure.js";
+import { LiuyaoTable } from "../components/LiuyaoTable.js";
+import { Luopan } from "../components/Luopan.js";
+import { QimenBoard } from "../components/QimenBoard.js";
+import { SchoolCard } from "../components/SchoolCard.js";
+import { ShikongBar, type ShikongView } from "../components/ShikongBar.js";
+import { SubjectChange } from "../components/SubjectChange.js";
+import { ThrowRecord } from "../components/ThrowRecord.js";
+import { VerifyPanel } from "../components/VerifyPanel.js";
+import { api, type PublicReading } from "../lib/api.js";
+import { saveRecentReading } from "../lib/recent-readings.js";
+import { readingStage, shouldPollReading } from "../lib/reading-state.js";
+const SCHOOL_KEYS = ["chengyi", "jingfang", "shaoyong"] as const;
+const SUBJECT_LABELS: Record<string, string> = {
+  career: "工作、官职",
+  wealth: "钱财、货品",
+  relationship: "感情、婚姻",
+  health: "健康、疾病",
+  study: "学业、考试",
+  travel: "出行、迁移",
+};
+function shikong(reading: PublicReading): ShikongView | undefined {
+  const value = reading.almanac;
+  if (!value) {
+    return undefined;
+  }
+  return {
+    solar: `${value.solar.text} 北京时间`,
+    lunar: `${value.lunar.date} ${value.lunar.timeBranch}时 · ${value.lunar.moonPhase}`,
+    pillars: `${value.pillars.join(" ")} · ${value.naYin.join(" ")}`,
+    solarTerm: `${value.solarTerms.current} · ${value.solarTerms.hou} · ${value.solarTerms.wuHou}`,
+    monthDay: `${value.cycle.monthBranch}月 · ${value.cycle.day}日 · 旬空${value.cycle.voidBranches.join("")}`,
+    duty: `${value.dayOfficers.officer}日 · ${value.dayOfficers.deity}${value.dayOfficers.path}`,
+  };
+}
+function Result(props: {
+  reading: PublicReading;
+  onReading: (reading: PublicReading) => void;
+}) {
+  const { reading } = props;
+  const chart = reading.chart;
+  if (!chart || !reading.lines || !reading.almanac || !reading.qimen) {
+    return (
+      <section className="panel">
+        <h1>正在排盘</h1>
+        <p className="hint">六爻已成，三家稍候。</p>
+      </section>
+    );
+  }
+  const figures = deriveFiveHexagrams(reading.lines);
+  const moving = reading.lines.flatMap((value, index) => [6, 9].includes(value) ? [index + 1] : []);
+  const primary = figures.primary;
+  const retry = async (key: typeof SCHOOL_KEYS[number]) => {
+    props.onReading(await api.retrySchool(reading.id, key));
+  };
+  return (
+    <>
+      <div className="reading-hero">
+        <section aria-labelledby="hexagram-title" className="panel hexagram-panel">
+          <div className="ask">
+            <span className="label">
+              所问之事 · {SUBJECT_LABELS[reading.subject.finalKey] ?? "其他"}
+            </span>
+            <p>{reading.question}</p>
+          </div>
+          <SubjectChange onReading={props.onReading} reading={reading} />
+          <div className="hexagram-stage">
+            <div className="luopan-wrap">
+              <Luopan />
+              <HexagramFigure
+                label={`${primary.name}，${moving.map((value) => `第${value}爻动`).join("，")}`}
+                lines={primary.yangLines}
+                moving={moving}
+              />
+            </div>
+            <div className="hexagram-title">
+              <span className="label">本卦</span>
+              <h1 id="hexagram-title">{primary.name}</h1>
+              <p>
+                动爻 {moving.length ? moving.join("、") : "无"} · 之卦
+                <b>{figures.derived.name}</b>
+              </p>
+              <span className="tag">{chart.palace.name}宫 · {chart.palace.sequence}</span>
+            </div>
+          </div>
+          <p className="judgement"><b>卦辞：</b>{primary.judgement}</p>
+          <ThrowRecord throws={reading.throws} />
+          <FiveHexagrams figures={figures} moving={moving} />
+        </section>
+        <section aria-labelledby="schools-title" className="panel">
+          <header className="panel-head">
+            <h2 id="schools-title">三家断语</h2>
+            <p>同一卦、同一件事，三派独立落笔。</p>
+          </header>
+          <ConsensusTrack schools={reading.schools} />
+          {SCHOOL_KEYS.map((key) => (
+            <SchoolCard
+              key={key}
+              onRetry={() => void retry(key)}
+              school={reading.schools[key]}
+              schoolKey={key}
+            />
+          ))}
+        </section>
+      </div>
+      <div className="reading-secondary">
+        <div className="reading-column">
+          <LiuyaoTable chart={chart} />
+          <FiveElementsDetail chart={chart} />
+        </div>
+        <QimenBoard value={reading.qimen} />
+      </div>
+      <AlmanacPanel value={reading.almanac} />
+      <VerifyPanel reading={reading} />
+    </>
+  );
+}
+export function Reading({ id }: { id: string }) {
+  const [reading, setReading] = useState<PublicReading>();
+  const [error, setError] = useState("");
+  const refresh = useCallback(async () => {
+    try {
+      const value = await api.getReading(id);
+      setReading(value);
+      setError("");
+      saveRecentReading({
+        id: value.id,
+        kind: value.kind,
+        question: value.question,
+        createdAt: value.createdAt,
+      });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "未能打开这一卦");
+    }
+  }, [id]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  useEffect(() => {
+    if (!reading || !shouldPollReading(reading)) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => void refresh(), 1_000);
+    return () => window.clearInterval(timer);
+  }, [reading, refresh]);
+  if (error) {
+    return (
+      <main className="page">
+        <section className="panel error-panel">
+          <h1>这一卦暂时打不开</h1>
+          <p className="error">{error}</p>
+          <a className="button" href="#/">返回首页</a>
+        </section>
+      </main>
+    );
+  }
+  if (!reading) {
+    return (
+      <main className="page">
+        <section aria-live="polite" className="panel">正在打开这一卦</section>
+      </main>
+    );
+  }
+  const stage = readingStage(reading);
+  const view = shikong(reading);
+  return (
+    <main className="page">
+      <header className="topbar">
+        <span className="seal">问</span>
+        <span className="brand">三易</span>
+        <a href="#/">返回首页</a>
+      </header>
+      {view ? <ShikongBar data={view} /> : null}
+      {reading.chart?.month.boundaryUncertain ? <p className="boundary-tag">月建 · 近交节</p> : null}
+      {stage === "awaiting-throws" ? (
+        <CoinThrow onReading={setReading} reading={reading} />
+      ) : stage === "failed" && !reading.chart ? (
+        <section className="panel">
+          <h1>排盘未能完成</h1>
+          <p className="error">{reading.error ?? "请稍后再试"}</p>
+          <a className="button" href="#/">返回首页</a>
+        </section>
+      ) : (
+        <Result onReading={setReading} reading={reading} />
+      )}
+    </main>
+  );
+}
+```
+
+- [ ] **Step 2: 在 `components.css` 末尾追加结果页完整样式；所有色值只引用令牌**
+
+```css
+/* web/styles/components.css：追加 */
+.reading-hero, .reading-secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+.reading-secondary {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+.reading-column, .coin-throw, .throw-record, .school-copy, .term-grid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.topbar a, .verify-panel a {
+  margin-left: auto;
+  color: var(--gold);
+}
+.boundary-tag, .good-text {
+  width: fit-content;
+  margin: 0;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 4px 8px;
+}
+.ask p, .judgement {
+  margin: 0;
+  line-height: 1.8;
+}
+.ask p {
+  font-size: 21px;
+}
+.subject-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.subject-change select {
+  border: 1px solid var(--line-strong);
+  background: var(--panel-2);
+  color: var(--paper);
+  padding: 8px;
+}
+.subject-change p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.hexagram-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+.luopan-wrap {
+  position: relative;
+  width: min(300px, 100%);
+  aspect-ratio: 1;
+}
+.luopan {
+  width: 100%;
+  height: 100%;
+}
+.luopan-ring, .luopan-tick {
+  fill: none;
+  stroke: var(--line-strong);
+}
+.luopan-stroke {
+  fill: var(--gold);
+  opacity: 0.62;
+}
+.luopan text {
+  fill: var(--muted);
+  font-family: var(--serif);
+  font-size: 12px;
+}
+.luopan text.luopan-cardinal {
+  fill: var(--gold);
+}
+.luopan-wrap > .hexagram-figure {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.hexagram-title h1 {
+  margin: 6px 0;
+  font-family: var(--brush);
+  font-size: clamp(44px, 6vw, 60px);
+}
+.hexagram-title b {
+  color: var(--gold);
+  font-family: var(--brush);
+  font-size: 22px;
+}
+.hexagram-figure {
+  display: grid;
+  gap: 8px;
+  width: 118px;
+}
+.hexagram-figure i {
+  display: block;
+  height: 10px;
+}
+.hexagram-figure .yang {
+  background: var(--paper);
+}
+.hexagram-figure .yin {
+  background: linear-gradient(90deg, var(--paper) 0 42%, transparent 42% 58%, var(--paper) 58% 100%);
+}
+.hexagram-figure .moving {
+  background: var(--cinnabar);
+}
+.hexagram-figure.compact {
+  width: 34px;
+  gap: 3px;
+}
+.hexagram-figure.compact i {
+  height: 4px;
+}
+.five-hexagrams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.five-hexagrams figure {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 76px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+}
+.five-hexagrams figure.active {
+  border-color: var(--line-strong);
+  background: var(--gold-soft);
+}
+.five-hexagrams figcaption, .five-hexagrams small {
+  display: grid;
+  text-align: center;
+}
+.five-hexagrams figcaption {
+  font-family: var(--brush);
+}
+.five-hexagrams small, .legend {
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 12px;
+}
+.throw {
+  display: grid;
+  grid-template-columns: 3.2em auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+}
+.throw.moving, .change, .school-verdict.bad, .almanac-grid .bad {
+  color: var(--cinnabar);
+}
+.coins {
+  display: flex;
+  gap: 5px;
+}
+.coin {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+}
+.coin::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--gold);
+  background: var(--panel);
+  content: "";
+  transform: translate(-50%, -50%);
+}
+.coin.back {
+  background: var(--gold);
+}
+.throw-button {
+  min-width: 132px;
+  min-height: 52px;
+  border: 1px solid var(--gold);
+  background: var(--gold-soft);
+  color: var(--gold);
+  cursor: pointer;
+}
+.throw-button.shaking {
+  animation: coin-shake 180ms linear infinite alternate;
+}
+.consensus-track {
+  position: relative;
+  height: 44px;
+  margin: 18px 12px 0;
+  border-bottom: 2px solid var(--line-strong);
+}
+.consensus .mean {
+  position: absolute;
+  bottom: -12px;
+  width: 1px;
+  height: 24px;
+  background: var(--paper);
+}
+.consensus .mean span {
+  position: absolute;
+  bottom: 28px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.consensus .pin {
+  position: absolute;
+  bottom: -10px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  background: var(--seal-bg);
+  color: var(--seal-text);
+  font-family: var(--brush);
+}
+.consensus-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--dim);
+}
+.school-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.school-card h3, .school-card p {
+  margin: 0;
+}
+.school-card h3 small, .school-verdict small {
+  margin-left: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.school-verdict {
+  font-family: var(--dynamic);
+  font-size: 22px;
+}
+.school-verdict.good, .almanac-grid .good {
+  color: var(--jade);
+}
+.school-reason {
+  color: var(--muted);
+  line-height: 1.8;
+}
+.chart-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.chart {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+.chart th, .chart td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+.chart tr.use td {
+  background: var(--gold-soft);
+}
+.chart .mark {
+  color: var(--gold);
+  font-family: var(--brush);
+  text-align: center;
+}
+.state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.state i, .qimen-flags i {
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-style: normal;
+  padding: 1px 5px;
+}
+.reading-guide {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.reading-guide p {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+.term-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+.term-disclosure {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+}
+.term-disclosure summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  align-items: center;
+  cursor: pointer;
+}
+.term-disclosure strong {
+  color: var(--gold);
+}
+.term-disclosure p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.five-elements-detail > summary, .verify-panel > summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+.five-elements-detail svg {
+  width: min(280px, 100%);
+}
+.five-elements-detail circle {
+  fill: var(--panel-2);
+  stroke: var(--line-strong);
+}
+.five-elements-detail circle.active {
+  stroke: var(--gold);
+}
+.five-elements-detail text {
+  fill: var(--paper);
+}
+.generate-edge {
+  stroke: var(--gold);
+}
+.overcome-edge {
+  stroke: var(--cinnabar);
+}
+.qimen-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line-strong);
+}
+.qimen-cell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 4px 6px;
+  min-height: 136px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.qimen-cell::before {
+  position: absolute;
+  right: -4px;
+  bottom: -14px;
+  color: var(--line);
+  content: attr(data-gua);
+  font-family: var(--brush);
+  font-size: 72px;
+}
+.qimen-cell .heaven, .qimen-cell .earth {
+  text-align: right;
+}
+.qimen-cell .star {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+.qimen-cell .star small {
+  margin-left: 6px;
+  color: var(--dim);
+}
+.qimen-flags {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.door {
+  font-family: var(--brush);
+  font-size: 22px;
+}
+.door.good {
+  color: var(--jade);
+}
+.door.bad {
+  color: var(--cinnabar);
+}
+.god.chief, .qimen-flags i {
+  color: var(--gold);
+}
+.qimen-cell.center {
+  place-content: center;
+  text-align: center;
+}
+.qimen-legend, .provenance {
+  color: var(--dim);
+  line-height: 1.7;
+}
+.almanac-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+}
+.almanac-grid div {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.verify-panel dl {
+  display: grid;
+  gap: 8px;
+}
+.verify-panel dl div {
+  display: grid;
+  grid-template-columns: minmax(8em, auto) minmax(0, 1fr);
+  gap: 12px;
+}
+@keyframes coin-shake {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .luopan-rotor {
+    animation: luopan-turn 240s linear infinite;
+    transform-origin: 160px 160px;
+  }
+  @keyframes luopan-turn {
+    to { transform: rotate(360deg); }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .throw-button.shaking, .luopan-rotor {
+    animation: none;
+  }
+}
+@media (max-width: 980px) {
+  .reading-hero, .reading-secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .hexagram-stage {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .qimen-cell {
+    min-height: 120px;
+    padding: 7px;
+  }
+  .qimen-cell::before {
+    font-size: 54px;
+  }
+}
+```
+
+- [ ] **Step 3: 运行 Chunk 5 全部定向测试**
+
+Run: `node --import tsx --test tests/frontend-reading-state.test.ts \
+  tests/frontend-throw-machine.test.ts tests/frontend-luopan.test.ts \
+  tests/frontend-reading-components.test.ts`
+
+Expected: 14 tests PASS、0 FAIL；六爻第二爻、奇门三个关键宫、三家四种状态、合议位置、术语两段说明和
+文化禁词均由测试锁定。
+
+- [ ] **Step 4: 严格类型、前端构建与产物文化扫描**
+
+Run: `npm run typecheck && npm run frontend:build && npm run frontend:secrets`
+
+Run: `! rg '易者|押钱|赔付|封存|・|[ぁ-ヿ]' web public \
+  --glob '!fonts/OFL.txt'`
+
+Expected: `tsc --noEmit`、构建与秘密扫描退出码均为 0；禁词与假名命中数为 0。
+
+- [ ] **Step 5: 静态约束与超长行检查**
+
+Run: `! awk 'length($0) > 110 { print FNR ":" length($0) ":" $0; bad=1 } END { exit bad }' \
+  web/lib/reading-state.ts web/lib/throw-machine.ts web/components/*.tsx \
+  web/pages/Reading.tsx tests/frontend-reading-state.test.ts \
+  tests/frontend-throw-machine.test.ts tests/frontend-luopan.test.ts \
+  tests/frontend-reading-components.test.ts`
+
+Expected: 0 行超过 110 字符；若字符串、正则或 CSS 长值确需豁免，先手工确认只属于硬性要求允许的三类，
+再在验收记录中逐行列出，不得静默忽略。
+
+- [ ] **Step 6: 浏览器人工验收**
+
+在 390px、980px、981px 三个视口逐项核对：
+
+1. 390px 页面本身无横向滚动，六爻表只在 `.chart-scroll` 内横向滚动；正文不小于 14px。
+2. 980px 为单列，981px 为“卦象｜三家”和“排盘｜奇门”双列。
+3. 指针按住与空格／回车按住均进入摇晃，松开只落一次；按钮及所有 summary、链接、选择器不小于 44px。
+4. 系统开启减少动态效果后，罗盘与摇钱动画静止，内容、落钱请求和状态提示不受影响。
+5. 第六掷完成后先见排盘，三家逐家落笔；单家失败、核对拒绝、重试用尽不遮挡另两家。
+6. 修改事项只令京房重写；京房落笔中入口禁用并解释；三次用尽后入口持续禁用。
+7. 卦时栏使用第一掷时间；近交节显示标签；奇门明确写“奇门按子时换日”。
+8. 黄历宜忌展示完整数组；复算面板默认折叠，展开后有一笔交易和六个区块的 Arcscan 链接。
+
+- [ ] **Step 7: 对照规范与计划边界**
+
+逐项核对 `six-throw-casting`、`question-three-schools`、`shikong-almanac-qimen`、`ink-night-theme`、
+`reading-archive`、`rich-liuyao-question-chart`、`explicit-five-elements` 的每个结果页 Scenario。确认：
+
+- 盘面事实由程序生成，奇门与黄历不进入三家输入；页面没有自行推断吉凶或应期。
+- 旧说明文字已经就地移植，五行生克、逐爻六亲来源和五步阅读引导没有因改版丢失。
+- `openspec/changes/sanyi-chinese-redesign/tasks.md` 仍只在 Chunk 6 全量验收后统一更新。
+- 本 Chunk 不提交；执行者按用户当次指示决定是否在后续 Chunk 提交。
