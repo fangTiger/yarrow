@@ -18,7 +18,8 @@
 - Chunk 2C：问事编排（Task 15）。
 - Chunk 2B/2C 交叉验收：领域与全量回归（Task 16）。
 - Chunk 3：服务端接口。
-- Chunk 4：前端基础。
+- Chunk 4A：前端基础（字体、视觉令牌、数据客户端与最近记录）。
+- Chunk 4B：前端基础（付款、首页与 hash 路由）。
 - Chunk 5：前端结果页。
 - Chunk 6：清理与验收。
 
@@ -67,6 +68,7 @@
 - `web/pages/Home.tsx`：呈现首页输入与最近记录。
 - `web/pages/Reading.tsx`：按 reading 状态组合问事结果页。
 - `web/components/ShikongBar.tsx`：呈现时空栏字段。
+- `web/components/ClassificationTags.tsx`：纯展示分类标签、未开放提示与改选动作。
 - `web/components/Luopan.tsx`：绘制仅装饰的二十四山后天八卦罗盘。
 - `web/components/CoinThrow.tsx`：实现可键盘操作的按住摇、松开落钱交互。
 - `web/components/HexagramFigure.tsx`：绘制本卦、动爻与之卦。
@@ -80,6 +82,8 @@
 - `web/components/PaymentButton.tsx`：封装一次点击连接、切网、余额检查和 EIP-5792 付款。
 - `web/components/RecentReadings.tsx`：容错读写本机最近 20 条链接。
 - `web/lib/api.ts`：提供新 JSON 接口的类型化客户端。
+- `web/lib/fee-plan.ts`：提供不依赖浏览器钱包配置的纯卦金付款计划。
+- `web/lib/use-fee-payment.ts`：封装连接、切网、余额检查与 EIP-5792 原子付款钩子。
 - `web/lib/recent-readings.ts`：维护最近 reading 的 localStorage 数据。
 - `web/styles/tokens.css`：定义水墨夜颜色、字体和尺寸令牌。
 - `web/styles/layout.css`：定义双列、980px 单列和 390px 无溢出布局。
@@ -4963,3 +4967,1419 @@ Run: `rg 'frontend/data|demo/|question-oracle|question-interpreter|createDemoPro
 - [ ] 核对 OpenSpec 与任务状态：`tasks.md` 的 1.10、1.14 只在实现与上述验收均完成后勾选；
 确认公开 reading 不含 `attempts`、付款人、完整交易数组或内部 claim key，且仍含规范化问题、
 付款首笔交易哈希、六掷区块号与哈希、六爻及卦时。
+
+## Chunk 4A: 前端基础（字体、视觉令牌与数据层）
+
+> 本 Chunk 覆盖 OpenSpec 任务 1.11、1.12、1.13 的首页部分。视觉值以已确认的水墨夜样稿和
+> 设计文档第 13 节为准；HTTP 类型严格服从 Chunk 3。`Reading.tsx` 是 Chunk 4/5 的有意边界，
+> 本 Chunk 只保证结果链接可进入并可测试，Chunk 5 再替换为完整结果页。
+
+### Task 21: 生成并自托管毛笔字体子集
+
+**Files:**
+- Create: `scripts/font-charset.ts`
+- Create: `scripts/subset-sanyi-font.py`
+- Create: `web/fonts/mashanzheng-chars.txt`
+- Create: `web/fonts/mashanzheng-subset.woff2`
+- Create: `web/fonts/OFL.txt`
+- Create: `tests/frontend-font.test.ts`
+
+- [ ] **Step 1: 写字表与字体来源失败测试**
+
+```ts
+// tests/frontend-font.test.ts
+import assert from "node:assert/strict";
+import { readFile, readdir } from "node:fs/promises";
+import { extname, join } from "node:path";
+import test from "node:test";
+import { buildFontCharset } from "../scripts/font-charset.js";
+async function webSources(root = "web"): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const path = join(root, entry.name);
+    if (entry.isDirectory()) return webSources(path);
+    return [path];
+  }));
+  return nested.flat().filter((path) => [".css", ".html", ".ts", ".tsx"].includes(extname(path)));
+}
+test("毛笔体字表确定、有关键字且没有假名", () => {
+  const charset = buildFontCharset();
+  assert.equal(charset, [...charset].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join(""));
+  for (const value of ["泰", "巽", "螣", "勾", "程"]) assert.match(charset, new RegExp(value));
+  assert.doesNotMatch(charset, /[\u3040-\u30ff]/u);
+});
+test("字体只从站内 woff2 提供", async () => {
+  const css = await readFile("web/styles/tokens.css", "utf8");
+  assert.match(css, /url\(["']?\/fonts\/mashanzheng-subset\.woff2["']?\)/u);
+  assert.match(css, /--brush:[^;]*"Ma Shan Zheng Subset"[^;]*"Kaiti SC"/u);
+  const text = (await Promise.all((await webSources()).map((path) => readFile(path, "utf8")))).join("\n");
+  assert.doesNotMatch(text, /fonts\.(?:googleapis|gstatic)\.com/u);
+});
+test("入口使用水墨夜样式且构建保留站内字体 URL", async () => {
+  const main = await readFile("web/main.tsx", "utf8");
+  const build = await readFile("scripts/build-frontend.ts", "utf8");
+  const html = await readFile("web/index.html", "utf8");
+  assert.match(main, /styles\/tokens\.css/u);
+  assert.doesNotMatch(main, /\.\/styles\.css/u);
+  assert.match(build, /external:\s*\["\/fonts\/\*"\]/u);
+  assert.match(html, /<title>三易<\/title>/u);
+  assert.match(html, /name="theme-color" content="#0F1110"/u);
+});
+```
+
+- [ ] **Step 2: RED**
+
+Run: `node --import tsx --test tests/frontend-font.test.ts`
+
+Expected: FAIL，缺少字表生成器与 `tokens.css`。
+
+- [ ] **Step 3: 实现确定性字表生成器**
+
+```ts
+// scripts/font-charset.ts
+import { mkdir, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { ZHOUYI_CORPUS } from "../src/agent/zhouyi-corpus.js";
+const EIGHT_GATES = "休生伤杜景死惊开";
+const NINE_STARS = "天蓬天任天冲天辅天英天芮天柱天心天禽";
+const EIGHT_SPIRITS = "值符腾蛇螣蛇太阴六合白虎玄武九地九天勾陈朱雀";
+const SIX_SPIRITS = "青龙朱雀勾陈腾蛇白虎玄武";
+const SIX_RELATIONS = "父母兄弟子孙妻财官鬼";
+const STEMS_BRANCHES = "甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥";
+const FIXED_COPY = [
+  "三易", "所问之事", "三家断语", "六爻排盘", "奇门时盘", "当日黄历", "卦历",
+  "公历", "农历", "四柱", "节气", "月建日辰", "值日", "最近所问", "问卦",
+  "程颐", "京房", "邵雍", "问",
+] as const;
+export function buildFontCharset(): string {
+  const source = [
+    ...ZHOUYI_CORPUS.map((item) => item.name),
+    EIGHT_GATES,
+    NINE_STARS,
+    EIGHT_SPIRITS,
+    SIX_SPIRITS,
+    SIX_RELATIONS,
+    STEMS_BRANCHES,
+    ...FIXED_COPY,
+  ].join("");
+  return [...new Set(source)].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join("");
+}
+export async function writeFontCharset(path = "web/fonts/mashanzheng-chars.txt"): Promise<void> {
+  await mkdir(resolve(path, ".."), { recursive: true });
+  await writeFile(path, `${buildFontCharset()}\n`, "utf8");
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  await writeFontCharset();
+}
+```
+
+- [ ] **Step 4: 锁定上游摘要，再实现下载与子集化脚本**
+
+先在 Chunk 1 创建的工具环境安装唯一新增工具依赖：
+
+Run: `.venv-tools/bin/pip install fonttools brotli`
+
+首次下载地址固定为：
+`https://raw.githubusercontent.com/google/fonts/main/ofl/mashanzheng/MaShanZheng-Regular.ttf`。
+已核验原文件大小为 5,857,936 字节，SHA-256 为
+`6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb`。后续每次运行都先校验
+摘要，再检查字形覆盖并调用 `pyftsubset`。
+
+```python
+# scripts/subset-sanyi-font.py
+from hashlib import sha256
+from pathlib import Path
+from subprocess import run
+from urllib.request import urlopen
+
+from fontTools.ttLib import TTFont
+
+FONT_URL = (
+    "https://raw.githubusercontent.com/google/fonts/main/ofl/mashanzheng/"
+    "MaShanZheng-Regular.ttf"
+)
+LICENSE_URL = "https://raw.githubusercontent.com/google/fonts/main/ofl/mashanzheng/OFL.txt"
+EXPECTED_SHA256 = "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb"
+EXPECTED_SIZE = 5_857_936
+KNOWN_MISSING = {"夬", "姤", "螣"}
+ROOT = Path(__file__).resolve().parents[1]
+FONT_DIR = ROOT / "web" / "fonts"
+
+
+def download(url: str) -> bytes:
+    with urlopen(url, timeout=30) as response:
+        return response.read()
+
+
+def main() -> None:
+    FONT_DIR.mkdir(parents=True, exist_ok=True)
+    source = download(FONT_URL)
+    if len(source) != EXPECTED_SIZE:
+        raise RuntimeError(f"字体大小不匹配：{len(source)}")
+    digest = sha256(source).hexdigest()
+    if digest != EXPECTED_SHA256:
+        raise RuntimeError(f"字体摘要不匹配：{digest}")
+    source_path = FONT_DIR / "MaShanZheng-Regular.ttf"
+    source_path.write_bytes(source)
+    charset = set((FONT_DIR / "mashanzheng-chars.txt").read_text(encoding="utf-8").strip())
+    cmap = TTFont(source_path).getBestCmap() or {}
+    missing = {character for character in charset if ord(character) not in cmap}
+    print("字体缺字：" + ("、".join(sorted(missing)) if missing else "无"))
+    unexpected = missing - KNOWN_MISSING
+    if unexpected:
+        raise RuntimeError("字体存在未登记缺字：" + "、".join(sorted(unexpected)))
+    (FONT_DIR / "OFL.txt").write_bytes(download(LICENSE_URL))
+    run([
+        str(ROOT / ".venv-tools" / "bin" / "pyftsubset"),
+        str(source_path),
+        f"--text-file={FONT_DIR / 'mashanzheng-chars.txt'}",
+        "--flavor=woff2",
+        f"--output-file={FONT_DIR / 'mashanzheng-subset.woff2'}",
+        "--layout-features=*",
+    ], check=True)
+    source_path.unlink()
+    if (FONT_DIR / "mashanzheng-subset.woff2").stat().st_size >= 100_000:
+        raise RuntimeError("字体子集必须小于 100 KB")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+- [ ] **Step 5: 生成资产并 GREEN**
+
+Run: `node --import tsx scripts/font-charset.ts && .venv-tools/bin/python scripts/subset-sanyi-font.py`
+
+Run: `node --import tsx --test tests/frontend-font.test.ts && test $(wc -c < web/fonts/mashanzheng-subset.woff2) -lt 100000`
+
+### Task 22: 建立视觉令牌、响应式布局与入口
+
+**Files:**
+- Create: `web/styles/tokens.css`
+- Create: `web/styles/layout.css`
+- Create: `web/styles/components.css`
+- Modify: `scripts/build-frontend.ts`
+- Modify: `web/index.html`
+- Modify: `web/main.tsx`
+- Modify: `web/providers/Providers.tsx`
+
+- [ ] **Step 1: 运行 Task 21 已写好的入口与 CSS 契约测试，确认仍为 RED**
+
+- [ ] **Step 2: RED 后创建三份完整样式**
+
+```css
+/* web/styles/tokens.css */
+@font-face {
+  font-family: "Ma Shan Zheng Subset";
+  src: url("/fonts/mashanzheng-subset.woff2") format("woff2");
+  font-display: swap;
+}
+:root {
+  color-scheme: dark;
+  --bg: #0F1110;
+  --panel: #151816;
+  --panel-2: #1B1F1C;
+  --paper: #EAE5D9;
+  --muted: #A6A195;
+  --dim: #75716A;
+  --gold: #C9A866;
+  --gold-soft: rgb(201 168 102 / 0.13);
+  --line: rgb(201 168 102 / 0.18);
+  --line-strong: rgb(201 168 102 / 0.42);
+  --cinnabar: #D0614A;
+  --cinnabar-soft: rgb(208 97 74 / 0.15);
+  --jade: #82B59E;
+  --jade-soft: rgb(130 181 158 / 0.14);
+  --seal-bg: #A63A2B;
+  --seal-text: #F6EFE2;
+  --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+  --brush: "Ma Shan Zheng Subset", "Kaiti SC", "STKaiti", "KaiTi", serif;
+  --dynamic: "Kaiti SC", "STKaiti", "KaiTi", serif;
+  --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+```css
+/* web/styles/layout.css */
+* {
+  box-sizing: border-box;
+}
+html {
+  min-width: 0;
+  overflow-x: hidden;
+}
+body {
+  margin: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  background: radial-gradient(1100px 560px at 8% -8%, rgb(255 255 255 / 0.055), transparent 62%),
+    radial-gradient(900px 520px at 104% 34%, rgb(201 168 102 / 0.05), transparent 66%), var(--bg);
+  color: var(--paper);
+  font-family: var(--serif);
+  font-size: 14px;
+  padding: 0 clamp(16px, 3.5vw, 44px) 72px;
+}
+button, input, textarea, select {
+  font: inherit;
+}
+button, a, input, select {
+  min-height: 44px;
+}
+.page {
+  display: grid;
+  gap: 26px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  gap: 26px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .home-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+```
+
+```css
+/* web/styles/components.css */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.seal {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  background: var(--seal-bg);
+  color: var(--seal-text);
+  font-family: var(--brush);
+  font-size: 24px;
+}
+.brand, h1, h2 {
+  font-family: var(--brush);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.brand {
+  font-size: 26px;
+}
+.shikong {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  border: 1px solid var(--line);
+  background: rgb(21 24 22 / 0.7);
+}
+.shikong-item {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 0 -1px -1px 0;
+}
+.shikong-item span, .hint, .recent time {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 22px clamp(16px, 2.2vw, 26px);
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.question-input {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-2);
+  color: var(--paper);
+  padding: 16px;
+  line-height: 1.7;
+}
+.tags, .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag, .button {
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  padding: 10px 14px;
+}
+.button-primary {
+  background: var(--gold);
+  color: #17130B;
+  cursor: pointer;
+}
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.error {
+  color: var(--cinnabar);
+}
+.recent {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent a {
+  display: grid;
+  gap: 3px;
+  color: var(--paper);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+}
+```
+
+- [ ] **Step 3: 修改构建、HTML、入口与 Provider**
+
+将 `index.html` 的标题改为「三易」，描述改为「一问三家：六爻问事，程颐、京房、邵雍各自解卦。」，
+`theme-color` 改为 `#0F1110`，保留 `lang="zh-CN"`。四个文件使用下列完整内容。
+
+```html
+<!-- web/index.html -->
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0F1110" />
+    <meta
+      name="description"
+      content="一问三家：六爻问事，程颐、京房、邵雍各自解卦。"
+    />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/dist/app.css" />
+    <title>三易</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/dist/app.js"></script>
+  </body>
+</html>
+```
+
+```ts
+// web/main.tsx
+import "@rainbow-me/rainbowkit/styles.css";
+import "./styles/tokens.css";
+import "./styles/layout.css";
+import "./styles/components.css";
+
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "./app.js";
+import { Providers } from "./providers/Providers.js";
+
+const root = document.querySelector<HTMLDivElement>("#root");
+if (!root) {
+  throw new Error("页面缺少 React 根节点");
+}
+createRoot(root).render(
+  <StrictMode>
+    <Providers>
+      <App />
+    </Providers>
+  </StrictMode>,
+);
+```
+
+```tsx
+// web/providers/Providers.tsx
+import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState, type ReactNode } from "react";
+import { WagmiProvider } from "wagmi";
+import { wagmiConfig } from "../lib/wagmi.js";
+
+export function Providers({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider
+          locale="zh-CN"
+          modalSize="compact"
+          theme={darkTheme({
+            accentColor: "#C9A866",
+            accentColorForeground: "#17130B",
+            borderRadius: "small",
+            overlayBlur: "small",
+          })}
+        >
+          {children}
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+```
+
+```ts
+// scripts/build-frontend.ts
+import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
+import { build } from "esbuild";
+
+const rootDir = process.cwd();
+const outputDir = resolve(rootDir, "web/dist");
+await mkdir(outputDir, { recursive: true });
+
+const PUBLIC_DEFAULTS = {
+  ARC_RPC_URL: "https://rpc.testnet.arc.io",
+  ARC_CHAIN_ID: "5042002",
+  ARC_EXPLORER: "https://testnet.arcscan.app",
+} as const;
+const walletConnectProjectId = process.env.WALLETCONNECT_PROJECT_ID ?? "";
+if (!/^[0-9a-fA-F]{32}$/.test(walletConnectProjectId)) {
+  throw new Error("WALLETCONNECT_PROJECT_ID 必须是 32 位十六进制公开项目标识");
+}
+const publicConfig = {
+  walletConnectProjectId,
+  arcRpcUrl: process.env.ARC_RPC_URL ?? PUBLIC_DEFAULTS.ARC_RPC_URL,
+  arcChainId: process.env.ARC_CHAIN_ID ?? PUBLIC_DEFAULTS.ARC_CHAIN_ID,
+  arcExplorer: process.env.ARC_EXPLORER ?? PUBLIC_DEFAULTS.ARC_EXPLORER,
+};
+if (!/^\d+$/.test(publicConfig.arcChainId)) {
+  throw new Error("ARC_CHAIN_ID 必须是十进制整数");
+}
+await build({
+  entryPoints: [resolve(rootDir, "web/main.tsx")],
+  outfile: resolve(outputDir, "app.js"),
+  bundle: true,
+  format: "esm",
+  platform: "browser",
+  target: ["es2022"],
+  minify: true,
+  sourcemap: false,
+  legalComments: "none",
+  external: ["/fonts/*"],
+  logOverride: {
+    // 当前钱包清单未启用 MetaMask SDK 的可选动态入口。
+    "empty-glob": "silent",
+  },
+  plugins: [{
+    name: "rainbowkit-safe-defaults",
+    setup(buildContext) {
+      buildContext.onResolve({ filter: /^@rainbow-me\/rainbowkit$/ }, (args) => {
+        if (!args.importer.endsWith("/web/lib/wagmi.ts")) {
+          return undefined;
+        }
+        return { path: resolve(rootDir, "web/lib/secure-rainbow-config.ts") };
+      });
+      buildContext.onResolve({ filter: /^wagmi\/chains$/ }, (args) => {
+        if (!args.importer.includes("/node_modules/@rainbow-me/rainbowkit/")) {
+          return undefined;
+        }
+        return { path: resolve(rootDir, "web/lib/rainbowkit-mainnet.ts") };
+      });
+    },
+  }],
+  define: {
+    // 浏览器只接收逐项列出的公开配置，不继承构建机环境。
+    "process.env": "{}",
+    "process.env.NODE_ENV": JSON.stringify("production"),
+    __WALLETCONNECT_PROJECT_ID__: JSON.stringify(publicConfig.walletConnectProjectId),
+    __ARC_RPC_URL__: JSON.stringify(publicConfig.arcRpcUrl),
+    __ARC_CHAIN_ID__: JSON.stringify(publicConfig.arcChainId),
+    __ARC_EXPLORER__: JSON.stringify(publicConfig.arcExplorer),
+  },
+});
+console.log("前端构建完成：web/dist/app.js");
+```
+
+- [ ] **Step 4: GREEN、构建与 390px 静态守卫**
+
+Run: `node --import tsx --test tests/frontend-font.test.ts && npm run typecheck && npm run frontend:build`
+
+Expected: PASS；esbuild 不把 `/fonts/...` 当磁盘根路径解析。浏览器 390px 视口下 `documentElement.scrollWidth`
+不大于 `innerWidth`，所有按钮与链接的可点击框高至少 44px。
+
+### Task 23: 实现与 Chunk 3 对齐的数据客户端和最近记录
+
+**Files:**
+- Create: `web/lib/api.ts`
+- Create: `web/lib/recent-readings.ts`
+- Create: `tests/frontend-api.test.ts`
+- Create: `tests/frontend-recent.test.ts`
+
+- [ ] **Step 1: 写完整失败测试**
+
+```ts
+// tests/frontend-api.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { ApiError, createApiClient } from "../web/lib/api.js";
+test("非 2xx 保留中文错误、状态与冲突 readingId", async () => {
+  const fakeFetch: typeof fetch = async () => new Response(
+    JSON.stringify({ error: "付款凭证已用于这一卦", readingId: "reading-1" }),
+    { status: 409, headers: { "content-type": "application/json" } },
+  );
+  const api = createApiClient(fakeFetch);
+  await assert.rejects(api.createReading({} as never), (error: unknown) => {
+    return error instanceof ApiError
+      && error.status === 409
+      && error.message === "付款凭证已用于这一卦"
+      && error.readingId === "reading-1";
+  });
+});
+test("非 JSON 错误仍给中文消息", async () => {
+  const api = createApiClient(async () => new Response("bad", { status: 503 }));
+  await assert.rejects(api.getNow(), (error: unknown) => {
+    return error instanceof ApiError && error.status === 503 && error.message === "请求未能完成";
+  });
+});
+```
+
+```ts
+// tests/frontend-recent.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { loadRecentReadings, saveRecentReading } from "../web/lib/recent-readings.js";
+class MemoryStorage implements Storage {
+  readonly data = new Map<string, string>();
+  get length() { return this.data.size; }
+  clear() { this.data.clear(); }
+  getItem(key: string) { return this.data.get(key) ?? null; }
+  key(index: number) { return [...this.data.keys()][index] ?? null; }
+  removeItem(key: string) { this.data.delete(key); }
+  setItem(key: string, value: string) { this.data.set(key, value); }
+}
+test("最近记录去重并只保留二十条", () => {
+  const storage = new MemoryStorage();
+  for (let index = 0; index < 22; index += 1) {
+    saveRecentReading({
+      id: `id-${index}`,
+      kind: "question",
+      question: `问题${index}`,
+      createdAt: new Date(index * 1_000).toISOString(),
+    }, storage);
+  }
+  saveRecentReading({ id: "id-21", kind: "question", question: "新问题", createdAt: "later" }, storage);
+  const values = loadRecentReadings(storage);
+  assert.equal(values.length, 20);
+  assert.equal(values[0]?.question, "新问题");
+  assert.equal(values.filter((item) => item.id === "id-21").length, 1);
+});
+test("存储读写抛错时返回空且不向外抛", () => {
+  const broken = new Proxy({} as Storage, { get() { throw new Error("blocked"); } });
+  assert.deepEqual(loadRecentReadings(broken), []);
+  assert.doesNotThrow(() => saveRecentReading({
+    id: "id", kind: "question", question: "问题", createdAt: "now",
+  }, broken));
+});
+```
+
+- [ ] **Step 2: RED 后实现客户端**
+
+```ts
+// web/lib/api.ts
+import type { QuestionFeeProof } from "../../src/oracle/fee-payment.js";
+import type { SanyiApi } from "../../src/sanyi/api.js";
+import type { QuestionSchoolKey } from "../../src/sanyi/schools/index.js";
+export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
+export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
+export type PublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
+export type ThrowResult = Awaited<ReturnType<SanyiApi["throwCoin"]>>;
+export interface CreateReadingInput {
+  question: string;
+  kind: Classification["kind"];
+  subjectKey?: string;
+  horizon?: string;
+  feeProof: QuestionFeeProof;
+}
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number, readonly readingId?: string) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+async function decode<T>(response: Response): Promise<T> {
+  if (response.ok) return response.json() as Promise<T>;
+  let payload: { error?: unknown; readingId?: unknown } = {};
+  try { payload = await response.json() as typeof payload; } catch {}
+  const message = typeof payload.error === "string" ? payload.error : "请求未能完成";
+  const readingId = typeof payload.readingId === "string" ? payload.readingId : undefined;
+  throw new ApiError(message, response.status, readingId);
+}
+export function createApiClient(fetcher: typeof fetch = fetch) {
+  const request = async <T>(path: string, body?: unknown): Promise<T> => decode<T>(await fetcher(path, {
+    ...(body === undefined ? {} : {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  }));
+  return {
+    getNow: () => request<NowResponse>("/api/now"),
+    classify: (question: string) => request<Classification>("/api/classify", { question }),
+    createReading: (input: CreateReadingInput) => request<PublicReading>("/api/readings", input),
+    throwCoin: (id: string, index: number) => request<ThrowResult>(`/api/readings/${id}/throws`, { index }),
+    getReading: (id: string) => request<PublicReading>(`/api/readings/${id}`),
+    retrySchool: (id: string, key: QuestionSchoolKey) => request<PublicReading>(
+      `/api/readings/${id}/schools/${key}/retry`,
+      {},
+    ),
+    changeSubject: (id: string, subjectKey: string) => request<PublicReading>(
+      `/api/readings/${id}/subject`,
+      { subjectKey },
+    ),
+  };
+}
+export const api = createApiClient();
+```
+
+```ts
+// web/lib/recent-readings.ts
+export interface RecentReading {
+  id: string;
+  kind: string;
+  question: string;
+  createdAt: string;
+}
+const KEY = "sanyi.recent-readings.v1";
+function isRecent(value: unknown): value is RecentReading {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return [item.id, item.kind, item.question, item.createdAt].every((field) => typeof field === "string");
+}
+export function loadRecentReadings(storage: Storage = localStorage): RecentReading[] {
+  try {
+    const value: unknown = JSON.parse(storage.getItem(KEY) ?? "[]");
+    return Array.isArray(value) ? value.filter(isRecent).slice(0, 20) : [];
+  } catch { return []; }
+}
+export function saveRecentReading(item: RecentReading, storage: Storage = localStorage): void {
+  try {
+    const previous = loadRecentReadings(storage).filter((value) => value.id !== item.id);
+    const values = [item, ...previous].slice(0, 20);
+    storage.setItem(KEY, JSON.stringify(values));
+  } catch {}
+}
+```
+
+- [ ] **Step 3: GREEN**
+
+Run: `node --import tsx --test tests/frontend-api.test.ts tests/frontend-recent.test.ts && npm run typecheck`
+
+## Chunk 4B: 前端基础（付款、首页与 hash 路由）
+
+### Task 24: 提取卦金计划并保留 EIP-5792 原子付款
+
+**Files:**
+- Create: `web/lib/fee-plan.ts`
+- Create: `web/lib/use-fee-payment.ts`
+- Create: `tests/frontend-fee-plan.test.ts`
+
+- [ ] **Step 1: 写纯函数三分支失败测试**
+
+```ts
+// tests/frontend-fee-plan.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { planFeePayment } from "../web/lib/fee-plan.js";
+const enoughNative = 10n ** 18n;
+test("余额不足时报告短缺", () => {
+  const value = planFeePayment({
+    erc20Balance: 1n, nativeBalance: 1n, gasPrice: 1n, allowances: [0n, 0n, 0n],
+  });
+  assert.equal(value.shortfall.missingErc20Usdc6, 49_999n);
+  assert.ok(value.shortfall.missingNativeWei18 > 0n);
+});
+test("首次付款列出三笔授权与三笔入账", () => {
+  const value = planFeePayment({
+    erc20Balance: 50_000n, nativeBalance: enoughNative, gasPrice: 1n, allowances: [0n, 0n, 0n],
+  });
+  assert.equal(value.missingApprovals.length, 3);
+  assert.equal(value.depositCalls.length, 3);
+});
+test("已有授权时不再授权", () => {
+  const value = planFeePayment({
+    erc20Balance: 50_000n,
+    nativeBalance: enoughNative,
+    gasPrice: 1n,
+    allowances: [10_000_000n, 10_000_000n, 10_000_000n],
+  });
+  assert.deepEqual(value.missingApprovals, []);
+  assert.deepEqual(value.depositCalls.map((call) => call.amount), [16_667n, 16_667n, 16_666n]);
+});
+```
+
+- [ ] **Step 2: RED 后实现纯计划与薄钩子**
+
+```ts
+// web/lib/fee-plan.ts
+import { walletShortfalls } from "../../src/frontend/wallet.js";
+import { buildQuestionFeePlan } from "../../src/oracle/fee-payment.js";
+
+export const PREFLIGHT_GAS_UNITS = 600_000n;
+export interface FeePlanInput {
+  erc20Balance: bigint;
+  nativeBalance: bigint;
+  gasPrice: bigint;
+  allowances: readonly bigint[];
+}
+export function planFeePayment(input: FeePlanInput) {
+  const plan = buildQuestionFeePlan();
+  const shortfall = walletShortfalls({
+    erc20BalanceUsdc6: input.erc20Balance,
+    nativeBalanceWei18: input.nativeBalance,
+    feeUsdc6: plan.feeUsdc6,
+    bondUsdc6: 0n,
+    estimatedGasWei18: input.gasPrice * PREFLIGHT_GAS_UNITS,
+  });
+  return {
+    shortfall,
+    missingApprovals: plan.approvals.filter((share, index) => {
+      return (input.allowances[index] ?? 0n) < share.amountUsdc6;
+    }),
+    depositCalls: plan.deposits.map((share) => ({ vault: share.vault, amount: share.amountUsdc6 })),
+  };
+}
+```
+
+```ts
+// web/lib/use-fee-payment.ts
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useCallback, useState } from "react";
+import { encodeFunctionData, type Address, type Hex } from "viem";
+import { useAccount, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
+import { divinerVaultAbi, erc20WalletAbi } from "../../src/frontend/abis.js";
+import { formatUsdc6, USDC_TOKEN_ADDRESS } from "../../src/frontend/wallet.js";
+import {
+  buildQuestionFeePlan,
+  type QuestionFeeProof,
+} from "../../src/oracle/fee-payment.js";
+import { planFeePayment, PREFLIGHT_GAS_UNITS } from "./fee-plan.js";
+import { ARC_CHAIN_ID, arcTestnet } from "./wagmi.js";
+
+function atomicMessage(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/atomic|wallet_sendCalls|method.*(?:not found|support)|capabilit/iu.test(message)) {
+    return new Error(
+      "当前钱包不支持原子批量交易。为保证三易卦金账户要么全部收款、"
+        + "要么全部不收，本次没有扣款。",
+      { cause: error },
+    );
+  }
+  return error instanceof Error ? error : new Error("付款未完成，本次没有扣款");
+}
+export function useFeePayment() {
+  const { address, chainId } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const { switchChainAsync } = useSwitchChain();
+  const publicClient = usePublicClient({ chainId: ARC_CHAIN_ID });
+  const { data: walletClient, refetch } = useWalletClient({ chainId: ARC_CHAIN_ID });
+  const [estimatedGasWei18, setEstimatedGasWei18] = useState<bigint>();
+  const pay = useCallback(async (): Promise<QuestionFeeProof> => {
+    if (!address) {
+      openConnectModal?.();
+      throw new Error("请先连接钱包，再支付卦金");
+    }
+    if (chainId !== ARC_CHAIN_ID) await switchChainAsync({ chainId: ARC_CHAIN_ID });
+    const activeWallet = walletClient ?? (await refetch()).data;
+    if (!activeWallet || !publicClient) throw new Error("钱包尚未准备好，请稍后重试");
+    const base = buildQuestionFeePlan();
+    const [erc20Balance, nativeBalance, gasPrice, ...allowances] = await Promise.all([
+      publicClient.readContract({
+        address: USDC_TOKEN_ADDRESS,
+        abi: erc20WalletAbi,
+        functionName: "balanceOf",
+        args: [address],
+      }),
+      publicClient.getBalance({ address }),
+      publicClient.getGasPrice(),
+      ...base.approvals.map((share) => publicClient.readContract({
+        address: USDC_TOKEN_ADDRESS,
+        abi: erc20WalletAbi,
+        functionName: "allowance",
+        args: [address, share.vault],
+      })),
+    ]);
+    setEstimatedGasWei18(gasPrice * PREFLIGHT_GAS_UNITS);
+    const planned = planFeePayment({ erc20Balance, nativeBalance, gasPrice, allowances });
+    if (planned.shortfall.missingErc20Usdc6 || planned.shortfall.missingNativeWei18) {
+      const amount = formatUsdc6(base.feeUsdc6);
+      throw new Error(`支付卦金需要 ${amount} USDC 及少量 gas；当前余额不足`);
+    }
+    const send = async (calls: ReadonlyArray<{ to: Address; data: Hex }>) => {
+      try {
+        const bundle = await activeWallet.sendCalls({
+          account: address,
+          chain: arcTestnet,
+          calls,
+          forceAtomic: true,
+        });
+        const status = await activeWallet.waitForCallsStatus({
+          id: bundle.id,
+          throwOnFailure: true,
+          timeout: 90_000,
+        });
+        if (!status.atomic || status.status !== "success") {
+          throw new Error("钱包没有原子确认整组交易");
+        }
+        const hashes = (status.receipts ?? []).map((item) => item.transactionHash).filter(
+          (hash): hash is Hex => typeof hash === "string" && /^0x[0-9a-fA-F]{64}$/u.test(hash),
+        );
+        if (!hashes.length) throw new Error("钱包未返回可核验的交易哈希");
+        return { id: bundle.id, hashes };
+      } catch (error) { throw atomicMessage(error); }
+    };
+    if (planned.missingApprovals.length) {
+      await send(planned.missingApprovals.map((share) => ({
+        to: USDC_TOKEN_ADDRESS,
+        data: encodeFunctionData({
+          abi: erc20WalletAbi,
+          functionName: "approve",
+          args: [share.vault, share.amountUsdc6],
+        }),
+      })));
+    }
+    const paid = await send(planned.depositCalls.map((call) => ({
+      to: call.vault,
+      data: encodeFunctionData({ abi: divinerVaultAbi, functionName: "deposit", args: [call.amount] }),
+    })));
+    return { payer: address, bundleId: paid.id, transactionHashes: paid.hashes };
+  }, [address, chainId, openConnectModal, publicClient, refetch, switchChainAsync, walletClient]);
+  return { pay, estimatedGasWei18 };
+}
+```
+
+- [ ] **Step 3: GREEN 与旧行为核对**
+
+Run: `node --import tsx --test tests/frontend-fee-plan.test.ts && npm run typecheck`
+
+对照旧 `web/app.tsx` 的 `sendAtomicCalls` 与 `payQuestionFee`：授权和付款必须是两次独立的原子批次；
+已有授权时只有付款一次确认；不支持 EIP-5792 时不降级为逐笔发送，且文案不得出现旧产品称谓。
+
+### Task 25: 构建首页组件与 hash 路由
+
+**Files:**
+- Rewrite: `web/app.tsx`
+- Create: `web/pages/Home.tsx`
+- Create: `web/pages/Reading.tsx`
+- Create: `web/components/ClassificationTags.tsx`
+- Create: `web/components/ShikongBar.tsx`
+- Create: `web/components/QuestionForm.tsx`
+- Create: `web/components/PaymentButton.tsx`
+- Create: `web/components/RecentReadings.tsx`
+- Create: `tests/frontend-home.test.ts`
+
+- [ ] **Step 1: 写完整 SSR 失败测试**
+
+```ts
+// tests/frontend-home.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import {
+  ClassificationTags,
+  type ClassificationView,
+} from "../web/components/ClassificationTags.js";
+import { RecentReadings } from "../web/components/RecentReadings.js";
+import { ShikongBar } from "../web/components/ShikongBar.js";
+const forbidden = /易者|押钱|赔付|封存|・|[\u3040-\u30ff]/u;
+test("时空栏渲染六格", () => {
+  const html = renderToStaticMarkup(createElement(ShikongBar, {
+    data: {
+      solar: "2026年9月30日 20:15",
+      lunar: "八月二十",
+      pillars: "丙午 丁酉 丁未 庚戌",
+      solarTerm: "秋分",
+      monthDay: "酉月 未日",
+      duty: "开日 天德",
+    },
+  }));
+  const labels = ["公历", "农历", "四柱", "节气", "月建日辰", "值日"];
+  for (const label of labels) assert.match(html, new RegExp(label));
+  assert.doesNotMatch(html, forbidden);
+});
+const view = (overrides: Partial<ClassificationView>): ClassificationView => ({
+  question: "这次面试能过吗", kind: "question", supported: true, subject: "工作官职", ...overrides,
+});
+test("问事、运势与起名标签提供正确动作", () => {
+  const callbacks = {
+    onKindChange: () => {},
+    onQuestionFallback: () => {},
+    onSubjectChange: () => {},
+  };
+  const question = renderToStaticMarkup(createElement(ClassificationTags, {
+    ...callbacks,
+    view: view({}),
+  }));
+  const fortune = renderToStaticMarkup(createElement(ClassificationTags, {
+    ...callbacks,
+    view: view({
+      kind: "fortune",
+      supported: true,
+      horizon: "今年",
+    }),
+  }));
+  const naming = renderToStaticMarkup(createElement(ClassificationTags, {
+    ...callbacks,
+    view: view({
+      kind: "naming",
+      supported: false,
+      suggestion: "可改为问事",
+    }),
+  }));
+  assert.match(question, /问事.*工作官职/su);
+  assert.match(fortune, /即将开放，可先改为问事/u);
+  assert.match(naming, /可改为问事/u);
+  assert.doesNotMatch(question + fortune + naming, forbidden);
+});
+test("最近记录可以打开", () => {
+  const html = renderToStaticMarkup(createElement(RecentReadings, {
+    readings: [{
+      id: "abc",
+      kind: "question",
+      question: "面试能过吗",
+      createdAt: "2026-09-30T12:15:00Z",
+    }],
+  }));
+  assert.match(html, /href="#\/r\/abc"/u);
+  assert.match(html, /面试能过吗/u);
+  assert.doesNotMatch(html, forbidden);
+});
+```
+
+- [ ] **Step 2: RED 后实现时空栏与最近记录**
+
+```tsx
+// web/components/ShikongBar.tsx
+import { useEffect, useState } from "react";
+import { api, type NowResponse } from "../lib/api.js";
+export interface ShikongView {
+  solar: string;
+  lunar: string;
+  pillars: string;
+  solarTerm: string;
+  monthDay: string;
+  duty: string;
+}
+function toView(value: NowResponse): ShikongView {
+  const item = value as unknown as Record<string, unknown>;
+  return {
+    solar: String(item.solar ?? item.gregorian ?? ""),
+    lunar: String(item.lunar ?? ""),
+    pillars: String(item.pillars ?? item.fourPillars ?? ""),
+    solarTerm: String(item.solarTerm ?? ""),
+    monthDay: String(item.monthDay ?? item.monthBuildDayBranch ?? ""),
+    duty: String(item.duty ?? item.dayOfficer ?? ""),
+  };
+}
+export function ShikongBar({ data }: { data?: ShikongView }) {
+  const [view, setView] = useState<ShikongView | undefined>(data);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (data) return undefined;
+    let active = true;
+    const refresh = () => api.getNow().then((value) => {
+      if (active) { setView(toView(value)); setFailed(false); }
+    }).catch(() => { if (active) setFailed(true); });
+    void refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [data]);
+  if (!view) {
+    return (
+      <section className="shikong" aria-label="此刻">
+        {failed ? "天时暂不可得" : "正在推算天时"}
+      </section>
+    );
+  }
+  const cells = [
+    ["公历", view.solar], ["农历", view.lunar], ["四柱", view.pillars],
+    ["节气", view.solarTerm], ["月建日辰", view.monthDay], ["值日", view.duty],
+  ];
+  return (
+    <section className="shikong" aria-label="此刻">
+      {cells.map(([label, value]) => (
+        <div className="shikong-item" key={label}>
+          <span>{label}</span>
+          <b>{value}</b>
+        </div>
+      ))}
+    </section>
+  );
+}
+```
+
+```tsx
+// web/components/RecentReadings.tsx
+import type { RecentReading } from "../lib/recent-readings.js";
+export function RecentReadings({ readings }: { readings: readonly RecentReading[] }) {
+  return (
+    <section className="panel">
+      <h2>最近所问</h2>
+      {readings.length ? (
+        <ul className="recent">
+          {readings.map((item) => (
+            <li key={item.id}>
+              <a href={`#/r/${item.id}`}>
+                <span>{item.question}</span>
+                <time>{item.createdAt}</time>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="hint">本机还没有留下卦历。</p>
+      )}
+    </section>
+  );
+}
+```
+
+- [ ] **Step 3: 实现分类问题框**
+
+```tsx
+// web/components/ClassificationTags.tsx
+export interface ClassificationView {
+  question: string;
+  kind: string;
+  supported: boolean;
+  subjectKey?: string;
+  subject?: string;
+  horizon?: string;
+  suggestion?: string;
+}
+interface ClassificationTagsProps {
+  view: ClassificationView;
+  onKindChange(kind: "question" | "destiny" | "fortune"): void;
+  onQuestionFallback(): void;
+  onSubjectChange(subjectKey: string, label: string): void;
+}
+const KINDS = [
+  ["question", "问事"],
+  ["destiny", "命理"],
+  ["fortune", "运势"],
+] as const;
+const SUBJECTS = [
+  ["career", "工作官职"],
+  ["wealth", "求财"],
+  ["relationship", "感情婚姻"],
+  ["health", "健康疾病"],
+  ["travel", "出行行人"],
+  ["lawsuit", "诉讼是非"],
+  ["other", "其它事项"],
+] as const;
+export function ClassificationTags(props: ClassificationTagsProps) {
+  const { view } = props;
+  return (
+    <section aria-label="分类结果">
+      <div className="tags">
+        {KINDS.map(([kind, label]) => (
+          <button
+            className="tag"
+            key={kind}
+            onClick={() => props.onKindChange(kind)}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
+        {view.subject ? <span className="tag">{view.subject}</span> : null}
+        {view.horizon ? <span className="tag">{view.horizon}</span> : null}
+      </div>
+      {view.kind === "question" ? (
+        <div className="tags" aria-label="改事项">
+          {SUBJECTS.map(([key, label]) => (
+            <button
+              className="tag"
+              key={key}
+              onClick={() => props.onSubjectChange(key, label)}
+              type="button"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {["destiny", "fortune"].includes(view.kind) ? (
+        <p>即将开放，可先改为问事</p>
+      ) : null}
+      {!view.supported && view.suggestion ? <p>{view.suggestion}</p> : null}
+      {view.kind !== "question" ? (
+        <button onClick={props.onQuestionFallback} type="button">
+          改为问事
+        </button>
+      ) : null}
+    </section>
+  );
+}
+```
+
+```tsx
+// web/components/QuestionForm.tsx
+import { useState, type FormEvent } from "react";
+import { api, type Classification } from "../lib/api.js";
+import {
+  ClassificationTags,
+  type ClassificationView,
+} from "./ClassificationTags.js";
+import { PaymentButton } from "./PaymentButton.js";
+function fromClassification(value: Classification): ClassificationView {
+  const item = value as Classification & { subject?: { label?: string }; horizon?: string };
+  return {
+    question: item.question,
+    kind: item.kind,
+    supported: item.supported,
+    ...(item.subject?.key ? { subjectKey: item.subject.key } : {}),
+    ...(item.subject?.label ? { subject: item.subject.label } : {}),
+    ...(item.horizon ? { horizon: item.horizon } : {}),
+    ...(item.suggestion ? { suggestion: item.suggestion } : {}),
+  };
+}
+export function QuestionForm() {
+  const [question, setQuestion] = useState("");
+  const [view, setView] = useState<ClassificationView>();
+  const [error, setError] = useState("");
+  const classify = async (event: FormEvent) => {
+    event.preventDefault();
+    if ([...question.trim()].length < 4 || [...question.trim()].length > 280) {
+      setError("问题需为 4 至 280 字");
+      return;
+    }
+    try { setView(fromClassification(await api.classify(question))); setError(""); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : "分类暂不可用"); }
+  };
+  const changeToQuestion = () => setView({
+    question, kind: "question", supported: true, subjectKey: "other", subject: "其它事项",
+  });
+  const changeSubject = (subjectKey: string, subject: string) => setView({
+    question,
+    kind: "question",
+    supported: true,
+    subjectKey,
+    subject,
+  });
+  const changeKind = (kind: "question" | "destiny" | "fortune") => {
+    if (kind === "question") {
+      changeToQuestion();
+      return;
+    }
+    setView({
+      question,
+      kind,
+      supported: true,
+      ...(kind === "fortune" ? { horizon: "year" } : {}),
+    });
+  };
+  return (
+    <form className="panel" onSubmit={classify}>
+      <h1>所问之事</h1>
+      <textarea
+        aria-label="所问之事"
+        className="question-input"
+        maxLength={280}
+        minLength={4}
+        onChange={(event) => setQuestion(event.target.value)}
+        value={question}
+      />
+      {view ? (
+        <ClassificationTags
+          onKindChange={changeKind}
+          onQuestionFallback={changeToQuestion}
+          onSubjectChange={changeSubject}
+          view={view}
+        />
+      ) : null}
+      {error ? <p className="error">{error}</p> : null}
+      {view?.kind === "question" ? (
+        <PaymentButton question={question} classification={view} />
+      ) : (
+        <button className="button button-primary" type="submit">识别所问</button>
+      )}
+    </form>
+  );
+}
+```
+
+- [ ] **Step 4: 实现付款、首页、占位结果页和路由**
+
+```tsx
+// web/components/PaymentButton.tsx
+import { useState } from "react";
+import { formatUnits } from "viem";
+import { api, ApiError } from "../lib/api.js";
+import { saveRecentReading } from "../lib/recent-readings.js";
+import { useFeePayment } from "../lib/use-fee-payment.js";
+import type { ClassificationView } from "./ClassificationTags.js";
+export function PaymentButton(props: { question: string; classification: ClassificationView }) {
+  const { pay, estimatedGasWei18 } = useFeePayment();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const submit = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const feeProof = await pay();
+      const reading = await api.createReading({
+        question: props.question,
+        kind: "question",
+        ...(props.classification.subjectKey
+          ? { subjectKey: props.classification.subjectKey }
+          : {}),
+        feeProof,
+      });
+      saveRecentReading({
+        id: reading.id,
+        kind: reading.kind,
+        question: reading.question,
+        createdAt: reading.createdAt,
+      });
+      location.hash = `/r/${reading.id}`;
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 409 && caught.readingId) {
+        location.hash = `/r/${caught.readingId}`;
+        return;
+      }
+      setError(caught instanceof Error ? caught.message : "付款未完成，本次没有扣款");
+    } finally { setBusy(false); }
+  };
+  const gas = estimatedGasWei18 === undefined
+    ? "连接钱包后计算"
+    : `${formatUnits(estimatedGasWei18, 18)} USDC`;
+  return (
+    <div>
+      <p className="hint">
+        金额：0.05 USDC；去向：三易卦金账户；预估 gas：{gas}。
+      </p>
+      <button
+        className="button button-primary"
+        disabled={busy}
+        onClick={submit}
+        type="button"
+      >
+        {busy ? "正在确认" : "问卦 · 0.05 USDC"}
+      </button>
+      {error ? <p className="error">{error}</p> : null}
+    </div>
+  );
+}
+```
+
+```tsx
+// web/pages/Home.tsx
+import { useState } from "react";
+import { QuestionForm } from "../components/QuestionForm.js";
+import { RecentReadings } from "../components/RecentReadings.js";
+import { ShikongBar } from "../components/ShikongBar.js";
+import { loadRecentReadings } from "../lib/recent-readings.js";
+export function Home() {
+  const [recent] = useState(loadRecentReadings);
+  return (
+    <main className="page">
+      <header className="topbar">
+        <span className="seal">问</span>
+        <span className="brand">三易</span>
+      </header>
+      <ShikongBar />
+      <div className="home-grid">
+        <QuestionForm />
+        <RecentReadings readings={recent} />
+      </div>
+    </main>
+  );
+}
+```
+
+```tsx
+// web/pages/Reading.tsx
+export function Reading({ id }: { id: string }) {
+  return (
+    <main className="page">
+      <section className="panel" aria-live="polite">
+        <h1>正在打开这一卦</h1>
+        <p className="hint">卦历编号：{id}</p>
+      </section>
+    </main>
+  );
+}
+```
+
+```tsx
+// web/app.tsx
+import { useEffect, useState } from "react";
+import { Home } from "./pages/Home.js";
+import { Reading } from "./pages/Reading.js";
+function route(hash: string): { page: "home" } | { page: "reading"; id: string } {
+  const match = hash.match(/^#\/r\/([a-z2-7]{26})$/u);
+  return match?.[1] ? { page: "reading", id: match[1] } : { page: "home" };
+}
+export function App() {
+  const [current, setCurrent] = useState(() => route(location.hash));
+  useEffect(() => {
+    const update = () => setCurrent(route(location.hash));
+    window.addEventListener("hashchange", update);
+    return () => window.removeEventListener("hashchange", update);
+  }, []);
+  return current.page === "reading" ? <Reading id={current.id} /> : <Home />;
+}
+```
+
+- [ ] **Step 5: GREEN、严格类型与构建**
+
+Run: `node --import tsx --test tests/frontend-home.test.ts && npm run typecheck && npm run frontend:build`
+
+Expected: 3 tests PASS；占位结果页可由合法 reading id 路由进入；分类失败和时空栏失败均不阻塞输入。
+
+### Task 26: Chunk 4 交叉验收
+
+- [ ] 运行本 Chunk 全部测试：
+
+Run: `node --import tsx --test tests/frontend-font.test.ts tests/frontend-api.test.ts \
+  tests/frontend-recent.test.ts tests/frontend-fee-plan.test.ts tests/frontend-home.test.ts`
+
+- [ ] 运行严格类型、构建、秘密扫描与字体大小检查：
+
+Run: `npm run typecheck && npm run frontend:build && npm run frontend:secrets`
+
+Run: `test $(wc -c < web/fonts/mashanzheng-subset.woff2) -lt 100000`
+
+- [ ] 运行文化与外链守卫：
+
+Run: `! rg 'fonts\.(googleapis|gstatic)\.com|易者|押钱|赔付|封存|・|[ぁ-ヿ]' web \
+  --glob '!fonts/OFL.txt'`
+
+- [ ] 在 390px、980px、981px 三个视口人工核对：页面无横向溢出；980px 单列、981px 双列；正文不小于
+14px；所有可点击目标至少 44px；键盘可操作分类、改类型、改事项、付款和最近记录。
+
+- [ ] 对照 Chunk 3 逐项核对七个客户端方法的路径、方法和请求体；确认 409 的 `readingId` 可直接恢复结果；
+对照旧站确认授权批次与付款批次都要求 `forceAtomic: true`，且任何不支持原子批量的错误都不会触发逐笔扣款。
+
+- [ ] 核对 OpenSpec：`unified-question-entry` 的分类可改、`paid-oracle-flow` 的全付费入口、
+`wallet-signed-divination` 的余额与网络门禁、`reading-archive` 的本机最近 20 条、`ink-night-theme` 的
+水墨夜令牌与文化守卫均有测试或人工验收对应项。`tasks.md` 仅在实现和上述验收全部完成后更新。
