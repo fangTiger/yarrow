@@ -1,7 +1,8 @@
 # wallet-signed-divination Specification
 
 ## Purpose
-TBD - created by archiving change user-wallet-workbench. Update Purpose after archive.
+规定浏览器钱包的网络与余额门禁、签名前后的资金透明，以及浏览器产物与秘密的隔离边界。第一期钱包只签署卦金付款，不再涉及立誓、揭示、保证金等押注流程；第二期将改为一次授权额度付款。
+
 ## Requirements
 ### Requirement: 用户钱包承担提问者交易
 

@@ -1,7 +1,8 @@
 # paid-oracle-flow Specification
 
 ## Purpose
-TBD - created by archiving change paid-oracle-wuxing. Update Purpose after archive.
+规定起卦前卦金的收取、核验与钱包交互路径，以及 mock 模式不得成为免费产品入口。本能力覆盖三易所有已开放术数（问事、命理、运势），并约束付款与起卦、排盘的先后顺序和凭证复用。
+
 ## Requirements
 ### Requirement: 所有起卦先收卦金
 

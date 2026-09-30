@@ -1,7 +1,8 @@
 # rich-liuyao-question-chart Specification
 
 ## Purpose
-TBD - created by archiving change rich-liuyao-question-chart. Update Purpose after archive.
+规定六爻问事的确定性排盘：五卦、京房纳甲、八宫世应、日柱月建、旺衰动变、用神事项及术语说明。所有排盘事实均由程序生成、可按同一区块时间复算，模型只能在这些事实之上解读，不得自行生成排盘字段。
+
 ## Requirements
 ### Requirement: 同源五卦
 

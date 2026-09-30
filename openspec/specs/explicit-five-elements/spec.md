@@ -1,7 +1,8 @@
 # explicit-five-elements Specification
 
 ## Purpose
-TBD - created by archiving change paid-oracle-wuxing. Update Purpose after archive.
+规定六爻排盘中五行相生相克、卦宫与逐爻纳甲五行的显式呈现，以及五行、旺衰与用神关系的说明方式。本能力服务于三易问事结果页的排盘详情区，确保用户能看到六亲、旺衰由何而来，而不是只看到结论标签。
+
 ## Requirements
 ### Requirement: 五行关系与本卦实值
 
