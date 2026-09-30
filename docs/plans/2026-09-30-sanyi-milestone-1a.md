@@ -12,7 +12,8 @@
 
 ## 分块预告
 
-- Chunk 1：术数与历法引擎。
+- Chunk 1A：历法与奇门（Task 1–4）。
+- Chunk 1B：变占、梅花与交叉验收（Task 5–7）。
 - Chunk 2A：分类、六掷与盘面核对。
 - Chunk 2B：三家提示词、原文、存档与单家落笔（Task 12–14）。
 - Chunk 2C：问事编排（Task 15）。
@@ -23,7 +24,7 @@
 - Chunk 5A：结果页状态、六掷与首屏卦象（Task 27–28）。
 - Chunk 5B：三家、排盘、五行、术语与事项修改（Task 29）。
 - Chunk 5C：奇门、黄历、复算、页面编排与交叉验收（Task 30–31）。
-- Chunk 6：清理与验收。
+- Chunk 6：旧站遗留清理、文化与秘密守卫、全量验证及 1A 用户验收（Task 32–36）。
 
 ## 文件结构
 
@@ -99,7 +100,7 @@
 
 ### 修改
 
-- `package.json`：加入 lunar 依赖、字体命令和新排练入口，不改项目名（项目更名属于 3.1）。
+- `package.json`：加入 lunar 依赖与字体命令，保留新排练入口，并将包名和描述更新为三易。
 - `package-lock.json`：锁定 `lunar-javascript@1.7.7` 的解析结果。
 - `src/oracle/liuyao-chart.ts`：仅导出既有旺衰计算函数供梅花复用。
 - `src/frontend/server.ts`：接入 `/api/now`、`/api/classify`、`/api/readings/*` 并移除旧路由。
@@ -112,8 +113,13 @@
 - `scripts/check-frontend-secrets.ts`：扫描新构建产物和字体旁路资产。
 - `scripts/rehearse-demo.ts`：改为调用新 reading 服务的 mock 问事全流程。
 - `tests/frontend-server.test.ts`：改测新接口安全边界、旧接口 404 和静态资源。
-- `.gitignore`：不跟踪 `.venv-tools/`、`data/readings/` 和运行日志。
+- `.gitignore`：不跟踪 `.venv-tools/`、根目录 `/data/`、原始字体和运行日志；字体子集、许可证与字表入库。
 - `openspec/changes/sanyi-chinese-redesign/tasks.md`：验收后勾选实际完成的 1.1–1.14。
+- `tests/frontend-wallet.test.ts`：必须保留；仅在确认个别用例只覆盖旧押注流程时删除这些用例。
+- `src/frontend/wallet.ts`、`src/frontend/abis.ts`：必须保留，供新付款流程复用。
+- `src/demo/secret-scan.ts`：必须保留，供 `scripts/check-frontend-secrets.ts` 复用。
+- `src/oracle/question-oracle.ts` 及其测试：必须保留，新服务依赖其中的类型。
+- `docs/plans/2026-09-30-sanyi-1a-acceptance.md`：提供里程碑 1A 的用户验收手册。
 
 ### 删除
 
@@ -122,10 +128,16 @@
 - `src/frontend/domain.ts`：旧工作台展示模型不再服务新站。
 - `tests/frontend-data.test.ts`：随旧快照模块删除。
 - `tests/frontend-domain.test.ts`：随旧展示模型删除。
-- `tests/frontend-wallet.test.ts`：旧押注钱包交互断言由新付款组件测试替代。
-- `tests/demo-rehearsal.test.ts`：旧六步工作台排练由新问事排练替代。
+- `src/demo/service.ts`、`src/demo/arc-driver.ts`、`src/demo/mock-driver.ts`、`src/demo/rehearsal.ts`、
+  `src/demo/human-proposition.ts`、`src/demo/predicate.ts`、`src/demo/provider.ts`：删除旧演示层；
+  `src/demo/provider.ts` 与仍保留的 `src/agent/provider.ts` 无关。
+- `scripts/run-frontend-mock.ts`、`scripts/recover-demo.ts`：删除旧前端 mock 与恢复脚本。
+- `src/oracle/question-interpreter.ts`：删除旧问轨解读。
+- `tests/demo-*.test.ts`、`tests/human-proposition.test.ts`、`tests/question-interpreter.test.ts`：
+  删除旧演示层与问轨测试。
+- `tests/frontend-content.test.ts`：删除旧站内容测试；仍适用于新站的秘密断言迁入新文化守卫。
 
-## Chunk 1: 术数与历法引擎（纯函数，无网络）
+## Chunk 1A: 历法与奇门
 
 > 本 Chunk 覆盖 OpenSpec 任务 1.1–1.3，以及 `shikong-almanac-qimen` 的全部服务端事实要求和 `question-three-schools` 中「主占之辞变占法」「梅花体用取法」要求。除生成 fixtures 的隔离工具外，运行时代码不得访问网络、Python 或系统时钟。
 
@@ -195,7 +207,14 @@ declare module "lunar-javascript" {
     getDayPositionXiDesc(): string; getDayPositionCaiDesc(): string; getDayPositionFuDesc(): string;
   }
   interface SolarFactory {
-    fromYmdHms(year: number, month: number, day: number, hour: number, minute: number, second: number): { getLunar(): LunarValue };
+    fromYmdHms(
+      year: number,
+      month: number,
+      day: number,
+      hour: number,
+      minute: number,
+      second: number,
+    ): { getLunar(): LunarValue };
   }
   const lunarPkg: { Solar: SolarFactory };
   export default lunarPkg;
@@ -232,14 +251,23 @@ const SAMPLE = BigInt(Date.UTC(2026, 8, 30, 12, 15, 0) / 1_000);
 test("时空栏和黄历逐字段符合已核验样例", () => {
   const result = almanacAt(SAMPLE);
   assert.deepEqual(result.solar, { timezone: "UTC+8", text: "2026-09-30 20:15:00" });
-  assert.deepEqual(result.lunar, { date: "二〇二六年八月二十", timeBranch: "戌", moonPhase: "更待" });
+  assert.deepEqual(result.lunar, {
+    date: "二〇二六年八月二十",
+    timeBranch: "戌",
+    moonPhase: "更待",
+  });
   assert.deepEqual(result.pillars, ["丙午", "丁酉", "丁未", "庚戌"]);
   assert.deepEqual(result.naYin, ["天河水", "山下火", "天河水", "钗钏金"]);
   assert.deepEqual(result.solarTerms, {
     current: "秋分", hou: "秋分 二候", wuHou: "蛰虫坯户",
     previousAt: "2026-09-23 08:05:14", next: "寒露", nextAt: "2026-10-08 14:29:17",
   });
-  assert.deepEqual(result.cycle, { monthBranch: "酉", day: "丁未", xun: "甲辰", voidBranches: ["寅", "卯"] });
+  assert.deepEqual(result.cycle, {
+    monthBranch: "酉",
+    day: "丁未",
+    xun: "甲辰",
+    voidBranches: ["寅", "卯"],
+  });
   assert.deepEqual(result.dayOfficers, { officer: "开", deity: "天德", path: "黄道" });
   assert.deepEqual(result.mansion, { name: "壁水貐", palace: "北", guardian: "玄武" });
   assert.deepEqual(result.clash, { description: "(辛丑)牛", direction: "西" });
@@ -247,8 +275,14 @@ test("时空栏和黄历逐字段符合已核验样例", () => {
   assert.equal(result.almanac.joy, "正南");
   assert.equal(result.almanac.wealth, "西南");
   assert.equal(result.almanac.fortune, "东南");
-  assert.deepEqual(result.almanac.suitable.slice(0, 6), ["祭祀", "解除", "结网", "畋猎", "取渔", "会亲友"]);
-  assert.deepEqual(result.almanac.avoid.slice(0, 6), ["开市", "祈福", "动土", "破土", "入殓", "安葬"]);
+  assert.deepEqual(
+    result.almanac.suitable.slice(0, 6),
+    ["祭祀", "解除", "结网", "畋猎", "取渔", "会亲友"],
+  );
+  assert.deepEqual(
+    result.almanac.avoid.slice(0, 6),
+    ["开市", "祈福", "动土", "破土", "入殓", "安葬"],
+  );
   assert.equal(result.almanac.suitable.length, 11);
   assert.equal(result.almanac.avoid.length, 7);
   assert.deepEqual(result.almanac.pengZu, ["丁不剃头头必生疮", "未不服药毒气入肠"]);
@@ -314,7 +348,14 @@ export interface AlmanacResult {
   lunar: { date: string; timeBranch: string; moonPhase: string };
   pillars: readonly [string, string, string, string];
   naYin: readonly [string, string, string, string];
-  solarTerms: { current: string; hou: string; wuHou: string; previousAt: string; next: string; nextAt: string };
+  solarTerms: {
+    current: string;
+    hou: string;
+    wuHou: string;
+    previousAt: string;
+    next: string;
+    nextAt: string;
+  };
   cycle: { monthBranch: string; day: string; xun: string; voidBranches: readonly [string, string] };
   month: ReturnType<typeof deriveSolarMonth>;
   dayOfficers: { officer: string; deity: string; path: string };
@@ -329,9 +370,18 @@ export interface AlmanacResult {
 const pad = (value: number): string => String(value).padStart(2, "0");
 
 function utc8Parts(timestamp: bigint): [number, number, number, number, number, number] {
-  if (timestamp < 0n || timestamp > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("历法时间戳必须是安全的非负整数秒");
+  if (timestamp < 0n || timestamp > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("历法时间戳必须是安全的非负整数秒");
+  }
   const date = new Date((Number(timestamp) + 8 * 3_600) * 1_000);
-  return [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()];
+  return [
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+  ];
 }
 
 function formatSolar(value: { toYmdHms(): string }): string {
@@ -349,34 +399,56 @@ export function almanacAt(timestamp: bigint): AlmanacResult {
   const liuyaoMonth = deriveSolarMonth(timestamp);
   const result: AlmanacResult = {
     timestamp: timestamp.toString(),
-    solar: { timezone: "UTC+8", text: `${year}-${pad(month)}-${pad(day)} ${pad(hour)}:${pad(minute)}:${pad(second)}` },
+    solar: {
+      timezone: "UTC+8",
+      text: `${year}-${pad(month)}-${pad(day)} ${pad(hour)}:${pad(minute)}:${pad(second)}`,
+    },
     lunar: { date: lunar.toString(), timeBranch: lunar.getTimeZhi(), moonPhase: lunar.getYueXiang() },
     pillars: [eight.getYear(), eight.getMonth(), eight.getDay(), eight.getTime()],
     naYin: [eight.getYearNaYin(), eight.getMonthNaYin(), eight.getDayNaYin(), eight.getTimeNaYin()],
     solarTerms: {
       current: previous.getName(), hou: lunar.getHou(), wuHou: lunar.getWuHou(),
-      previousAt: formatSolar(previous.getSolar()), next: next.getName(), nextAt: formatSolar(next.getSolar()),
+      previousAt: formatSolar(previous.getSolar()),
+      next: next.getName(),
+      nextAt: formatSolar(next.getSolar()),
     },
     cycle: {
       monthBranch: eight.getMonth().slice(1), day: eight.getDay(), xun: lunar.getDayXun(),
       voidBranches: lunar.getDayXunKong().split("") as [string, string],
     },
     month: liuyaoMonth,
-    dayOfficers: { officer: lunar.getZhiXing(), deity: lunar.getDayTianShen(), path: lunar.getDayTianShenType() },
-    mansion: { name: `${lunar.getXiu()}${lunar.getZheng()}${lunar.getAnimal() === "獝" ? "貐" : lunar.getAnimal()}`, palace: lunar.getGong(), guardian: lunar.getShou() },
+    dayOfficers: {
+      officer: lunar.getZhiXing(),
+      deity: lunar.getDayTianShen(),
+      path: lunar.getDayTianShenType(),
+    },
+    mansion: {
+      name: `${lunar.getXiu()}${lunar.getZheng()}${
+        lunar.getAnimal() === "獝" ? "貐" : lunar.getAnimal()
+      }`,
+      palace: lunar.getGong(),
+      guardian: lunar.getShou(),
+    },
     clash: { description: lunar.getDayChongDesc(), direction: lunar.getDaySha() },
     almanac: {
       nineStar: lunar.getDayNineStar().toString(), joy: lunar.getDayPositionXiDesc(),
       wealth: lunar.getDayPositionCaiDesc(), fortune: lunar.getDayPositionFuDesc(),
-      suitable: lunar.getDayYi(), avoid: lunar.getDayJi(), pengZu: [lunar.getPengZuGan(), lunar.getPengZuZhi()],
+      suitable: lunar.getDayYi(),
+      avoid: lunar.getDayJi(),
+      pengZu: [lunar.getPengZuGan(), lunar.getPengZuZhi()],
     },
   };
   assertCalendarConsistent(result, liuyaoDay.ganzhi);
   return result;
 }
 
-export function assertCalendarConsistent(result: AlmanacResult, expectedDay = deriveSexagenaryDay(BigInt(result.timestamp)).ganzhi): void {
-  if (result.cycle.day !== expectedDay) throw new Error(`历法不一致：黄历日干支${result.cycle.day}，六爻日干支${expectedDay}`);
+export function assertCalendarConsistent(
+  result: AlmanacResult,
+  expectedDay = deriveSexagenaryDay(BigInt(result.timestamp)).ganzhi,
+): void {
+  if (result.cycle.day !== expectedDay) {
+    throw new Error(`历法不一致：黄历日干支${result.cycle.day}，六爻日干支${expectedDay}`);
+  }
   // NOAA 近似算法在交节窗口内只给“近交节”提示；日干支仍须严格互校。
   if (!result.month.boundaryUncertain && result.cycle.monthBranch !== result.month.branch) {
     throw new Error(`历法不一致：黄历月建${result.cycle.monthBranch}，六爻月建${result.month.branch}`);
@@ -445,20 +517,38 @@ TIMES = [
     "2028-02-04T22:30", "2028-03-05T01:30", "2028-06-21T12:00", "2028-12-21T12:00",
 ]
 
-PALACE = {"坎": "坎一", "坤": "坤二", "震": "震三", "巽": "巽四", "中": "中五", "乾": "乾六", "兌": "兑七", "艮": "艮八", "離": "离九"}
-DOOR = {"休": "休门", "生": "生门", "傷": "伤门", "杜": "杜门", "景": "景门", "死": "死门", "驚": "惊门", "開": "开门"}
-STAR = {"蓬": "天蓬", "任": "天任", "沖": "天冲", "輔": "天辅", "英": "天英", "芮": "天芮", "柱": "天柱", "心": "天心", "禽": "天芮"}
+PALACE = {
+    "坎": "坎一", "坤": "坤二", "震": "震三",
+    "巽": "巽四", "中": "中五", "乾": "乾六",
+    "兌": "兑七", "艮": "艮八", "離": "离九",
+}
+DOOR = {
+    "休": "休门", "生": "生门", "傷": "伤门", "杜": "杜门",
+    "景": "景门", "死": "死门", "驚": "惊门", "開": "开门",
+}
+STAR = {
+    "蓬": "天蓬", "任": "天任", "沖": "天冲",
+    "輔": "天辅", "英": "天英", "芮": "天芮",
+    "柱": "天柱", "心": "天心", "禽": "天芮",
+}
 GOD = {
     "符": "值符", "蛇": "腾蛇", "陰": "太阴", "合": "六合",
     "勾": "勾陈", "雀": "朱雀", "虎": "白虎", "玄": "玄武", "地": "九地", "天": "九天",
 }
 SOLAR_TERM = {
-    "冬至": "冬至", "小寒": "小寒", "大寒": "大寒", "立春": "立春", "雨水": "雨水", "驚蟄": "惊蛰",
-    "春分": "春分", "清明": "清明", "穀雨": "谷雨", "立夏": "立夏", "小滿": "小满", "芒種": "芒种",
-    "夏至": "夏至", "小暑": "小暑", "大暑": "大暑", "立秋": "立秋", "處暑": "处暑", "白露": "白露",
-    "秋分": "秋分", "寒露": "寒露", "霜降": "霜降", "立冬": "立冬", "小雪": "小雪", "大雪": "大雪",
+    "冬至": "冬至", "小寒": "小寒", "大寒": "大寒",
+    "立春": "立春", "雨水": "雨水", "驚蟄": "惊蛰",
+    "春分": "春分", "清明": "清明", "穀雨": "谷雨",
+    "立夏": "立夏", "小滿": "小满", "芒種": "芒种",
+    "夏至": "夏至", "小暑": "小暑", "大暑": "大暑",
+    "立秋": "立秋", "處暑": "处暑", "白露": "白露",
+    "秋分": "秋分", "寒露": "寒露", "霜降": "霜降",
+    "立冬": "立冬", "小雪": "小雪", "大雪": "大雪",
 }
-REQUIRED_KEYS = {"干支", "旬空", "排局", "節氣", "值符值使", "天盤", "地盤", "門", "星", "神", "馬星"}
+REQUIRED_KEYS = {
+    "干支", "旬空", "排局", "節氣", "值符值使", "天盤",
+    "地盤", "門", "星", "神", "馬星",
+}
 EXPECTED_KEYS = REQUIRED_KEYS | {"排盤方式", "旬首", "局日", "天乙", "長生運"}
 
 def checked(mapping, key, kind):
@@ -502,7 +592,11 @@ def normalize(moment, raw):
     chief_star, chief_star_palace = duty["值符星宮"]
     chief_door, chief_door_palace = duty["值使門宮"]
     pillars = parse_pillars(raw["干支"])
-    normalized_chief_star = "天禽" if chief_star == "禽" and raw["地盤"].get("中") == chief_stem else checked(STAR, chief_star, "九星简称")
+    normalized_chief_star = (
+        "天禽"
+        if chief_star == "禽" and raw["地盤"].get("中") == chief_stem
+        else checked(STAR, chief_star, "九星简称")
+    )
     return {
         "localTime": moment.strftime("%Y-%m-%d %H:%M:00"),
         "method": "时家转盘拆补法",
@@ -528,7 +622,10 @@ for text in TIMES:
     moment = datetime.fromisoformat(text)
     raw = Qimen(moment.year, moment.month, moment.day, moment.hour, moment.minute).pan(1)
     target = out / f"{moment.strftime('%Y%m%d-%H%M')}.json"
-    target.write_text(json.dumps(normalize(moment, raw), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    target.write_text(
+        json.dumps(normalize(moment, raw), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 print(f"已生成 {len(TIMES)} 个奇门标准答案")
 ```
 
@@ -550,7 +647,9 @@ test("kinqimen 标准答案不少于 40 个且字段完整", async () => {
   const files = (await readdir("tests/fixtures/qimen")).filter((name) => name.endsWith(".json"));
   assert.ok(files.length >= 40);
   for (const file of files) {
-    const fixture = JSON.parse(await readFile(`tests/fixtures/qimen/${file}`, "utf8")) as Record<string, unknown>;
+    const fixture = JSON.parse(
+      await readFile(`tests/fixtures/qimen/${file}`, "utf8"),
+    ) as Record<string, unknown>;
     assert.deepEqual(Object.keys(fixture), [
       "localTime", "method", "dayPillar", "hourPillar", "solarTerm", "layout", "xunHead",
       "chiefStem", "chiefStar", "chiefStarPalace", "chiefDoor",
@@ -586,7 +685,9 @@ git add tools/qimen/generate_fixtures.py tests/fixtures/qimen tests/qimen.test.t
 import { qimenAt } from "../src/calendar/qimen.js";
 
 test("TS 实现与全部 kinqimen fixtures 逐字段一致", async () => {
-  const files = (await readdir("tests/fixtures/qimen")).filter((name) => name.endsWith(".json")).sort();
+  const files = (await readdir("tests/fixtures/qimen"))
+    .filter((name) => name.endsWith(".json"))
+    .sort();
   for (const file of files) {
     const expected = JSON.parse(await readFile(`tests/fixtures/qimen/${file}`, "utf8"));
     const timestamp = BigInt(Date.parse(`${expected.localTime.replace(" ", "T")}+08:00`) / 1_000);
@@ -605,7 +706,13 @@ test("2026-09-30 20:15 人工核验字段不受 fixture 生成器错误遮蔽", 
   assert.equal(result.chiefDoor, "景门");
   assert.equal(result.chiefDoorPalace, "震三");
   assert.deepEqual([result.dayVoid, result.hourVoid, result.horse], ["寅卯", "寅卯", "申"]);
-  assert.deepEqual(result.palaces["巽四"], { heavenStem: "己", earthStem: "戊", star: "天冲", door: "死门", god: "太阴" });
+  assert.deepEqual(result.palaces["巽四"], {
+    heavenStem: "己",
+    earthStem: "戊",
+    star: "天冲",
+    door: "死门",
+    god: "太阴",
+  });
   assert.equal(result.palaces["兑七"].god, "九天");
 });
 
@@ -629,7 +736,9 @@ Expected: FAIL，包含 `Cannot find module '../src/calendar/qimen.js'`。
 import lunarPkg from "lunar-javascript";
 import { almanacAt } from "./almanac.js";
 
-type Palace = "坎一" | "坤二" | "震三" | "巽四" | "中五" | "乾六" | "兑七" | "艮八" | "离九";
+type Palace =
+  | "坎一" | "坤二" | "震三" | "巽四" | "中五"
+  | "乾六" | "兑七" | "艮八" | "离九";
 type RingPalace = Exclude<Palace, "中五">;
 type Dun = "阳" | "阴";
 interface Cell {
@@ -661,7 +770,9 @@ export interface QimenResult {
 const PALACES: readonly Palace[] = [
   "坎一", "坤二", "震三", "巽四", "中五", "乾六", "兑七", "艮八", "离九",
 ];
-const RING: readonly RingPalace[] = ["坎一", "艮八", "震三", "巽四", "离九", "坤二", "兑七", "乾六"];
+const RING: readonly RingPalace[] = [
+  "坎一", "艮八", "震三", "巽四", "离九", "坤二", "兑七", "乾六",
+];
 const STEMS = ["戊", "己", "庚", "辛", "壬", "癸", "丁", "丙", "乙"] as const;
 const ORIGINAL_STAR: Record<Palace, string> = {
   坎一: "天蓬", 坤二: "天芮", 震三: "天冲", 巽四: "天辅", 中五: "天禽",
@@ -727,7 +838,12 @@ function yuanFor(day: string): 0 | 1 | 2 {
   return [0, 6, 3, 9].includes(branch) ? 0 : [2, 8, 5, 11].includes(branch) ? 1 : 2;
 }
 function branchHorse(branch: string): string {
-  const groups: Record<string, string> = { 申子辰: "寅", 寅午戌: "申", 亥卯未: "巳", 巳酉丑: "亥" };
+  const groups: Record<string, string> = {
+    申子辰: "寅",
+    寅午戌: "申",
+    亥卯未: "巳",
+    巳酉丑: "亥",
+  };
   const group = Object.keys(groups).find((key) => key.includes(branch));
   if (!group) throw new Error(`地支 ${branch} 没有驿马组`);
   return groups[group]!;
@@ -736,14 +852,19 @@ function branchHorse(branch: string): string {
 export function qimenAt(timestamp: bigint): QimenResult {
   const almanac = almanacAt(timestamp);
   // 奇门按子时（23:00）换日取日柱与时柱，与 kinqimen 及传统口径一致。
-  const [y, mo, d, h, mi, se] = almanac.solar.text.split(/[- :]/).map(Number) as [number, number, number, number, number, number];
+  const [y, mo, d, h, mi, se] = almanac.solar.text
+    .split(/[- :]/)
+    .map(Number) as [number, number, number, number, number, number];
   const eight = lunarPkg.Solar.fromYmdHms(y, mo, d, h, mi, se).getLunar().getEightChar();
   eight.setSect(1);
   const day = eight.getDay();
   const hour = eight.getTime();
   // 节气交接采用 lunar-javascript 的精确时刻；冬至至芒种为阳遁，其余为阴遁。
   const term = almanac.solarTerms.current;
-  const yangTerms = ["冬至", "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种"];
+  const yangTerms = [
+    "冬至", "小寒", "大寒", "立春", "雨水", "惊蛰",
+    "春分", "清明", "谷雨", "立夏", "小满", "芒种",
+  ];
   const dun: Dun = yangTerms.includes(term) ? "阳" : "阴";
   const yuan = yuanFor(day);
   const ju = TERM_JU[term]?.[yuan];
@@ -805,7 +926,8 @@ export function qimenAt(timestamp: bigint): QimenResult {
     xunHead: hourXun.head,
     chiefStem: hourXun.stem,
     chiefStar,
-    // 值符和值使报告原始落宫，排盘时中五寄坤二；界面显示「中五（寄坤二）」。
+    // 值符和值使报告原始落宫，排盘时中五寄坤二；
+    // 界面显示「中五（寄坤二）」。
     chiefStarPalace: rawStarTarget,
     chiefDoor,
     chiefDoorPalace: reportedDoorTarget,
@@ -835,6 +957,10 @@ Expected: `tsc --noEmit` 退出码 0。
 git add src/calendar/qimen.ts tests/qimen.test.ts && git commit -m "feat(qimen): 实现时家转盘拆补法"
 ```
 
+## Chunk 1B: 变占、梅花与交叉验收
+
+> 本 Chunk 覆盖 OpenSpec 任务 1.3，以及 `question-three-schools` 中「主占之辞变占法」与「梅花体用取法」要求。
+
 ### Task 5: 实现朱熹变占法主占之辞
 
 **Files:**
@@ -859,7 +985,12 @@ const cases: ReadonlyArray<{
   { lines: [7, 7, 7, 8, 8, 8], kind: "本卦卦辞", primary: "卦辞", secondary: [] },
   { lines: [9, 7, 7, 8, 8, 8], kind: "本卦爻辞", primary: "初九", secondary: [] },
   { lines: [7, 9, 7, 8, 9, 8], kind: "本卦两爻辞", primary: "九五", secondary: ["九二"] },
-  { lines: [9, 9, 9, 8, 8, 8], kind: "本卦与之卦卦辞", primary: "卦辞", secondary: ["之卦卦辞"] },
+  {
+    lines: [9, 9, 9, 8, 8, 8],
+    kind: "本卦与之卦卦辞",
+    primary: "卦辞",
+    secondary: ["之卦卦辞"],
+  },
   { lines: [9, 9, 9, 8, 8, 9], kind: "之卦两不动爻辞", primary: "六四", secondary: ["六五"] },
   { lines: [9, 9, 9, 7, 9, 9], kind: "之卦不动爻辞", primary: "九四", secondary: [] },
 ];
@@ -904,20 +1035,50 @@ export function selectPrimaryOracleText(lines: readonly number[]): OracleSelecti
   const five = deriveFiveHexagrams(lines);
   const primary = getHexagramText(five.primary.kingWenNumber);
   const derived = getHexagramText(five.derived.kingWenNumber);
-  const moving = lines.map((value, index) => value === 6 || value === 9 ? index : -1).filter((index) => index >= 0);
+  const moving = lines
+    .map((value, index) => value === 6 || value === 9 ? index : -1)
+    .filter((index) => index >= 0);
   const still = lines.map((_, index) => index).filter((index) => !moving.includes(index));
-  if (moving.length === 0) return { rule: "本卦卦辞", primary: judgement("卦辞", primary.judgement), secondary: [] };
-  if (moving.length === 1) return { rule: "本卦爻辞", primary: primary.lines[moving[0]!]!, secondary: [] };
-  if (moving.length === 2) return { rule: "本卦两爻辞", primary: primary.lines[moving[1]!]!, secondary: [primary.lines[moving[0]!]!] };
+  if (moving.length === 0) {
+    return {
+      rule: "本卦卦辞",
+      primary: judgement("卦辞", primary.judgement),
+      secondary: [],
+    };
+  }
+  if (moving.length === 1) {
+    return { rule: "本卦爻辞", primary: primary.lines[moving[0]!]!, secondary: [] };
+  }
+  if (moving.length === 2) {
+    return {
+      rule: "本卦两爻辞",
+      primary: primary.lines[moving[1]!]!,
+      secondary: [primary.lines[moving[0]!]!],
+    };
+  }
   if (moving.length === 3) return {
     rule: "本卦与之卦卦辞",
     primary: judgement("卦辞", primary.judgement),
     secondary: [judgement("之卦卦辞", derived.judgement)],
   };
-  if (moving.length === 4) return { rule: "之卦两不动爻辞", primary: derived.lines[still[0]!]!, secondary: [derived.lines[still[1]!]!] };
-  if (moving.length === 5) return { rule: "之卦不动爻辞", primary: derived.lines[still[0]!]!, secondary: [] };
+  if (moving.length === 4) {
+    return {
+      rule: "之卦两不动爻辞",
+      primary: derived.lines[still[0]!]!,
+      secondary: [derived.lines[still[1]!]!],
+    };
+  }
+  if (moving.length === 5) {
+    return { rule: "之卦不动爻辞", primary: derived.lines[still[0]!]!, secondary: [] };
+  }
   const special = primary.kingWenNumber === 1 ? "用九" : primary.kingWenNumber === 2 ? "用六" : null;
-  if (!special) return { rule: "之卦卦辞", primary: judgement("之卦卦辞", derived.judgement), secondary: [] };
+  if (!special) {
+    return {
+      rule: "之卦卦辞",
+      primary: judgement("之卦卦辞", derived.judgement),
+      secondary: [],
+    };
+  }
   const extra = primary.extras.find((item) => item.label === special);
   if (!extra) throw new Error(`${primary.name}语料缺少${special}`);
   return { rule: special, primary: extra, secondary: [] };
@@ -997,11 +1158,21 @@ import {
 type Position = "upper" | "lower";
 type Relation = "比和" | "体生用" | "用生体" | "体克用" | "用克体";
 const CHANGED_RELATION: Record<Relation, string> = {
-  比和: "变卦与体比和", 体生用: "体生变卦", 用生体: "变卦生体", 体克用: "体克变卦", 用克体: "变卦克体",
+  比和: "变卦与体比和",
+  体生用: "体生变卦",
+  用生体: "变卦生体",
+  体克用: "体克变卦",
+  用克体: "变卦克体",
 };
 const TRIGRAMS: Record<number, { name: PalaceName; element: FiveElement }> = {
-  0: { name: "坤", element: "土" }, 1: { name: "震", element: "木" }, 2: { name: "坎", element: "水" }, 3: { name: "兑", element: "金" },
-  4: { name: "艮", element: "土" }, 5: { name: "离", element: "火" }, 6: { name: "巽", element: "木" }, 7: { name: "乾", element: "金" },
+  0: { name: "坤", element: "土" },
+  1: { name: "震", element: "木" },
+  2: { name: "坎", element: "水" },
+  3: { name: "兑", element: "金" },
+  4: { name: "艮", element: "土" },
+  5: { name: "离", element: "火" },
+  6: { name: "巽", element: "木" },
+  7: { name: "乾", element: "金" },
 };
 function trigram(lines: readonly boolean[]) {
   const number = lines.reduce((sum, yang, index) => sum + (yang ? 1 << index : 0), 0);
@@ -1039,8 +1210,16 @@ export function deriveMeihua(lines: readonly number[], timestamp: bigint): Meihu
     body: { position: bodyPosition, ...body, strength: strengthFor(month.element, body.element) },
     use: { position: usePosition, ...use },
     bodyUseRelation: relation(body.element, use.element),
-    mutual: { name: five.mutual.name, lower: trigram(five.primary.yangLines.slice(1, 4)).name, upper: trigram(five.primary.yangLines.slice(2, 5)).name },
-    changed: { name: five.derived.name, changedUse, relationToBody: CHANGED_RELATION[relation(body.element, changedUse.element)] },
+    mutual: {
+      name: five.mutual.name,
+      lower: trigram(five.primary.yangLines.slice(1, 4)).name,
+      upper: trigram(five.primary.yangLines.slice(2, 5)).name,
+    },
+    changed: {
+      name: five.derived.name,
+      changedUse,
+      relationToBody: CHANGED_RELATION[relation(body.element, changedUse.element)],
+    },
     rule: "按本站体用取法；本站不采集外应",
   };
 }
@@ -1077,7 +1256,7 @@ test("六爻展示事实不含日文中点", () => {
 git add src/oracle/liuyao-chart.ts src/calendar/meihua.ts tests/meihua.test.ts tests/liuyao-chart.test.ts && git commit -m "feat(calendar): 实现梅花体用并清理展示分隔符"
 ```
 
-### Task 7: Chunk 1 交叉验收
+### Task 7: Chunk 1A/1B 交叉验收
 
 **Files:**
 - Test: `tests/almanac.test.ts`
@@ -1086,7 +1265,7 @@ git add src/oracle/liuyao-chart.ts src/calendar/meihua.ts tests/meihua.test.ts t
 - Test: `tests/meihua.test.ts`
 - Test: `tests/liuyao-chart.test.ts`
 
-- [ ] **Step 1: 运行 Chunk 1 定向测试（2–5 分钟）**
+- [ ] **Step 1: 运行 Chunk 1A/1B 定向测试（2–5 分钟）**
 
 Run: `node --import tsx --test tests/almanac.test.ts tests/qimen.test.ts tests/bianzhan.test.ts tests/meihua.test.ts tests/liuyao-chart.test.ts`
 
@@ -2171,6 +2350,7 @@ test("三家系统提示词给出完整写作与安全边界", () => {
     assert.match(school.systemPrompt, /JSON/);
     assert.match(school.systemPrompt, /健康.*就医/s);
     assert.match(school.systemPrompt, /医疗、法律或投资结论/);
+    assert.match(school.systemPrompt, /自称只用本名/);
   }
   assert.match(QUESTION_SCHOOLS[1].systemPrompt, /以用神为纲/);
   assert.match(QUESTION_SCHOOLS[2].systemPrompt, /按本站体用取法/);
@@ -2311,7 +2491,7 @@ sections 依次写：一、主占之辞与卦义；二、卦时卦德与处境�
 evidence.ref 只能使用用户提示“可用事实编号”中列出的编号。
 应期必须同时说明成立条件；健康类问题必须建议就医。
 不得给出医疗、法律或投资结论；不得出现押钱、赔付、封存。
-自称使用“程颐”，不使用“易者”；输出必须严格符合给定 JSON Schema。`,
+自称只用本名“程颐”，不用其它称谓；输出必须严格符合给定 JSON Schema。`,
   buildUserPrompt(input) {
     return buildSchoolPrompt(
       input,
@@ -2336,7 +2516,7 @@ export const jingfang = {
 evidence.ref 只能使用用户提示“可用事实编号”中列出的编号。
 应期必须同时说明成立条件；健康类问题必须建议就医。
 不得给出医疗、法律或投资结论；不得出现押钱、赔付、封存。
-自称使用“京房”，不使用“易者”；输出必须严格符合给定 JSON Schema。`,
+自称只用本名“京房”，不用其它称谓；输出必须严格符合给定 JSON Schema。`,
   buildUserPrompt(input) {
     return buildSchoolPrompt(input, [
       "line:",
@@ -2365,7 +2545,7 @@ sections 依次写：一、体用生克；二、互卦与变卦；三、时令�
 evidence.ref 只能使用用户提示“可用事实编号”中列出的编号。
 应期必须同时说明成立条件；健康类问题必须建议就医。
 不得给出医疗、法律或投资结论；不得出现押钱、赔付、封存。
-自称使用“邵雍”，不使用“易者”；输出必须严格符合给定 JSON Schema。`,
+自称只用本名“邵雍”，不用其它称谓；输出必须严格符合给定 JSON Schema。`,
   buildUserPrompt(input) {
     return buildSchoolPrompt(input, ["body-use", "hexagram:", "month"]);
   },
@@ -3974,7 +4154,6 @@ Expected: `tsc --noEmit` 退出码 0；全量测试 PASS、0 FAIL。
 > 本 Chunk 覆盖 OpenSpec 任务 1.10 与 1.14。HTTP 层只负责协议、安全边界和错误序列化；
 > `SanyiApi` 负责校验与公开视图，`ReadingService` 继续独占业务状态机。旧接口统一下线，
 > mock 只用于测试与排练，生产启动固定使用 Arc 区块、真实卦金核验和 DeepSeek provider。
-
 ### Task 17: 建立类型化错误与三易 API 边界
 
 **Files:**
@@ -4952,7 +5131,7 @@ Run: `node --import tsx --test tests/sanyi-rehearsal.test.ts && npm run demo:reh
 
 Run: `node --import tsx --test tests/sanyi-api.test.ts tests/frontend-server.test.ts tests/sanyi-rehearsal.test.ts`
 
-- [ ] 运行 Chunk 1、2A、2B、2C 的全部测试：
+- [ ] 运行 Chunk 1A、1B、2A、2B、2C 的全部测试：
 
 Run: `node --import tsx --test tests/almanac.test.ts tests/qimen.test.ts tests/meihua.test.ts \
   tests/bianzhan.test.ts tests/sanyi-classify.test.ts tests/sanyi-throws.test.ts \
@@ -5082,7 +5261,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
 
 - [ ] **Step 4: 锁定上游摘要，再实现下载与子集化脚本**
 
-先在 Chunk 1 创建的工具环境安装唯一新增工具依赖：
+先在 Chunk 1A 创建的工具环境安装唯一新增工具依赖：
 
 Run: `.venv-tools/bin/pip install fonttools brotli`
 
@@ -7605,7 +7784,6 @@ export function SubjectChange(props: {
 `PaymentButton.tsx`、Providers 或任何牵出 `web/lib/wagmi.ts` 的模块。
 
 ## Chunk 5C: 奇门、黄历、复算、页面编排与交叉验收
-
 ### Task 30: 实现附属面板并用真实引擎数据做组件回归
 
 **Files:**
@@ -8604,3 +8782,630 @@ Expected: 0 行超过 110 字符；若字符串、正则或 CSS 长值确需豁�
 - 旧说明文字已经就地移植，五行生克、逐爻六亲来源和五步阅读引导没有因改版丢失。
 - `openspec/changes/sanyi-chinese-redesign/tasks.md` 仍只在 Chunk 6 全量验收后统一更新。
 - 本 Chunk 不提交；执行者按用户当次指示决定是否在后续 Chunk 提交。
+
+## Chunk 6: 清理与验收
+
+> 本 Chunk 覆盖 OpenSpec 任务 0.3、1.13–1.15。删除遵循“先证后删”：每组先用精确的
+> `.js` 导入路径检查删除集合之外的引用，只有所有命令均无输出时才执行 `git rm`。任何命中都先判断
+> 引用方是否也应删除；若不在本计划删除清单内，立即停止该组，不得靠改成宽泛 glob 或强删绕过。
+> 合约、探测、回放、消融、封存演示相关的全部 `src/`、`scripts/` 与测试均不在本 Chunk 删除范围。
+
+### Task 32: 逐组复查并删除旧网站遗留
+
+**Files:**
+- Delete: `src/demo/service.ts`
+- Delete: `src/demo/arc-driver.ts`
+- Delete: `src/demo/mock-driver.ts`
+- Delete: `src/demo/rehearsal.ts`
+- Delete: `src/demo/human-proposition.ts`
+- Delete: `src/demo/predicate.ts`
+- Delete: `src/demo/provider.ts`
+- Delete: `scripts/run-frontend-mock.ts`
+- Delete: `scripts/recover-demo.ts`
+- Delete: `src/oracle/question-interpreter.ts`
+- Delete: `src/frontend/data.ts`
+- Delete: `src/frontend/domain.ts`
+- Delete: `web/styles.css`
+- Delete: `tests/demo-*.test.ts`
+- Delete: `tests/human-proposition.test.ts`
+- Delete: `tests/question-interpreter.test.ts`
+- Delete: `tests/frontend-data.test.ts`
+- Delete: `tests/frontend-domain.test.ts`
+- Delete: `tests/frontend-content.test.ts`
+- Modify: `tests/frontend-wallet.test.ts`（仅当存在只覆盖旧押注流程的用例）
+
+- [ ] **Step 1: 锁定必须保留的边界（3 分钟）**
+
+Run:
+
+```bash
+test -f src/frontend/wallet.ts && test -f src/frontend/abis.ts \
+  && test -f tests/frontend-wallet.test.ts \
+  && test -f src/demo/secret-scan.ts \
+  && test -f src/oracle/question-oracle.ts \
+  && rg -n 'QuestionBlockSource|QuestionFeeVerifier' src/sanyi src/frontend tests
+```
+
+Expected: 命令退出码为 0；最后一条至少显示新服务对 `QuestionBlockSource` 或
+`QuestionFeeVerifier` 的引用。`src/agent/provider.ts`、合约、探测、回放、消融与封存演示文件保持不动。
+
+- [ ] **Step 2: 确认服务端已经脱离旧模块（2 分钟）**
+
+Run:
+
+```bash
+rg -n 'demo/|frontend/data\.js|question-interpreter\.js' src/frontend/server.ts
+```
+
+Expected: 无输出、退出码 1；已改写的服务端不得再导入旧演示层、旧前端数据或旧问轨解读器。
+若有输出，先回到 Task 18 完成服务端改写，不得开始删除。
+
+- [ ] **Step 3: 由外向内复查并删除旧脚本（4 分钟）**
+
+Run:
+
+```bash
+rg -n 'scripts/run-frontend-mock\.js|run-frontend-mock\.js' scripts src tests web \
+  --glob '!scripts/run-frontend-mock.ts'
+rg -n 'scripts/recover-demo\.js|recover-demo\.js' scripts src tests web \
+  --glob '!scripts/recover-demo.ts'
+```
+
+Expected: 两条命令均无输出、退出码 1。`package.json` 中同名脚本键不是 TS 导入，留到 Task 33 删除。
+
+Run:
+
+```bash
+git rm scripts/run-frontend-mock.ts scripts/recover-demo.ts
+npm test
+npm run typecheck
+```
+
+Expected: 两个旧脚本被删除；全量测试 PASS，类型检查退出码 0。
+
+- [ ] **Step 4: 复查并删除旧问轨解读及其测试（4 分钟）**
+
+Run:
+
+```bash
+rg -n 'src/oracle/question-interpreter\.js|oracle/question-interpreter\.js' scripts src tests web \
+  --glob '!src/oracle/question-interpreter.ts' --glob '!tests/question-interpreter.test.ts'
+```
+
+Expected: 无输出、退出码 1；不得误删 `src/oracle/question-oracle.ts` 及其测试。
+
+Run:
+
+```bash
+git rm src/oracle/question-interpreter.ts tests/question-interpreter.test.ts
+npm test
+npm run typecheck
+```
+
+Expected: 只删除旧解读器及其测试；全量测试 PASS，类型检查退出码 0。
+
+- [ ] **Step 5: 复查并删除旧前端数据层及其测试（4 分钟）**
+
+Run:
+
+```bash
+rg -n 'src/frontend/data\.js|frontend/data\.js' scripts src tests web \
+  --glob '!src/frontend/data.ts' --glob '!tests/frontend-data.test.ts'
+rg -n 'src/frontend/domain\.js|frontend/domain\.js' scripts src tests web \
+  --glob '!src/frontend/domain.ts' --glob '!tests/frontend-domain.test.ts'
+```
+
+Expected: 两条命令均无输出、退出码 1。
+
+Run:
+
+```bash
+git rm src/frontend/data.ts src/frontend/domain.ts \
+  tests/frontend-data.test.ts tests/frontend-domain.test.ts
+npm test
+npm run typecheck
+```
+
+Expected: 旧数据层及对应测试被删除；全量测试 PASS，类型检查退出码 0。
+
+- [ ] **Step 6: 逐个复查旧演示层的精确导入路径（5 分钟）**
+
+旧脚本、旧问轨解读和旧前端数据层此时均已删除。以下每条命令的 Expected 均为无输出、退出码 1；
+排除项只覆盖本组七个候选及随本组删除的测试，任何输出都代表仍有本组之外的调用者：
+
+```bash
+rg -n 'src/demo/service\.js|demo/service\.js' scripts src tests web \
+  --glob '!src/demo/{service,arc-driver,mock-driver,rehearsal,human-proposition,predicate,provider}.ts' \
+  --glob '!tests/demo-*.test.ts'
+rg -n 'src/demo/arc-driver\.js|demo/arc-driver\.js' scripts src tests web \
+  --glob '!src/demo/{service,arc-driver,mock-driver,rehearsal,human-proposition,predicate,provider}.ts' \
+  --glob '!tests/demo-*.test.ts'
+rg -n 'src/demo/mock-driver\.js|demo/mock-driver\.js' scripts src tests web \
+  --glob '!src/demo/{service,arc-driver,mock-driver,rehearsal,human-proposition,predicate,provider}.ts' \
+  --glob '!tests/demo-*.test.ts'
+rg -n 'src/demo/rehearsal\.js|demo/rehearsal\.js' scripts src tests web \
+  --glob '!src/demo/{service,arc-driver,mock-driver,rehearsal,human-proposition,predicate,provider}.ts' \
+  --glob '!tests/demo-*.test.ts'
+rg -n 'src/demo/human-proposition\.js|demo/human-proposition\.js' scripts src tests web \
+  --glob '!src/demo/{service,arc-driver,mock-driver,rehearsal,human-proposition,predicate,provider}.ts' \
+  --glob '!tests/human-proposition.test.ts' --glob '!tests/demo-*.test.ts'
+rg -n 'src/demo/predicate\.js|demo/predicate\.js' scripts src tests web \
+  --glob '!src/demo/{service,arc-driver,mock-driver,rehearsal,human-proposition,predicate,provider}.ts' \
+  --glob '!tests/demo-*.test.ts'
+rg -n 'src/demo/provider\.js|demo/provider\.js' scripts src tests web \
+  --glob '!src/demo/{service,arc-driver,mock-driver,rehearsal,human-proposition,predicate,provider}.ts' \
+  --glob '!tests/demo-*.test.ts'
+```
+
+最后一条只匹配 `demo/provider.js`，不得把 `src/agent/provider.ts` 或 `agent/provider.js` 算入删除范围。
+
+- [ ] **Step 7: 删除旧演示层及其测试并立刻回归（5 分钟）**
+
+Run:
+
+```bash
+git rm src/demo/service.ts src/demo/arc-driver.ts src/demo/mock-driver.ts \
+  src/demo/rehearsal.ts src/demo/human-proposition.ts src/demo/predicate.ts \
+  src/demo/provider.ts tests/demo-*.test.ts tests/human-proposition.test.ts
+npm test
+npm run typecheck
+```
+
+Expected: `git rm` 只删除列出的旧演示层和对应测试；`npm test` 全部 PASS，`tsc --noEmit` 退出码 0。
+若 glob 没有匹配文件，先用 `git ls-files 'tests/demo-*.test.ts'` 核对，不得加 `--ignore-unmatch` 掩盖差异。
+
+- [ ] **Step 8: 复查并删除旧样式与旧内容测试（4 分钟）**
+
+Run:
+
+```bash
+rg -n '\./styles\.css"|web/styles\.css' scripts src tests web \
+  --glob '!web/styles.css' --glob '!tests/frontend-content.test.ts'
+rg -n 'tests/frontend-content\.test\.js|frontend-content\.test\.js' scripts src tests web \
+  --glob '!tests/frontend-content.test.ts'
+```
+
+Expected: 两条命令均无输出、退出码 1；旧测试中仍适用的秘密、环境变量入口、助记词和账户派生断言
+已经由 `src/demo/secret-scan.ts` 与 Task 34 的新守卫承接。
+
+Run:
+
+```bash
+git rm web/styles.css tests/frontend-content.test.ts
+npm test
+npm run typecheck
+```
+
+Expected: 旧总样式和旧内容测试被删除；全量测试 PASS，类型检查退出码 0。
+
+- [ ] **Step 9: 审计删除与保留集合（3 分钟）**
+
+Run:
+
+```bash
+git diff --name-status -- src scripts tests web
+test -f src/frontend/wallet.ts && test -f src/frontend/abis.ts \
+  && test -f tests/frontend-wallet.test.ts && test -f src/demo/secret-scan.ts \
+  && test -f src/oracle/question-oracle.ts
+```
+
+Expected: 删除项只来自本 Task 清单，五个必须保留的路径仍存在。检查 `tests/frontend-wallet.test.ts`：若有
+只针对旧押注流程且已失去生产入口的用例，只删除这些用例并在执行记录中逐个写明测试名；新付款计划、
+授权、余额、链切换和 EIP-5792 原子调用相关用例必须保留。
+
+### Task 33: 更新包元数据、命令与忽略规则
+
+**Files:**
+- Modify: `package.json`
+- Modify: `.gitignore`
+
+- [ ] **Step 1: 写元数据与脚本约束检查并确认当前状态不满足（3 分钟）**
+
+Run:
+
+```bash
+node -e 'const p=require("./package.json"); if(p.name!=="sanyi")process.exit(1); \
+if(p.description!=="三易：一问三家的中式命理")process.exit(1); \
+for(const k of ["frontend:mock","demo:smoke:live","demo:recover"])if(k in p.scripts)process.exit(1); \
+for(const k of ["font:charset","font:subset","demo:rehearse"])if(!(k in p.scripts))process.exit(1)'
+```
+
+Expected: FAIL；当前包名、描述、旧脚本或字体脚本至少一项不符合目标。
+
+- [ ] **Step 2: 最小修改 `package.json`**
+
+将顶层字段改为：
+
+```json
+"name": "sanyi",
+"description": "三易：一问三家的中式命理"
+```
+
+删除 `frontend:mock`、`demo:smoke:live`、`demo:recover`，加入：
+
+```json
+"font:charset": "node --import tsx scripts/font-charset.ts",
+"font:subset": ".venv-tools/bin/python scripts/subset-sanyi-font.py"
+```
+
+`demo:rehearse` 必须保持 Chunk 3 已定义的精确值：
+
+```json
+"demo:rehearse": "node --import tsx scripts/rehearse-demo.ts --mode=mock"
+```
+
+- [ ] **Step 3: 更新 `.gitignore` 并核对字体资产边界（3 分钟）**
+
+确保 `.gitignore` 包含：
+
+```gitignore
+.venv-tools/
+/data/
+web/fonts/MaShanZheng-Regular.ttf
+```
+
+Run:
+
+```bash
+git check-ignore -q .venv-tools/bin/python
+git check-ignore -q data/readings/example.json
+git check-ignore -q web/fonts/MaShanZheng-Regular.ttf
+! git check-ignore src/calendar/data/example.json
+! git check-ignore web/fonts/mashanzheng-subset.woff2
+! git check-ignore web/fonts/OFL.txt
+! git check-ignore web/fonts/mashanzheng-chars.txt
+```
+
+Expected: 七条检查均退出码 0；只有根目录运行数据被忽略，`src/calendar/data/` 可入库；原始字体被忽略，
+字体子集、许可证与固定字表可入库。
+
+- [ ] **Step 4: 运行元数据检查、测试与类型检查（3 分钟）**
+
+Run:
+
+```bash
+node -e 'const p=require("./package.json"); if(p.name!=="sanyi")process.exit(1); \
+if(p.description!=="三易：一问三家的中式命理")process.exit(1); \
+for(const k of ["frontend:mock","demo:smoke:live","demo:recover"])if(k in p.scripts)process.exit(1); \
+for(const k of ["font:charset","font:subset","demo:rehearse"])if(!(k in p.scripts))process.exit(1)'
+npm test
+npm run typecheck
+```
+
+Expected: 元数据检查退出码 0；全量测试 PASS，类型检查退出码 0。
+
+### Task 34: 建立新站文化守卫并扩展秘密扫描
+
+**Files:**
+- Create: `tests/frontend-sanyi-content.test.ts`
+- Modify: `scripts/check-frontend-secrets.ts`
+- Preserve: `src/demo/secret-scan.ts`
+
+- [ ] **Step 1: 写完整文化守卫测试**
+
+```ts
+// tests/frontend-sanyi-content.test.ts
+import assert from "node:assert/strict";
+import { access, readFile, readdir } from "node:fs/promises";
+import { extname, join, relative } from "node:path";
+import test from "node:test";
+
+const TEXT_EXTENSIONS = new Set([".ts", ".tsx", ".css", ".html"]);
+const CULTURE_FORBIDDEN = /[\u3040-\u30ff]|・|易者|身銭|筮竹|神社|高島|断易/u;
+const VISIBLE_FORBIDDEN = /押钱|赔付|封存/u;
+const REMOTE_FONT = /fonts\.(?:googleapis|gstatic)\.com/u;
+
+async function walk(root: string): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const path = join(root, entry.name);
+    return entry.isDirectory() ? walk(path) : [path];
+  }));
+  return nested.flat();
+}
+
+async function sourceFiles(): Promise<string[]> {
+  const [webFiles, sanyiFiles] = await Promise.all([walk("web"), walk("src/sanyi")]);
+  return [...webFiles, ...sanyiFiles].filter((path) =>
+    TEXT_EXTENSIONS.has(extname(path)) && !path.startsWith("web/dist/"));
+}
+
+async function assertNoMatch(paths: string[], pattern: RegExp, label: string): Promise<void> {
+  const failures: string[] = [];
+  for (const path of paths) {
+    const text = await readFile(path, "utf8");
+    if (pattern.test(text)) failures.push(relative(process.cwd(), path));
+  }
+  assert.deepEqual(failures, [], `${label}：${failures.join("、")}`);
+}
+
+test("文化扫描要求先生成 app.js 与 app.css", async () => {
+  for (const path of ["web/dist/app.js", "web/dist/app.css"]) {
+    await assert.doesNotReject(
+      access(path),
+      `缺少 ${path}；请先运行 npm run frontend:build`,
+    );
+  }
+});
+
+test("构建产物与源码不含日式文化残留", async () => {
+  const paths = ["web/dist/app.js", "web/dist/app.css", ...await sourceFiles()];
+  await assertNoMatch(paths, CULTURE_FORBIDDEN, "发现日式文化残留");
+});
+
+test("用户可见源码不含旧押注与归档文案", async () => {
+  const paths = ["web/dist/app.js", "web/dist/app.css", ...(await sourceFiles()).filter((path) =>
+    !path.startsWith("src/sanyi/schools/"))];
+  await assertNoMatch(paths, VISIBLE_FORBIDDEN, "发现旧产品文案");
+});
+
+test("构建产物与源码不加载 Google Fonts", async () => {
+  const paths = ["web/dist/app.js", "web/dist/app.css", ...await sourceFiles()];
+  await assertNoMatch(paths, REMOTE_FONT, "发现外部字体地址");
+});
+```
+
+其中 `CULTURE_FORBIDDEN` 的 `\u3040-\u30ff` 精确覆盖 Unicode U+3040–U+30FF 假名区间；
+`src/sanyi/schools/` 只对“押钱／赔付／封存”三项禁止句豁免，不豁免假名、日式文化词或外部字体。
+
+- [ ] **Step 2: 运行测试并确认 RED 信息明确（2 分钟）**
+
+Run: `node --import tsx --test tests/frontend-sanyi-content.test.ts`
+
+Expected: 在尚未完成新构建或仍有旧文案时 FAIL；若 `web/dist` 缺失，错误明确包含
+`请先运行 npm run frontend:build`，而不是把缺失文件当作空文本跳过。
+
+- [ ] **Step 3: 用以下完整内容替换秘密扫描脚本**
+
+```ts
+// scripts/check-frontend-secrets.ts
+import { readFile, readdir } from "node:fs/promises";
+import { extname, join } from "node:path";
+
+import { scanFrontendSources } from "../src/demo/secret-scan.js";
+
+const TEXT_EXTENSIONS = new Set([".html", ".css", ".js", ".ts", ".tsx", ".txt"]);
+const BINARY_EXTENSIONS = new Set([".woff", ".woff2", ".ttf", ".otf", ".png", ".jpg", ".webp"]);
+
+async function walk(root: string): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const path = join(root, entry.name);
+    return entry.isDirectory() ? walk(path) : [path];
+  }));
+  return nested.flat();
+}
+
+const paths = (await walk("web")).filter((path) => {
+  const extension = extname(path).toLowerCase();
+  if (BINARY_EXTENSIONS.has(extension)) return false;
+  return TEXT_EXTENSIONS.has(extension);
+});
+const sources = await Promise.all(paths.map(async (path) => ({
+  path,
+  text: await readFile(path, "utf8"),
+})));
+const secrets = [
+  { label: "Arc 签名秘密值", value: process.env.ARC_PRIVATE_KEY ?? "" },
+  { label: "DeepSeek 凭据值", value: process.env.DEEPSEEK_API_KEY ?? "" },
+];
+const leaks = scanFrontendSources(sources, secrets);
+if (leaks.length > 0) {
+  for (const leak of leaks) {
+    console.error(`前端秘密扫描失败：${leak.path}（${leak.reasons.join("、")}）`);
+  }
+  process.exitCode = 1;
+} else {
+  console.log(
+    `前端秘密扫描通过：${paths.length} 个浏览器源码或构建文件不含秘密值、` +
+    "环境变量入口、助记词或账户派生入口",
+  );
+}
+```
+
+该实现递归覆盖 `web/dist/app.js`、`web/dist/app.css` 和所有前端文本源码；字体等二进制按扩展名跳过，
+但 `web/fonts/OFL.txt` 与 `mashanzheng-chars.txt` 仍作为文本参与扫描。
+
+- [ ] **Step 4: 构建后运行 GREEN 与回归（5 分钟）**
+
+运行 `npm test` 前需先运行 `npm run frontend:build`，以生成文化守卫依赖的 `web/dist` 产物。
+
+Run:
+
+```bash
+npm run frontend:build
+node --import tsx --test tests/frontend-sanyi-content.test.ts
+npm run frontend:secrets
+npm test
+npm run typecheck
+```
+
+Expected: 文化守卫 4 tests PASS；秘密扫描明确报告扫描到浏览器源码及构建文件且退出码 0；全量测试
+PASS，类型检查退出码 0。若扫描命中，修改实际文案或资源引用，不得扩大豁免；唯一文案豁免仍是
+`src/sanyi/schools/` 中用于约束模型的禁止句。
+
+### Task 35: 编写里程碑 1A 用户验收手册
+
+**Files:**
+- Create: `docs/plans/2026-09-30-sanyi-1a-acceptance.md`
+
+- [ ] **Step 1: 用以下完整内容新建验收文档**
+
+```markdown
+# 三易里程碑 1A 用户验收
+
+## 启动准备
+
+1. 在项目根目录准备 `.env`，至少填写 `DEEPSEEK_API_KEY` 和 `WALLETCONNECT_PROJECT_ID`。
+2. 运行 `npm run frontend:dev`。
+3. 浏览器打开 `http://127.0.0.1:4173`，使用 Arc Testnet 钱包和测试币验收。
+
+如需运行 `npm test`，需先运行 `npm run frontend:build`，生成测试依赖的 `web/dist` 产物。
+
+## 验收清单
+
+每项通过后勾选；发现问题时记录页面、操作、实际结果和截图。
+
+- [ ] **首页时空栏**
+  - 怎么做：打开首页，等待时空信息载入，并与本机北京时间对照。
+  - 应看到：公历、农历、四柱、节气、月建、日辰、旬空与值日信息齐全，时间按北京时间显示。
+
+- [ ] **分类标签与改选**
+  - 怎么做：输入一个具体问事，观察自动分类，再点击其它可用事项标签并改回。
+  - 应看到：分类结果清楚；付款前可以改选，最终事项以最后一次选择为准。
+
+- [ ] **未开放门类提示**
+  - 怎么做：分别输入命理、运势、起名类问题或选择对应入口。
+  - 应看到：三类均明确提示“尚未开放”及当前可用范围，不会进入收费或六掷流程。
+
+- [ ] **付款一次确认**
+  - 怎么做：选择可用问事并点击付款，连接 Arc Testnet 钱包，检查钱包确认内容。
+  - 应看到：卦金为 0.05 USDC；正常路径只需一次用户确认，付款成功后进入六掷。
+
+- [ ] **六掷交互与键盘操作**
+  - 怎么做：分别用指针按住后松开、键盘 Space 和 Enter 完成六掷；尝试重复触发同一掷。
+  - 应看到：按住时有摇卦状态，松开只落一次；自下而上累计六爻，重复操作不会多记。
+
+- [ ] **排盘表、术语说明与阅读引导**
+  - 怎么做：完成六掷，展开排盘及术语说明，按页面引导依次阅读。
+  - 应看到：世应、六亲、六神、纳甲、旬空、月日旺衰可读；术语包含“是什么”和“这一卦里”，
+    阅读引导能从本卦走到动爻、之卦和三家结果。
+
+- [ ] **五行详情**
+  - 怎么做：展开五行详情，抽查一爻的地支、五行、六亲来源和旺衰说明。
+  - 应看到：生克关系与六亲来源明确，且提示强弱本身不等同于吉凶。
+
+- [ ] **三家短断、详断与合议线**
+  - 怎么做：等待程颐、京房、邵雍逐家完成，阅读短断并展开详断。
+  - 应看到：三家可独立成功或失败；各自把握位置保留，合议线显示三家的算术平均。
+
+- [ ] **修改事项只重跑京房**
+  - 怎么做：记下三家内容，修改问事事项并确认，等待更新结束。
+  - 应看到：程颐和邵雍内容不变，只有京房进入落笔并更新；次数限制和禁用原因清楚。
+
+- [ ] **奇门九宫**
+  - 怎么做：查看奇门时盘，找到死门、九天、中五宫及换日说明。
+  - 应看到：九宫按南上北下排列；死门、九天可辨；中五明确“寄坤二”；页面注明子时换日。
+
+- [ ] **黄历**
+  - 怎么做：展开当日黄历并逐行查看。
+  - 应看到：建除、值神、二十八宿、冲煞、九星、吉神方位、宜忌和彭祖百忌完整显示。
+
+- [ ] **复算信息与 Arcscan**
+  - 怎么做：展开复算信息，依次点击付款交易和六个掷卦区块链接。
+  - 应看到：每个链接在 Arcscan 打开正确交易或区块，页面同时给出规范化问题和复算公式。
+
+- [ ] **刷新与分享链接**
+  - 怎么做：在结果页刷新；复制当前 `#/r/<id>` 链接到新标签页打开。
+  - 应看到：两种方式均恢复同一卦、六掷与三家结果，不会重复收费或重新掷卦。
+
+- [ ] **390px 手机布局**
+  - 怎么做：把视口设为 390px，从首页走到完整结果页并左右滑动页面。
+  - 应看到：页面本身没有横向滚动；六爻宽表只在自己的滚动容器内横向移动，按钮可正常操作。
+
+- [ ] **断网时不改用本地随机**
+  - 怎么做：进入六掷后断开网络，再尝试下一掷；恢复网络后重试。
+  - 应看到：断网时摇卦暂停并解释网络问题，爻数与结果不变；不会生成本地随机结果，恢复后可继续。
+
+## 验收结论
+
+- [ ] 上述项目全部通过，可以勾选 OpenSpec 任务 1.15。
+- 验收人：
+- 验收日期：
+- 未通过项或备注：
+```
+
+- [ ] **Step 2: 检查文档覆盖面（2 分钟）**
+
+Run:
+
+```bash
+rg -n '首页时空栏|分类标签与改选|未开放门类提示|付款一次确认|六掷交互与键盘操作|排盘表|五行详情|三家短断|修改事项只重跑京房|奇门九宫|黄历|Arcscan|刷新与分享链接|390px|断网时不改用本地随机' \
+  docs/plans/2026-09-30-sanyi-1a-acceptance.md
+```
+
+Expected: 15 个验收主题全部命中；每项均同时包含“怎么做”和“应看到”。
+
+### Task 36: 全量验证、OpenSpec 收口与用户验收交接
+
+**Files:**
+- Modify: `openspec/changes/sanyi-chinese-redesign/tasks.md`
+- Verify: `docs/plans/2026-09-30-sanyi-milestone-1a.md`
+- Verify: `docs/plans/2026-09-30-sanyi-1a-acceptance.md`
+
+- [ ] **Step 1: 重新生成生产前端（3 分钟）**
+
+Run: `npm run frontend:build`
+
+Expected: 退出码 0，重新生成 `web/dist/app.js` 与 `web/dist/app.css`；
+`web/fonts/mashanzheng-subset.woff2` 已存在，且 `app.css` 引用 `/fonts/mashanzheng-subset.woff2`。
+
+- [ ] **Step 2: 运行全量单元与集成测试（按顺序，不短路记录）（5–15 分钟）**
+
+Run: `npm test`
+
+Expected: 退出码 0，所有测试 PASS、0 FAIL；输出包含
+`tests/frontend-sanyi-content.test.ts` 的 4 个文化守卫用例。
+
+- [ ] **Step 3: 运行严格类型检查（3 分钟）**
+
+Run: `npm run typecheck`
+
+Expected: `tsc --noEmit` 退出码 0，无 TypeScript 诊断。
+
+- [ ] **Step 4: 扫描前端秘密（2 分钟）**
+
+Run: `npm run frontend:secrets`
+
+Expected: 退出码 0；输出说明浏览器源码和构建产物不含秘密值、服务端环境变量入口、私钥入口、
+助记词或账户派生入口；字体二进制未按 UTF-8 读取。
+
+- [ ] **Step 5: 跑完确定性 mock 排练（3–10 分钟）**
+
+Run: `npm run demo:rehearse`
+
+Expected: 退出码 0；一卦完成付款凭证校验、六次递增区块掷卦、排盘与三家落笔，且不请求真实付款或
+真实模型服务。
+
+- [ ] **Step 6: 验证固定字体字表可重复生成（2 分钟）**
+
+Run:
+
+```bash
+npm run font:charset
+git diff --exit-code web/fonts/mashanzheng-chars.txt
+```
+
+Expected: 两条命令退出码均为 0；字表内容与已跟踪版本完全一致，没有顺序漂移或漏字。
+
+- [ ] **Step 7: 验收通过后更新 OpenSpec 完成状态（3 分钟）**
+
+只有 Step 1–6 全部通过后，才把
+`openspec/changes/sanyi-chinese-redesign/tasks.md` 的 `0.3` 与 `1.1`–`1.14` 改为 `[x]`。
+`1.15` 必须保持 `[ ]`，直到用户按 Task 35 文档完成并明确确认验收通过。
+
+Run:
+
+```bash
+rg -n '^- \[x\] (0\.3|1\.(?:[1-9]|1[0-4]))\b' \
+  openspec/changes/sanyi-chinese-redesign/tasks.md
+rg -n '^- \[ \] 1\.15\b' openspec/changes/sanyi-chinese-redesign/tasks.md
+openspec validate sanyi-chinese-redesign --strict
+```
+
+Expected: 第一条命中 15 项（0.3 加 1.1–1.14），第二条只命中尚待用户确认的 1.15；严格校验显示
+`sanyi-chinese-redesign` 有效并以退出码 0 结束。
+
+- [ ] **Step 8: 最终范围与工作区审计（3 分钟）**
+
+Run:
+
+```bash
+git status --short
+git diff --check
+git diff --name-status
+```
+
+Expected: 没有尾随空白或补丁格式错误；删除、保留、修改和新增文件与本 Chunk 清单一致；没有修改
+运行时密钥、本地数据、合约、探测、回放、消融或封存演示文件。本 Chunk 不提交，由主管审查后决定
+后续集成方式。

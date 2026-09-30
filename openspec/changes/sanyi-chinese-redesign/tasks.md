@@ -2,7 +2,7 @@
 
 - [x] 0.1 建立 git 基线并创建 `sanyi-redesign` 分支
 - [x] 0.2 归档五个已完成旧变更并同步 `openspec/specs/`
-- [ ] 0.3 编写里程碑 1A 实现计划 `docs/plans/2026-09-30-sanyi-milestone-1a.md`
+- [x] 0.3 编写里程碑 1A 实现计划 `docs/plans/2026-09-30-sanyi-milestone-1a.md`
 
 ## 1. 里程碑 1A：新站骨架与问事
 
