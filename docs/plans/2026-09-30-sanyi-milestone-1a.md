@@ -10,6 +10,16 @@
 
 ---
 
+## 分块预告
+
+- Chunk 1：术数与历法引擎。
+- Chunk 2A：分类、六掷与盘面核对。
+- Chunk 2B：三家、存档与编排。
+- Chunk 3：服务端接口。
+- Chunk 4：前端基础。
+- Chunk 5：前端结果页。
+- Chunk 6：清理与验收。
+
 ## 文件结构
 
 以下清单覆盖里程碑 1A 全部任务 1.1–1.14；每个文件只承担列出的单一职责。
@@ -30,18 +40,23 @@
 - `src/sanyi/classify.ts`：确定性分类问题类型、运势时间范围和问事事项。
 - `src/sanyi/throws.ts`：派生单掷铜钱并执行顺序、幂等与新区块约束。
 - `src/sanyi/schema.ts`：定义三家结构化断语 JSON Schema 和自洽校验。
+- `src/sanyi/facts.ts`：把六爻、梅花与变占结果转换为可核对的编号事实表。
 - `src/sanyi/audit.ts`：用编号事实表核对证据及正文中的盘面组合。
 - `src/sanyi/schools/shared.ts`：提供三家提示词共用的安全边界和序列化工具。
 - `src/sanyi/schools/chengyi.ts`：组装程颐判断路径与卦爻辞输入。
 - `src/sanyi/schools/jingfang.ts`：组装京房纳甲事实与用神输入。
 - `src/sanyi/schools/shaoyong.ts`：组装邵雍体用互变输入。
+- `src/sanyi/schools/index.ts`：汇总问事三家定义并提供稳定键类型。
+- `src/sanyi/mock-schools.ts`：依据事实表生成可通过核对的确定性三家断语。
 - `src/sanyi/store.ts`：原子持久化 reading 与付款凭证索引。
 - `src/sanyi/reading-service.ts`：编排创建、六掷、排盘、三家并行、重试和改事项。
 - `src/sanyi/log.ts`：向 `log/sanyi_{日期}.log` 写入脱敏中文日志。
 - `tests/sanyi-classify.test.ts`：覆盖八类分类、时间范围、默认问事和替代建议。
 - `tests/sanyi-throws.test.ts`：覆盖可复算映射、顺序、幂等、超时和区块递增。
 - `tests/sanyi-schema.test.ts`：覆盖结构、字数、应期和吉凶把握自洽。
+- `tests/sanyi-facts.test.ts`：覆盖编号事实表的完整性与已核验样例。
 - `tests/sanyi-audit.test.ts`：覆盖未知 ref、矛盾 claim 和正文虚构事实。
+- `tests/helpers/sample-question.ts`：构造事实表与核对测试共用的已核验问事样例盘。
 - `tests/sanyi-schools.test.ts`：用 mock provider 验证三家输入隔离与提示词边界。
 - `tests/sanyi-store.test.ts`：覆盖不可枚举 id、重启防复用和隐私边界。
 - `tests/sanyi-reading-service.test.ts`：覆盖问事全流程、失败隔离、免费重试与仅重跑京房。
@@ -77,7 +92,6 @@
 - `package.json`：加入 lunar 依赖、字体命令和新排练入口，不改项目名（项目更名属于 3.1）。
 - `package-lock.json`：锁定 `lunar-javascript@1.7.7` 的解析结果。
 - `src/oracle/liuyao-chart.ts`：仅导出既有旺衰计算函数供梅花复用。
-- `src/demo/provider.ts`：提供三家断语的确定性 mock fixtures。
 - `src/frontend/server.ts`：接入 `/api/now`、`/api/classify`、`/api/readings/*` 并移除旧路由。
 - `web/main.tsx`：保留 Providers，只挂载新应用入口。
 - `web/app.tsx`：缩减为 `#/` 与 `#/r/<id>` 的 hash 路由。
@@ -1093,3 +1107,1005 @@ Expected: 显示 1.1、1.2、1.3 和七条 Requirement；本 Chunk 的测试分�
 ```bash
 git add src/calendar src/oracle/liuyao-chart.ts src/types/lunar-javascript.d.ts tools/qimen tests/almanac.test.ts tests/qimen.test.ts tests/bianzhan.test.ts tests/meihua.test.ts && git commit -m "test(calendar): 完成术数历法交叉验收"
 ```
+
+## Chunk 2A: 分类、六掷与盘面核对
+### Task 8: 统一问题分类与付款前改选
+**Files:**
+- Create: `src/sanyi/classify.ts`
+- Modify: `src/oracle/question-classifier.ts`
+- Create: `tests/sanyi-classify.test.ts`
+- Test: `tests/question-classifier.test.ts`
+- [ ] **Step 1: 写失败测试（5 分钟）**
+```ts
+// tests/sanyi-classify.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { classifyQuestion, overrideClassification } from "../src/sanyi/classify.js";
+const cases = [
+  ["我本月财运怎么样", "fortune", "month"],
+  ["我今年运势如何", "fortune", "year"],
+  ["我明年运势如何", "fortune", "next-year"],
+  ["2027年我的运势", "fortune", "year:2027"],
+  ["今天运气怎么样", "fortune", "today"],
+  ["我适合做什么工作", "destiny", undefined],
+  ["看看我的八字", "destiny", undefined],
+  ["那件事会怎样", "question", undefined],
+  ["给女儿起个名字，姓王", "naming", undefined],
+  ["下个月哪天搬家好", "date-selection", undefined],
+  ["天蝎座本月运势", "zodiac", undefined],
+  ["我们俩合不合", "compatibility", undefined],
+] as const;
+for (const [question, kind, horizon] of cases) {
+  test(question, () => {
+    const result = classifyQuestion(question);
+    assert.equal(result.kind, kind);
+    assert.equal(result.horizon, horizon);
+  });
+}
+test("问事复用现有事项分类", () => {
+  const result = classifyQuestion("这次面试能过吗");
+  assert.equal(result.subject?.key, "career");
+  assert.equal(result.subject?.useGod, "官鬼");
+});
+test("未开放类型给出问事替代建议", () => {
+  const result = classifyQuestion("给女儿起个名字，姓王");
+  assert.equal(result.supported, false);
+  assert.match(result.suggestion ?? "", /给孩子起名叫某某好不好/);
+});
+test("付款前可改类型、事项和时间范围", () => {
+  const base = classifyQuestion("我本月财运怎么样");
+  const changed = overrideClassification(base, { kind: "question", subjectKey: "career" });
+  assert.equal(changed.kind, "question");
+  assert.equal(changed.subject?.key, "career");
+  assert.throws(() => overrideClassification(base, { horizon: "year:20x7" }), /时间范围无效/);
+});
+test("规范化并拒绝无意义或越界输入", () => {
+  assert.equal(classifyQuestion("  那件事   会怎样  ").question, "那件事 会怎样");
+  assert.equal(classifyQuestion("1234").kind, "other");
+  assert.throws(() => classifyQuestion("123"), /4–280/);
+});
+```
+- [ ] **Step 2: 运行 RED（2 分钟）**
+Run: `node --import tsx --test tests/sanyi-classify.test.ts`
+Expected: FAIL，包含 `Cannot find module '../src/sanyi/classify.js'`。
+- [ ] **Step 3: 实现分类器（5 分钟）**
+```ts
+// src/sanyi/classify.ts
+import {
+  QUESTION_SUBJECTS,
+  classifyQuestionSubject,
+  type QuestionSubjectKey,
+  type QuestionSubjectSuggestion,
+} from "../oracle/question-classifier.js";
+export type QuestionKind =
+  | "question"
+  | "destiny"
+  | "fortune"
+  | "naming"
+  | "date-selection"
+  | "zodiac"
+  | "compatibility"
+  | "other";
+export type FortuneHorizon = "today" | "month" | "year" | "next-year" | `year:${number}`;
+export interface QuestionClassification {
+  question: string;
+  kind: QuestionKind;
+  horizon?: FortuneHorizon;
+  subject?: QuestionSubjectSuggestion;
+  supported: boolean;
+  needsBirth: boolean;
+  suggestion?: string;
+}
+
+const RULES: ReadonlyArray<[Exclude<QuestionKind, "question" | "other">, RegExp]> = [
+  ["naming", /起名|取名|名字/],
+  ["compatibility", /合婚|合不合|八字合/],
+  ["date-selection", /择日|哪天|吉日|搬家.*日/],
+  [
+    "zodiac",
+    new RegExp(
+      "星座|星盘|白羊|金牛|双子|巨蟹|狮子|处女|天秤|"+
+      "天蝎|射手|摩羯|水瓶|双鱼",
+    ),
+  ],
+  ["fortune", /运势|运气|流年|财运/],
+  ["destiny", /八字|命里|命格|适合做什么|性格|一生命运/],
+];
+const UNSUPPORTED: Record<Exclude<QuestionKind, "question" | "destiny" | "fortune">, string> = {
+  naming: "起名即将开放。也可以改为问事，例如「给孩子起名叫某某好不好」。",
+  "date-selection": "择日即将开放。也可以把候选日期当作一件事来问。",
+  zodiac: "星座即将开放。也可以把关心的事情改为问事。",
+  compatibility: "合婚即将开放。也可以把这段关系改为一件事来问。",
+  other: "暂时无法识别这个问题，请改写成一件具体的事来问。",
+};
+export function normalizeQuestion(value: string): string {
+  const question = value.trim().replace(/\s+/g, " ");
+  if (question.length < 4 || question.length > 280) {
+    throw new Error("问题长度必须为 4–280 个字符");
+  }
+  return question;
+}
+function horizonFor(question: string): FortuneHorizon {
+  const year = question.match(/(20\d{2})年/)?.[1];
+  if (year) return `year:${Number(year)}`;
+  if (/今天|今日/.test(question)) return "today";
+  if (/本月|这个月/.test(question)) return "month";
+  if (/明年/.test(question)) return "next-year";
+  return "year";
+}
+
+export function classifyQuestion(raw: string): QuestionClassification {
+  const question = normalizeQuestion(raw);
+  const matched = RULES.find(([, pattern]) => pattern.test(question));
+  const hasText = /[\p{Script=Han}A-Za-z]/u.test(question);
+  const kind: QuestionKind = matched?.[0] ?? (hasText ? "question" : "other");
+  const supported = kind === "question" || kind === "destiny" || kind === "fortune";
+  return {
+    question,
+    kind,
+    supported,
+    needsBirth: kind === "destiny" || kind === "fortune",
+    ...(kind === "fortune" ? { horizon: horizonFor(question) } : {}),
+    ...(kind === "question" ? { subject: classifyQuestionSubject(question) } : {}),
+    ...(!supported ? { suggestion: UNSUPPORTED[kind as keyof typeof UNSUPPORTED] } : {}),
+  };
+}
+export function overrideClassification(
+  base: QuestionClassification,
+  patch: { kind?: QuestionKind; horizon?: FortuneHorizon | string; subjectKey?: QuestionSubjectKey },
+): QuestionClassification {
+  const kind = patch.kind ?? base.kind;
+  const kinds: readonly QuestionKind[] = [
+    "question",
+    "destiny",
+    "fortune",
+    "naming",
+    "date-selection",
+    "zodiac",
+    "compatibility",
+    "other",
+  ];
+  if (!kinds.includes(kind)) {
+    throw new Error("问题类型无效");
+  }
+  if (
+    patch.horizon !== undefined
+    && !/^(today|month|year|next-year|year:20\d{2})$/.test(patch.horizon)
+  ) {
+    throw new Error("时间范围无效");
+  }
+  const option = patch.subjectKey === undefined
+    ? undefined
+    : QUESTION_SUBJECTS.find((item) => item.key === patch.subjectKey);
+  if (patch.subjectKey !== undefined && !option) {
+    throw new Error("事项类型无效");
+  }
+  return {
+    question: base.question,
+    kind,
+    supported: kind === "question" || kind === "destiny" || kind === "fortune",
+    needsBirth: kind === "destiny" || kind === "fortune",
+    ...(kind === "fortune" ? { horizon: (patch.horizon ?? base.horizon ?? "year") as FortuneHorizon } : {}),
+    ...(kind === "question"
+      ? {
+          subject: option
+            ? { ...option, reason: "用户在付款前主动改选事项。" }
+            : base.subject ?? classifyQuestionSubject(base.question),
+        }
+      : {}),
+    ...(!["question", "destiny", "fortune"].includes(kind)
+      ? { suggestion: UNSUPPORTED[kind as keyof typeof UNSUPPORTED] }
+      : {}),
+  };
+}
+```
+
+- [ ] **Step 4: 先扩展现有事业关键词（2 分钟）**
+
+在 `src/oracle/question-classifier.ts` 的 `career` 项中，把 `pattern` 精确改为：
+
+```ts
+{
+  key: "career",
+  pattern: new RegExp(
+    "面试|求职|应聘|跳槽|辞职|离职|工作|职业|事业|岗位|"+
+    "官职|功名|升职|入职|offer|录取|丈夫|老公|先生|盗贼|小偷",
+  ),
+  reason: "问题涉及求职、工作、官职或功名。",
+},
+```
+
+并在 `tests/question-classifier.test.ts` 的“事项主题独立建议用神”测试中加入：
+
+```ts
+const interview = classifyQuestion("这次面试能过吗").subject;
+assert.equal(interview.key, "career");
+assert.equal(interview.useGod, "官鬼");
+```
+
+- [ ] **Step 5: GREEN、类型检查与提交（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-classify.test.ts tests/question-classifier.test.ts && npm run typecheck`
+
+Expected: `16 pass, 0 fail`；`tsc --noEmit` 退出码 0。
+
+```bash
+git add src/sanyi/classify.ts src/oracle/question-classifier.ts \
+  tests/sanyi-classify.test.ts tests/question-classifier.test.ts \
+  && git commit -m "feat(sanyi): 实现统一问题分类"
+```
+
+### Task 9: 六掷派生与区块约束
+
+**Files:**
+- Create: `src/sanyi/throws.ts`
+- Create: `tests/sanyi-throws.test.ts`
+
+- [ ] **Step 1: 写失败测试（5 分钟）**
+
+```ts
+// tests/sanyi-throws.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { encodePacked, keccak256, type Hex } from "viem";
+import { ArcUnavailableError, assertNextThrow, deriveThrow, waitForBlockAfter } from "../src/sanyi/throws.js";
+const TX = `0x${"11".repeat(32)}` as Hex;
+const BLOCK = `0x${"22".repeat(32)}` as Hex;
+
+test("单掷与 viem 现场计算完全一致", () => {
+  const expectedHash = keccak256(encodePacked(
+    ["string", "bytes32", "bytes32", "string", "uint8"],
+    ["sanyi-throw-v1", TX, BLOCK, "这件事会怎样", 1],
+  ));
+  const bits = Number(BigInt(expectedHash) & 7n);
+  const coins = [bits & 1, (bits >> 1) & 1, (bits >> 2) & 1];
+  const result = deriveThrow({
+    paymentTxHash: TX,
+    blockHash: BLOCK,
+    question: "  这件事会怎样 ",
+    index: 1,
+  });
+  assert.deepEqual(result.coins, coins);
+  assert.equal(result.value, 6 + coins.reduce((sum, coin) => sum + coin, 0));
+});
+test("四种背数映射为交单拆重", () => {
+  const expected = [[0, 6, "交"], [1, 7, "单"], [2, 8, "拆"], [3, 9, "重"]] as const;
+  for (const [backs, value, name] of expected) {
+    assert.deepEqual({ value: 6 + backs, name: ["交", "单", "拆", "重"][backs] }, { value, name });
+  }
+});
+test("顺序、上限与新区块约束", async () => {
+  assert.equal(assertNextThrow([], 1), undefined);
+  assert.throws(() => assertNextThrow([], 2), /需先完成第 1 掷/);
+  const complete = Array.from({ length: 6 }, (_, offset) => ({ index: offset + 1 }));
+  assert.throws(() => assertNextThrow(complete, 7), /六掷已经完成/);
+  const blocks = [{ number: 9n, hash: BLOCK, timestamp: 1n }, { number: 11n, hash: BLOCK, timestamp: 2n }];
+  const source = {
+    latest: async () => {
+      const block = blocks.shift();
+      assert.ok(block);
+      return block;
+    },
+  };
+  const block = await waitForBlockAfter(source, 10n, {
+    timeoutMs: 10,
+    pollMs: 0,
+    now: () => 0,
+    sleep: async () => {},
+  });
+  assert.equal(block.number, 11n);
+});
+test("超时抛可续掷错误", async () => {
+  let now = 0;
+  await assert.rejects(
+    waitForBlockAfter(
+      { latest: async () => ({ number: 10n, hash: BLOCK, timestamp: 1n }) },
+      10n,
+      {
+        timeoutMs: 10,
+        pollMs: 5,
+        now: () => now,
+        sleep: async (ms) => {
+          now += ms;
+        },
+      },
+    ),
+    (error: unknown) => error instanceof ArcUnavailableError && /未能取得天时/.test(error.message),
+  );
+});
+```
+
+- [ ] **Step 2: 运行 RED（2 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-throws.test.ts`
+
+Expected: FAIL，包含 `Cannot find module '../src/sanyi/throws.js'`。
+
+- [ ] **Step 3: 实现六掷纯函数（5 分钟）**
+
+```ts
+// src/sanyi/throws.ts
+import { encodePacked, keccak256, type Hex } from "viem";
+import type { QuestionBlockSource } from "../oracle/question-oracle.js";
+import { normalizeQuestion } from "./classify.js";
+export type Coin = 0 | 1;
+export interface ThrowResult {
+  index: number;
+  coins: readonly [Coin, Coin, Coin];
+  backs: number;
+  value: number;
+  name: "交" | "单" | "拆" | "重";
+  moving: boolean;
+}
+export interface RecordedThrow extends ThrowResult {
+  blockNumber: string;
+  blockHash: Hex;
+  blockTimestamp: string;
+}
+export class ArcUnavailableError extends Error {
+  constructor(options?: ErrorOptions) {
+    super("未能取得天时（Arc 网络无响应），稍后可继续", options);
+    this.name = "ArcUnavailableError";
+  }
+}
+export interface DeriveThrowInput {
+  paymentTxHash: Hex;
+  blockHash: Hex;
+  question: string;
+  index: number;
+}
+export function deriveThrow(input: DeriveThrowInput): ThrowResult {
+  if (!Number.isInteger(input.index) || input.index < 1 || input.index > 6) {
+    throw new Error("掷序必须为 1–6");
+  }
+  const hash = keccak256(encodePacked(
+    ["string", "bytes32", "bytes32", "string", "uint8"],
+    ["sanyi-throw-v1", input.paymentTxHash, input.blockHash, normalizeQuestion(input.question), input.index],
+  ));
+  const bits = Number(BigInt(hash) & 7n);
+  const coins: [Coin, Coin, Coin] = [
+    (bits & 1) as Coin,
+    ((bits >> 1) & 1) as Coin,
+    ((bits >> 2) & 1) as Coin,
+  ];
+  const backs = coins.reduce<number>((sum, coin) => sum + coin, 0);
+  const value = 6 + backs;
+  const names: readonly ThrowResult["name"][] = ["交", "单", "拆", "重"];
+  const name = names[backs];
+  if (!name) {
+    throw new Error("铜钱背面数量无效");
+  }
+  return {
+    index: input.index,
+    coins,
+    backs,
+    value,
+    name,
+    moving: value === 6 || value === 9,
+  };
+}
+export function assertNextThrow(recorded: readonly Pick<RecordedThrow, "index">[], index: number): void {
+  if (index > 6 || recorded.length >= 6) throw new Error("六掷已经完成，不能进行第七掷");
+  const expected = recorded.length + 1;
+  if (index !== expected) throw new Error(`需先完成第 ${expected} 掷`);
+}
+export async function waitForBlockAfter(
+  source: QuestionBlockSource,
+  minExclusive: bigint,
+  options: {
+    timeoutMs?: number;
+    pollMs?: number;
+    now?: () => number;
+    sleep?: (ms: number) => Promise<void>;
+  } = {},
+): Promise<Awaited<ReturnType<QuestionBlockSource["latest"]>>> {
+  const timeoutMs = options.timeoutMs ?? 10_000;
+  const pollMs = options.pollMs ?? 250;
+  const now = options.now ?? Date.now;
+  const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const started = now();
+  try {
+    while (now() - started < timeoutMs) {
+      const block = await source.latest();
+      if (block.number > minExclusive) return block;
+      await sleep(pollMs);
+    }
+  } catch (error) {
+    throw new ArcUnavailableError({ cause: error });
+  }
+  throw new ArcUnavailableError();
+}
+```
+
+- [ ] **Step 4: GREEN、类型检查与提交（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-throws.test.ts && npm run typecheck`
+
+Expected: `4 pass, 0 fail`；`tsc --noEmit` 退出码 0。
+
+```bash
+git add src/sanyi/throws.ts tests/sanyi-throws.test.ts && git commit -m "feat(sanyi): 实现可复算六掷"
+```
+
+### Task 10: 编号事实表、断语 Schema 与盘面核对
+
+**Files:**
+- Create: `src/sanyi/facts.ts`
+- Create: `src/sanyi/schema.ts`
+- Create: `src/sanyi/audit.ts`
+- Create: `tests/helpers/sample-question.ts`
+- Create: `tests/sanyi-facts.test.ts`
+- Create: `tests/sanyi-schema.test.ts`
+- Create: `tests/sanyi-audit.test.ts`
+
+- [ ] **Step 1: 写失败测试（5 分钟）**
+
+```ts
+// tests/helpers/sample-question.ts
+import { selectPrimaryOracleText } from "../../src/calendar/bianzhan.js";
+import { deriveMeihua } from "../../src/calendar/meihua.js";
+import {
+  buildLiuyaoChart,
+  deriveFiveHexagrams,
+} from "../../src/oracle/liuyao-chart.js";
+import { buildQuestionFacts } from "../../src/sanyi/facts.js";
+import type { QuestionSchoolOutput } from "../../src/sanyi/schema.js";
+
+export const TIME = BigInt(Date.UTC(2026, 8, 30, 12, 15) / 1_000);
+export const LINES: readonly number[] = [9, 7, 7, 8, 8, 8];
+export const chart = buildLiuyaoChart({
+  lines: LINES,
+  timestamp: TIME,
+  focus: {
+    subjectKey: "career",
+    subjectLabel: "工作／官职",
+    useGod: "官鬼",
+    overridden: false,
+  },
+});
+export const facts = buildQuestionFacts(
+  chart,
+  deriveFiveHexagrams(LINES),
+  deriveMeihua(LINES, TIME),
+  selectPrimaryOracleText(LINES),
+);
+export const baseOutput: QuestionSchoolOutput = {
+  verdict: "平",
+  confidenceTenths: 5,
+  headline: "守正待时",
+  reason: "条件未齐",
+  sections: [
+    { title: "用神", text: "先看用神" },
+    { title: "世应", text: "再看世应" },
+    { title: "动变", text: "后看动变" },
+  ],
+  advice: ["等待明确通知"],
+  evidence: [{ ref: "line:2", claim: "官鬼" }],
+};
+```
+
+```ts
+// tests/sanyi-facts.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { facts } from "./helpers/sample-question.js";
+
+test("事实表覆盖盘面编号并锁定已核验爻位", () => {
+  assert.deepEqual(
+    [...facts.keys()].slice(0, 3),
+    ["line:1", "line:2", "line:3"],
+  );
+  assert.equal(facts.get("line:1")?.tokens.has("甲子"), true);
+  assert.equal(facts.get("line:1")?.tokens.has("妻财"), true);
+  assert.equal(facts.get("line:1")?.tokens.has("辛丑"), true);
+  assert.equal(facts.get("line:1")?.tokens.has("回头克"), true);
+  assert.equal(facts.get("line:2")?.tokens.has("旬空"), true);
+  assert.equal(facts.get("line:2")?.tokens.has("伏"), true);
+  for (const id of [
+    "month",
+    "day",
+    "use-god",
+    "body-use",
+    "hexagram:primary",
+    "hexagram:derived",
+    "hexagram:mutual",
+    "hexagram:opposite",
+    "hexagram:reversed",
+    "main-text",
+  ]) {
+    assert.equal(facts.has(id), true, `缺少事实：${id}`);
+  }
+});
+```
+
+```ts
+// tests/sanyi-audit.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { auditOutput, tokenizeClaim } from "../src/sanyi/audit.js";
+import type { QuestionSchoolOutput } from "../src/sanyi/schema.js";
+import { baseOutput, facts } from "./helpers/sample-question.js";
+
+function evidenceOutput(ref: string, claim: string): QuestionSchoolOutput {
+  return {
+    ...baseOutput,
+    evidence: [{ ref, claim }],
+  };
+}
+
+function proseOutput(text: string): QuestionSchoolOutput {
+  return {
+    ...baseOutput,
+    sections: [
+      { title: "正文", text },
+      ...baseOutput.sections.slice(1),
+    ],
+  };
+}
+
+const CASES: ReadonlyArray<{
+  name: string;
+  output: QuestionSchoolOutput;
+  expected: boolean;
+}> = [
+  {
+    name: "允许二爻甲寅木官鬼死且旬空",
+    output: evidenceOutput("line:2", "甲寅木官鬼死且旬空"),
+    expected: true,
+  },
+  {
+    name: "允许上爻应爻酉金子孙旺",
+    output: evidenceOutput("line:6", "应爻酉金子孙旺"),
+    expected: true,
+  },
+  {
+    name: "允许初爻动化丑土回头克",
+    output: evidenceOutput("line:1", "初爻子水动化丑土回头克"),
+    expected: true,
+  },
+  {
+    name: "允许三爻世爻辰土兄弟休",
+    output: evidenceOutput("line:3", "世爻辰土兄弟休"),
+    expected: true,
+  },
+  {
+    name: "允许二爻伏乙巳火父母",
+    output: evidenceOutput("line:2", "伏乙巳火父母"),
+    expected: true,
+  },
+  {
+    name: "允许用神官鬼与忌神子孙",
+    output: evidenceOutput("use-god", "用神官鬼，忌神子孙"),
+    expected: true,
+  },
+  {
+    name: "允许正文引用盘中多个真实组合",
+    output: proseOutput("寅木官鬼旬空，子水妻财发动来生，化丑土兄弟回头克"),
+    expected: true,
+  },
+  {
+    name: "正文普通词不触发单字误判",
+    output: proseOutput("此事宜休息片刻，相助者多，应当耐心"),
+    expected: true,
+  },
+  {
+    name: "拦截不存在的时柱编号",
+    output: evidenceOutput("pillar:time", "庚戌"),
+    expected: false,
+  },
+  {
+    name: "拦截三爻虚构旬空",
+    output: evidenceOutput("line:3", "辰土兄弟旬空"),
+    expected: false,
+  },
+  {
+    name: "拦截二爻错误六亲",
+    output: evidenceOutput("line:2", "寅木妻财"),
+    expected: false,
+  },
+  {
+    name: "拦截四爻虚构发动",
+    output: evidenceOutput("line:4", "癸丑土兄弟动"),
+    expected: false,
+  },
+  {
+    name: "拦截正文不存在的午火官鬼",
+    output: proseOutput("午火官鬼旺"),
+    expected: false,
+  },
+];
+
+for (const sample of CASES) {
+  test(sample.name, () => {
+    const result = auditOutput(sample.output, facts);
+    assert.equal(result.ok, sample.expected, result.errors.join("；"));
+  });
+}
+
+test("分词按最长候选从左到右匹配", () => {
+  assert.deepEqual(
+    tokenizeClaim("应爻酉金子孙旺"),
+    ["应", "酉", "金", "子孙", "旺"],
+  );
+  assert.deepEqual(tokenizeClaim("甲寅木官鬼"), ["甲寅", "木", "官鬼"]);
+  assert.deepEqual(tokenizeClaim("化丑土回头克"), ["丑", "土", "回头克"]);
+});
+```
+
+```ts
+// tests/sanyi-schema.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { Ajv } from "ajv";
+import {
+  QUESTION_SCHOOL_SCHEMA,
+  checkVerdictConsistency,
+  type QuestionSchoolOutput,
+  type Verdict,
+} from "../src/sanyi/schema.js";
+import { baseOutput } from "./helpers/sample-question.js";
+
+function consistency(verdict: Verdict, confidenceTenths: number): string[] {
+  return checkVerdictConsistency({ verdict, confidenceTenths });
+}
+
+test("五种吉凶使用规定的把握边界", () => {
+  for (const verdict of ["大吉", "吉"] as const) {
+    assert.deepEqual(consistency(verdict, 6), []);
+    assert.notDeepEqual(consistency(verdict, 5), []);
+  }
+  assert.deepEqual(consistency("平", 4), []);
+  assert.deepEqual(consistency("平", 6), []);
+  assert.notDeepEqual(consistency("平", 3), []);
+  assert.notDeepEqual(consistency("平", 7), []);
+  for (const verdict of ["凶", "大凶"] as const) {
+    assert.deepEqual(consistency(verdict, 4), []);
+    assert.notDeepEqual(consistency(verdict, 5), []);
+  }
+});
+
+const validate = new Ajv({ allErrors: true }).compile(QUESTION_SCHOOL_SCHEMA);
+
+function valid(value: unknown): boolean {
+  return validate(value) === true;
+}
+
+test("JSON Schema 接受完整合法对象", () => {
+  assert.equal(valid(baseOutput), true, JSON.stringify(validate.errors));
+});
+
+const INVALID_CASES: ReadonlyArray<{
+  name: string;
+  value: QuestionSchoolOutput | Record<string, unknown>;
+}> = [
+  {
+    name: "拒绝十七字标题",
+    value: { ...baseOutput, headline: "一二三四五六七八九十一二三四五六七" },
+  },
+  {
+    name: "拒绝少于三段正文",
+    value: { ...baseOutput, sections: baseOutput.sections.slice(0, 2) },
+  },
+  {
+    name: "拒绝应期缺少成立条件",
+    value: { ...baseOutput, timing: { window: "下月" } },
+  },
+  {
+    name: "拒绝未声明的额外字段",
+    value: { ...baseOutput, extra: true },
+  },
+];
+
+for (const sample of INVALID_CASES) {
+  test(sample.name, () => {
+    assert.equal(valid(sample.value), false);
+  });
+}
+```
+
+- [ ] **Step 2: 运行 RED（2 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-facts.test.ts tests/sanyi-schema.test.ts tests/sanyi-audit.test.ts`
+
+Expected: FAIL，三个模块均不存在。
+
+- [ ] **Step 3: 实现 Schema 与自洽校验（5 分钟）**
+
+```ts
+// src/sanyi/schema.ts
+import type { JsonSchema } from "../agent/schemas.js";
+export type Verdict = "大吉" | "吉" | "平" | "凶" | "大凶";
+export interface QuestionSchoolOutput {
+  verdict: Verdict;
+  confidenceTenths: number;
+  headline: string;
+  reason: string;
+  sections: ReadonlyArray<{ title: string; text: string }>;
+  timing?: { window: string; condition: string };
+  advice: readonly string[];
+  evidence: ReadonlyArray<{ ref: string; claim: string }>;
+}
+export const QUESTION_SCHOOL_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["verdict", "confidenceTenths", "headline", "reason", "sections", "advice", "evidence"],
+  properties: {
+    verdict: { type: "string", enum: ["大吉", "吉", "平", "凶", "大凶"] },
+    confidenceTenths: { type: "integer", minimum: 1, maximum: 9 },
+    headline: { type: "string", minLength: 1, maxLength: 16 },
+    reason: { type: "string", minLength: 1, maxLength: 60 },
+    sections: {
+      type: "array",
+      minItems: 3,
+      maxItems: 5,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["title", "text"],
+        properties: {
+          title: { type: "string", minLength: 1 },
+          text: { type: "string", minLength: 1 },
+        },
+      },
+    },
+    timing: {
+      type: "object",
+      additionalProperties: false,
+      required: ["window", "condition"],
+      properties: {
+        window: { type: "string", minLength: 1 },
+        condition: { type: "string", minLength: 1 },
+      },
+    },
+    advice: { type: "array", minItems: 1, maxItems: 3, items: { type: "string", minLength: 1 } },
+    evidence: {
+      type: "array",
+      minItems: 1,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["ref", "claim"],
+        properties: {
+          ref: { type: "string", minLength: 1 },
+          claim: { type: "string", minLength: 1 },
+        },
+      },
+    },
+  },
+} as const satisfies JsonSchema;
+export function checkVerdictConsistency(
+  output: Pick<QuestionSchoolOutput, "verdict" | "confidenceTenths">,
+): string[] {
+  const { verdict, confidenceTenths } = output;
+  if ((verdict === "大吉" || verdict === "吉") && confidenceTenths < 6) {
+    return [`${verdict}对应的把握不得低于六成`];
+  }
+  if (verdict === "平" && (confidenceTenths < 4 || confidenceTenths > 6)) {
+    return ["平对应的把握必须为四至六成"];
+  }
+  if ((verdict === "凶" || verdict === "大凶") && confidenceTenths > 4) {
+    return [`${verdict}对应的把握不得高于四成`];
+  }
+  return [];
+}
+```
+
+- [ ] **Step 4: 实现事实表与核对器（5 分钟）**
+
+```ts
+// src/sanyi/facts.ts
+import type { FiveHexagrams, LiuyaoChart } from "../oracle/liuyao-chart.js";
+import type { MeihuaResult } from "../calendar/meihua.js";
+import type { OracleSelection } from "../calendar/bianzhan.js";
+export interface Fact { id: string; label: string; tokens: ReadonlySet<string> }
+export type FactTable = Map<string, Fact>;
+type TokenValue = string | null | undefined | false;
+
+function words(values: readonly TokenValue[]): Set<string> {
+  return new Set(
+    values.filter((value): value is string => typeof value === "string" && value.length > 0),
+  );
+}
+
+function stemOf(stemBranch: string): string {
+  return stemBranch.slice(0, 1);
+}
+
+export function buildQuestionFacts(
+  chart: LiuyaoChart,
+  five: FiveHexagrams,
+  meihua: MeihuaResult,
+  main: OracleSelection,
+): FactTable {
+  const facts: FactTable = new Map();
+  for (const row of chart.rows) {
+    const tokens = words([
+      row.primary.stemBranch,
+      stemOf(row.primary.stemBranch),
+      row.primary.branch,
+      row.primary.element,
+      row.primary.relation,
+      row.sixSpirit,
+      row.marker,
+      row.primary.strength,
+      row.primary.isVoid && "旬空",
+      row.primary.isMonthBroken && "月破",
+      row.isDayBroken && "日破",
+      row.isHiddenMoving && "暗动",
+      row.changing && "动",
+      row.changing && row.changed.stemBranch,
+      row.changing && stemOf(row.changed.stemBranch),
+      row.changing && row.changed.branch,
+      row.changing && row.changed.element,
+      row.changing && row.changed.relation,
+      row.returnEffect,
+      row.advanceRetreat,
+      row.hidden && "伏",
+      row.hidden?.stemBranch,
+      row.hidden && stemOf(row.hidden.stemBranch),
+      row.hidden?.stemBranch.slice(1),
+      row.hidden?.element,
+      row.hidden?.relation,
+    ]);
+    const id = `line:${row.position}`;
+    facts.set(id, { id, label: `${row.position}爻：${[...tokens].join(" ")}`, tokens });
+  }
+  const add = (id: string, label: string, tokens: readonly string[]): void => {
+    facts.set(id, { id, label, tokens: new Set(tokens) });
+  };
+  add("month", `月建${chart.month.branch}`, [chart.month.branch, chart.month.element, "月建"]);
+  add(
+    "day",
+    `日辰${chart.day.ganzhi}，旬空${chart.day.voidBranches.join("")}`,
+    [chart.day.ganzhi, chart.day.stem, chart.day.branch, ...chart.day.voidBranches, "旬空"],
+  );
+  if (chart.focus) {
+    add("use-god", `用神${chart.focus.useGod}`, [
+      "用神",
+      chart.focus.useGod,
+      "原神",
+      chart.focus.originalGod,
+      "忌神",
+      chart.focus.tabooGod,
+      "仇神",
+      chart.focus.enemyGod,
+    ]);
+  }
+  add("body-use", `${meihua.body.name}为体，${meihua.use.name}为用`, [
+    "体",
+    meihua.body.name,
+    meihua.body.element,
+    "用",
+    meihua.use.name,
+    meihua.use.element,
+    meihua.bodyUseRelation,
+  ]);
+  const keys = ["primary", "derived", "mutual", "opposite", "reversed"] as const;
+  for (const key of keys) {
+    add(`hexagram:${key}`, five[key].name, [five[key].name]);
+  }
+  add("main-text", `${main.primary.label}：${main.primary.text}`, [main.primary.label]);
+  return facts;
+}
+```
+
+```ts
+// src/sanyi/audit.ts
+import type { FactTable } from "./facts.js";
+import type { QuestionSchoolOutput } from "./schema.js";
+
+const STEMS = "甲乙丙丁戊己庚辛壬癸";
+const BRANCHES = "子丑寅卯辰巳午未申酉戌亥";
+const CYCLE = Array.from({ length: 60 }, (_, index) => {
+  return `${STEMS[index % 10]}${BRANCHES[index % 12]}`;
+});
+const WORDS = [
+  "回头生", "回头克",
+  "父母", "子孙", "官鬼", "妻财", "兄弟",
+  "青龙", "朱雀", "勾陈", "螣蛇", "白虎", "玄武",
+  "旬空", "月破", "日破", "暗动", "进神", "退神",
+  "用神", "原神", "忌神", "仇神",
+  ...CYCLE,
+  ...STEMS,
+  ...BRANCHES,
+  ..."金木水火土旺相休囚死世应伏动体用",
+].sort((left, right) => right.length - left.length);
+const COMBINATION = new RegExp(
+  "([子丑寅卯辰巳午未申酉戌亥])"+
+  "([金木水火土])"+
+  "(父母|子孙|官鬼|妻财|兄弟)",
+  "g",
+);
+
+export function tokenizeClaim(text: string): string[] {
+  const tokens: string[] = [];
+  for (let index = 0; index < text.length;) {
+    const token = WORDS.find((candidate) => text.startsWith(candidate, index));
+    if (token) {
+      tokens.push(token);
+      index += token.length;
+    } else {
+      index += 1;
+    }
+  }
+  return tokens;
+}
+
+export function auditOutput(
+  output: QuestionSchoolOutput,
+  facts: FactTable,
+): { ok: boolean; errors: string[] } {
+  const errors: string[] = [];
+  for (const evidence of output.evidence) {
+    const fact = facts.get(evidence.ref);
+    if (!fact) {
+      errors.push(`事实编号不存在：${evidence.ref}`);
+      continue;
+    }
+    for (const token of tokenizeClaim(evidence.claim)) {
+      if (!fact.tokens.has(token)) {
+        errors.push(`${evidence.ref} 不支持关键词：${token}`);
+      }
+    }
+  }
+  const lineTokens = [...facts]
+    .filter(([id]) => id.startsWith("line:"))
+    .map(([, fact]) => fact.tokens);
+  const prose = [
+    output.headline,
+    output.reason,
+    ...output.sections.map((section) => section.text),
+  ].join("\n");
+  for (const match of prose.matchAll(COMBINATION)) {
+    const tokens = match.slice(1);
+    if (!lineTokens.some((set) => tokens.every((token) => set.has(token)))) {
+      errors.push(`正文出现不存在的盘面组合：${match[0]}`);
+    }
+  }
+  return { ok: errors.length === 0, errors };
+}
+```
+
+- [ ] **Step 5: GREEN、类型检查与提交（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-facts.test.ts tests/sanyi-schema.test.ts tests/sanyi-audit.test.ts && npm run typecheck`
+
+Expected: 全部 PASS、0 FAIL；`tsc --noEmit` 退出码 0。
+
+```bash
+git add src/sanyi/facts.ts src/sanyi/schema.ts src/sanyi/audit.ts tests/sanyi-facts.test.ts tests/sanyi-schema.test.ts tests/sanyi-audit.test.ts && git commit -m "feat(sanyi): 建立断语事实核对边界"
+```
+
+### Task 11: Chunk 2A 交叉验收
+
+**Files:**
+- Test: `tests/sanyi-classify.test.ts`
+- Test: `tests/sanyi-throws.test.ts`
+- Test: `tests/sanyi-facts.test.ts`
+- Test: `tests/sanyi-schema.test.ts`
+- Test: `tests/sanyi-audit.test.ts`
+- Test: `tests/question-classifier.test.ts`
+- Test: `tests/liuyao-chart.test.ts`
+
+- [ ] **Step 1: 运行 2A 定向测试（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-classify.test.ts tests/sanyi-throws.test.ts tests/sanyi-facts.test.ts tests/sanyi-schema.test.ts tests/sanyi-audit.test.ts tests/question-classifier.test.ts tests/liuyao-chart.test.ts`
+
+Expected: 全部 PASS、0 FAIL；分类器与六爻既有测试无回归。
+
+- [ ] **Step 2: 运行严格类型检查（2 分钟）**
+
+Run: `npm run typecheck`
+
+Expected: `tsc --noEmit` 退出码 0。
+
+- [ ] **Step 3: 提交（2 分钟）**
+
+```bash
+git add src/oracle/question-classifier.ts src/sanyi tests/helpers/sample-question.ts tests/sanyi-*.test.ts tests/question-classifier.test.ts && git commit -m "test(sanyi): 完成问事领域纯函数验收"
+```
+
+
+## Chunk 2B: 三家、存档与编排
+
+下一轮编写。
