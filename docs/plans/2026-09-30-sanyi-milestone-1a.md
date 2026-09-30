@@ -3962,3 +3962,1004 @@ Expected: 既有问事与六爻回归测试全部 PASS、0 FAIL。
 Run: `npm run typecheck && npm test`
 
 Expected: `tsc --noEmit` 退出码 0；全量测试 PASS、0 FAIL。
+
+## Chunk 3: 服务端接口与排练
+
+> 本 Chunk 覆盖 OpenSpec 任务 1.10 与 1.14。HTTP 层只负责协议、安全边界和错误序列化；
+> `SanyiApi` 负责校验与公开视图，`ReadingService` 继续独占业务状态机。旧接口统一下线，
+> mock 只用于测试与排练，生产启动固定使用 Arc 区块、真实卦金核验和 DeepSeek provider。
+
+### Task 17: 建立类型化错误与三易 API 边界
+
+**Files:**
+- Create: `src/sanyi/http-errors.ts`
+- Create: `src/sanyi/api.ts`
+- Create: `tests/sanyi-api.test.ts`
+
+- [ ] **Step 1: 写 API 失败测试（8 分钟）**
+
+```ts
+// tests/sanyi-api.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import type { QuestionFeeProof } from "../src/oracle/fee-payment.js";
+import { createSanyiApi } from "../src/sanyi/api.js";
+import {
+  NotFoundError,
+  NotOpenYetError,
+  SanyiInputError,
+} from "../src/sanyi/http-errors.js";
+import type { StoredReading } from "../src/sanyi/store.js";
+const ID = "abcdefghijklmnopqrstuvwxyz";
+const PROOF: QuestionFeeProof = {
+  payer: `0x${"11".repeat(20)}`,
+  bundleId: "bundle-1",
+  transactionHashes: [`0x${"22".repeat(32)}`],
+};
+function reading(): StoredReading {
+  return {
+    id: ID,
+    kind: "question",
+    createdAt: "2026-09-30T12:15:00.000Z",
+    question: "这次面试能过吗",
+    subject: {
+      suggestedKey: "career",
+      finalKey: "career",
+      overridden: false,
+      changes: 0,
+    },
+    payment: {
+      payer: PROOF.payer,
+      transactionHashes: PROOF.transactionHashes,
+      firstHash: PROOF.transactionHashes[0]!,
+      shares: [],
+    },
+    throws: [{
+      index: 1,
+      coins: [1, 0, 0],
+      backs: 1,
+      value: 7,
+      name: "单",
+      moving: false,
+      blockNumber: "8",
+      blockHash: `0x${"33".repeat(32)}`,
+      blockTimestamp: "1790770501",
+    }],
+    schools: {
+      chengyi: { status: "pending", attempts: 7, retries: 0 },
+      jingfang: { status: "pending", attempts: 8, retries: 0 },
+      shaoyong: { status: "pending", attempts: 9, retries: 0 },
+    },
+    status: "awaiting-throws",
+    lines: [7, 8, 7, 8, 7, 8],
+    castTime: "1790770501",
+  };
+}
+function fixture() {
+  const calls: string[] = [];
+  const value = reading();
+  const service = {
+    async createQuestionReading(input: unknown) {
+      calls.push(`create:${JSON.stringify(input)}`);
+      return value;
+    },
+    async throwCoin(id: string, index: number) {
+      calls.push(`throw:${id}:${index}`);
+      return value.throws[0]!;
+    },
+    async getReading(id: string) {
+      calls.push(`get:${id}`);
+      if (id === "aaaaaaaaaaaaaaaaaaaaaaaaaa") {
+        const error = new Error("missing") as NodeJS.ErrnoException;
+        error.code = "ENOENT";
+        throw error;
+      }
+      return value;
+    },
+    async retrySchool(id: string, key: "chengyi" | "jingfang" | "shaoyong") {
+      calls.push(`retry:${id}:${key}`);
+      return value;
+    },
+    async changeSubject(id: string, key: string) {
+      calls.push(`subject:${id}:${key}`);
+      return value;
+    },
+  };
+  let milliseconds = Date.parse("2026-09-30T12:15:00.000Z");
+  const api = createSanyiApi(service, { now: () => new Date(milliseconds) });
+  return { api, calls, advance: (value: number) => { milliseconds += value; } };
+}
+test("校验问题、事项与掷序", async () => {
+  const { api } = fixture();
+  await assert.rejects(api.classify({ question: "" }), SanyiInputError);
+  await assert.rejects(
+    api.createReading({ question: "这次面试能过吗", subjectKey: "bad", feeProof: PROOF }),
+    SanyiInputError,
+  );
+  await assert.rejects(api.throwCoin(ID, { index: "1" }), SanyiInputError);
+});
+test("命理与运势明确留待下一阶段", async () => {
+  const { api } = fixture();
+  for (const question of ["看看我的八字", "我今年运势如何"]) {
+    await assert.rejects(api.createReading({ question, feeProof: PROOF }), (error: unknown) => {
+      return error instanceof NotOpenYetError
+        && error.message === "命理与运势将在下一阶段开放，可先改为问事";
+    });
+  }
+});
+test("未开放类型返回具体替代建议", async () => {
+  const { api } = fixture();
+  await assert.rejects(
+    api.createReading({ question: "给女儿起个名字，姓王", feeProof: PROOF }),
+    (error: unknown) => error instanceof SanyiInputError
+      && /给孩子起名叫某某好不好/.test(error.message),
+  );
+});
+test("公开 reading 保留复算材料但移除内部字段", async () => {
+  const { api } = fixture();
+  const value = await api.getReading(ID);
+  const text = JSON.stringify(value);
+  assert.equal(value.question, "这次面试能过吗");
+  assert.equal(value.payment.firstHash, PROOF.transactionHashes[0]);
+  assert.equal(value.throws[0]?.blockNumber, "8");
+  assert.deepEqual(value.lines, [7, 8, 7, 8, 7, 8]);
+  assert.equal(value.castTime, "1790770501");
+  assert.doesNotMatch(text, /attempts|payer|transactionHashes|claimKey/);
+});
+test("存档 ENOENT 转换为 NotFoundError", async () => {
+  const { api } = fixture();
+  await assert.rejects(
+    api.getReading("aaaaaaaaaaaaaaaaaaaaaaaaaa"),
+    NotFoundError,
+  );
+});
+test("now 在三十秒内复用对象，满三十秒刷新", async () => {
+  const { api, advance } = fixture();
+  const first = await api.now();
+  advance(29_999);
+  assert.equal(await api.now(), first);
+  advance(1);
+  assert.notEqual(await api.now(), first);
+});
+```
+
+- [ ] **Step 2: 运行 `node --import tsx --test tests/sanyi-api.test.ts`，确认缺少 API 模块**
+
+- [ ] **Step 3: 实现稳定的错误类与状态映射**
+
+```ts
+// src/sanyi/http-errors.ts
+import {
+  LimitExceededError,
+  PaymentAlreadyUsedError,
+  StateConflictError,
+} from "./reading-service.js";
+import { ArcUnavailableError } from "./throws.js";
+class HttpError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = new.target.name;
+  }
+}
+export class SanyiInputError extends HttpError {
+  constructor(message: string) { super(message, 400); }
+}
+export class NotFoundError extends HttpError {
+  constructor(message = "未找到解读") { super(message, 404); }
+}
+export class NotOpenYetError extends HttpError {
+  constructor(message: string) { super(message, 501); }
+}
+export class UnsupportedMediaType extends HttpError {
+  constructor(message = "写接口只接受 application/json") { super(message, 415); }
+}
+export class ForbiddenOrigin extends HttpError {
+  constructor(message = "拒绝跨源操作") { super(message, 403); }
+}
+export class PayloadTooLarge extends HttpError {
+  constructor(message = "请求体超过 8 KiB 限制") { super(message, 413); }
+}
+export function statusForError(error: unknown): number {
+  if (
+    error instanceof SanyiInputError
+    || error instanceof NotFoundError
+    || error instanceof NotOpenYetError
+    || error instanceof UnsupportedMediaType
+    || error instanceof ForbiddenOrigin
+    || error instanceof PayloadTooLarge
+  ) {
+    return error.status;
+  }
+  if (
+    error instanceof PaymentAlreadyUsedError
+    || error instanceof LimitExceededError
+    || error instanceof StateConflictError
+  ) {
+    return 409;
+  }
+  if (error instanceof ArcUnavailableError) {
+    return 503;
+  }
+  return 500;
+}
+```
+
+- [ ] **Step 4: 实现无 HTTP 依赖的 API（10 分钟）**
+
+```ts
+// src/sanyi/api.ts
+import { almanacAt } from "../calendar/almanac.js";
+import { QUESTION_SUBJECTS } from "../oracle/question-classifier.js";
+import type { QuestionFeeProof } from "../oracle/fee-payment.js";
+import { classifyQuestion } from "./classify.js";
+import { NotFoundError, NotOpenYetError, SanyiInputError } from "./http-errors.js";
+import type { ReadingService } from "./reading-service.js";
+import type { QuestionSchoolKey } from "./schools/index.js";
+import type { StoredReading } from "./store.js";
+type ServiceBoundary = Pick<
+  ReadingService,
+  "createQuestionReading" | "throwCoin" | "getReading" | "retrySchool" | "changeSubject"
+>;
+type SubjectKey = StoredReading["subject"]["finalKey"];
+export interface PublicReading extends Omit<StoredReading, "payment" | "schools"> {
+  payment: { firstHash: StoredReading["payment"]["firstHash"] };
+  schools: Record<QuestionSchoolKey, Omit<StoredReading["schools"][QuestionSchoolKey], "attempts">>;
+}
+export interface SanyiApi {
+  now(): Promise<ReturnType<typeof almanacAt>>;
+  classify(input: unknown): Promise<ReturnType<typeof classifyQuestion>>;
+  createReading(input: unknown): Promise<PublicReading>;
+  throwCoin(id: string, input: unknown): Promise<StoredReading["throws"][number]>;
+  getReading(id: string): Promise<PublicReading>;
+  retrySchool(id: string, key: QuestionSchoolKey): Promise<PublicReading>;
+  changeSubject(id: string, input: unknown): Promise<PublicReading>;
+}
+function record(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new SanyiInputError("请求体必须是 JSON 对象");
+  }
+  return value as Record<string, unknown>;
+}
+function questionFrom(input: unknown): string {
+  const question = record(input).question;
+  if (typeof question !== "string") {
+    throw new SanyiInputError("问题必须是字符串");
+  }
+  try {
+    return classifyQuestion(question).question;
+  } catch (error) {
+    throw new SanyiInputError(error instanceof Error ? error.message : "问题无效");
+  }
+}
+function subjectFrom(value: unknown): SubjectKey | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const option = QUESTION_SUBJECTS.find((item) => item.key === value);
+  if (!option) {
+    throw new SanyiInputError("事项类型无效");
+  }
+  return option.key;
+}
+function feeProofFrom(value: unknown): QuestionFeeProof {
+  if (!value || typeof value !== "object") {
+    throw new SanyiInputError("缺少卦金付款凭证");
+  }
+  return value as QuestionFeeProof;
+}
+function publicReading(reading: StoredReading): PublicReading {
+  const school = (key: QuestionSchoolKey) => {
+    const { attempts: _attempts, ...visible } = reading.schools[key];
+    return visible;
+  };
+  return {
+    ...reading,
+    payment: { firstHash: reading.payment.firstHash },
+    schools: {
+      chengyi: school("chengyi"),
+      jingfang: school("jingfang"),
+      shaoyong: school("shaoyong"),
+    },
+  };
+}
+async function notFound<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new NotFoundError();
+    }
+    throw error;
+  }
+}
+export function createSanyiApi(
+  service: ServiceBoundary,
+  options: { now?: () => Date } = {},
+): SanyiApi {
+  const clock = options.now ?? (() => new Date());
+  let cache: { createdAt: number; value: ReturnType<typeof almanacAt> } | undefined;
+  return {
+    async now() {
+      const milliseconds = clock().getTime();
+      if (cache && milliseconds - cache.createdAt < 30_000) {
+        return cache.value;
+      }
+      const value = almanacAt(BigInt(Math.floor(milliseconds / 1_000)));
+      cache = { createdAt: milliseconds, value };
+      return value;
+    },
+    async classify(input) {
+      return classifyQuestion(questionFrom(input));
+    },
+    async createReading(input) {
+      const body = record(input);
+      const classification = classifyQuestion(questionFrom(body));
+      if (classification.kind === "destiny" || classification.kind === "fortune") {
+        throw new NotOpenYetError("命理与运势将在下一阶段开放，可先改为问事");
+      }
+      if (classification.kind !== "question") {
+        throw new SanyiInputError(classification.suggestion ?? "请改为一件具体的事来问");
+      }
+      const subjectKey = subjectFrom(body.subjectKey);
+      const reading = await service.createQuestionReading({
+        question: classification.question,
+        feeProof: feeProofFrom(body.feeProof),
+        ...(subjectKey === undefined ? {} : { subjectKey }),
+      });
+      return publicReading(reading);
+    },
+    async throwCoin(id, input) {
+      const index = record(input).index;
+      if (typeof index !== "number" || !Number.isInteger(index)) {
+        throw new SanyiInputError("掷序必须是整数");
+      }
+      return notFound(() => service.throwCoin(id, index));
+    },
+    async getReading(id) {
+      return publicReading(await notFound(() => service.getReading(id)));
+    },
+    async retrySchool(id, key) {
+      return publicReading(await notFound(() => service.retrySchool(id, key)));
+    },
+    async changeSubject(id, input) {
+      const subjectKey = subjectFrom(record(input).subjectKey);
+      if (!subjectKey) {
+        throw new SanyiInputError("缺少事项类型");
+      }
+      return publicReading(await notFound(() => service.changeSubject(id, subjectKey)));
+    },
+  };
+}
+```
+
+- [ ] **Step 5: GREEN 与严格类型检查（3 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-api.test.ts && npm run typecheck`
+
+### Task 18: 替换前端服务路由与生产启动装配
+
+**Files:**
+- Modify: `src/frontend/server.ts`
+- Rewrite: `tests/frontend-server.test.ts`
+
+- [ ] **Step 1: 整体改写服务端测试（10 分钟）**
+
+```ts
+// tests/frontend-server.test.ts
+import assert from "node:assert/strict";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import type { Server } from "node:http";
+import { request } from "node:http";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import type { SanyiApi } from "../src/sanyi/api.js";
+import { PaymentAlreadyUsedError } from "../src/sanyi/reading-service.js";
+import { ArcUnavailableError } from "../src/sanyi/throws.js";
+import { createFrontendServer } from "../src/frontend/server.js";
+function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
+  const reading = { id: "abcdefghijklmnopqrstuvwxyz", status: "awaiting-throws" };
+  return {
+    now: async () => ({ solar: { text: "2026-09-30 20:15:00" } }) as never,
+    classify: async () => ({ kind: "question" }) as never,
+    createReading: async () => reading as never,
+    throwCoin: async () => ({ index: 1, value: 7 }) as never,
+    getReading: async () => reading as never,
+    retrySchool: async () => reading as never,
+    changeSubject: async () => reading as never,
+    ...overrides,
+  };
+}
+async function fixture(api: SanyiApi = fakeApi()) {
+  const root = await mkdtemp(join(tmpdir(), "sanyi-http-"));
+  const publicDir = join(root, "web");
+  await mkdir(publicDir);
+  await writeFile(join(publicDir, "index.html"), "三易", "utf8");
+  await writeFile(join(publicDir, "font.woff2"), "font", "utf8");
+  const server = createFrontendServer({ publicDir, api });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  const base = `http://127.0.0.1:${address.port}`;
+  return { root, server, base };
+}
+async function close(item: { root: string; server: Server }): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    item.server.close((error) => error ? reject(error) : resolve());
+  });
+  await rm(item.root, { recursive: true, force: true });
+}
+function post(base: string, path: string, body: unknown, headers: Record<string, string> = {}) {
+  return fetch(`${base}${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: base, ...headers },
+    body: typeof body === "string" ? body : JSON.stringify(body),
+  });
+}
+test("七条新路由返回成功状态", async () => {
+  const item = await fixture();
+  try {
+    const id = "abcdefghijklmnopqrstuvwxyz";
+    const routes: Array<[string, string, unknown?]> = [
+      ["GET", "/api/now"],
+      ["POST", "/api/classify", { question: "这件事会怎样" }],
+      ["POST", "/api/readings", { question: "这件事会怎样" }],
+      ["POST", `/api/readings/${id}/throws`, { index: 1 }],
+      ["GET", `/api/readings/${id}`],
+      ["POST", `/api/readings/${id}/schools/chengyi/retry`, {}],
+      ["POST", `/api/readings/${id}/subject`, { subjectKey: "career" }],
+    ];
+    for (const [method, path, body] of routes) {
+      const response = method === "GET"
+        ? await fetch(`${item.base}${path}`)
+        : await post(item.base, path, body);
+      assert.equal(response.status, 200, `${method} ${path}`);
+    }
+  } finally {
+    await close(item);
+  }
+});
+test("写接口拒绝缺失或错误 Origin", async () => {
+  const item = await fixture();
+  try {
+    const missing = await fetch(`${item.base}/api/classify`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    const wrong = await post(item.base, "/api/classify", {}, { origin: "https://evil.example" });
+    assert.equal(missing.status, 403);
+    assert.equal(wrong.status, 403);
+  } finally {
+    await close(item);
+  }
+});
+test("写接口拒绝非 JSON 与超过 8 KiB 的请求体", async () => {
+  const item = await fixture();
+  try {
+    const wrongType = await fetch(`${item.base}/api/classify`, {
+      method: "POST",
+      headers: { origin: item.base },
+      body: "{}",
+    });
+    const tooLarge = await post(item.base, "/api/classify", "x".repeat(9 * 1_024));
+    assert.equal(wrongType.status, 415);
+    assert.equal(tooLarge.status, 413);
+  } finally {
+    await close(item);
+  }
+});
+test("非法 id、非法三家键和四类旧接口均为 404", async () => {
+  const item = await fixture();
+  try {
+    const paths = [
+      "/api/readings/bad",
+      "/api/readings/abcdefghijklmnopqrstuvwxyz/schools/bad/retry",
+      "/api/oracle",
+      "/api/demo",
+      "/api/demo/round/prepare",
+      "/api/question/classify",
+    ];
+    for (const path of paths) {
+      assert.equal((await fetch(`${item.base}${path}`)).status, 404, path);
+    }
+  } finally {
+    await close(item);
+  }
+});
+test("已知领域错误按错误类映射", async () => {
+  const id = "abcdefghijklmnopqrstuvwxyz";
+  const conflict = await fixture(fakeApi({
+    createReading: async () => { throw new PaymentAlreadyUsedError(id); },
+  }));
+  try {
+    const response = await post(conflict.base, "/api/readings", {});
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), {
+      error: `付款凭证已用于 reading：${id}`,
+      readingId: id,
+    });
+  } finally {
+    await close(conflict);
+  }
+  const unavailable = await fixture(fakeApi({
+    throwCoin: async () => { throw new ArcUnavailableError(); },
+  }));
+  try {
+    const response = await post(unavailable.base, `/api/readings/${id}/throws`, { index: 1 });
+    assert.equal(response.status, 503);
+  } finally {
+    await close(unavailable);
+  }
+});
+test("未知错误为 500 且不泄露堆栈", async () => {
+  const item = await fixture(fakeApi({
+    now: async () => { throw new Error("boom"); },
+  }));
+  try {
+    const response = await fetch(`${item.base}/api/now`);
+    assert.equal(response.status, 500);
+    assert.doesNotMatch(JSON.stringify(await response.json()), /at /);
+  } finally {
+    await close(item);
+  }
+});
+test("woff2 使用正确类型且原始路径穿越返回 403", async () => {
+  const item = await fixture();
+  try {
+    const font = await fetch(`${item.base}/font.woff2`);
+    assert.equal(font.headers.get("content-type"), "font/woff2");
+    const address = item.server.address();
+    assert.ok(address && typeof address === "object");
+    const status = await new Promise<number>((resolve, reject) => {
+      const call = request({
+        host: "127.0.0.1",
+        port: address.port,
+        path: "/%2e%2e/package.json",
+      }, (response) => resolve(response.statusCode ?? 0));
+      call.on("error", reject);
+      call.end();
+    });
+    assert.equal(status, 403);
+  } finally {
+    await close(item);
+  }
+});
+```
+
+- [ ] **Step 2: 运行服务端测试，确认旧路由仍在线且构造函数尚不接受 `api`**
+
+- [ ] **Step 3: 用静态资源、路由表与统一安全边界替换服务**
+
+```ts
+// src/frontend/server.ts
+import { readFile } from "node:fs/promises";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import { isAbsolute, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { createArcPublicClient } from "../arc.js";
+import { createDefaultProvider } from "../agent/default-provider.js";
+import { ArcQuestionFeeVerifier } from "../oracle/arc-question-fee-verifier.js";
+import { createSanyiApi, type SanyiApi } from "../sanyi/api.js";
+import {
+  ForbiddenOrigin,
+  PayloadTooLarge,
+  SanyiInputError,
+  statusForError,
+  UnsupportedMediaType,
+} from "../sanyi/http-errors.js";
+import { createSanyiLogger } from "../sanyi/log.js";
+import { ReadingService, PaymentAlreadyUsedError } from "../sanyi/reading-service.js";
+import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
+import { isReadingId, ReadingStore } from "../sanyi/store.js";
+interface FrontendServerOptions {
+  publicDir?: string;
+  api?: SanyiApi;
+}
+const CONTENT_TYPES: Record<string, string> = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".woff2": "font/woff2",
+};
+const SCHOOL_KEYS = new Set<QuestionSchoolKey>(["chengyi", "jingfang", "shaoyong"]);
+export function resolveStaticPath(publicDir: string, pathname: string): string | null {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+  if (decoded.includes("\0")) {
+    return null;
+  }
+  const requested = decoded === "/" ? "/index.html" : decoded;
+  const candidate = resolve(publicDir, `.${requested}`);
+  const fromRoot = relative(resolve(publicDir), candidate);
+  return fromRoot.startsWith("..") || isAbsolute(fromRoot) ? null : candidate;
+}
+function json(response: ServerResponse, status: number, payload: unknown): void {
+  response.writeHead(status, {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+  });
+  response.end(JSON.stringify(payload));
+}
+function requireSameOrigin(request: IncomingMessage): void {
+  const host = request.headers.host;
+  if (!host || request.headers.origin !== `http://${host}`) {
+    throw new ForbiddenOrigin();
+  }
+}
+async function readJsonBody(request: IncomingMessage): Promise<unknown> {
+  const type = request.headers["content-type"] ?? "";
+  if (type.toLowerCase().split(";", 1)[0]?.trim() !== "application/json") {
+    throw new UnsupportedMediaType();
+  }
+  const chunks: Buffer[] = [];
+  let size = 0;
+  let oversized = false;
+  for await (const chunk of request) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += buffer.length;
+    oversized ||= size > 8_192;
+    if (!oversized) {
+      chunks.push(buffer);
+    }
+  }
+  if (oversized) {
+    throw new PayloadTooLarge();
+  }
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+  } catch {
+    throw new SanyiInputError("请求体不是合法 JSON");
+  }
+}
+function errorPayload(error: unknown): { error: string; readingId?: string } {
+  const message = statusForError(error) === 500
+    ? "服务暂时不可用"
+    : error instanceof Error ? error.message : "服务暂时不可用";
+  return {
+    error: message,
+    ...(error instanceof PaymentAlreadyUsedError ? { readingId: error.readingId } : {}),
+  };
+}
+export function createFrontendServer(options: FrontendServerOptions = {}): Server {
+  const publicDir = resolve(options.publicDir ?? resolve(process.cwd(), "web"));
+  const api = options.api;
+  return createServer(async (request, response) => {
+    const rawPath = (request.url ?? "/").split("?", 1)[0] ?? "/";
+    const url = new URL(request.url ?? "/", "http://localhost");
+    try {
+      if (/^\/api\/(oracle|demo(?:\/|$)|question(?:\/|$))/.test(url.pathname)) {
+        json(response, 404, { error: "接口已下线" });
+        return;
+      }
+      const idRoute = url.pathname.match(/^\/api\/readings\/([^/]+)$/);
+      const throwRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/throws$/);
+      const retryRoute = url.pathname.match(
+        /^\/api\/readings\/([^/]+)\/schools\/([^/]+)\/retry$/,
+      );
+      const subjectRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/subject$/);
+      const isApi = url.pathname.startsWith("/api/");
+      const writing = request.method === "POST";
+      if (writing && isApi) {
+        requireSameOrigin(request);
+      }
+      const body = writing && isApi ? await readJsonBody(request) : undefined;
+      if (request.method === "GET" && url.pathname === "/api/now" && api) {
+        json(response, 200, await api.now());
+        return;
+      }
+      if (request.method === "POST" && url.pathname === "/api/classify" && api) {
+        json(response, 200, await api.classify(body));
+        return;
+      }
+      if (request.method === "POST" && url.pathname === "/api/readings" && api) {
+        json(response, 200, await api.createReading(body));
+        return;
+      }
+      if (idRoute && request.method === "GET" && api && isReadingId(idRoute[1] ?? "")) {
+        json(response, 200, await api.getReading(idRoute[1] as string));
+        return;
+      }
+      if (throwRoute && request.method === "POST" && api && isReadingId(throwRoute[1] ?? "")) {
+        json(response, 200, await api.throwCoin(throwRoute[1] as string, body));
+        return;
+      }
+      const retryKey = retryRoute?.[2] as QuestionSchoolKey | undefined;
+      if (
+        retryRoute
+        && request.method === "POST"
+        && api
+        && isReadingId(retryRoute[1] ?? "")
+        && retryKey
+        && SCHOOL_KEYS.has(retryKey)
+      ) {
+        json(response, 200, await api.retrySchool(retryRoute[1] as string, retryKey));
+        return;
+      }
+      if (subjectRoute && request.method === "POST" && api && isReadingId(subjectRoute[1] ?? "")) {
+        json(response, 200, await api.changeSubject(subjectRoute[1] as string, body));
+        return;
+      }
+      if (isApi) {
+        json(response, 404, { error: "未找到接口" });
+        return;
+      }
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        json(response, 405, { error: "静态资源只允许读取" });
+        return;
+      }
+      const path = resolveStaticPath(publicDir, rawPath);
+      if (!path) {
+        json(response, 403, { error: "拒绝访问" });
+        return;
+      }
+      try {
+        const content = await readFile(path);
+        const extension = path.slice(path.lastIndexOf("."));
+        response.writeHead(200, {
+          "cache-control": path.endsWith("index.html") ? "no-cache" : "public, max-age=3600",
+          "content-type": CONTENT_TYPES[extension] ?? "application/octet-stream",
+        });
+        response.end(request.method === "HEAD" ? undefined : content);
+      } catch (error) {
+        const status = (error as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
+        json(response, status, { error: status === 404 ? "未找到" : "读取失败" });
+      }
+    } catch (error) {
+      json(response, statusForError(error), errorPayload(error));
+    }
+  });
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const publicClient = createArcPublicClient();
+  const service = new ReadingService({
+    feeVerifier: new ArcQuestionFeeVerifier(publicClient),
+    blockSource: {
+      latest: async () => {
+        const block = await publicClient.getBlock({ blockTag: "latest" });
+        if (!block.hash) {
+          throw new Error("最新区块没有可复算哈希");
+        }
+        return { number: block.number, hash: block.hash, timestamp: block.timestamp };
+      },
+    },
+    provider: createDefaultProvider({ maxTokens: 2_048 }),
+    store: new ReadingStore("data"),
+    logger: createSanyiLogger(),
+  });
+  const port = Number(process.env.FRONTEND_PORT ?? "4173");
+  createFrontendServer({ api: createSanyiApi(service) }).listen(port, "127.0.0.1", () => {
+    console.log(`三易服务已启动：http://127.0.0.1:${port}`);
+    console.log("问事卦金：0.05 USDC；付款后亲手六掷，三家依同一卦独立落笔");
+    console.log("复算材料：付款首笔交易与六个 Arc 区块会随解读存档");
+  });
+}
+```
+
+- [ ] **Step 4: GREEN、断引用检查与严格类型检查（5 分钟）**
+
+Run: `node --import tsx --test tests/frontend-server.test.ts && npm run typecheck`
+
+Run: `rg 'frontend/data|demo/|question-oracle|question-interpreter|createDemoProvider' src/frontend/server.ts`
+
+### Task 19: 新增确定性 provider 并改写问事排练
+
+**Files:**
+- Create: `src/sanyi/mock-provider.ts`
+- Rewrite: `scripts/rehearse-demo.ts`
+- Create: `tests/sanyi-rehearsal.test.ts`
+- Modify: `package.json`
+
+- [ ] **Step 1: 写排练失败测试（5 分钟）**
+
+```ts
+// tests/sanyi-rehearsal.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { runRehearsal } from "../scripts/rehearse-demo.js";
+test("mock 排练完成六掷与三家落笔", async () => {
+  const summary = await runRehearsal();
+  assert.equal(summary.status, "done");
+  assert.equal(summary.lines.length, 6);
+  assert.deepEqual(summary.schools.map((item) => item.status), ["done", "done", "done"]);
+  assert.equal(summary.schools.map((item) => item.name).join("、"), "程颐、京房、邵雍");
+  assert.equal(Number.isFinite(summary.consensusTenths), true);
+});
+```
+
+- [ ] **Step 2: 运行排练测试，确认旧脚本没有导出 `runRehearsal`**
+
+- [ ] **Step 3: 实现排练专用 provider**
+
+```ts
+// src/sanyi/mock-provider.ts
+import { hashJson } from "../agent/audit.js";
+import type {
+  StructuredOutputProvider,
+  StructuredOutputRequest,
+} from "../agent/provider.js";
+import type { FactTable } from "./facts.js";
+import { mockSchoolOutput } from "./mock-schools.js";
+import type { QuestionSchoolKey } from "./schools/index.js";
+function factsFromPrompt(prompt: string): FactTable {
+  const facts: FactTable = new Map();
+  for (const line of prompt.split("\n")) {
+    const match = line.match(/^([a-z-]+(?::\w+)?)[：](.+)$/u);
+    if (match?.[1] && match[2]) {
+      facts.set(match[1], {
+        id: match[1],
+        label: match[2],
+        tokens: new Set<string>(),
+      });
+    }
+  }
+  return facts;
+}
+export class MockSchoolsProvider implements StructuredOutputProvider {
+  readonly modelId = "sanyi-mock-schools";
+  readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
+  readonly providerConfigHash = hashJson(this.providerConfig);
+  async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    const key = request.taskId.split("/").at(-1) as QuestionSchoolKey;
+    if (!["chengyi", "jingfang", "shaoyong"].includes(key)) {
+      throw new Error(`mock provider 不支持任务：${request.taskId}`);
+    }
+    return mockSchoolOutput(key, factsFromPrompt(request.userPrompt)) as T;
+  }
+}
+```
+
+- [ ] **Step 4: 把脚本改为可调用的完整 mock 流程（8 分钟）**
+
+```ts
+// scripts/rehearse-demo.ts
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { mockQuestionFeeReceipt } from "../src/oracle/fee-payment.js";
+import type { QuestionFeeProof } from "../src/oracle/fee-payment.js";
+import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
+import { createSanyiLogger } from "../src/sanyi/log.js";
+import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
+import { ReadingService } from "../src/sanyi/reading-service.js";
+import { ReadingStore } from "../src/sanyi/store.js";
+const SCHOOL_NAMES = { chengyi: "程颐", jingfang: "京房", shaoyong: "邵雍" } as const;
+export interface RehearsalSummary {
+  status: "done";
+  primary: string;
+  derived: string;
+  lines: readonly number[];
+  schools: ReadonlyArray<{
+    name: string;
+    status: "done";
+    verdict: string;
+    confidenceTenths: number;
+  }>;
+  consensusTenths: number;
+}
+export async function runRehearsal(): Promise<RehearsalSummary> {
+  const root = await mkdtemp(join(tmpdir(), "sanyi-rehearsal-"));
+  let height = 0n;
+  try {
+    const proof: QuestionFeeProof = {
+      payer: `0x${"11".repeat(20)}`,
+      bundleId: "rehearsal",
+      transactionHashes: [`0x${"22".repeat(32)}`],
+    };
+    const service = new ReadingService({
+      feeVerifier: { verify: async (value) => mockQuestionFeeReceipt(value) },
+      blockSource: {
+        latest: async () => {
+          height += 1n;
+          return {
+            number: height,
+            hash: `0x${height.toString(16).padStart(64, "0")}`,
+            timestamp: 1_790_770_500n + height,
+          };
+        },
+      },
+      provider: new MockSchoolsProvider(),
+      store: new ReadingStore(root),
+      logger: createSanyiLogger(join(root, "log")),
+      waitOptions: { pollMs: 1, timeoutMs: 100, sleep: async () => {} },
+    });
+    const created = await service.createQuestionReading({
+      question: "这次面试能过吗",
+      feeProof: proof,
+    });
+    for (let index = 1; index <= 6; index += 1) {
+      await service.throwCoin(created.id, index);
+    }
+    await service.whenSettled(created.id);
+    const reading = await service.getReading(created.id);
+    if (reading.status !== "done" || !reading.lines || !reading.chart) {
+      throw new Error(`排练未完成：${reading.status}`);
+    }
+    const five = deriveFiveHexagrams(reading.lines);
+    const keys = ["chengyi", "jingfang", "shaoyong"] as const;
+    const schools = keys.map((key) => {
+      const state = reading.schools[key];
+      if (state.status !== "done" || !state.output) {
+        throw new Error(`${SCHOOL_NAMES[key]}未完成：${state.status}`);
+      }
+      return {
+        name: SCHOOL_NAMES[key],
+        status: "done" as const,
+        verdict: state.output.verdict,
+        confidenceTenths: state.output.confidenceTenths,
+      };
+    });
+    return {
+      status: "done",
+      primary: five.primary.name,
+      derived: five.derived.name,
+      lines: reading.lines,
+      schools,
+      consensusTenths: schools.reduce((sum, item) => sum + item.confidenceTenths, 0) / 3,
+    };
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const mode = process.argv.find((item) => item.startsWith("--mode="))?.slice(7) ?? "mock";
+  if (mode !== "mock") {
+    throw new Error("排练只支持 --mode=mock");
+  }
+  try {
+    const summary = await runRehearsal();
+    console.log(`本卦：${summary.primary}；之卦：${summary.derived}`);
+    for (const school of summary.schools) {
+      console.log(`${school.name}：${school.verdict}，${school.confidenceTenths}成`);
+    }
+    console.log(`合议平均：约${summary.consensusTenths.toFixed(1)}成`);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
+}
+```
+
+- [ ] **Step 5: 修改唯一相关脚本项（2 分钟）**
+
+在 `package.json` 中精确替换：
+
+```json
+"demo:rehearse": "node --import tsx scripts/rehearse-demo.ts --mode=mock"
+```
+
+- [ ] **Step 6: GREEN、CLI 与严格类型检查（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-rehearsal.test.ts && npm run demo:rehearse && npm run typecheck`
+
+### Task 20: Chunk 3 交叉验收
+
+- [ ] 运行本 Chunk 的全部测试：
+
+Run: `node --import tsx --test tests/sanyi-api.test.ts tests/frontend-server.test.ts tests/sanyi-rehearsal.test.ts`
+
+- [ ] 运行 Chunk 1、2A、2B、2C 的全部测试：
+
+Run: `node --import tsx --test tests/almanac.test.ts tests/qimen.test.ts tests/meihua.test.ts \
+  tests/bianzhan.test.ts tests/sanyi-classify.test.ts tests/sanyi-throws.test.ts \
+  tests/sanyi-schema.test.ts tests/sanyi-facts.test.ts tests/sanyi-audit.test.ts \
+  tests/sanyi-schools.test.ts tests/sanyi-store.test.ts tests/sanyi-school-runner.test.ts \
+  tests/sanyi-reading-service.test.ts`
+
+- [ ] 检查计划代码行宽、旧依赖断开和严格类型：
+
+Run: `npm run typecheck`
+
+Run: `rg 'frontend/data|demo/|question-oracle|question-interpreter|createDemoProvider' src/frontend/server.ts`
+
+- [ ] 核对 OpenSpec 与任务状态：`tasks.md` 的 1.10、1.14 只在实现与上述验收均完成后勾选；
+确认公开 reading 不含 `attempts`、付款人、完整交易数组或内部 claim key，且仍含规范化问题、
+付款首笔交易哈希、六掷区块号与哈希、六爻及卦时。
