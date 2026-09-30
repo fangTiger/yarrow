@@ -14,7 +14,9 @@
 
 - Chunk 1：术数与历法引擎。
 - Chunk 2A：分类、六掷与盘面核对。
-- Chunk 2B：三家、存档与编排。
+- Chunk 2B：三家提示词、原文、存档与单家落笔（Task 12–14）。
+- Chunk 2C：问事编排（Task 15）。
+- Chunk 2B/2C 交叉验收：领域与全量回归（Task 16）。
 - Chunk 3：服务端接口。
 - Chunk 4：前端基础。
 - Chunk 5：前端结果页。
@@ -49,6 +51,7 @@
 - `src/sanyi/schools/index.ts`：汇总问事三家定义并提供稳定键类型。
 - `src/sanyi/mock-schools.ts`：依据事实表生成可通过核对的确定性三家断语。
 - `src/sanyi/store.ts`：原子持久化 reading 与付款凭证索引。
+- `src/sanyi/school-runner.ts`：调用、核对并至多重写一次单家断语。
 - `src/sanyi/reading-service.ts`：编排创建、六掷、排盘、三家并行、重试和改事项。
 - `src/sanyi/log.ts`：向 `log/sanyi_{日期}.log` 写入脱敏中文日志。
 - `tests/sanyi-classify.test.ts`：覆盖八类分类、时间范围、默认问事和替代建议。
@@ -59,6 +62,7 @@
 - `tests/helpers/sample-question.ts`：构造事实表与核对测试共用的已核验问事样例盘。
 - `tests/sanyi-schools.test.ts`：用 mock provider 验证三家输入隔离与提示词边界。
 - `tests/sanyi-store.test.ts`：覆盖不可枚举 id、重启防复用和隐私边界。
+- `tests/sanyi-school-runner.test.ts`：覆盖单家一次通过、核对重写、拒绝与模型失败。
 - `tests/sanyi-reading-service.test.ts`：覆盖问事全流程、失败隔离、免费重试与仅重跑京房。
 - `web/pages/Home.tsx`：呈现首页输入与最近记录。
 - `web/pages/Reading.tsx`：按 reading 状态组合问事结果页。
@@ -2106,6 +2110,1855 @@ git add src/oracle/question-classifier.ts src/sanyi tests/helpers/sample-questio
 ```
 
 
-## Chunk 2B: 三家、存档与编排
+## Chunk 2B: 三家提示词、原文与存档
 
-下一轮编写。
+### Task 12: 三家提示词、原文与确定性 mock
+
+**Files:**
+- Create: `src/sanyi/original-texts.ts`
+- Create: `src/sanyi/schools/shared.ts`
+- Create: `src/sanyi/schools/chengyi.ts`
+- Create: `src/sanyi/schools/jingfang.ts`
+- Create: `src/sanyi/schools/shaoyong.ts`
+- Create: `src/sanyi/schools/index.ts`
+- Create: `src/sanyi/mock-schools.ts`
+- Create: `tests/sanyi-schools.test.ts`
+
+- [ ] **Step 1: 写失败测试（5 分钟）**
+
+```ts
+// tests/sanyi-schools.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { Ajv } from "ajv";
+import { auditOutput } from "../src/sanyi/audit.js";
+import { buildOriginalTexts } from "../src/sanyi/original-texts.js";
+import { mockSchoolOutput } from "../src/sanyi/mock-schools.js";
+import {
+  QUESTION_SCHOOL_SCHEMA,
+  checkVerdictConsistency,
+} from "../src/sanyi/schema.js";
+import { QUESTION_SCHOOLS } from "../src/sanyi/schools/index.js";
+import {
+  LINES,
+  facts,
+} from "./helpers/sample-question.js";
+import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
+import { selectPrimaryOracleText } from "../src/calendar/bianzhan.js";
+
+const originals = buildOriginalTexts(
+  deriveFiveHexagrams(LINES),
+  selectPrimaryOracleText(LINES),
+);
+
+test("原文清单含本卦之卦全部爻辞与主占之辞", () => {
+  assert.match(originals.join("\n"), /本卦 地天泰 初九：拔茅茹/);
+  assert.match(originals.join("\n"), /之卦 地风升/);
+  assert.match(originals.join("\n"), /主占之辞/);
+  assert.equal(originals.filter((line) => /[初二三四五上]/.test(line)).length >= 12, true);
+});
+
+test("三家系统提示词给出完整写作与安全边界", () => {
+  for (const school of QUESTION_SCHOOLS) {
+    assert.match(school.systemPrompt, /不得出现押钱、赔付、封存/);
+    assert.match(school.systemPrompt, /evidence\.ref/);
+    assert.match(school.systemPrompt, /JSON/);
+    assert.match(school.systemPrompt, /健康.*就医/s);
+    assert.match(school.systemPrompt, /医疗、法律或投资结论/);
+  }
+  assert.match(QUESTION_SCHOOLS[1].systemPrompt, /以用神为纲/);
+  assert.match(QUESTION_SCHOOLS[2].systemPrompt, /按本站体用取法/);
+  assert.match(QUESTION_SCHOOLS[2].systemPrompt, /不得虚构外应/);
+});
+
+test("三家用户提示严格隔离事实且都收到原文", () => {
+  const prompts = QUESTION_SCHOOLS.map((school) => {
+    return school.buildUserPrompt({
+      question: "这次面试能过吗",
+      facts,
+      originalTexts: originals,
+    });
+  });
+  assert.doesNotMatch(prompts[0]!, /line:/);
+  assert.doesNotMatch(prompts[2]!, /use-god/);
+  for (const prompt of prompts) {
+    assert.match(prompt, /本卦 地天泰/);
+    assert.doesNotMatch(prompt, /值符|黄历|宜：|忌：/);
+  }
+});
+
+test("三家 mock 同时通过结构、自洽和事实核对", () => {
+  const validate = new Ajv({ allErrors: true }).compile(QUESTION_SCHOOL_SCHEMA);
+  const pairs = QUESTION_SCHOOLS.map((school) => {
+    return [school.key, mockSchoolOutput(school.key, facts)] as const;
+  });
+  assert.equal(new Set(pairs.map(([, output]) => output.verdict)).size, 3);
+  assert.equal(new Set(pairs.map(([, output]) => output.confidenceTenths)).size, 3);
+  for (const [key, output] of pairs) {
+    assert.equal(validate(output), true, `${key}: ${JSON.stringify(validate.errors)}`);
+    assert.deepEqual(checkVerdictConsistency(output), []);
+    assert.deepEqual(auditOutput(output, facts), { ok: true, errors: [] });
+    assert.doesNotMatch(JSON.stringify(output), /易者|押钱|赔付|封存|・/u);
+  }
+});
+```
+
+- [ ] **Step 2: 运行 RED（2 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-schools.test.ts`
+
+Expected: FAIL，提示 `original-texts.js` 或三家模块不存在。
+
+- [ ] **Step 3: 实现原文清单（5 分钟）**
+
+```ts
+// src/sanyi/original-texts.ts
+import { getHexagramText } from "../agent/zhouyi-corpus.js";
+import type { OracleSelection } from "../calendar/bianzhan.js";
+import type { FiveHexagrams } from "../oracle/liuyao-chart.js";
+
+function hexagramTexts(
+  role: "本卦" | "之卦",
+  figure: FiveHexagrams["primary"],
+): string[] {
+  const text = getHexagramText(figure.kingWenNumber);
+  return [
+    `${role} ${text.name} 卦辞：${text.judgement}`,
+    ...text.lines.map((line) => {
+      return `${role} ${text.name} ${line.label}：${line.text}`;
+    }),
+    ...text.extras.map((line) => {
+      return `${role} ${text.name} ${line.label}：${line.text}`;
+    }),
+  ];
+}
+
+export function buildOriginalTexts(
+  five: FiveHexagrams,
+  selection: OracleSelection,
+): string[] {
+  return [
+    ...hexagramTexts("本卦", five.primary),
+    ...hexagramTexts("之卦", five.derived),
+    `主占之辞 ${selection.primary.label}：${selection.primary.text}`,
+    ...selection.secondary.map((item) => {
+      return `辅占之辞 ${item.label}：${item.text}`;
+    }),
+  ];
+}
+```
+
+- [ ] **Step 4: 实现三家定义（5 分钟）**
+
+```ts
+// src/sanyi/schools/shared.ts
+import type { FactTable } from "../facts.js";
+
+export interface SchoolInput {
+  question: string;
+  facts: FactTable;
+  originalTexts: readonly string[];
+}
+
+export interface QuestionSchool {
+  key: "chengyi" | "jingfang" | "shaoyong";
+  name: string;
+  school: string;
+  systemPrompt: string;
+  buildUserPrompt(input: SchoolInput): string;
+}
+
+export function buildSchoolPrompt(
+  input: SchoolInput,
+  allowed: readonly string[],
+  mainFirst = false,
+): string {
+  const facts = [...input.facts.values()].filter((fact) => {
+    return allowed.some((prefix) => {
+      return fact.id === prefix || fact.id.startsWith(prefix);
+    });
+  });
+  const originals = mainFirst
+    ? [...input.originalTexts].sort((left) => left.startsWith("主占") ? -1 : 1)
+    : input.originalTexts;
+  return [
+    `问题：${input.question}`,
+    "可用事实编号：",
+    ...facts.map((fact) => `${fact.id}：${fact.label}`),
+    "可直接引用的原文：",
+    ...originals,
+  ].join("\n");
+}
+```
+
+```ts
+// src/sanyi/schools/chengyi.ts
+import { buildSchoolPrompt, type QuestionSchool } from "./shared.js";
+
+export const chengyi = {
+  key: "chengyi",
+  name: "程颐",
+  school: "义理派",
+  systemPrompt: `你是程颐，以义理派路径解读问事卦。
+sections 依次写：一、主占之辞与卦义；二、卦时卦德与处境；三、处世之道与行动。
+只能直接引用用户提示提供的原文，不得补写、改写为伪引文或编造排盘数据。
+evidence.ref 只能使用用户提示“可用事实编号”中列出的编号。
+应期必须同时说明成立条件；健康类问题必须建议就医。
+不得给出医疗、法律或投资结论；不得出现押钱、赔付、封存。
+自称使用“程颐”，不使用“易者”；输出必须严格符合给定 JSON Schema。`,
+  buildUserPrompt(input) {
+    return buildSchoolPrompt(
+      input,
+      ["hexagram:", "main-text", "month"],
+      true,
+    );
+  },
+} satisfies QuestionSchool;
+```
+
+```ts
+// src/sanyi/schools/jingfang.ts
+import { buildSchoolPrompt, type QuestionSchool } from "./shared.js";
+
+export const jingfang = {
+  key: "jingfang",
+  name: "京房",
+  school: "纳甲六爻",
+  systemPrompt: `你是京房，以纳甲六爻路径解读问事卦。
+以用神为纲，sections 依次写：一、用神旺衰空破；二、原神忌神；三、世应与动变；四、应期。
+只能直接引用用户提示提供的原文，不得补写、改写为伪引文或编造排盘数据。
+evidence.ref 只能使用用户提示“可用事实编号”中列出的编号。
+应期必须同时说明成立条件；健康类问题必须建议就医。
+不得给出医疗、法律或投资结论；不得出现押钱、赔付、封存。
+自称使用“京房”，不使用“易者”；输出必须严格符合给定 JSON Schema。`,
+  buildUserPrompt(input) {
+    return buildSchoolPrompt(input, [
+      "line:",
+      "use-god",
+      "day",
+      "month",
+      "hexagram:primary",
+      "hexagram:derived",
+    ]);
+  },
+} satisfies QuestionSchool;
+```
+
+```ts
+// src/sanyi/schools/shaoyong.ts
+import { buildSchoolPrompt, type QuestionSchool } from "./shared.js";
+
+export const shaoyong = {
+  key: "shaoyong",
+  name: "邵雍",
+  school: "梅花易数",
+  systemPrompt: `你是邵雍，以梅花易数路径解读问事卦，按本站体用取法。
+sections 依次写：一、体用生克；二、互卦与变卦；三、时令与行动。
+本站不采集外应，不得虚构外应；不得编造排盘数据。
+只能直接引用用户提示提供的原文，不得补写或改写为伪引文。
+evidence.ref 只能使用用户提示“可用事实编号”中列出的编号。
+应期必须同时说明成立条件；健康类问题必须建议就医。
+不得给出医疗、法律或投资结论；不得出现押钱、赔付、封存。
+自称使用“邵雍”，不使用“易者”；输出必须严格符合给定 JSON Schema。`,
+  buildUserPrompt(input) {
+    return buildSchoolPrompt(input, ["body-use", "hexagram:", "month"]);
+  },
+} satisfies QuestionSchool;
+```
+
+```ts
+// src/sanyi/schools/index.ts
+import { chengyi } from "./chengyi.js";
+import { jingfang } from "./jingfang.js";
+import { shaoyong } from "./shaoyong.js";
+
+export const QUESTION_SCHOOLS = [chengyi, jingfang, shaoyong] as const;
+export type QuestionSchoolKey = typeof QUESTION_SCHOOLS[number]["key"];
+```
+
+- [ ] **Step 5: 实现确定性 mock（5 分钟）**
+
+```ts
+// src/sanyi/mock-schools.ts
+import type { FactTable } from "./facts.js";
+import type { QuestionSchoolOutput } from "./schema.js";
+import type { QuestionSchoolKey } from "./schools/index.js";
+
+const SETTINGS = {
+  chengyi: { verdict: "吉", confidenceTenths: 6, ref: "main-text" },
+  jingfang: { verdict: "平", confidenceTenths: 5, ref: "use-god" },
+  shaoyong: { verdict: "凶", confidenceTenths: 4, ref: "body-use" },
+} as const;
+
+export function mockSchoolOutput(
+  key: QuestionSchoolKey,
+  facts: FactTable,
+): QuestionSchoolOutput {
+  const setting = SETTINGS[key];
+  const fact = facts.get(setting.ref);
+  if (!fact) {
+    throw new Error(`mock 缺少事实：${setting.ref}`);
+  }
+  return {
+    verdict: setting.verdict,
+    confidenceTenths: setting.confidenceTenths,
+    headline: "守正待时",
+    reason: "依盘面事实判断，宜先核实条件",
+    sections: [
+      { title: "依据", text: fact.label },
+      { title: "判断", text: "条件尚未齐备" },
+      { title: "行动", text: "先核实客观条件" },
+    ],
+    advice: ["保留调整余地"],
+    evidence: [{ ref: fact.id, claim: [...fact.tokens].join(" ") }],
+  };
+}
+```
+
+- [ ] **Step 6: GREEN、类型检查与提交（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-schools.test.ts && npm run typecheck`
+
+Expected: `4 pass, 0 fail`；严格类型检查退出码 0。
+
+```bash
+git add src/sanyi/original-texts.ts src/sanyi/schools src/sanyi/mock-schools.ts \
+  tests/sanyi-schools.test.ts \
+  && git commit -m "feat(sanyi): 实现三家提示词与原文输入"
+```
+
+### Task 13: 原子存档、付款凭证与脱敏日志
+
+**Files:**
+- Create: `src/sanyi/store.ts`
+- Create: `src/sanyi/log.ts`
+- Create: `tests/sanyi-store.test.ts`
+
+- [ ] **Step 1: 写失败测试（5 分钟）**
+
+```ts
+// tests/sanyi-store.test.ts
+import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import { ReadingStore, isReadingId, newReadingId } from "../src/sanyi/store.js";
+import type { StoredReading } from "../src/sanyi/store.js";
+
+function emptyReading(id = newReadingId()): StoredReading {
+  return {
+    id,
+    kind: "question",
+    createdAt: "2026-09-30T12:15:00.000Z",
+    question: "这次面试能过吗",
+    subject: {
+      suggestedKey: "career",
+      finalKey: "career",
+      overridden: false,
+      changes: 0,
+    },
+    payment: {
+      payer: `0x${"11".repeat(20)}`,
+      transactionHashes: [`0x${"22".repeat(32)}`],
+      firstHash: `0x${"22".repeat(32)}`,
+      shares: [],
+    },
+    throws: [],
+    schools: {
+      chengyi: { status: "pending", attempts: 0, retries: 0 },
+      jingfang: { status: "pending", attempts: 0, retries: 0 },
+      shaoyong: { status: "pending", attempts: 0, retries: 0 },
+    },
+    status: "awaiting-throws",
+  };
+}
+
+async function withStore(
+  run: (store: ReadingStore, root: string) => Promise<void>,
+): Promise<void> {
+  const root = await mkdtemp(join(tmpdir(), "sanyi-store-"));
+  try {
+    await run(new ReadingStore(root), root);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+test("写读往返保留具体类型字段", async () => {
+  await withStore(async (store) => {
+    const reading = emptyReading();
+    await store.write(reading);
+    assert.deepEqual(await store.read(reading.id), reading);
+  });
+});
+
+test("reading id 固定 26 位且一千次无重复", () => {
+  const ids = Array.from({ length: 1_000 }, () => newReadingId());
+  assert.equal(ids.every(isReadingId), true);
+  assert.equal(new Set(ids).size, 1_000);
+});
+
+test("付款凭证跨 store 实例仍不可复用", async () => {
+  await withStore(async (store, root) => {
+    const id = newReadingId();
+    assert.equal(await store.claimPayment("claim", id), null);
+    assert.equal(await store.claimPayment("claim", newReadingId()), id);
+    const restarted = new ReadingStore(root);
+    assert.equal(await restarted.claimPayment("claim", newReadingId()), id);
+  });
+});
+
+test("同一 reading 的二十次并发更新不丢失", async () => {
+  await withStore(async (store) => {
+    const reading = emptyReading();
+    await store.write(reading);
+    await Promise.all(Array.from({ length: 20 }, (_, index) => {
+      return store.update(reading.id, (current) => {
+        return { ...current, lines: [...(current.lines ?? []), index] };
+      });
+    }));
+    assert.equal((await store.read(reading.id)).lines?.length, 20);
+  });
+});
+
+test("非法 id 被拒绝且存档键不含生辰前缀", async () => {
+  await withStore(async (store) => {
+    await assert.rejects(store.read("../bad"), /reading id 无效/);
+    const reading = emptyReading();
+    await store.write(reading);
+    const keys: string[] = [];
+    JSON.stringify(await store.read(reading.id), (key, value) => {
+      keys.push(key);
+      return value;
+    });
+    assert.equal(keys.some((key) => /^birth/i.test(key)), false);
+  });
+});
+```
+
+- [ ] **Step 2: 运行 RED（2 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-store.test.ts`
+
+Expected: FAIL，提示 `store.js` 不存在。
+
+- [ ] **Step 3: 实现具体类型与原子 store（5 分钟）**
+
+```ts
+// src/sanyi/store.ts
+import { createHash, randomBytes } from "node:crypto";
+import { mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import type { Address, Hex } from "viem";
+import type { QuestionFeeReceipt } from "../oracle/fee-payment.js";
+import type { LiuyaoChart } from "../oracle/liuyao-chart.js";
+import type { AlmanacResult } from "../calendar/almanac.js";
+import type { OracleSelection } from "../calendar/bianzhan.js";
+import type { MeihuaResult } from "../calendar/meihua.js";
+import type { QimenResult } from "../calendar/qimen.js";
+import type { QuestionSubjectKey } from "../oracle/question-classifier.js";
+import type { QuestionSchoolOutput } from "./schema.js";
+import type { QuestionSchoolKey } from "./schools/index.js";
+import type { RecordedThrow } from "./throws.js";
+
+export interface SchoolState {
+  status: "pending" | "writing" | "done" | "failed" | "rejected";
+  output?: QuestionSchoolOutput;
+  attempts: number;
+  retries: number;
+  error?: string;
+}
+
+export interface StoredReading {
+  id: string;
+  kind: "question";
+  createdAt: string;
+  question: string;
+  subject: {
+    suggestedKey: QuestionSubjectKey;
+    finalKey: QuestionSubjectKey;
+    overridden: boolean;
+    changes: number;
+  };
+  payment: {
+    payer: Address;
+    transactionHashes: readonly Hex[];
+    firstHash: Hex;
+    shares: QuestionFeeReceipt["shares"];
+  };
+  throws: readonly RecordedThrow[];
+  schools: Record<QuestionSchoolKey, SchoolState>;
+  status: "awaiting-throws" | "charting" | "writing" | "done" | "failed";
+  error?: string;
+  castTime?: string;
+  lines?: readonly number[];
+  chart?: LiuyaoChart;
+  meihua?: MeihuaResult;
+  bianzhan?: OracleSelection;
+  almanac?: AlmanacResult;
+  qimen?: QimenResult;
+}
+
+const ALPHABET = "abcdefghijklmnopqrstuvwxyz234567";
+
+export function newReadingId(bytes = randomBytes(16)): string {
+  let buffer = 0;
+  let bitCount = 0;
+  let result = "";
+  for (const byte of bytes) {
+    buffer = buffer * 256 + byte;
+    bitCount += 8;
+    while (bitCount >= 5) {
+      bitCount -= 5;
+      const divisor = 2 ** bitCount;
+      const index = Math.floor(buffer / divisor) & 31;
+      result += ALPHABET[index];
+      buffer %= divisor;
+    }
+  }
+  if (bitCount > 0) {
+    result += ALPHABET[(buffer << (5 - bitCount)) & 31];
+  }
+  return result;
+}
+
+export function isReadingId(value: string): boolean {
+  return /^[a-z2-7]{26}$/.test(value);
+}
+
+export class ReadingStore {
+  private readonly queues = new Map<string, Promise<void>>();
+
+  constructor(private readonly root = "data") {}
+
+  private readingPath(id: string): string {
+    if (!isReadingId(id)) {
+      throw new Error("reading id 无效");
+    }
+    return join(this.root, "readings", `${id}.json`);
+  }
+
+  async read(id: string): Promise<StoredReading> {
+    const text = await readFile(this.readingPath(id), "utf8");
+    return JSON.parse(text) as StoredReading;
+  }
+
+  async write(reading: StoredReading): Promise<void> {
+    const directory = join(this.root, "readings");
+    await mkdir(directory, { recursive: true });
+    const target = this.readingPath(reading.id);
+    const temporary = `${target}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
+    await writeFile(temporary, `${JSON.stringify(reading, null, 2)}\n`, "utf8");
+    await rename(temporary, target);
+  }
+
+  async update(
+    id: string,
+    change: (reading: StoredReading) => StoredReading,
+  ): Promise<StoredReading> {
+    let result: StoredReading | undefined;
+    const previous = this.queues.get(id) ?? Promise.resolve();
+    const next = previous.catch(() => {}).then(async () => {
+      result = change(await this.read(id));
+      await this.write(result);
+    });
+    this.queues.set(id, next);
+    try {
+      await next;
+    } finally {
+      if (this.queues.get(id) === next) {
+        this.queues.delete(id);
+      }
+    }
+    if (!result) {
+      throw new Error("存档更新未产生结果");
+    }
+    return result;
+  }
+
+  async claimPayment(claimKey: string, readingId: string): Promise<string | null> {
+    const directory = join(this.root, "payment-claims");
+    await mkdir(directory, { recursive: true });
+    const digest = createHash("sha256").update(claimKey).digest("hex");
+    const path = join(directory, `${digest}.json`);
+    try {
+      const handle = await open(path, "wx");
+      try {
+        await handle.writeFile(JSON.stringify({ readingId }), "utf8");
+      } finally {
+        await handle.close();
+      }
+      return null;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+        throw error;
+      }
+      const stored = JSON.parse(await readFile(path, "utf8")) as {
+        readingId: string;
+      };
+      return stored.readingId;
+    }
+  }
+}
+```
+
+- [ ] **Step 4: 实现脱敏日志（3 分钟）**
+
+```ts
+// src/sanyi/log.ts
+import { appendFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
+
+export interface SanyiLogger {
+  write(
+    message: string,
+    fields?: Readonly<Record<string, string | number | boolean>>,
+  ): Promise<void>;
+}
+
+export function createSanyiLogger(
+  root = "log",
+  clock: () => Date = () => new Date(),
+): SanyiLogger {
+  return {
+    async write(message, fields = {}) {
+      const now = clock();
+      const local = new Date(now.getTime() + 8 * 3_600_000);
+      const date = local.toISOString().slice(0, 10);
+      const safe = Object.fromEntries(
+        Object.entries(fields).filter(([key]) => {
+          return !/^birth/i.test(key) && !/secret|mnemonic|private/i.test(key);
+        }),
+      );
+      await mkdir(root, { recursive: true });
+      const line = JSON.stringify({ time: now.toISOString(), message, ...safe });
+      await appendFile(join(root, `sanyi_${date}.log`), `${line}\n`, "utf8");
+    },
+  };
+}
+```
+
+- [ ] **Step 5: GREEN、类型检查与提交（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-store.test.ts && npm run typecheck`
+
+Expected: `5 pass, 0 fail`；严格类型检查退出码 0。
+
+```bash
+git add src/sanyi/store.ts src/sanyi/log.ts tests/sanyi-store.test.ts \
+  && git commit -m "feat(sanyi): 实现原子问事存档与脱敏日志"
+```
+
+### Task 14: 单家落笔与核对重写
+
+**Files:**
+- Create: `src/sanyi/school-runner.ts`
+- Create: `tests/sanyi-school-runner.test.ts`
+
+- [ ] **Step 1: 写单家调用、重写与失败测试（5 分钟）**
+
+```ts
+// tests/sanyi-school-runner.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import type {
+  StructuredOutputProvider,
+  StructuredOutputRequest,
+} from "../src/agent/provider.js";
+import { mockSchoolOutput } from "../src/sanyi/mock-schools.js";
+import { runSchool } from "../src/sanyi/school-runner.js";
+import type { QuestionSchoolOutput } from "../src/sanyi/schema.js";
+import { QUESTION_SCHOOLS } from "../src/sanyi/schools/index.js";
+import { facts } from "./helpers/sample-question.js";
+
+class FakeProvider implements StructuredOutputProvider {
+  readonly modelId = "fake";
+  readonly providerConfig = {};
+  readonly providerConfigHash = `0x${"00".repeat(32)}` as const;
+  readonly requests: StructuredOutputRequest[] = [];
+
+  constructor(
+    private readonly responses: Array<QuestionSchoolOutput | Error>,
+  ) {}
+
+  async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    this.requests.push(request);
+    const response = this.responses.shift();
+    if (!response) {
+      throw new Error("测试响应不足");
+    }
+    if (response instanceof Error) {
+      throw response;
+    }
+    return response as T;
+  }
+}
+
+const school = QUESTION_SCHOOLS[1];
+const valid = mockSchoolOutput("jingfang", facts);
+const invalid: QuestionSchoolOutput = {
+  ...valid,
+  verdict: "吉",
+  confidenceTenths: 3,
+};
+const input = {
+  school,
+  question: "这次面试能过吗",
+  facts,
+  originalTexts: ["本卦 地天泰 卦辞：泰，小往大来，吉亨。"],
+};
+
+test("一次通过返回 done 且 calls 为一", async () => {
+  const provider = new FakeProvider([valid]);
+  const result = await runSchool({ provider }, input);
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 1);
+});
+
+test("首次核对失败后重写通过，并附带上次错误", async () => {
+  const provider = new FakeProvider([invalid, valid]);
+  const result = await runSchool({ provider }, input);
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 2);
+  assert.match(provider.requests[1]?.userPrompt ?? "", /吉对应的把握不得低于六成/);
+});
+
+test("连续两次核对失败返回 rejected", async () => {
+  const provider = new FakeProvider([invalid, invalid]);
+  const result = await runSchool({ provider }, input);
+  assert.equal(result.status, "rejected");
+  assert.equal(result.calls, 2);
+  assert.match(result.status === "rejected" ? result.error : "", /未通过盘面核对/);
+});
+
+test("模型抛错返回 failed 与中文错误", async () => {
+  const provider = new FakeProvider([new Error("暂不可用")]);
+  const result = await runSchool({ provider }, input);
+  assert.equal(result.status, "failed");
+  assert.equal(result.calls, 1);
+  assert.match(result.status === "failed" ? result.error : "", /模型调用失败.*暂不可用/);
+});
+```
+
+- [ ] **Step 2: 运行 RED（2 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-school-runner.test.ts`
+
+Expected: FAIL，提示 `school-runner.js` 不存在。
+
+- [ ] **Step 3: 实现单家落笔与至多一次重写（5 分钟）**
+
+```ts
+// src/sanyi/school-runner.ts
+import type { StructuredOutputProvider } from "../agent/provider.js";
+import { auditOutput } from "./audit.js";
+import type { FactTable } from "./facts.js";
+import {
+  QUESTION_SCHOOL_SCHEMA,
+  checkVerdictConsistency,
+  type QuestionSchoolOutput,
+} from "./schema.js";
+import type { QuestionSchool } from "./schools/shared.js";
+
+export interface SchoolRunDependencies {
+  provider: StructuredOutputProvider;
+}
+
+export interface SchoolRunInput {
+  school: QuestionSchool;
+  question: string;
+  facts: FactTable;
+  originalTexts: readonly string[];
+}
+
+export type SchoolRunResult =
+  | { status: "done"; output: QuestionSchoolOutput; calls: number }
+  | { status: "failed" | "rejected"; error: string; calls: number };
+
+function validationErrors(
+  output: QuestionSchoolOutput,
+  facts: FactTable,
+): string[] {
+  return [
+    ...checkVerdictConsistency(output),
+    ...auditOutput(output, facts).errors,
+  ];
+}
+
+export async function runSchool(
+  deps: SchoolRunDependencies,
+  input: SchoolRunInput,
+): Promise<SchoolRunResult> {
+  const basePrompt = input.school.buildUserPrompt(input);
+  let userPrompt = basePrompt;
+  let calls = 0;
+  for (let pass = 0; pass < 2; pass += 1) {
+    try {
+      calls += 1;
+      const output = await deps.provider.generateStructured<QuestionSchoolOutput>({
+        taskId: `sanyi/question/${input.school.key}`,
+        systemPrompt: input.school.systemPrompt,
+        cacheSystemPrompt: true,
+        userPrompt,
+        schema: QUESTION_SCHOOL_SCHEMA,
+        effort: "medium",
+      });
+      const errors = validationErrors(output, input.facts);
+      if (errors.length === 0) {
+        return { status: "done", output, calls };
+      }
+      if (pass === 1) {
+        return {
+          status: "rejected",
+          error: `断语未通过盘面核对：${errors.join("；")}`,
+          calls,
+        };
+      }
+      userPrompt = [
+        basePrompt,
+        "",
+        "上一次输出未通过核对，请修正后完整重写：",
+        ...errors.map((error) => `- ${error}`),
+      ].join("\n");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { status: "failed", error: `模型调用失败：${message}`, calls };
+    }
+  }
+  return { status: "rejected", error: "断语未通过盘面核对", calls };
+}
+```
+
+- [ ] **Step 4: GREEN、严格类型检查与提交（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-school-runner.test.ts && npm run typecheck`
+
+Expected: `4 pass, 0 fail`；`tsc --noEmit` 退出码 0。
+
+```bash
+git add src/sanyi/school-runner.ts tests/sanyi-school-runner.test.ts \
+  && git commit -m "feat(sanyi): 实现单家落笔与核对重写"
+```
+
+## Chunk 2C: 问事编排
+
+### Task 15: 问事编排服务
+
+**Files:**
+- Create: `src/sanyi/reading-service.ts`
+- Create: `tests/sanyi-reading-service.test.ts`
+
+- [ ] **Step 1: 写公开 API 失败测试（10 分钟）**
+
+```ts
+// tests/sanyi-reading-service.test.ts
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import type {
+  StructuredOutputProvider,
+  StructuredOutputRequest,
+} from "../src/agent/provider.js";
+import { mockQuestionFeeReceipt } from "../src/oracle/fee-payment.js";
+import type { QuestionFeeProof } from "../src/oracle/fee-payment.js";
+import type { QuestionBlockSource } from "../src/oracle/question-oracle.js";
+import { createSanyiLogger, type SanyiLogger } from "../src/sanyi/log.js";
+import { mockSchoolOutput } from "../src/sanyi/mock-schools.js";
+import {
+  LimitExceededError,
+  PaymentAlreadyUsedError,
+  ReadingService,
+  StateConflictError,
+} from "../src/sanyi/reading-service.js";
+import type { QuestionSchoolOutput } from "../src/sanyi/schema.js";
+import type { FactTable } from "../src/sanyi/facts.js";
+import type { QuestionSchoolKey } from "../src/sanyi/schools/index.js";
+import { ReadingStore } from "../src/sanyi/store.js";
+import { ArcUnavailableError } from "../src/sanyi/throws.js";
+
+const TX = `0x${"22".repeat(32)}` as const;
+const PROOF: QuestionFeeProof = {
+  payer: `0x${"11".repeat(20)}`,
+  bundleId: "bundle-1",
+  transactionHashes: [TX],
+};
+
+class FakeBlockSource implements QuestionBlockSource {
+  calls = 0;
+  stalled = false;
+  private height = 0n;
+
+  async latest(): Promise<{
+    number: bigint;
+    hash: `0x${string}`;
+    timestamp: bigint;
+  }> {
+    this.calls += 1;
+    if (!this.stalled) {
+      this.height += 1n;
+    }
+    return {
+      number: this.height,
+      hash: `0x${this.height.toString(16).padStart(64, "0")}`,
+      timestamp: 1_790_776_500n + this.height,
+    };
+  }
+}
+
+function factsFromPrompt(prompt: string): FactTable {
+  const facts: FactTable = new Map();
+  for (const line of prompt.split("\n")) {
+    const match = line.match(/^([a-z-]+(?::\w+)?)[：](.+)$/u);
+    if (match?.[1] && match[2]) {
+      facts.set(match[1], {
+        id: match[1],
+        label: match[2],
+        tokens: new Set<string>(),
+      });
+    }
+  }
+  return facts;
+}
+
+interface ProviderGate {
+  started: Promise<void>;
+  release(): void;
+}
+
+class FakeProvider implements StructuredOutputProvider {
+  readonly modelId = "fake";
+  readonly providerConfig = {};
+  readonly providerConfigHash = `0x${"00".repeat(32)}` as const;
+  readonly calls = new Map<QuestionSchoolKey, number>();
+  throwFor: QuestionSchoolKey | null = null;
+  rejectFor: QuestionSchoolKey | null = null;
+  private readonly gates = new Map<
+    QuestionSchoolKey,
+    Array<{ wait: Promise<void>; markStarted(): void }>
+  >();
+
+  delayNext(key: QuestionSchoolKey): ProviderGate {
+    let release = (): void => {};
+    let markStarted = (): void => {};
+    const wait = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+    const queue = this.gates.get(key) ?? [];
+    queue.push({ wait, markStarted });
+    this.gates.set(key, queue);
+    return { started, release };
+  }
+
+  async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    const key = request.taskId.split("/").at(-1) as QuestionSchoolKey;
+    this.calls.set(key, (this.calls.get(key) ?? 0) + 1);
+    const gate = this.gates.get(key)?.shift();
+    if (gate) {
+      gate.markStarted();
+      await gate.wait;
+    }
+    if (this.throwFor === key) {
+      throw new Error("模型暂不可用");
+    }
+    const output = mockSchoolOutput(key, factsFromPrompt(request.userPrompt));
+    if (this.rejectFor === key) {
+      return {
+        ...output,
+        verdict: "吉",
+        confidenceTenths: 3,
+      } as T;
+    }
+    return output as T;
+  }
+}
+
+interface Fixture {
+  root: string;
+  store: ReadingStore;
+  blocks: FakeBlockSource;
+  provider: FakeProvider;
+  logger: SanyiLogger;
+  service: ReadingService;
+}
+
+async function fixture(input: {
+  root?: string;
+  calendarThrows?: boolean;
+} = {}): Promise<Fixture> {
+  const root = input.root ?? await mkdtemp(join(tmpdir(), "sanyi-service-"));
+  const store = new ReadingStore(root);
+  const blocks = new FakeBlockSource();
+  const provider = new FakeProvider();
+  const logger = createSanyiLogger(join(root, "log"), () => new Date(0));
+  const service = new ReadingService({
+    feeVerifier: {
+      verify: async (proof: QuestionFeeProof) => mockQuestionFeeReceipt(proof),
+    },
+    blockSource: blocks,
+    provider,
+    store,
+    logger,
+    clock: () => new Date("2026-09-30T12:15:00.000Z"),
+    waitOptions: {
+      timeoutMs: 3,
+      pollMs: 1,
+      sleep: async () => {},
+    },
+    ...(input.calendarThrows
+      ? {
+          calendar: {
+            almanacAt: () => {
+              throw new Error("历法失败");
+            },
+            qimenAt: () => {
+              throw new Error("不应继续计算奇门");
+            },
+          },
+        }
+      : {}),
+  });
+  return { root, store, blocks, provider, logger, service };
+}
+
+async function create(
+  service: ReadingService,
+  feeProof: QuestionFeeProof = PROOF,
+) {
+  return service.createQuestionReading({
+    question: "这次面试能过吗",
+    feeProof,
+  });
+}
+
+async function castAll(service: ReadingService, id: string): Promise<void> {
+  for (let index = 1; index <= 6; index += 1) {
+    await service.throwCoin(id, index);
+  }
+  await service.whenSettled(id);
+}
+
+test("创建后为 awaiting-throws", async () => {
+  const item = await fixture();
+  try {
+    assert.equal((await create(item.service)).status, "awaiting-throws");
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("六掷后按官鬼排盘且三家完成", async () => {
+  const item = await fixture();
+  try {
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    const done = await item.service.getReading(reading.id);
+    assert.equal(done.status, "done");
+    assert.equal(done.chart?.focus?.useGod, "官鬼");
+    assert.deepEqual(
+      Object.values(done.schools).map((state) => state.status),
+      ["done", "done", "done"],
+    );
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("重复和并发同一掷幂等且只读取一次区块", async () => {
+  const item = await fixture();
+  try {
+    const reading = await create(item.service);
+    const [left, right] = await Promise.all([
+      item.service.throwCoin(reading.id, 1),
+      item.service.throwCoin(reading.id, 1),
+    ]);
+    assert.deepEqual(left, right);
+    const calls = item.blocks.calls;
+    assert.deepEqual(await item.service.throwCoin(reading.id, 1), left);
+    assert.equal(item.blocks.calls, calls);
+    assert.equal((await item.service.getReading(reading.id)).throws.length, 1);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("乱序掷被拒绝", async () => {
+  const item = await fixture();
+  try {
+    const reading = await create(item.service);
+    await assert.rejects(item.service.throwCoin(reading.id, 2), /第 1 掷/);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("区块停滞保留前序掷且恢复后可续掷", async () => {
+  const item = await fixture();
+  try {
+    const reading = await create(item.service);
+    await item.service.throwCoin(reading.id, 1);
+    item.blocks.stalled = true;
+    await assert.rejects(
+      item.service.throwCoin(reading.id, 2),
+      (error: unknown) => error instanceof ArcUnavailableError,
+    );
+    assert.equal((await item.service.getReading(reading.id)).throws.length, 1);
+    item.blocks.stalled = false;
+    await item.service.throwCoin(reading.id, 2);
+    assert.equal((await item.service.getReading(reading.id)).throws.length, 2);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("一家失败被隔离、可成功重试且每卦第三次重试超限", async () => {
+  const item = await fixture();
+  try {
+    item.provider.throwFor = "chengyi";
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    let stored = await item.service.getReading(reading.id);
+    assert.equal(stored.schools.chengyi.status, "failed");
+    assert.equal(stored.schools.jingfang.status, "done");
+    assert.equal(stored.schools.shaoyong.status, "done");
+    item.provider.throwFor = null;
+    await item.service.retrySchool(reading.id, "chengyi");
+    await item.service.whenSettled(reading.id);
+    stored = await item.service.getReading(reading.id);
+    assert.equal(stored.schools.chengyi.status, "done");
+    const second = await create(item.service, {
+      ...PROOF,
+      bundleId: "bundle-2",
+    });
+    item.provider.throwFor = "chengyi";
+    await castAll(item.service, second.id);
+    await item.service.retrySchool(second.id, "chengyi");
+    await item.service.whenSettled(second.id);
+    await item.service.retrySchool(second.id, "chengyi");
+    await item.service.whenSettled(second.id);
+    await assert.rejects(
+      item.service.retrySchool(second.id, "chengyi"),
+      (error: unknown) => error instanceof LimitExceededError,
+    );
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("京房连续两次核对失败后标为 rejected", async () => {
+  const item = await fixture();
+  try {
+    item.provider.rejectFor = "jingfang";
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    const done = await item.service.getReading(reading.id);
+    assert.equal(done.schools.jingfang.status, "rejected");
+    assert.equal(item.provider.calls.get("jingfang"), 2);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("改事项只重跑京房且第四次修改超限", async () => {
+  const item = await fixture();
+  try {
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    const before = await item.service.getReading(reading.id);
+    const calls = new Map(item.provider.calls);
+    for (const key of ["wealth", "career", "wealth"] as const) {
+      await item.service.changeSubject(reading.id, key);
+      await item.service.whenSettled(reading.id);
+    }
+    const after = await item.service.getReading(reading.id);
+    assert.equal(after.chart?.focus?.useGod, "妻财");
+    assert.equal(item.provider.calls.get("jingfang"), (calls.get("jingfang") ?? 0) + 3);
+    assert.equal(item.provider.calls.get("chengyi"), calls.get("chengyi"));
+    assert.equal(item.provider.calls.get("shaoyong"), calls.get("shaoyong"));
+    assert.deepEqual(after.schools.chengyi.output, before.schools.chengyi.output);
+    assert.deepEqual(after.schools.shaoyong.output, before.schools.shaoyong.output);
+    await assert.rejects(
+      item.service.changeSubject(reading.id, "career"),
+      (error: unknown) => error instanceof LimitExceededError,
+    );
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("whenSettled 等待同一 reading 的全部后台任务", async () => {
+  const item = await fixture();
+  try {
+    item.provider.throwFor = "chengyi";
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    item.provider.throwFor = null;
+    const chengyi = item.provider.delayNext("chengyi");
+    const jingfang = item.provider.delayNext("jingfang");
+    await item.service.retrySchool(reading.id, "chengyi");
+    await chengyi.started;
+    await item.service.changeSubject(reading.id, "wealth");
+    await jingfang.started;
+    let settled = false;
+    const waiting = item.service.whenSettled(reading.id).then(() => {
+      settled = true;
+    });
+    chengyi.release();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.equal(settled, false);
+    jingfang.release();
+    await waiting;
+    assert.equal(settled, true);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("首次京房落笔期间不能改事项，完成后可以修改", async () => {
+  const item = await fixture();
+  try {
+    const gate = item.provider.delayNext("jingfang");
+    const reading = await create(item.service);
+    for (let index = 1; index <= 6; index += 1) {
+      await item.service.throwCoin(reading.id, index);
+    }
+    await gate.started;
+    await assert.rejects(
+      item.service.changeSubject(reading.id, "wealth"),
+      (error: unknown) => error instanceof StateConflictError,
+    );
+    gate.release();
+    await item.service.whenSettled(reading.id);
+    await item.service.changeSubject(reading.id, "wealth");
+    await item.service.whenSettled(reading.id);
+    assert.equal(
+      (await item.service.getReading(reading.id)).subject.finalKey,
+      "wealth",
+    );
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("已完成的一家不能重试", async () => {
+  const item = await fixture();
+  try {
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    await assert.rejects(
+      item.service.retrySchool(reading.id, "chengyi"),
+      (error: unknown) => error instanceof StateConflictError,
+    );
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("并发第三次改事项只有一次成功", async () => {
+  const item = await fixture();
+  try {
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    for (const key of ["wealth", "career"] as const) {
+      await item.service.changeSubject(reading.id, key);
+      await item.service.whenSettled(reading.id);
+    }
+    const results = await Promise.allSettled([
+      item.service.changeSubject(reading.id, "wealth"),
+      item.service.changeSubject(reading.id, "documents"),
+    ]);
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+    const rejected = results.find((result) => result.status === "rejected");
+    assert.ok(rejected?.status === "rejected");
+    assert.equal(
+      rejected.reason instanceof LimitExceededError
+        || rejected.reason instanceof StateConflictError,
+      true,
+    );
+    await item.service.whenSettled(reading.id);
+    assert.equal((await item.service.getReading(reading.id)).subject.changes, 3);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("付款凭证跨 service 与 store 实例返回原 reading id", async () => {
+  const item = await fixture();
+  try {
+    const first = await create(item.service);
+    const restarted = await fixture({ root: item.root });
+    await assert.rejects(create(restarted.service), (error: unknown) => {
+      return error instanceof PaymentAlreadyUsedError
+        && error.readingId === first.id;
+    });
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("历法异常落为 failed 且不产生未处理拒绝", async () => {
+  const item = await fixture({ calendarThrows: true });
+  const unhandled: unknown[] = [];
+  const listener = (reason: unknown): void => {
+    unhandled.push(reason);
+  };
+  process.on("unhandledRejection", listener);
+  try {
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    const failed = await item.service.getReading(reading.id);
+    assert.equal(failed.status, "failed");
+    assert.match(failed.error ?? "", /排盘失败/);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.equal(unhandled.length, 0);
+  } finally {
+    process.off("unhandledRejection", listener);
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("日志文件存在且 birthDate 字段被过滤", async () => {
+  const item = await fixture();
+  try {
+    await item.logger.write("测试日志", {
+      birthDate: "不可记录",
+      readingId: "safe-id",
+    });
+    const path = join(item.root, "log", "sanyi_1970-01-01.log");
+    const log = await readFile(path, "utf8");
+    assert.match(log, /测试日志/);
+    assert.doesNotMatch(log, /birthDate|不可记录/);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+```
+
+- [ ] **Step 2: 运行 RED（2 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-reading-service.test.ts`
+
+Expected: FAIL，提示 `reading-service.js`、`school-runner.js` 或 `log.js` 不存在。
+
+- [ ] **Step 3: 实现问事状态机（10 分钟）**
+
+```ts
+// src/sanyi/reading-service.ts
+import { almanacAt } from "../calendar/almanac.js";
+import { selectPrimaryOracleText } from "../calendar/bianzhan.js";
+import { deriveMeihua } from "../calendar/meihua.js";
+import { qimenAt } from "../calendar/qimen.js";
+import { QUESTION_SUBJECTS } from "../oracle/question-classifier.js";
+import type { QuestionSubjectKey } from "../oracle/question-classifier.js";
+import type { QuestionFeeProof } from "../oracle/fee-payment.js";
+import { buildLiuyaoChart, deriveFiveHexagrams } from "../oracle/liuyao-chart.js";
+import type {
+  QuestionBlockSource,
+  QuestionFeeVerifier,
+} from "../oracle/question-oracle.js";
+import type { StructuredOutputProvider } from "../agent/provider.js";
+import { classifyQuestion, normalizeQuestion } from "./classify.js";
+import { buildQuestionFacts, type FactTable } from "./facts.js";
+import type { SanyiLogger } from "./log.js";
+import { buildOriginalTexts } from "./original-texts.js";
+import { runSchool, type SchoolRunResult } from "./school-runner.js";
+import { QUESTION_SCHOOLS, type QuestionSchoolKey } from "./schools/index.js";
+import type { QuestionSchool } from "./schools/shared.js";
+import {
+  ReadingStore,
+  newReadingId,
+  type SchoolState,
+  type StoredReading,
+} from "./store.js";
+import {
+  assertNextThrow,
+  deriveThrow,
+  waitForBlockAfter,
+  type RecordedThrow,
+} from "./throws.js";
+
+type WaitOptions = NonNullable<Parameters<typeof waitForBlockAfter>[2]>;
+
+interface CalendarDependencies {
+  almanacAt: typeof almanacAt;
+  qimenAt: typeof qimenAt;
+}
+
+export interface ReadingServiceDependencies {
+  feeVerifier: QuestionFeeVerifier;
+  blockSource: QuestionBlockSource;
+  provider: StructuredOutputProvider;
+  store: ReadingStore;
+  logger: SanyiLogger;
+  clock?: () => Date;
+  waitOptions?: WaitOptions;
+  calendar?: CalendarDependencies;
+}
+
+interface RebuiltContext {
+  facts: FactTable;
+  originalTexts: readonly string[];
+  chart: ReturnType<typeof buildLiuyaoChart>;
+}
+
+export class PaymentAlreadyUsedError extends Error {
+  constructor(readonly readingId: string) {
+    super(`付款凭证已用于 reading：${readingId}`);
+    this.name = "PaymentAlreadyUsedError";
+  }
+}
+
+export class LimitExceededError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "LimitExceededError";
+  }
+}
+
+export class StateConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StateConflictError";
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function paymentClaimKey(proof: QuestionFeeProof): string {
+  return JSON.stringify({
+    payer: proof.payer.toLowerCase(),
+    bundleId: proof.bundleId,
+    transactionHashes: proof.transactionHashes.map((hash) => hash.toLowerCase()),
+  });
+}
+
+function subjectOption(key: QuestionSubjectKey) {
+  const option = QUESTION_SUBJECTS.find((item) => item.key === key);
+  if (!option) {
+    throw new Error("事项类型无效");
+  }
+  return option;
+}
+
+function initialSchools(): StoredReading["schools"] {
+  return {
+    chengyi: { status: "pending", attempts: 0, retries: 0 },
+    jingfang: { status: "pending", attempts: 0, retries: 0 },
+    shaoyong: { status: "pending", attempts: 0, retries: 0 },
+  };
+}
+
+export class ReadingService {
+  private readonly clock: () => Date;
+  private readonly calendar: CalendarDependencies;
+  private readonly waitOptions: WaitOptions;
+  private readonly readingQueues = new Map<string, Promise<void>>();
+  private readonly background = new Map<string, Promise<void>>();
+
+  constructor(private readonly deps: ReadingServiceDependencies) {
+    this.clock = deps.clock ?? (() => new Date());
+    this.calendar = deps.calendar ?? { almanacAt, qimenAt };
+    this.waitOptions = deps.waitOptions ?? {};
+  }
+
+  async createQuestionReading(input: {
+    question: string;
+    subjectKey?: QuestionSubjectKey;
+    feeProof: QuestionFeeProof;
+  }): Promise<StoredReading> {
+    const classification = classifyQuestion(input.question);
+    if (classification.kind !== "question" || !classification.subject) {
+      throw new Error("此服务只接受问事问题");
+    }
+    const question = normalizeQuestion(input.question);
+    const suggested = classification.subject;
+    const selected = subjectOption(input.subjectKey ?? suggested.key);
+    const receipt = await this.deps.feeVerifier.verify(input.feeProof);
+    if (receipt.feeUsdc6 !== "50000" || receipt.shares.length !== 3) {
+      throw new Error("三座卦金账户付款凭证不完整");
+    }
+    const firstHash = receipt.transactionHashes[0];
+    if (!firstHash) {
+      throw new Error("付款交易哈希不完整");
+    }
+    const id = newReadingId();
+    const existing = await this.deps.store.claimPayment(
+      paymentClaimKey(input.feeProof),
+      id,
+    );
+    if (existing) {
+      throw new PaymentAlreadyUsedError(existing);
+    }
+    const reading: StoredReading = {
+      id,
+      kind: "question",
+      createdAt: this.clock().toISOString(),
+      question,
+      subject: {
+        suggestedKey: suggested.key,
+        finalKey: selected.key,
+        overridden: selected.key !== suggested.key,
+        changes: 0,
+      },
+      payment: {
+        payer: input.feeProof.payer,
+        transactionHashes: receipt.transactionHashes,
+        firstHash,
+        shares: receipt.shares,
+      },
+      throws: [],
+      schools: initialSchools(),
+      status: "awaiting-throws",
+    };
+    await this.deps.store.write(reading);
+    return reading;
+  }
+
+  async throwCoin(id: string, index: number): Promise<RecordedThrow> {
+    return this.withReadingLock(id, async () => {
+      const reading = await this.deps.store.read(id);
+      const recorded = reading.throws.find((item) => item.index === index);
+      if (recorded) {
+        return recorded;
+      }
+      assertNextThrow(reading.throws, index);
+      const previous = reading.throws.at(-1);
+      const block = await waitForBlockAfter(
+        this.deps.blockSource,
+        previous ? BigInt(previous.blockNumber) : 0n,
+        this.waitOptions,
+      );
+      const result = deriveThrow({
+        paymentTxHash: reading.payment.firstHash,
+        blockHash: block.hash,
+        question: reading.question,
+        index,
+      });
+      const next: RecordedThrow = {
+        ...result,
+        blockNumber: block.number.toString(),
+        blockHash: block.hash,
+        blockTimestamp: block.timestamp.toString(),
+      };
+      await this.deps.store.update(id, (current) => ({
+        ...current,
+        throws: [...current.throws, next],
+      }));
+      if (index === 6) {
+        this.startBackground(id, this.finalize(id));
+      }
+      return next;
+    });
+  }
+
+  async retrySchool(id: string, key: QuestionSchoolKey): Promise<StoredReading> {
+    return this.withReadingLock(id, async () => {
+      const reading = await this.deps.store.read(id);
+      const state = reading.schools[key];
+      if (state.status !== "failed" && state.status !== "rejected") {
+        throw new StateConflictError("此家当前状态不可重试");
+      }
+      if (state.retries >= 2) {
+        throw new LimitExceededError("此家重试次数已用尽");
+      }
+      const updated = await this.deps.store.update(id, (current) => ({
+        ...current,
+        schools: {
+          ...current.schools,
+          [key]: {
+            status: "writing",
+            attempts: current.schools[key].attempts,
+            retries: current.schools[key].retries + 1,
+          },
+        },
+      }));
+      this.startBackground(id, this.rerunSchool(id, key));
+      return updated;
+    });
+  }
+
+  async changeSubject(
+    id: string,
+    subjectKey: QuestionSubjectKey,
+  ): Promise<StoredReading> {
+    return this.withReadingLock(id, async () => {
+      const reading = await this.deps.store.read(id);
+      if (reading.status !== "done") {
+        throw new StateConflictError("三家尚未全部落笔，请稍后再改事项");
+      }
+      if (reading.schools.jingfang.status === "writing") {
+        throw new StateConflictError("京房正在落笔，请稍后再改事项");
+      }
+      if (!reading.lines || !reading.castTime) {
+        throw new StateConflictError("尚未完成排盘，不能修改事项");
+      }
+      if (reading.subject.changes >= 3) {
+        throw new LimitExceededError("事项修改次数已用尽");
+      }
+      subjectOption(subjectKey);
+      const changed: StoredReading = {
+        ...reading,
+        subject: {
+          ...reading.subject,
+          finalKey: subjectKey,
+          overridden: subjectKey !== reading.subject.suggestedKey,
+          changes: reading.subject.changes + 1,
+        },
+      };
+      const context = this.rebuildContext(changed);
+      const updated = await this.deps.store.update(id, (current) => ({
+        ...current,
+        subject: changed.subject,
+        chart: context.chart,
+        schools: {
+          ...current.schools,
+          jingfang: {
+            status: "writing",
+            attempts: current.schools.jingfang.attempts,
+            retries: current.schools.jingfang.retries,
+          },
+        },
+      }));
+      this.startBackground(id, this.rerunSchool(id, "jingfang"));
+      return updated;
+    });
+  }
+
+  async getReading(id: string): Promise<StoredReading> {
+    return this.deps.store.read(id);
+  }
+
+  async whenSettled(id: string): Promise<void> {
+    await (this.background.get(id) ?? Promise.resolve());
+  }
+
+  private async withReadingLock<T>(
+    id: string,
+    action: () => Promise<T>,
+  ): Promise<T> {
+    const previous = this.readingQueues.get(id) ?? Promise.resolve();
+    const result = previous.catch(() => {}).then(action);
+    const tail = result.then(
+      () => {},
+      () => {},
+    );
+    this.readingQueues.set(id, tail);
+    try {
+      return await result;
+    } finally {
+      if (this.readingQueues.get(id) === tail) {
+        this.readingQueues.delete(id);
+      }
+    }
+  }
+
+  private startBackground(id: string, task: Promise<void>): void {
+    const current = task.catch(async (error: unknown) => {
+      await this.failReading(id, error);
+    });
+    const previous = this.background.get(id) ?? Promise.resolve();
+    const combined = Promise.all([previous, current]).then(() => {});
+    this.background.set(id, combined);
+    void combined.finally(() => {
+      if (this.background.get(id) === combined) {
+        this.background.delete(id);
+      }
+    });
+  }
+
+  private async finalize(id: string): Promise<void> {
+    const reading = await this.deps.store.update(id, (current) => ({
+      ...current,
+      status: "charting",
+    }));
+    const first = reading.throws[0];
+    if (!first || reading.throws.length !== 6) {
+      throw new Error("六掷记录不完整");
+    }
+    const lines = reading.throws.map((item) => item.value);
+    const castTime = first.blockTimestamp;
+    const basis: StoredReading = { ...reading, lines, castTime };
+    const context = this.rebuildContext(basis);
+    const timestamp = BigInt(castTime);
+    const meihua = deriveMeihua(lines, timestamp);
+    const bianzhan = selectPrimaryOracleText(lines);
+    const almanac = this.calendar.almanacAt(timestamp);
+    const qimen = this.calendar.qimenAt(timestamp);
+    await this.deps.store.update(id, (current) => ({
+      ...current,
+      lines,
+      castTime,
+      chart: context.chart,
+      meihua,
+      bianzhan,
+      almanac,
+      qimen,
+      status: "writing",
+      schools: {
+        chengyi: { ...current.schools.chengyi, status: "writing" },
+        jingfang: { ...current.schools.jingfang, status: "writing" },
+        shaoyong: { ...current.schools.shaoyong, status: "writing" },
+      },
+    }));
+    await Promise.all(QUESTION_SCHOOLS.map(async (school) => {
+      await this.runAndStore(id, school, context, false);
+    }));
+    await this.deps.store.update(id, (current) => ({
+      ...current,
+      status: "done",
+    }));
+  }
+
+  private rebuildContext(reading: StoredReading): RebuiltContext {
+    if (!reading.lines || !reading.castTime) {
+      throw new Error("存档缺少排盘材料");
+    }
+    const subject = subjectOption(reading.subject.finalKey);
+    const timestamp = BigInt(reading.castTime);
+    const chart = buildLiuyaoChart({
+      lines: reading.lines,
+      timestamp,
+      focus: {
+        subjectKey: subject.key,
+        subjectLabel: subject.label,
+        useGod: subject.useGod,
+        overridden: reading.subject.overridden,
+      },
+    });
+    const five = deriveFiveHexagrams(reading.lines);
+    const meihua = deriveMeihua(reading.lines, timestamp);
+    const bianzhan = selectPrimaryOracleText(reading.lines);
+    return {
+      chart,
+      facts: buildQuestionFacts(chart, five, meihua, bianzhan),
+      originalTexts: buildOriginalTexts(five, bianzhan),
+    };
+  }
+
+  private async rerunSchool(
+    id: string,
+    key: QuestionSchoolKey,
+  ): Promise<void> {
+    const reading = await this.deps.store.read(id);
+    const context = this.rebuildContext(reading);
+    const school = QUESTION_SCHOOLS.find((item) => item.key === key);
+    if (!school) {
+      throw new Error("三家键无效");
+    }
+    await this.runAndStore(id, school, context, true);
+  }
+
+  private async runAndStore(
+    id: string,
+    school: QuestionSchool,
+    context: RebuiltContext,
+    preserveRetries: boolean,
+  ): Promise<void> {
+    const reading = await this.deps.store.read(id);
+    const result = await runSchool(
+      { provider: this.deps.provider },
+      {
+        school,
+        question: reading.question,
+        facts: context.facts,
+        originalTexts: context.originalTexts,
+      },
+    );
+    await this.deps.store.update(id, (current) => ({
+      ...current,
+      schools: {
+        ...current.schools,
+        [school.key]: this.schoolState(
+          current.schools[school.key],
+          result,
+          preserveRetries,
+        ),
+      },
+    }));
+  }
+
+  private schoolState(
+    previous: SchoolState,
+    result: SchoolRunResult,
+    preserveRetries: boolean,
+  ): SchoolState {
+    const retries = preserveRetries ? previous.retries : 0;
+    if (result.status === "done") {
+      return {
+        status: "done",
+        output: result.output,
+        attempts: previous.attempts + result.calls,
+        retries,
+      };
+    }
+    return {
+      status: result.status,
+      error: result.error,
+      attempts: previous.attempts + result.calls,
+      retries,
+    };
+  }
+
+  private async failReading(id: string, error: unknown): Promise<void> {
+    const message = `排盘失败：${errorMessage(error)}`;
+    try {
+      await this.deps.store.update(id, (current) => ({
+        ...current,
+        status: "failed",
+        error: message,
+      }));
+    } catch {
+      // 存档本身不可写时仍须继续尝试记录日志。
+    }
+    try {
+      await this.deps.logger.write("问事排盘失败", {
+        readingId: id,
+        error: message,
+      });
+    } catch {
+      // 日志失败不能产生未处理拒绝。
+    }
+  }
+}
+```
+
+- [ ] **Step 4: GREEN、严格类型检查与提交（5 分钟）**
+
+Run: `node --import tsx --test tests/sanyi-reading-service.test.ts && npm run typecheck`
+
+Expected: `15 pass, 0 fail`；`tsc --noEmit` 退出码 0。
+
+```bash
+git add src/sanyi/reading-service.ts tests/sanyi-reading-service.test.ts \
+  && git commit -m "feat(sanyi): 编排问事六掷与三家落笔"
+```
+
+## Chunk 2B/2C 交叉验收
+
+### Task 16: 领域与全量回归
+
+- [ ] 核对 Task 12–15 的实现与存档字段，再运行领域测试：
+
+Run: `node --import tsx --test tests/sanyi-*.test.ts`
+
+Expected: Chunk 2A–2C 全部测试 PASS、0 FAIL。
+
+- [ ] 运行既有问事与六爻回归：
+
+Run: `node --import tsx --test tests/question-oracle.test.ts tests/liuyao-chart.test.ts`
+
+Expected: 既有问事与六爻回归测试全部 PASS、0 FAIL。
+
+- [ ] 核对 `openspec/changes/sanyi-chinese-redesign/tasks.md` 状态与实现一致，
+并运行严格类型检查和全量测试：
+
+Run: `npm run typecheck && npm test`
+
+Expected: `tsc --noEmit` 退出码 0；全量测试 PASS、0 FAIL。
