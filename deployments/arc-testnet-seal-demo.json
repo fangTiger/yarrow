@@ -1,0 +1,717 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-04T23:03:53.894Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002
+  },
+  "status": "PASS",
+  "provider": {
+    "kind": "mock",
+    "modelId": "deterministic-seal-demo-mock-v1"
+  },
+  "parameters": {
+    "waitBlocks": "2",
+    "revealWindow": "96",
+    "maxResolutionDelay": "96",
+    "feeUsdc6": "5000",
+    "bondUsdc6": "25000",
+    "vaultFundingUsdc6": "130000",
+    "mMin": 1,
+    "mMax": 5,
+    "probabilityBps": 9900,
+    "minimumSurvivalUsdc6": "15000"
+  },
+  "accounts": {
+    "deployer": "0x737301a6A40ea453A877627c409EF5756a395DB9",
+    "querent": "0x1D55CdEF8bc4630C9C0A73e46b44DbE17aA6B2eF",
+    "diviner": "0x6dF862c0835D7999F18041737C70D0a85fC191d9",
+    "settler": "0xB77eeE5128C7bfdD62be30fF3FdFd1F11ea502EA"
+  },
+  "contracts": {
+    "PredicateRegistry": {
+      "address": "0x110b5525bcabfce7fcfaf886867b5f7e06f0e30e",
+      "transactionHash": "0x325d4de68c7ae4b7d4cbe66fe7c784c162d4572c59edb772c7cce42ad36d89b5",
+      "blockNumber": "60484783",
+      "gasUsed": "355528",
+      "gasCostWei": "8888200000000000",
+      "constructorArgs": []
+    },
+    "ScoreBook": {
+      "address": "0xfa43113cf528a931803247104931c633d9ec05be",
+      "transactionHash": "0xd5371c3a3c4a737a63ffe43c98c6f3d5156c3b4baa537a2300bcab0bc96bb635",
+      "blockNumber": "60484786",
+      "gasUsed": "1833191",
+      "gasCostWei": "45829775000000000",
+      "constructorArgs": [
+        "0x8004B663056A597Dffe9eCcC1965A193B7388713"
+      ]
+    },
+    "DivinationRegistry": {
+      "address": "0xbd1859bb3065b57f4e9af38cb01f03fadd6148e3",
+      "transactionHash": "0xe518c440008ff6b1663369c2342b95fe0a023cddcabae28ba55d2e71f4bdba41",
+      "blockNumber": "60484798",
+      "gasUsed": "1700283",
+      "gasCostWei": "42507075000000000",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0x737301a6A40ea453A877627c409EF5756a395DB9",
+        "2",
+        "96"
+      ]
+    },
+    "PredictionBook": {
+      "address": "0x32a65c137b66be478d4b5f2d7337243703b07c75",
+      "transactionHash": "0x33b795f64ffe1d8339560e24363ee9cdb82843ff4636bfd1dfd5c08fa66cab2e",
+      "blockNumber": "60484807",
+      "gasUsed": "2973250",
+      "gasCostWei": "74331250000000000",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0xbd1859bb3065b57f4e9af38cb01f03fadd6148e3",
+        "0x110b5525bcabfce7fcfaf886867b5f7e06f0e30e",
+        "0xfa43113cf528a931803247104931c633d9ec05be"
+      ]
+    },
+    "DivinerVault": {
+      "address": "0xe3755c5737b1cd48e785c635b0f027af58dde5d5",
+      "transactionHash": "0xa2711c81613bbd49a3f2b3638c10fca29de01136ab1843af00009212c3091eaa",
+      "blockNumber": "60484810",
+      "gasUsed": "1085007",
+      "gasCostWei": "27125175000000000",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0x32a65c137b66be478d4b5f2d7337243703b07c75",
+        "0x6dF862c0835D7999F18041737C70D0a85fC191d9",
+        1,
+        5
+      ]
+    },
+    "UsdcSupplyResolver": {
+      "address": "0x04ae7aae97281a2de74da307ba470c22293a5341",
+      "transactionHash": "0x3223f5be3bb42ab114871ab4b23bf37757c72ae73485ef3690a3b63f4f127100",
+      "blockNumber": "60484813",
+      "gasUsed": "428065",
+      "gasCostWei": "10701625000000000",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "96"
+      ]
+    }
+  },
+  "transactions": [
+    {
+      "title": "补足演示提问者余额",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xedabf5e1cfe2d57a1375ba73730b81b8ccf1f5b29c48ee4cdc7e7f4060649966",
+      "blockNumber": "60484768",
+      "gasUsed": "73950",
+      "gasCostWei": "1848750000000000"
+    },
+    {
+      "title": "补足演示易者余额",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x9439c6f4a019f61f3da48b047a3e9cb2ee73d554bbd9a8e8ae5ef5a42188f2fc",
+      "blockNumber": "60484771",
+      "gasUsed": "73950",
+      "gasCostWei": "1848750000000000"
+    },
+    {
+      "title": "补足无许可结算者余额",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xba2b358b250e37e79ad08f7e07bb3db048c609c7c1d5dd1623cb4d457e38e974",
+      "blockNumber": "60484780",
+      "gasUsed": "73950",
+      "gasCostWei": "1848750000000000"
+    },
+    {
+      "title": "部署 PredicateRegistry",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x325d4de68c7ae4b7d4cbe66fe7c784c162d4572c59edb772c7cce42ad36d89b5",
+      "blockNumber": "60484783",
+      "gasUsed": "355528",
+      "gasCostWei": "8888200000000000"
+    },
+    {
+      "title": "部署 ScoreBook",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xd5371c3a3c4a737a63ffe43c98c6f3d5156c3b4baa537a2300bcab0bc96bb635",
+      "blockNumber": "60484786",
+      "gasUsed": "1833191",
+      "gasCostWei": "45829775000000000"
+    },
+    {
+      "title": "部署 DivinationRegistry",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xe518c440008ff6b1663369c2342b95fe0a023cddcabae28ba55d2e71f4bdba41",
+      "blockNumber": "60484798",
+      "gasUsed": "1700283",
+      "gasCostWei": "42507075000000000"
+    },
+    {
+      "title": "部署 PredictionBook",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x33b795f64ffe1d8339560e24363ee9cdb82843ff4636bfd1dfd5c08fa66cab2e",
+      "blockNumber": "60484807",
+      "gasUsed": "2973250",
+      "gasCostWei": "74331250000000000"
+    },
+    {
+      "title": "部署 DivinerVault",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xa2711c81613bbd49a3f2b3638c10fca29de01136ab1843af00009212c3091eaa",
+      "blockNumber": "60484810",
+      "gasUsed": "1085007",
+      "gasCostWei": "27125175000000000"
+    },
+    {
+      "title": "部署 UsdcSupplyResolver",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x3223f5be3bb42ab114871ab4b23bf37757c72ae73485ef3690a3b63f4f127100",
+      "blockNumber": "60484813",
+      "gasUsed": "428065",
+      "gasCostWei": "10701625000000000"
+    },
+    {
+      "title": "设置托管操作员",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x300ce95d39b7999ff706b7cd2b4195599cc653d10cb08d0e544d7b6c8d1f7599",
+      "blockNumber": "60484815",
+      "gasUsed": "45359",
+      "gasCostWei": "1133975000000000"
+    },
+    {
+      "title": "设置计分记录者",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xf8ee393635a94e3a0b76abb2cbba8eef2beddf7190c240e52990d5ee695af1f4",
+      "blockNumber": "60484818",
+      "gasUsed": "45272",
+      "gasCostWei": "1131800000000000"
+    },
+    {
+      "title": "注册演示易者",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xbc4f0ea6271a376cd3e85c187b08e7d98d446780932326198ec375fd9a3c0bb5",
+      "blockNumber": "60484826",
+      "gasUsed": "117618",
+      "gasCostWei": "2940450000000000"
+    },
+    {
+      "title": "登记天层 USDC 总量谓词",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xb6f68201f329ea753c7860467af3a9e4475b02e882f9ab7ecbc59c53a18fbc3d",
+      "blockNumber": "60484828",
+      "gasUsed": "93532",
+      "gasCostWei": "2338300000000000"
+    },
+    {
+      "title": "授权演示金库注资",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x0a3155b654b4f7ccb57d261454a2d8312f94645b06781e0eacfcea5ecf34904e",
+      "blockNumber": "60484830",
+      "gasUsed": "55438",
+      "gasCostWei": "1385950000000000"
+    },
+    {
+      "title": "注资演示金库",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x900736a24636c068515d59e3df9ce19017ecedf8b5bbb239a5ff6721f36fb924",
+      "blockNumber": "60484832",
+      "gasUsed": "57112",
+      "gasCostWei": "1427800000000000"
+    },
+    {
+      "title": "提问者授权七轮托管",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x17533509b564b5ef6fb0fe9fb5bf74dbf9738c3375f5b610c69549fe9333736f",
+      "blockNumber": "60484834",
+      "gasUsed": "55438",
+      "gasCostWei": "1385950000000000"
+    },
+    {
+      "title": "第1轮 commit",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x5c3ff8cebd2a819237c0fe6cc83cd6c269a059d45639cff8742a19072808b41d",
+      "blockNumber": "60484836",
+      "gasUsed": "220002",
+      "gasCostWei": "5500050000000000"
+    },
+    {
+      "title": "第1轮 reveal",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x96449d0f7a9ea7d7b7dc768ff280b27f44d9607b5ae6074eb5940977625bacda",
+      "blockNumber": "60484845",
+      "gasUsed": "120854",
+      "gasCostWei": "3021350000000000"
+    },
+    {
+      "title": "第1轮应卦（正确预热）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xf429e79b43a19ac36ea8d6db8e667f0a76e3850ebac816244a31486f5b91682d",
+      "blockNumber": "60484848",
+      "gasUsed": "736079",
+      "gasCostWei": "18401975000000000"
+    },
+    {
+      "title": "第1轮真实结算（正确预热）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x2876d1fd102ceb645664cfdda2e02bf245753b08dddcfb30f0e56dd8a7a7d4b2",
+      "blockNumber": "60484878",
+      "gasUsed": "442489",
+      "gasCostWei": "11062225000000000"
+    },
+    {
+      "title": "第2轮 commit",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xa4c37ac2a66c9e88081db23ef750c7a456a56c7a62d903ddd32ffb9ea0ea209a",
+      "blockNumber": "60484887",
+      "gasUsed": "202914",
+      "gasCostWei": "5072850000000000"
+    },
+    {
+      "title": "第2轮 reveal",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xdc4edc964d21fd9e831d1d28c244511034b692bfb0a6bd14fb898b68acc5b299",
+      "blockNumber": "60484898",
+      "gasUsed": "120948",
+      "gasCostWei": "3023700000000000"
+    },
+    {
+      "title": "第2轮应卦（连续错误 1/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x6e7f276c0d09ed2ce38ae7e1369cd647965ec556dd6fbfc78b6041f8eaca04ec",
+      "blockNumber": "60484900",
+      "gasUsed": "772131",
+      "gasCostWei": "19303275000000000"
+    },
+    {
+      "title": "第2轮真实结算（连续错误 1/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xa777dc5c098bd84611ac115361a2ab73330631355f468d8cbf4a2cdb447e6869",
+      "blockNumber": "60484929",
+      "gasUsed": "365759",
+      "gasCostWei": "9143975000000000"
+    },
+    {
+      "title": "第3轮 commit",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x9a0b012f9f39116a68f8e658b60860cd9c8eaf66f85fa4932ddb33616560d1ac",
+      "blockNumber": "60484933",
+      "gasUsed": "202914",
+      "gasCostWei": "5072850000000000"
+    },
+    {
+      "title": "第3轮 reveal",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xd61eb1e397a9a97e372de02b4cd9fb6177aa350dd3fe05cdf0157b2edc7e8feb",
+      "blockNumber": "60484942",
+      "gasUsed": "120972",
+      "gasCostWei": "3024300000000000"
+    },
+    {
+      "title": "第3轮应卦（连续错误 2/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xefad590afe1a40c2f30b88c853cd51c7b3a2497515b0b346ffd0bbc4d2b59dc5",
+      "blockNumber": "60484945",
+      "gasUsed": "777213",
+      "gasCostWei": "19430325000000000"
+    },
+    {
+      "title": "第3轮真实结算（连续错误 2/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xbc3462d6f797df8a7e27e5170b92d0be3e8d346ab11e2b841c61321c1b0d2140",
+      "blockNumber": "60484974",
+      "gasUsed": "376624",
+      "gasCostWei": "9415600000000000"
+    },
+    {
+      "title": "第4轮 commit",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x3df348035e9d5002b599a88e53729fcd2110fbd5ed7ac3d3d6f898291b8acae9",
+      "blockNumber": "60484979",
+      "gasUsed": "202914",
+      "gasCostWei": "5072850000000000"
+    },
+    {
+      "title": "第4轮 reveal",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xd35171c6eeaecd109740821284a249e941ed968f4b77e2c0892a83a180404219",
+      "blockNumber": "60484988",
+      "gasUsed": "120972",
+      "gasCostWei": "3024300000000000"
+    },
+    {
+      "title": "第4轮应卦（连续错误 3/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xa634262399bf60eaf5732b79525861063a7a825bed33007ac697c129ed1bd90d",
+      "blockNumber": "60484991",
+      "gasUsed": "776275",
+      "gasCostWei": "19406875000000000"
+    },
+    {
+      "title": "第4轮真实结算（连续错误 3/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x02ce0fae4aee86e8a6218aeb593e94d58fe7fd478b4de51781a2922781821aff",
+      "blockNumber": "60485019",
+      "gasUsed": "376624",
+      "gasCostWei": "9415600000000000"
+    },
+    {
+      "title": "第5轮 commit",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x08b24482880b31d48949fa056ae8a59b7d907e3860c0244663e4a513e687a847",
+      "blockNumber": "60485031",
+      "gasUsed": "202914",
+      "gasCostWei": "5072850000000000"
+    },
+    {
+      "title": "第5轮 reveal",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x18ffbbabf0e49da7abaa04196b1c44769b39800206294f5f3d8d45a0bd2e4801",
+      "blockNumber": "60485040",
+      "gasUsed": "120919",
+      "gasCostWei": "3022975000000000"
+    },
+    {
+      "title": "第5轮应卦（连续错误 4/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x099d2a4f01a761f6ff8079c8a8d4edbdae1cd749a715132056b1cc47c097cc13",
+      "blockNumber": "60485042",
+      "gasUsed": "776275",
+      "gasCostWei": "19406875000000000"
+    },
+    {
+      "title": "第5轮真实结算（连续错误 4/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xef8a47cda2b8db4e3533a14578ee2048bc25bcafc17649d9583bd03103d2d331",
+      "blockNumber": "60485071",
+      "gasUsed": "376624",
+      "gasCostWei": "9415600000000000"
+    },
+    {
+      "title": "第6轮 commit",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x03b23d1bd3c06a9d736c1783ca551280069d7b5ada8f7a6c0f796e63217e3a35",
+      "blockNumber": "60485076",
+      "gasUsed": "202902",
+      "gasCostWei": "5072550000000000"
+    },
+    {
+      "title": "第6轮 reveal",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x8ab4bd339ce1267f64c5a5aeee02bf9ad07570a99370a48e9b68c3ddf8286b75",
+      "blockNumber": "60485087",
+      "gasUsed": "120849",
+      "gasCostWei": "3021225000000000"
+    },
+    {
+      "title": "第6轮应卦（连续错误 5/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x89d1466cd4ae365fddc0c83243579ffda428895c4328774db36978f7eddc7029",
+      "blockNumber": "60485090",
+      "gasUsed": "776275",
+      "gasCostWei": "19406875000000000"
+    },
+    {
+      "title": "第6轮真实结算（连续错误 5/5）",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x30b7cdf4281c08a3a80a61ec070556433d11c32b670af5867f5f3f00b8228e4d",
+      "blockNumber": "60485118",
+      "gasUsed": "398078",
+      "gasCostWei": "9951950000000000"
+    },
+    {
+      "title": "第7轮 commit",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x6c63e5287c8fb636a3665dfa097bd43b3f9097e145eaea0dba3a964b76854c6d",
+      "blockNumber": "60485129",
+      "gasUsed": "202890",
+      "gasCostWei": "5072250000000000"
+    },
+    {
+      "title": "第7轮 reveal",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0xf46274ed3b62dcb863750585e27058f80ff1dc56db15070a0d77bf1b840998bc",
+      "blockNumber": "60485138",
+      "gasUsed": "120256",
+      "gasCostWei": "3006400000000000"
+    },
+    {
+      "title": "封存后再次应卦",
+      "expected": "REVERT",
+      "status": "REVERT",
+      "transactionHash": "0x6f2f655e64dd14aac0526bbd4fcd84d76298b690a024cb83d7c29527272f5af1",
+      "blockNumber": "60485521",
+      "gasUsed": "103149",
+      "gasCostWei": "2578725000000000",
+      "revertReason": "VaultSealed()"
+    },
+    {
+      "title": "封存后正式注资",
+      "expected": "REVERT",
+      "status": "REVERT",
+      "transactionHash": "0xa8472365af3437276a902a1e20ef3c36a1b2da4a8adf906842bd73f452043d27",
+      "blockNumber": "60485672",
+      "gasUsed": "28692",
+      "gasCostWei": "717300000000000",
+      "revertReason": "VaultSealed()"
+    },
+    {
+      "title": "向封存金库强制转入一个最小单位",
+      "expected": "SUCCESS",
+      "status": "SUCCESS",
+      "transactionHash": "0x4dde53c24adeed280edf8dfc232f3512c6848df6a515ef0488461ff78c53d28d",
+      "blockNumber": "60485675",
+      "gasUsed": "48926",
+      "gasCostWei": "1223150000000000"
+    },
+    {
+      "title": "强制转入后再次应卦",
+      "expected": "REVERT",
+      "status": "REVERT",
+      "transactionHash": "0xce0e012b5b8a8bc28a4d8789c550d6fa11baf8fb72a000d784e671f07bee0cab",
+      "blockNumber": "60485684",
+      "gasUsed": "103149",
+      "gasCostWei": "2578725000000000",
+      "revertReason": "VaultSealed()"
+    }
+  ],
+  "rounds": [
+    {
+      "sequence": 1,
+      "outcome": true,
+      "probabilityBps": 9900,
+      "multiplier": 1,
+      "brier": "10000",
+      "settlementDeltaUsdc6": "4998",
+      "bankrollBeforeUsdc6": "130000",
+      "bankrollAfterUsdc6": "134998",
+      "sealedAfter": false,
+      "roundId": "0",
+      "deadline": "60484868",
+      "primaryKingWenNumber": 46,
+      "derivedKingWenNumber": 7,
+      "lines": [
+        8,
+        7,
+        9,
+        8,
+        8,
+        8
+      ],
+      "commitTransactionHash": "0x5c3ff8cebd2a819237c0fe6cc83cd6c269a059d45639cff8742a19072808b41d",
+      "revealTransactionHash": "0x96449d0f7a9ea7d7b7dc768ff280b27f44d9607b5ae6074eb5940977625bacda",
+      "submitTransactionHash": "0xf429e79b43a19ac36ea8d6db8e667f0a76e3850ebac816244a31486f5b91682d",
+      "settleTransactionHash": "0x2876d1fd102ceb645664cfdda2e02bf245753b08dddcfb30f0e56dd8a7a7d4b2"
+    },
+    {
+      "sequence": 2,
+      "outcome": false,
+      "probabilityBps": 9900,
+      "multiplier": 5,
+      "brier": "98010000",
+      "settlementDeltaUsdc6": "-73010",
+      "bankrollBeforeUsdc6": "134998",
+      "bankrollAfterUsdc6": "61988",
+      "sealedAfter": false,
+      "roundId": "1",
+      "deadline": "60484919",
+      "primaryKingWenNumber": 34,
+      "derivedKingWenNumber": 32,
+      "lines": [
+        9,
+        7,
+        7,
+        7,
+        8,
+        8
+      ],
+      "commitTransactionHash": "0xa4c37ac2a66c9e88081db23ef750c7a456a56c7a62d903ddd32ffb9ea0ea209a",
+      "revealTransactionHash": "0xdc4edc964d21fd9e831d1d28c244511034b692bfb0a6bd14fb898b68acc5b299",
+      "submitTransactionHash": "0x6e7f276c0d09ed2ce38ae7e1369cd647965ec556dd6fbfc78b6041f8eaca04ec",
+      "settleTransactionHash": "0xa777dc5c098bd84611ac115361a2ab73330631355f468d8cbf4a2cdb447e6869"
+    },
+    {
+      "sequence": 3,
+      "outcome": false,
+      "probabilityBps": 9900,
+      "multiplier": 1,
+      "brier": "98010000",
+      "settlementDeltaUsdc6": "-14602",
+      "bankrollBeforeUsdc6": "61988",
+      "bankrollAfterUsdc6": "47386",
+      "sealedAfter": false,
+      "roundId": "2",
+      "deadline": "60484965",
+      "primaryKingWenNumber": 61,
+      "derivedKingWenNumber": 10,
+      "lines": [
+        7,
+        7,
+        8,
+        6,
+        7,
+        7
+      ],
+      "commitTransactionHash": "0x9a0b012f9f39116a68f8e658b60860cd9c8eaf66f85fa4932ddb33616560d1ac",
+      "revealTransactionHash": "0xd61eb1e397a9a97e372de02b4cd9fb6177aa350dd3fe05cdf0157b2edc7e8feb",
+      "submitTransactionHash": "0xefad590afe1a40c2f30b88c853cd51c7b3a2497515b0b346ffd0bbc4d2b59dc5",
+      "settleTransactionHash": "0xbc3462d6f797df8a7e27e5170b92d0be3e8d346ab11e2b841c61321c1b0d2140"
+    },
+    {
+      "sequence": 4,
+      "outcome": false,
+      "probabilityBps": 9900,
+      "multiplier": 1,
+      "brier": "98010000",
+      "settlementDeltaUsdc6": "-14602",
+      "bankrollBeforeUsdc6": "47386",
+      "bankrollAfterUsdc6": "32784",
+      "sealedAfter": false,
+      "roundId": "3",
+      "deadline": "60485011",
+      "primaryKingWenNumber": 58,
+      "derivedKingWenNumber": 10,
+      "lines": [
+        7,
+        7,
+        8,
+        7,
+        7,
+        6
+      ],
+      "commitTransactionHash": "0x3df348035e9d5002b599a88e53729fcd2110fbd5ed7ac3d3d6f898291b8acae9",
+      "revealTransactionHash": "0xd35171c6eeaecd109740821284a249e941ed968f4b77e2c0892a83a180404219",
+      "submitTransactionHash": "0xa634262399bf60eaf5732b79525861063a7a825bed33007ac697c129ed1bd90d",
+      "settleTransactionHash": "0x02ce0fae4aee86e8a6218aeb593e94d58fe7fd478b4de51781a2922781821aff"
+    },
+    {
+      "sequence": 5,
+      "outcome": false,
+      "probabilityBps": 9900,
+      "multiplier": 1,
+      "brier": "98010000",
+      "settlementDeltaUsdc6": "-14602",
+      "bankrollBeforeUsdc6": "32784",
+      "bankrollAfterUsdc6": "18182",
+      "sealedAfter": false,
+      "roundId": "4",
+      "deadline": "60485062",
+      "primaryKingWenNumber": 32,
+      "derivedKingWenNumber": 32,
+      "lines": [
+        8,
+        7,
+        7,
+        7,
+        8,
+        8
+      ],
+      "commitTransactionHash": "0x08b24482880b31d48949fa056ae8a59b7d907e3860c0244663e4a513e687a847",
+      "revealTransactionHash": "0x18ffbbabf0e49da7abaa04196b1c44769b39800206294f5f3d8d45a0bd2e4801",
+      "submitTransactionHash": "0x099d2a4f01a761f6ff8079c8a8d4edbdae1cd749a715132056b1cc47c097cc13",
+      "settleTransactionHash": "0xef8a47cda2b8db4e3533a14578ee2048bc25bcafc17649d9583bd03103d2d331"
+    },
+    {
+      "sequence": 6,
+      "outcome": false,
+      "probabilityBps": 9900,
+      "multiplier": 1,
+      "brier": "98010000",
+      "settlementDeltaUsdc6": "-14602",
+      "bankrollBeforeUsdc6": "18182",
+      "bankrollAfterUsdc6": "3580",
+      "sealedAfter": true,
+      "roundId": "5",
+      "deadline": "60485110",
+      "primaryKingWenNumber": 24,
+      "derivedKingWenNumber": 4,
+      "lines": [
+        9,
+        6,
+        8,
+        8,
+        8,
+        6
+      ],
+      "commitTransactionHash": "0x03b23d1bd3c06a9d736c1783ca551280069d7b5ada8f7a6c0f796e63217e3a35",
+      "revealTransactionHash": "0x8ab4bd339ce1267f64c5a5aeee02bf9ad07570a99370a48e9b68c3ddf8286b75",
+      "submitTransactionHash": "0x89d1466cd4ae365fddc0c83243579ffda428895c4328774db36978f7eddc7029",
+      "settleTransactionHash": "0x30b7cdf4281c08a3a80a61ec070556433d11c32b670af5867f5f3f00b8228e4d"
+    }
+  ],
+  "permanence": {
+    "resubmitReverted": true,
+    "depositReverted": true,
+    "forcedTransferDidNotRevive": true,
+    "finalState": "SEALED",
+    "finalAssetsUsdc6": "3581",
+    "historyCount": "6",
+    "lastRoundId": "5"
+  },
+  "costs": {
+    "gasCostWei": "464613125000000000",
+    "gasCostUsdc6": "464613",
+    "vaultFundingUsdc6": "130000",
+    "conservativeBudgetUseUsdc6": "594613",
+    "deployerBalanceBeforeWei": "10026457550000000000",
+    "deployerBalanceAfterWei": "8999228475000000000",
+    "controlledBalanceAfterWei": "9558261425000000000"
+  },
+  "notes": [
+    "六轮概率由确定性 mock 固定为 YES 99%；mock 不能证明真实模型能力。",
+    "前五次错误之前的一次正确结算只用于让链上确定性策略先提高倍率，从而可观察后续收缩。",
+    "错误轮使用 USDC 总量大于 uint256 最大值这一不可满足命题；结果由 UsdcSupplyResolver 在截止后首次链上观察并缓存，不由管理员写入。",
+    "ERC-20 允许任何人强制转入代币，合约无法阻止该动作；永久性的定义是 SEALED 状态不变、deposit 回滚且之后永远不能再应卦。",
+    "首次封存后应卦模拟仅返回自定义错误选择器 0x00497160；经合约 ABI 核对为 VaultSealed()。",
+    "首次正式注资模拟仅报告合约回滚；随后发送的链上回滚交易与状态核验确认金库仍为 SEALED。",
+    "首次永久性模拟复验因 RPC 只返回自定义错误选择器而停住；确认 0x00497160=VaultSealed() 后按既有第 7 轮续跑，未重放部署或六轮结算。"
+  ],
+  "reportPath": "reports/arc-seal-demo-2026-09-04T23-03-53-894Z.md",
+  "profile": {
+    "key": "sealed-demo",
+    "name": "折筮·零号"
+  }
+}

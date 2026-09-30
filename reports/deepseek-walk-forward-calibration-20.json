@@ -1,0 +1,1715 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-05T03:33:49.051Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002
+  },
+  "backtested": true,
+  "modelId": "deepseek-v4-flash",
+  "sampleCount": 20,
+  "rounds": [
+    {
+      "replayId": 1,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60507985",
+        "blockHash": "0x686246c45fb7b22ca04c809934c5fa56adc7d48cf8bbd0231f9e9bfe8e78a879",
+        "timestamp": "1788574995",
+        "totalSupply": "314987116014885989"
+      },
+      "resolution": {
+        "blockNumber": "60507991",
+        "blockHash": "0x3b4822a6cf8072d973ec94ccde1d1b42ea3000e88a24c04f18f1a77ed3ccb57c",
+        "timestamp": "1788574998",
+        "totalSupply": "314987116014785989"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60507991 是否严格高于截止块 60507985 的已知总量？",
+        "cutoffBlock": "60507985",
+        "resolutionBlock": "60507991",
+        "threshold": "314987116014885989"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          9,
+          7,
+          7,
+          7,
+          7
+        ],
+        "primaryKingWenNumber": 1,
+        "derivedKingWenNumber": 13,
+        "changingLinePositions": [
+          2
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4500,
+          "reasoning": "乾为天极盛，九二动变同人，或主短期量增但难持续。截止与结算仅隔6块，链上增量有限。无既往战绩校准，趋向谨慎，估略低于半数为否。",
+          "direction": "NO",
+          "multiplier": 1,
+          "reservedUsdc6": "150000",
+          "settlementDeltaUsdc6": "9500",
+          "bankrollBeforeUsdc6": "3000000",
+          "bankrollAfterUsdc6": "3009500",
+          "brier": "20250000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 3600,
+          "reasoning": "本卦乾为纯阳，刚健过甚，动爻九二‘见龙在田’虽显，但变卦同人‘同人于宗’有吝，显示总量或难显著增长；截止已知阈值高企，短期增量有限，故倾向不高于。",
+          "direction": "NO",
+          "multiplier": 1,
+          "reservedUsdc6": "150000",
+          "settlementDeltaUsdc6": "24080",
+          "bankrollBeforeUsdc6": "3000000",
+          "bankrollAfterUsdc6": "3024080",
+          "brier": "12960000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 6200,
+          "reasoning": "本卦乾为天，变动为同人。六爻皆阳，气势极盛，变爻二爻示事物发展转折。同人卦利涉大川，暗示通过。历史无记录，凭卦象取上涨偏向，但仅小幅高于5000点。",
+          "direction": "YES",
+          "multiplier": 1,
+          "reservedUsdc6": "150000",
+          "settlementDeltaUsdc6": "-26880",
+          "bankrollBeforeUsdc6": "3000000",
+          "bankrollAfterUsdc6": "2973120",
+          "brier": "38440000",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "replayId": 2,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60507993",
+        "blockHash": "0xa6c7ef818e457caa8f8bea8d4c06ea21aa663ab9e9830b56db18c857692b9c37",
+        "timestamp": "1788574999",
+        "totalSupply": "314987116014785989"
+      },
+      "resolution": {
+        "blockNumber": "60507999",
+        "blockHash": "0xe9efb0f7e7bb5d0d95a10dd06e00e3a0f9935d13d6e821fcea7adfc3e027ba69",
+        "timestamp": "1788575002",
+        "totalSupply": "314987116014784989"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60507999 是否严格高于截止块 60507993 的已知总量？",
+        "cutoffBlock": "60507993",
+        "resolutionBlock": "60507999",
+        "threshold": "314987116014785989"
+      },
+      "hexagram": {
+        "lines": [
+          9,
+          8,
+          6,
+          8,
+          7,
+          9
+        ],
+        "primaryKingWenNumber": 42,
+        "derivedKingWenNumber": 39,
+        "changingLinePositions": [
+          1,
+          3,
+          6
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4600,
+          "reasoning": "益卦利往，但三爻变蹇，动爻初九大作与上九勿恒皆示变数。总量仅差6块，阈值已知，增幅或有限。历史样本少，校准保守，倾向略低小幅超阈。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "15360",
+          "bankrollBeforeUsdc6": "3009500",
+          "bankrollAfterUsdc6": "3024860",
+          "brier": "21160000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 3000,
+          "reasoning": "本卦风雷益动而变蹇，六爻逢冲，益象难持久。初九‘大作’虽吉，然上九爻辞‘莫益之，或击之’暗示增长受阻。截止时已近阈值，块间增量有限，故判不增。历史样本虽赢，但概率保守下调。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "64000",
+          "bankrollBeforeUsdc6": "3024080",
+          "bankrollAfterUsdc6": "3088080",
+          "brier": "9000000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4300,
+          "reasoning": "益卦利进但变蹇卦，主行险受阻，增长或停滞。三爻动凶，上爻戒恒，总量难破前高。兼己战绩弱，故偏向未超阈值。",
+          "direction": "NO",
+          "multiplier": 1,
+          "reservedUsdc6": "150000",
+          "settlementDeltaUsdc6": "13020",
+          "bankrollBeforeUsdc6": "2973120",
+          "bankrollAfterUsdc6": "2986140",
+          "brier": "18490000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 3,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508001",
+        "blockHash": "0xfb655b1104612914ae9e63774f051aefd18380b9c8b00f8efac8923698960bd8",
+        "timestamp": "1788575003",
+        "totalSupply": "314987116014784989"
+      },
+      "resolution": {
+        "blockNumber": "60508007",
+        "blockHash": "0x38881fd76d205cb910b6401d00611c022ca527753acf17ba4829d4ad42980fdf",
+        "timestamp": "1788575007",
+        "totalSupply": "314987116012600581"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508007 是否严格高于截止块 60508001 的已知总量？",
+        "cutoffBlock": "60508001",
+        "resolutionBlock": "60508007",
+        "threshold": "314987116014784989"
+      },
+      "hexagram": {
+        "lines": [
+          6,
+          8,
+          9,
+          8,
+          6,
+          7
+        ],
+        "primaryKingWenNumber": 52,
+        "derivedKingWenNumber": 42,
+        "changingLinePositions": [
+          1,
+          3,
+          5
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4300,
+          "reasoning": "艮止如山，动爻初三五变，有阻滞未通之象。益卦虽利往，但增量需时。历史虽全对，样本少，保守偏空，概率略低于五成。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "26040",
+          "bankrollBeforeUsdc6": "3024860",
+          "bankrollAfterUsdc6": "3050900",
+          "brier": "18490000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4100,
+          "reasoning": "艮为止，困局难增；变益虽利进，然身爻静而限爻动，蓄积受阻。历史校准略偏下，稳估四成。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "32760",
+          "bankrollBeforeUsdc6": "3088080",
+          "bankrollAfterUsdc6": "3120840",
+          "brier": "16810000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4300,
+          "reasoning": "艮止如山，止而不前，变爻初三五动转益卦，但止象主打无增。截止与结算块差6，已知总量高，增量或有限，倾向不破阈值。",
+          "direction": "NO",
+          "multiplier": 1,
+          "reservedUsdc6": "150000",
+          "settlementDeltaUsdc6": "13020",
+          "bankrollBeforeUsdc6": "2986140",
+          "bankrollAfterUsdc6": "2999160",
+          "brier": "18490000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 4,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508009",
+        "blockHash": "0xbba7181034a8e5c1efdf8ea2912c8ee7e92677b0c00d25782c60ae67db119025",
+        "timestamp": "1788575008",
+        "totalSupply": "314987116012500581"
+      },
+      "resolution": {
+        "blockNumber": "60508015",
+        "blockHash": "0xaa033d65e4ee9a794d351f2f1db9c62a3d0f208cb9c4329e324bc345dd4837ac",
+        "timestamp": "1788575011",
+        "totalSupply": "314987116012400581"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508015 是否严格高于截止块 60508009 的已知总量？",
+        "cutoffBlock": "60508009",
+        "resolutionBlock": "60508015",
+        "threshold": "314987116012500581"
+      },
+      "hexagram": {
+        "lines": [
+          8,
+          7,
+          6,
+          6,
+          7,
+          8
+        ],
+        "primaryKingWenNumber": 29,
+        "derivedKingWenNumber": 28,
+        "changingLinePositions": [
+          3,
+          4
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 3500,
+          "reasoning": "坎卦重险，主阻滞。动爻在三四，内卦变，显示信息或总量有变，但止于60508015的增量不确定。卦辞虽云有孚，然坎险未平。历史全对但样本少，随机性高。我倾向保守，不确信阈值已被突破。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "51000",
+          "bankrollBeforeUsdc6": "3050900",
+          "bankrollAfterUsdc6": "3101900",
+          "brier": "12250000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 3000,
+          "reasoning": "坎为水重险，爻辞多凶；三、四爻变入大过栋桡，主过度失衡。总量攀升逾六千亿，已极高，继续严格超越阈值似有险阻。历史全对但样本少，谨慎偏向下行。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "64000",
+          "bankrollBeforeUsdc6": "3120840",
+          "bankrollAfterUsdc6": "3184840",
+          "brier": "9000000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4300,
+          "reasoning": "坎为水险陷，爻变三四，纲纪动摇，USDC总量或未稳增。大过栋桡，过顶有险。截止值已高，结算增益有限，估不足。",
+          "direction": "NO",
+          "multiplier": 1,
+          "reservedUsdc6": "150000",
+          "settlementDeltaUsdc6": "13020",
+          "bankrollBeforeUsdc6": "2999160",
+          "bankrollAfterUsdc6": "3012180",
+          "brier": "18490000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 5,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508017",
+        "blockHash": "0x3e731fead4198647446174368ae1fb69bfac7287319241a4f76d6460933aee3b",
+        "timestamp": "1788575012",
+        "totalSupply": "314987116012400581"
+      },
+      "resolution": {
+        "blockNumber": "60508023",
+        "blockHash": "0xf981f957522087e03eb55fb4622f871d79049c92b04c8b5d6e15c3792c52c6d8",
+        "timestamp": "1788575015",
+        "totalSupply": "314987116012210594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508023 是否严格高于截止块 60508017 的已知总量？",
+        "cutoffBlock": "60508017",
+        "resolutionBlock": "60508023",
+        "threshold": "314987116012400581"
+      },
+      "hexagram": {
+        "lines": [
+          8,
+          9,
+          6,
+          9,
+          8,
+          8
+        ],
+        "primaryKingWenNumber": 40,
+        "derivedKingWenNumber": 15,
+        "changingLinePositions": [
+          2,
+          3,
+          4
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4100,
+          "reasoning": "解卦主解缓，变爻二三四处谦退收敛，显示增量不大。历史全中但样本少，保留校准。阈值已高，继续大幅增加概率偏低，故判未严格高于。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "32760",
+          "bankrollBeforeUsdc6": "3101900",
+          "bankrollAfterUsdc6": "3134660",
+          "brier": "16810000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4200,
+          "reasoning": "变爻二三四，内卦坎化艮，解卦转谦，有减损之象。阈值已知，块差仅6，总量或增或平，然谦卦示谨慎，历史虽准，样本少，故概率略低于50%。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3184840",
+          "bankrollAfterUsdc6": "3214280",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 3800,
+          "reasoning": "解卦雷水解转地山谦，解忧后宜谦退，未释放增额之象。变爻居二三四，中位动荡，总量难破已知高位。历史正确率七五，稍避险。故判未严格高于。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "42240",
+          "bankrollBeforeUsdc6": "3012180",
+          "bankrollAfterUsdc6": "3054420",
+          "brier": "14440000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 6,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508025",
+        "blockHash": "0xa0d34353fed5a5b851b24f4f97cb47fe8bbd32668d97b34483eb37e6d5b4582b",
+        "timestamp": "1788575016",
+        "totalSupply": "314987116012210594"
+      },
+      "resolution": {
+        "blockNumber": "60508031",
+        "blockHash": "0x7520649f59ea12ab45a34ef32ab29fc9135e618326ff79e460989fa64aefda86",
+        "timestamp": "1788575019",
+        "totalSupply": "314987116007110594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508031 是否严格高于截止块 60508025 的已知总量？",
+        "cutoffBlock": "60508025",
+        "resolutionBlock": "60508031",
+        "threshold": "314987116012210594"
+      },
+      "hexagram": {
+        "lines": [
+          8,
+          8,
+          6,
+          7,
+          8,
+          6
+        ],
+        "primaryKingWenNumber": 16,
+        "derivedKingWenNumber": 56,
+        "changingLinePositions": [
+          3,
+          6
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4200,
+          "reasoning": "豫卦行师，动而遇旅，主变动不定。截止后六块即结算，增量有限，阈值庞大，难有剧增。虽历史战绩全对，但需谨慎，故偏NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3134660",
+          "bankrollAfterUsdc6": "3164100",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4200,
+          "reasoning": "变爻三六，豫之未成而旅变，事有迁动。断点仅差六块，增长未必超过已知量。历史五中五但样本小，不主强上。取偏NO，概率4200。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3214280",
+          "bankrollAfterUsdc6": "3243720",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 3800,
+          "reasoning": "豫卦安逸迟滞，之卦旅变不定，变爻三上示盈极而衰。总量阈值高企，短期激增可能性低，偏移倾向轻降，故判不高于。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "42240",
+          "bankrollBeforeUsdc6": "3054420",
+          "bankrollAfterUsdc6": "3096660",
+          "brier": "14440000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 7,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508033",
+        "blockHash": "0x78c0607d3a5b72b59ad0875f8f8d3fc004d3603400470cdfa47532da3b03bf11",
+        "timestamp": "1788575020",
+        "totalSupply": "314987116007110594"
+      },
+      "resolution": {
+        "blockNumber": "60508039",
+        "blockHash": "0xbad136ab2f628cad10ee2d4b5fa7645fbbf8777e8136dc4bfd01d68ad5841756",
+        "timestamp": "1788575023",
+        "totalSupply": "314987116006080594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508039 是否严格高于截止块 60508033 的已知总量？",
+        "cutoffBlock": "60508033",
+        "resolutionBlock": "60508039",
+        "threshold": "314987116007110594"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          7,
+          7,
+          9,
+          8,
+          9
+        ],
+        "primaryKingWenNumber": 14,
+        "derivedKingWenNumber": 11,
+        "changingLinePositions": [
+          4,
+          6
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4400,
+          "reasoning": "大有变泰，火天转地天，盈满见消。九四动曰匪彭，勿过张扬，上九动则泰极否来，城复于隍。USDC总量恐回落，故判NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "22560",
+          "bankrollBeforeUsdc6": "3164100",
+          "bankrollAfterUsdc6": "3186660",
+          "brier": "19360000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4200,
+          "reasoning": "卦象火天大有化地天泰，动爻在四、上，有盛极而衰之象；上九“自天祐之”吉，然泰卦上六“城复于隍”，恐量增不及阈值。历史虽全对，但对小增量事件应保守，估概率4200基点。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3243720",
+          "bankrollAfterUsdc6": "3273160",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4600,
+          "reasoning": "火天大有转地天泰，大有丰盛而泰为通泰，然四爻、上爻动示盛极转虚。链上总量短期内越过已知阈值需额外增量，卦象‘城复于隍’暗示回落，故判未超过。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "15360",
+          "bankrollBeforeUsdc6": "3096660",
+          "bankrollAfterUsdc6": "3112020",
+          "brier": "21160000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 8,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508041",
+        "blockHash": "0x29985d147bf8b111e7056b7bbcd69ddea68b923c7265bb37cf69c0a38c59d202",
+        "timestamp": "1788575024",
+        "totalSupply": "314987116006080594"
+      },
+      "resolution": {
+        "blockNumber": "60508047",
+        "blockHash": "0x26ad49c9e79111212a9e605b6bacc8ca48a088698dd95edd6b980d5d4ea3934f",
+        "timestamp": "1788575027",
+        "totalSupply": "314987116004980594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508047 是否严格高于截止块 60508041 的已知总量？",
+        "cutoffBlock": "60508041",
+        "resolutionBlock": "60508047",
+        "threshold": "314987116006080594"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          6,
+          6,
+          7,
+          8,
+          8
+        ],
+        "primaryKingWenNumber": 51,
+        "derivedKingWenNumber": 34,
+        "changingLinePositions": [
+          2,
+          3
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4200,
+          "reasoning": "震主动荡，六二丧贝、六三震行，主总量恐有回落；变卦大壮虽强，但截止阈值高企，增量难测。近史全对但样本有限，且本卦示险，故偏不增。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3186660",
+          "bankrollAfterUsdc6": "3216100",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4200,
+          "reasoning": "震卦动在二三，主惊惧变动。六二丧贝勿逐，七日得，示短期波动不利增长。阈值已高，结算近，增发有限。历史虽全中，但样本小，故略偏下。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3273160",
+          "bankrollAfterUsdc6": "3302600",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 3800,
+          "reasoning": "震为雷动而变雷天大壮，主震荡后强盛，但六二‘丧贝’、六三‘震行无眚’示损耗或未增。阈值高悬，USDC总量或难越。历史胜六成，但保守取NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "42240",
+          "bankrollBeforeUsdc6": "3112020",
+          "bankrollAfterUsdc6": "3154260",
+          "brier": "14440000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 9,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508049",
+        "blockHash": "0x430e1614f9d6397c7f8c2697bc92a33b1f3b5cb12c9bb5a9b92b12b2a2dfd2d0",
+        "timestamp": "1788575028",
+        "totalSupply": "314987116004980594"
+      },
+      "resolution": {
+        "blockNumber": "60508055",
+        "blockHash": "0x68896eb8063db80a2af42731a86bf2c0e6c9461a9a1a92385912be89bf39b85c",
+        "timestamp": "1788575031",
+        "totalSupply": "314987116004980594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508055 是否严格高于截止块 60508049 的已知总量？",
+        "cutoffBlock": "60508049",
+        "resolutionBlock": "60508055",
+        "threshold": "314987116004980594"
+      },
+      "hexagram": {
+        "lines": [
+          6,
+          7,
+          8,
+          7,
+          8,
+          9
+        ],
+        "primaryKingWenNumber": 64,
+        "derivedKingWenNumber": 54,
+        "changingLinePositions": [
+          1,
+          6
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4200,
+          "reasoning": "未济近成而终险，初濡尾上失是，变归妹征凶；块间总量或未逾阈值，历史校准略低，故判NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3216100",
+          "bankrollAfterUsdc6": "3245540",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 3800,
+          "reasoning": "未济将成而变归妹，初上动变，事未竟而终有变。阈值已高，增发有限，历史全中但样本少，故略低于五成。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "42240",
+          "bankrollBeforeUsdc6": "3302600",
+          "bankrollAfterUsdc6": "3344840",
+          "brier": "14440000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 6200,
+          "reasoning": "未济将渡未成，变爻初上皆动，归妹终成。差额6区块，链上增发或转账致总量上升可能，历史胜率87.5%支持偏向增长。",
+          "direction": "YES",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "-53760",
+          "bankrollBeforeUsdc6": "3154260",
+          "bankrollAfterUsdc6": "3100500",
+          "brier": "38440000",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "replayId": 10,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508057",
+        "blockHash": "0x2a868ac34e7feb856d6aa3d85d64cd19648aab5df4af912125226f1ab096f5f0",
+        "timestamp": "1788575032",
+        "totalSupply": "314987116004980594"
+      },
+      "resolution": {
+        "blockNumber": "60508063",
+        "blockHash": "0x4b0781f300426d0f85699c422f54b01fa9ff48a045aec4051bc5ed4a3bd80ff1",
+        "timestamp": "1788575035",
+        "totalSupply": "314987116003609594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508063 是否严格高于截止块 60508057 的已知总量？",
+        "cutoffBlock": "60508057",
+        "resolutionBlock": "60508063",
+        "threshold": "314987116004980594"
+      },
+      "hexagram": {
+        "lines": [
+          6,
+          8,
+          9,
+          7,
+          9,
+          8
+        ],
+        "primaryKingWenNumber": 31,
+        "derivedKingWenNumber": 51,
+        "changingLinePositions": [
+          1,
+          3,
+          5
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 3100,
+          "reasoning": "咸卦感应，爻变多动，震卦主惊惧变动。截止总量已知，结算块仅隔数块，链上USDC短期激增概率低，历史全中但样本少，故略偏NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "61560",
+          "bankrollBeforeUsdc6": "3245540",
+          "bankrollAfterUsdc6": "3307100",
+          "brier": "9610000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4700,
+          "reasoning": "咸卦交感而变震，初三五爻动，主变化中有震荡。然历史样本全对，均值回归应偏保守。去中心化总量或增至，但无明确象示，故低概率判断。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "11640",
+          "bankrollBeforeUsdc6": "3344840",
+          "bankrollAfterUsdc6": "3356480",
+          "brier": "22090000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4200,
+          "reasoning": "咸卦交感变动，变爻初三五，之卦震雷动荡。阈值已知总量高企，块距仅6，增量难超阈值，取象量能不足，断不增。历史7/9印证直觉，概率下修至4200。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3100500",
+          "bankrollAfterUsdc6": "3129940",
+          "brier": "17640000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 11,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508065",
+        "blockHash": "0xf86ae7125e0647eea0de0f9d467690c1f289b252ecf9a1c850724b4293633f8f",
+        "timestamp": "1788575036",
+        "totalSupply": "314987116003609594"
+      },
+      "resolution": {
+        "blockNumber": "60508071",
+        "blockHash": "0xdb04178100690f16a64fc93494feb8bec94d01624e740daa06ea92fbf0f73581",
+        "timestamp": "1788575040",
+        "totalSupply": "314987116003609594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508071 是否严格高于截止块 60508065 的已知总量？",
+        "cutoffBlock": "60508065",
+        "resolutionBlock": "60508071",
+        "threshold": "314987116003609594"
+      },
+      "hexagram": {
+        "lines": [
+          9,
+          7,
+          8,
+          9,
+          8,
+          8
+        ],
+        "primaryKingWenNumber": 54,
+        "derivedKingWenNumber": 7,
+        "changingLinePositions": [
+          1,
+          4
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4300,
+          "reasoning": "归妹卦示迟缓与未成，动爻初九跛履、九四愆期，主增量不及预期。师卦虽主众动，但爻辞常戒凶。总量阈值高，短期新增难超，故判低概率。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "26040",
+          "bankrollBeforeUsdc6": "3307100",
+          "bankrollAfterUsdc6": "3333140",
+          "brier": "18490000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 1800,
+          "reasoning": "归妹卦辞征凶，且初九变师初六，师出以律否臧凶，警示变数致总量难升。变爻在初四，初吉而四迟归，总量增加时机未至，故判否。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "87040",
+          "bankrollBeforeUsdc6": "3356480",
+          "bankrollAfterUsdc6": "3443520",
+          "brier": "3240000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4321,
+          "reasoning": "归妹之师，主迟滞转折；初九跛履征吉，九四愆期迟归，暗示总量未及阈值即转弱。师卦行险，凶象隐现，本无实而虚，故估计不高于阈值。历史正确率0.8，略偏保守。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "25315",
+          "bankrollBeforeUsdc6": "3129940",
+          "bankrollAfterUsdc6": "3155255",
+          "brier": "18671041",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 12,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508073",
+        "blockHash": "0x64b7d097bf96a62f93d65d3566fa76ff25b61e1bc232c1594f54b9e5911e9eb9",
+        "timestamp": "1788575041",
+        "totalSupply": "314987116002159594"
+      },
+      "resolution": {
+        "blockNumber": "60508079",
+        "blockHash": "0x248fefe7d264e74928de2bbf7a2a1cac03d4cac58924d4f64f8e8c152340382c",
+        "timestamp": "1788575044",
+        "totalSupply": "314987116002159594"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508079 是否严格高于截止块 60508073 的已知总量？",
+        "cutoffBlock": "60508073",
+        "resolutionBlock": "60508079",
+        "threshold": "314987116002159594"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          9,
+          7,
+          9,
+          7,
+          8
+        ],
+        "primaryKingWenNumber": 43,
+        "derivedKingWenNumber": 63,
+        "changingLinePositions": [
+          2,
+          4
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4200,
+          "reasoning": "夬卦决而必断，然动爻九二、九四示中途有变，似总量增长或不及预期；既济终乱，亦防结算前回落。历史校准佳但样本少，故压低概率。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3333140",
+          "bankrollAfterUsdc6": "3362580",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4700,
+          "reasoning": "卦象夬变既济，动爻二四警示变动有险，卦辞爻辞多示危殆，虽历史全对，但量增之势未明，故偏NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "11640",
+          "bankrollBeforeUsdc6": "3443520",
+          "bankrollAfterUsdc6": "3455160",
+          "brier": "22090000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4560,
+          "reasoning": "夬卦决而必变，之卦既济初吉终乱。爻动二四，警示事未成而先导。USDC增发或暂缓，总量或不超已知。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "16825",
+          "bankrollBeforeUsdc6": "3155255",
+          "bankrollAfterUsdc6": "3172080",
+          "brier": "20793600",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 13,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508081",
+        "blockHash": "0x53863329efe6e39e9027c8178dd6fd784cdb3badc57f8f7e297d262263fe8432",
+        "timestamp": "1788575045",
+        "totalSupply": "314987116002149594"
+      },
+      "resolution": {
+        "blockNumber": "60508087",
+        "blockHash": "0x93dd426b75630e05a1077c44aafd126da0170e3ef8dafe27397ed0550ab8276c",
+        "timestamp": "1788575048",
+        "totalSupply": "314987116002149639"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508087 是否严格高于截止块 60508081 的已知总量？",
+        "cutoffBlock": "60508081",
+        "resolutionBlock": "60508087",
+        "threshold": "314987116002149594"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          8,
+          6,
+          7,
+          6,
+          8
+        ],
+        "primaryKingWenNumber": 51,
+        "derivedKingWenNumber": 49,
+        "changingLinePositions": [
+          3,
+          5
+        ]
+      },
+      "outcome": true,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 3576,
+          "reasoning": "震卦本主动荡，但总量变化微小；变爻六三、六五均显险厉而需慎行，革卦主变却非必然增量。历史全对但样本少，不破则守，倾向未明显超出。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "-65071",
+          "bankrollBeforeUsdc6": "3362580",
+          "bankrollAfterUsdc6": "3297509",
+          "brier": "41267776",
+          "correct": false
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4200,
+          "reasoning": "震为雷动而变革，六三、六五动变泽火革，革主变动但主慎守。震卦爻辞有‘亿丧贝’、‘震来往厉’之象，预示增长受阻或总量未升。历史战绩虽佳，但卦象示谨慎，故估不增。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "-34560",
+          "bankrollBeforeUsdc6": "3455160",
+          "bankrollAfterUsdc6": "3420600",
+          "brier": "33640000",
+          "correct": false
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4200,
+          "reasoning": "震为雷主变动惊惧，变爻三、五显示中途有阻，之卦泽火革主变革但需时日。USDC总量在短块差内或未超阈值，历史战绩略优但波动，倾向否定。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "-34560",
+          "bankrollBeforeUsdc6": "3172080",
+          "bankrollAfterUsdc6": "3137520",
+          "brier": "33640000",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "replayId": 14,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508089",
+        "blockHash": "0x096f0ba92e5a7a3e56c93152352d00108cdd6e7dfb6129fcc639b1d5cada2fac",
+        "timestamp": "1788575049",
+        "totalSupply": "314987116002036658"
+      },
+      "resolution": {
+        "blockNumber": "60508095",
+        "blockHash": "0x4d40d88b80a5168639e3200214547d87a425cd8ae7675deabd6e17e00a38b811",
+        "timestamp": "1788575052",
+        "totalSupply": "314987116002036658"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508095 是否严格高于截止块 60508089 的已知总量？",
+        "cutoffBlock": "60508089",
+        "resolutionBlock": "60508095",
+        "threshold": "314987116002036658"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          8,
+          8,
+          9,
+          7,
+          7
+        ],
+        "primaryKingWenNumber": 25,
+        "derivedKingWenNumber": 42,
+        "changingLinePositions": [
+          4
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 2600,
+          "reasoning": "无妄卦示不宜妄动，第四爻阳动变阴，之卦为益。截止值已高达3.15e17，结算块仅相隔6块，USDC总量剧增需极端流动性注入，概率偏低。历史校准虽优，但此卦象警示突变非吉，故低概率押否。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "72960",
+          "bankrollBeforeUsdc6": "3297509",
+          "bankrollAfterUsdc6": "3370469",
+          "brier": "6760000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4615,
+          "reasoning": "无妄之灾，或系之牛，行人之得，邑人之灾。变爻九四动，主中途有变，总量或未增。历史准率虽高，但本卦警示意外，故偏向不增。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "14807",
+          "bankrollBeforeUsdc6": "3420600",
+          "bankrollAfterUsdc6": "3435407",
+          "brier": "21298225",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4300,
+          "reasoning": "无妄变益，主意外之变，或增或减未定。九四爻动可贞无咎，但上九凶象显，恐总量未达阈值。历史胜率尚可，但此问偏于精确增量，不宜高估，故取四三成概率。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "26040",
+          "bankrollBeforeUsdc6": "3137520",
+          "bankrollAfterUsdc6": "3163560",
+          "brier": "18490000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 15,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508097",
+        "blockHash": "0x236096193cbba33bbeb29b23c2015d36d8177bb313b270d9704edec8c7a9bb17",
+        "timestamp": "1788575053",
+        "totalSupply": "314987116002036658"
+      },
+      "resolution": {
+        "blockNumber": "60508103",
+        "blockHash": "0x06d30f54753fb2b8776da890999e851dd28dbdacbcc253afd198a7af49880709",
+        "timestamp": "1788575056",
+        "totalSupply": "314987116002036658"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508103 是否严格高于截止块 60508097 的已知总量？",
+        "cutoffBlock": "60508097",
+        "resolutionBlock": "60508103",
+        "threshold": "314987116002036658"
+      },
+      "hexagram": {
+        "lines": [
+          9,
+          7,
+          7,
+          8,
+          8,
+          8
+        ],
+        "primaryKingWenNumber": 11,
+        "derivedKingWenNumber": 46,
+        "changingLinePositions": [
+          1
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 6400,
+          "reasoning": "泰卦通泰，初九拔茅连茹，征吉，示增长延续；之卦升卦更主上升。USDC总量在短块内大概率续增，历史胜率93%校准，取64%。",
+          "direction": "YES",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "-63840",
+          "bankrollBeforeUsdc6": "3370469",
+          "bankrollAfterUsdc6": "3306629",
+          "brier": "40960000",
+          "correct": false
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4200,
+          "reasoning": "泰卦初九动，拔茅连茹征吉，有上行意；然变升，升虚邑，虚而不实。历史准确率0.929，校准偏差。总量增加未证，保守估NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3435407",
+          "bankrollAfterUsdc6": "3464847",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4870,
+          "reasoning": "泰至极而升，然初九变阴示起始有阻，总量微增难断。阈值高悬，疑有回落。绩虽胜，谨慎取阴。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "5132",
+          "bankrollBeforeUsdc6": "3163560",
+          "bankrollAfterUsdc6": "3168692",
+          "brier": "23716900",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 16,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508105",
+        "blockHash": "0xf2909a0bc7885454cff0ac61c238d37ce3f060701c9fba01893b86a387c6d40a",
+        "timestamp": "1788575057",
+        "totalSupply": "314987116001936658"
+      },
+      "resolution": {
+        "blockNumber": "60508111",
+        "blockHash": "0xdef85d77bff51c396404a0802ab48a32d27cc30f70b69066de944ed303777dab",
+        "timestamp": "1788575060",
+        "totalSupply": "314987116001936658"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508111 是否严格高于截止块 60508105 的已知总量？",
+        "cutoffBlock": "60508105",
+        "resolutionBlock": "60508111",
+        "threshold": "314987116001936658"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          7,
+          6,
+          7,
+          8,
+          8
+        ],
+        "primaryKingWenNumber": 54,
+        "derivedKingWenNumber": 34,
+        "changingLinePositions": [
+          3
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 3600,
+          "reasoning": "归妹卦征凶，主虚饰不实；变爻六三需待时，大壮虽壮而需固守。增发USDC需实质行动，卦象示增发未及，历史校准亦倾向低估。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "48160",
+          "bankrollBeforeUsdc6": "3306629",
+          "bankrollAfterUsdc6": "3354789",
+          "brier": "12960000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4200,
+          "reasoning": "归妹六三动，言‘反归以娣’，有退让不争之象；之卦大壮虽刚健，然爻辞多有进退维谷之意。变爻居三，位不当而近于兑口，量增或受阻。兼历史Brier偏差略保守，故定NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3464847",
+          "bankrollAfterUsdc6": "3494287",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 3500,
+          "reasoning": "卦象归妹之壮，归者滞缓，变爻六三‘须’示等待反归，主增长未至。总量或平或微增，未确超阈。历史胜率虽高，然此象偏保守，断为否。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "51000",
+          "bankrollBeforeUsdc6": "3168692",
+          "bankrollAfterUsdc6": "3219692",
+          "brier": "12250000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 17,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508113",
+        "blockHash": "0xe3e8f858b66a8a61670e8c6f670527365f7ff827a9ee616c695969efa7916636",
+        "timestamp": "1788575061",
+        "totalSupply": "314987116001936658"
+      },
+      "resolution": {
+        "blockNumber": "60508119",
+        "blockHash": "0xe6d867fd8fbdfe69b8febd82990e979bb3925533b690feaf515ee9f3bfba9eac",
+        "timestamp": "1788575064",
+        "totalSupply": "314987115996936658"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508119 是否严格高于截止块 60508113 的已知总量？",
+        "cutoffBlock": "60508113",
+        "resolutionBlock": "60508119",
+        "threshold": "314987116001936658"
+      },
+      "hexagram": {
+        "lines": [
+          8,
+          8,
+          6,
+          8,
+          8,
+          7
+        ],
+        "primaryKingWenNumber": 23,
+        "derivedKingWenNumber": 52,
+        "changingLinePositions": [
+          3
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4500,
+          "reasoning": "剥卦不利有攸往，主削减之势；动爻六三剥之无咎，未见增量之象。艮为止，总量或停滞不前。历史胜率虽高，但此卦象偏保守，故概率稍低于五成。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "19000",
+          "bankrollBeforeUsdc6": "3354789",
+          "bankrollAfterUsdc6": "3373789",
+          "brier": "20250000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4300,
+          "reasoning": "剥卦不利有攸往，主衰退；变爻于三爻，剥之无咎但非增益。阈值增长概率有限，结合历史胜率约94%，校准后倾向保守，估43%。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "26040",
+          "bankrollBeforeUsdc6": "3494287",
+          "bankrollAfterUsdc6": "3520327",
+          "brier": "18490000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4800,
+          "reasoning": "剥卦为消蚀之象，不利有攸往，暗示总量或减。之卦艮止，示停滞难增。外应结算块临近，短促波动难越已知阈值，故偏下调。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "7840",
+          "bankrollBeforeUsdc6": "3219692",
+          "bankrollAfterUsdc6": "3227532",
+          "brier": "23040000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 18,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508121",
+        "blockHash": "0x01ad82a0c50f1bdf2295a73ad3c10ed795981ce32297fdf1ba4018ad94c0f50f",
+        "timestamp": "1788575065",
+        "totalSupply": "314987115996936658"
+      },
+      "resolution": {
+        "blockNumber": "60508127",
+        "blockHash": "0xa5fd52cc99ae7f817ea3b59fa5df095834b1e0759abf25acb981fc27cb5e2a6d",
+        "timestamp": "1788575068",
+        "totalSupply": "314987115886935658"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508127 是否严格高于截止块 60508121 的已知总量？",
+        "cutoffBlock": "60508121",
+        "resolutionBlock": "60508127",
+        "threshold": "314987115996936658"
+      },
+      "hexagram": {
+        "lines": [
+          9,
+          7,
+          7,
+          7,
+          9,
+          7
+        ],
+        "primaryKingWenNumber": 1,
+        "derivedKingWenNumber": 50,
+        "changingLinePositions": [
+          1,
+          5
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 3800,
+          "reasoning": "乾卦动爻初九潜龙勿用，九五飞龙在天，显示高位反转之象；变火风鼎，鼎折足则力不继。观察链上总量短时激增或回落均有可能，但据历史准确率88%校准，保守估计未严格超越阈值。主观解卦，不构成确定预测。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "42240",
+          "bankrollBeforeUsdc6": "3373789",
+          "bankrollAfterUsdc6": "3416029",
+          "brier": "14440000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 4300,
+          "reasoning": "初九潜龙勿用，九五飞龙在天，皆处高位不动，示总量难续增。变鼎卦九四折足，主漏损，故估低于阈值。历史胜率虽高，但此象偏保守。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "26040",
+          "bankrollBeforeUsdc6": "3520327",
+          "bankrollAfterUsdc6": "3546367",
+          "brier": "18490000",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4300,
+          "reasoning": "乾为天刚健，初始总量已定。变爻在初、五，乾初潜藏勿用，九五飞龙在天但已至顶。之卦鼎初利出否，为清理旧积；上九鼎玉铉大吉，但结算时未见新增入鼎之象。USDC总量非增即平，卦辞亢龙有悔，物极恐转减，故略倾向未超阈值。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "26040",
+          "bankrollBeforeUsdc6": "3227532",
+          "bankrollAfterUsdc6": "3253572",
+          "brier": "18490000",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "replayId": 19,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508129",
+        "blockHash": "0x53e69b710c889d13776cf73de645686b43aecfd80a366d57d5decde2e8f6114f",
+        "timestamp": "1788575069",
+        "totalSupply": "314987115886935658"
+      },
+      "resolution": {
+        "blockNumber": "60508135",
+        "blockHash": "0xc5f4a5efaa58f6373ffe7d52eb9d2f81362bbca8243ca28c9448960b60e5a628",
+        "timestamp": "1788575072",
+        "totalSupply": "314987115886835658"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508135 是否严格高于截止块 60508129 的已知总量？",
+        "cutoffBlock": "60508129",
+        "resolutionBlock": "60508135",
+        "threshold": "314987115886935658"
+      },
+      "hexagram": {
+        "lines": [
+          9,
+          7,
+          8,
+          6,
+          7,
+          7
+        ],
+        "primaryKingWenNumber": 61,
+        "derivedKingWenNumber": 6,
+        "changingLinePositions": [
+          1,
+          4
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 3600,
+          "reasoning": "中孚为信而柔，初爻虞吉示谨慎观察，四爻月几望马匹亡，值总量接近。变讼主争，上九翰音登天凶，虚声难实。增量未明，存疑守中，故低定。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "48160",
+          "bankrollBeforeUsdc6": "3416029",
+          "bankrollAfterUsdc6": "3464189",
+          "brier": "12960000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 3823,
+          "reasoning": "中孚体虚，变讼有争；初九虞吉而四爻马匹亡，主增长难续。历史虽准，然阈值巨大，短期严格突破概率偏低，故断约38%。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "41538",
+          "bankrollBeforeUsdc6": "3546367",
+          "bankrollAfterUsdc6": "3587905",
+          "brier": "14615329",
+          "correct": true
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 6300,
+          "reasoning": "本卦中孚主诚信充实，初九‘虞吉’示审慎可成，量增有望；之卦讼卦主争执，但九四‘不克讼，复即命’提示变化未定。阈值已知，变爻初四呼应开放与竞争，历史胜率较高，倾向增加。",
+          "direction": "YES",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "-58760",
+          "bankrollBeforeUsdc6": "3253572",
+          "bankrollAfterUsdc6": "3194812",
+          "brier": "39690000",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "replayId": 20,
+      "backtested": true,
+      "cutoff": {
+        "blockNumber": "60508137",
+        "blockHash": "0x0d2a2857092e35dc0e838becff8fa779fd7710b4dfc9ebd3e82863f5cef3f999",
+        "timestamp": "1788575073",
+        "totalSupply": "314987115886835658"
+      },
+      "resolution": {
+        "blockNumber": "60508143",
+        "blockHash": "0xf972e326d75edb9c95a994c831dcbbe1b424d0d8e2f808fa6974faf0c6aa9406",
+        "timestamp": "1788575076",
+        "totalSupply": "314987115886835658"
+      },
+      "proposition": {
+        "predicateId": "0xd982d0662f4e1f4c1fc0f48ea7d7165736dbde6648d51dbc7286082c547dba99",
+        "statement": "Arc Testnet 的 USDC 总量在块 60508143 是否严格高于截止块 60508137 的已知总量？",
+        "cutoffBlock": "60508137",
+        "resolutionBlock": "60508143",
+        "threshold": "314987115886835658"
+      },
+      "hexagram": {
+        "lines": [
+          7,
+          8,
+          8,
+          7,
+          9,
+          9
+        ],
+        "primaryKingWenNumber": 25,
+        "derivedKingWenNumber": 51,
+        "changingLinePositions": [
+          5,
+          6
+        ]
+      },
+      "outcome": false,
+      "predictions": [
+        {
+          "divinerKey": "takashima",
+          "probabilityBps": 4200,
+          "reasoning": "无妄主守正勿妄动，上九爻辞‘行有眚’不利进，之卦震为雷主突变但惊惧。历史上限已知且仅隔6块，增量超阈概率偏低，故估NO。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3464189",
+          "bankrollAfterUsdc6": "3493629",
+          "brier": "17640000",
+          "correct": true
+        },
+        {
+          "divinerKey": "wuxing",
+          "probabilityBps": 5300,
+          "reasoning": "本卦无妄主守正，但五爻动变震，示变动突发。变卦震为惊雷，量或突增。历史胜率94.7%，略偏YES。",
+          "direction": "YES",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "-12360",
+          "bankrollBeforeUsdc6": "3587905",
+          "bankrollAfterUsdc6": "3575545",
+          "brier": "28090000",
+          "correct": false
+        },
+        {
+          "divinerKey": "meihua",
+          "probabilityBps": 4200,
+          "reasoning": "无妄主守正不利妄动，之卦震为惊变之象。变爻在五、上，上九言‘行有眚，无攸利’，警示冒进有险。USDC总量或微增，但已知量高企，阈值附近波动易回落，故倾向不高。历史准确率尚可，但保守估之。",
+          "direction": "NO",
+          "multiplier": 2,
+          "reservedUsdc6": "300000",
+          "settlementDeltaUsdc6": "29440",
+          "bankrollBeforeUsdc6": "3194812",
+          "bankrollAfterUsdc6": "3224252",
+          "brier": "17640000",
+          "correct": true
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "takashima": {
+      "sampleCount": 20,
+      "correctCount": 18,
+      "averageBrier": 0.18710888,
+      "wilson95": {
+        "lowerBps": 6989,
+        "upperBps": 9721
+      },
+      "finalBankrollUsdc6": "3493629"
+    },
+    "wuxing": {
+      "sampleCount": 20,
+      "correctCount": 18,
+      "averageBrier": 0.17504677,
+      "wilson95": {
+        "lowerBps": 6989,
+        "upperBps": 9721
+      },
+      "finalBankrollUsdc6": "3575545"
+    },
+    "meihua": {
+      "sampleCount": 20,
+      "correctCount": 16,
+      "averageBrier": 0.22044577,
+      "wilson95": {
+        "lowerBps": 5839,
+        "upperBps": 9193
+      },
+      "finalBankrollUsdc6": "3224252"
+    }
+  },
+  "disclosure": {
+    "historyType": "非现场历史",
+    "claim": "本回放只验证机制在运转，不能证明易经有预测力。"
+  },
+  "providerAudit": {
+    "modelId": "deepseek-v4-flash",
+    "providerConfig": {
+      "model": "deepseek-v4-flash",
+      "thinking": {
+        "type": "disabled"
+      },
+      "response_format": {
+        "type": "json_object"
+      },
+      "base_url": "https://api.deepseek.com"
+    },
+    "providerConfigHash": "0x0a84b88b2d006d82f35ead3dc5f765fe16430e9f059efb3fd070cc163610ef98",
+    "generationJournal": "reports/deepseek-generation-audit.jsonl",
+    "firstValidOutputPolicy": "每个任务键采用并持久化首个合法输出；恢复时按请求哈希复用，禁止再次生成。"
+  },
+  "budget": {
+    "balanceBefore": {
+      "isAvailable": true,
+      "balances": {
+        "CNY": 24.3
+      }
+    },
+    "balanceAfter": {
+      "isAvailable": true,
+      "balances": {
+        "CNY": 24.3
+      }
+    },
+    "actualBalanceDeltaCny": 0,
+    "usage": {
+      "promptTokens": 50212,
+      "completionTokens": 5200,
+      "promptCacheHitTokens": 24192,
+      "promptCacheMissTokens": 26020
+    },
+    "attempts": 72,
+    "validOutputs": 60,
+    "estimatedAtObservedTimeUsd": 0.018651488,
+    "estimatedPeakForThisRunUsd": 0.018651487999999997,
+    "projectedMain1000PeakUsd": 0.9325743999999999,
+    "projectedMain1000PeakCny": 6.994307999999999,
+    "projectedFourGroups1000PeakUsd": 3.7302975999999997,
+    "projectedFourGroups1000PeakCny": 27.977231999999997,
+    "cnyPerUsdBudgetAssumption": 7.5,
+    "pricingNote": "采用 2026-08-16 后 V4-Flash 峰时单价：缓存命中 $0.014/M、未命中 $0.44/M、输出 $1.32/M；实际扣款以余额接口为准。"
+  }
+}

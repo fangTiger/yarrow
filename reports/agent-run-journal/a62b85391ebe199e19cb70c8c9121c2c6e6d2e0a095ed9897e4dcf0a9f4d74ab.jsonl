@@ -1,0 +1,2 @@
+{"payload":{"chainId":5042002,"predictionBook":"0x83fc712fbd5f48c171d25c8136c87F71Bebcb00E","roundId":"1"},"type":"round-claimed"}
+{"payload":{"attempt":1,"modelId":"mock-yijing-demo-v1","providerConfigHash":"0xd819f2aa372d7380a90ca4839ad6a2120a5a34489fb0a5f9c4aad0304d6ee159","rawOutputHash":"0x5890898621907762e352a44e08e2e33105c64fbf4212b5bd1d1464c11d6789d7","result":"valid","taskId":"proposition-compiler"},"type":"provider-attempt"}

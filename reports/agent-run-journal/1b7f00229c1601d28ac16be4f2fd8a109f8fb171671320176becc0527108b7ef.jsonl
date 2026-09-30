@@ -1,0 +1,2 @@
+{"payload":{"chainId":5042002,"predictionBook":"0x83fc712fbd5f48c171d25c8136c87F71Bebcb00E","roundId":"4"},"type":"round-claimed"}
+{"payload":{"attempt":1,"modelId":"deepseek-v4-flash","providerConfigHash":"0x0a84b88b2d006d82f35ead3dc5f765fe16430e9f059efb3fd070cc163610ef98","rawOutputHash":"0x06b421b757f2691ae2ddc6f3d7d42fd53a9f0a5a2e9c44d85f0f786d16b1691a","result":"schema-invalid","taskId":"proposition-compiler","usage":{"completionTokens":77,"promptCacheHitTokens":0,"promptCacheMissTokens":421,"promptTokens":421}},"type":"provider-attempt"}

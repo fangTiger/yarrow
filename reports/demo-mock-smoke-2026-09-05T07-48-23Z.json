@@ -1,0 +1,304 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-05T07:48:23.435Z",
+  "mode": "mock",
+  "assertion": {
+    "roundId": "3",
+    "predictionCount": 3,
+    "transactionCount": 13,
+    "gasCostUsdc6": "115569"
+  },
+  "actualDeepSeekCostCny": null,
+  "deepSeekEstimatedCostUsd": null,
+  "provider": {
+    "kind": "mock",
+    "modelId": "mock-yijing-demo-v1"
+  },
+  "balancesBefore": [
+    {
+      "role": "deployer",
+      "address": "0x737301a6A40ea453A877627c409EF5756a395DB9",
+      "nativeUsdc18": "7782251850000000000",
+      "tokenUsdc6": "7782251"
+    },
+    {
+      "role": "querent",
+      "address": "0xa606E53c6FF1fcde504773Ce728cda874cE58b0E",
+      "nativeUsdc18": "90613825000000000",
+      "tokenUsdc6": "90613"
+    },
+    {
+      "role": "thirdParty",
+      "address": "0x82bdA3564bbE6D59F50F8368d1Eb9B979c976297",
+      "nativeUsdc18": "76807125000000000",
+      "tokenUsdc6": "76807"
+    },
+    {
+      "role": "diviner/takashima",
+      "address": "0xBf2831f139B9FfBd374c87D1e2415C494822Da2e",
+      "nativeUsdc18": "80000550000000000",
+      "tokenUsdc6": "80000"
+    },
+    {
+      "role": "diviner/wuxing",
+      "address": "0xfA9D0488dfef270286C0159f439D6A7940A3F935",
+      "nativeUsdc18": "80000275000000000",
+      "tokenUsdc6": "80000"
+    },
+    {
+      "role": "diviner/meihua",
+      "address": "0xB9C8B97AF2ac1c8Aa2401427C8D04Ed848e4a016",
+      "nativeUsdc18": "80000700000000000",
+      "tokenUsdc6": "80000"
+    }
+  ],
+  "balancesAfter": [
+    {
+      "role": "deployer",
+      "address": "0x737301a6A40ea453A877627c409EF5756a395DB9",
+      "nativeUsdc18": "7812807500000000000",
+      "tokenUsdc6": "7812807"
+    },
+    {
+      "role": "querent",
+      "address": "0xa606E53c6FF1fcde504773Ce728cda874cE58b0E",
+      "nativeUsdc18": "615292400000000000",
+      "tokenUsdc6": "615292"
+    },
+    {
+      "role": "thirdParty",
+      "address": "0x82bdA3564bbE6D59F50F8368d1Eb9B979c976297",
+      "nativeUsdc18": "37494775000000000",
+      "tokenUsdc6": "37494"
+    },
+    {
+      "role": "diviner/takashima",
+      "address": "0xBf2831f139B9FfBd374c87D1e2415C494822Da2e",
+      "nativeUsdc18": "57870750000000000",
+      "tokenUsdc6": "57870"
+    },
+    {
+      "role": "diviner/wuxing",
+      "address": "0xfA9D0488dfef270286C0159f439D6A7940A3F935",
+      "nativeUsdc18": "62663425000000000",
+      "tokenUsdc6": "62663"
+    },
+    {
+      "role": "diviner/meihua",
+      "address": "0xB9C8B97AF2ac1c8Aa2401427C8D04Ed848e4a016",
+      "nativeUsdc18": "62663450000000000",
+      "tokenUsdc6": "62663"
+    }
+  ],
+  "session": {
+    "id": "2026-09-05T07:48:24.934Z/mock",
+    "createdAt": "2026-09-05T07:48:24.934Z",
+    "updatedAt": "2026-09-05T07:49:52.796Z",
+    "mode": "mock",
+    "phase": "settled",
+    "question": "Arc Testnet 的 USDC 总量在本次演示截止块后首次观察时会高于历史校准阈值吗？（2026-09-05T07-48-23Z）",
+    "roundId": "3",
+    "hexagram": {
+      "lines": [
+        6,
+        7,
+        7,
+        7,
+        9,
+        7
+      ],
+      "primaryKingWenNumber": 44,
+      "primaryName": "天风姤",
+      "derivedKingWenNumber": 14,
+      "derivedName": "火天大有",
+      "changingLinePositions": [
+        1,
+        5
+      ]
+    },
+    "proposition": {
+      "statement": "截止块后首次观察到的 Arc USDC 总量高于 314989080268508930（六位精度）",
+      "predicateId": "0x863677f7cfe78e3bdd60342473ba9a9fec23acfa8f1e2572e08fdb3de0a68e49",
+      "params": "0x000000000000000000000000000000000000000000000000045f10e64d880f02",
+      "deadlineBlock": "60545700",
+      "calibration": {
+        "method": "historical-threshold-quantile-v1",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60545026",
+        "historyEndBlock": "60545615",
+        "horizonBlocks": "85"
+      }
+    },
+    "predictions": [
+      {
+        "id": "1",
+        "divinerKey": "takashima",
+        "divinerName": "高島易断",
+        "probabilityBps": 6100,
+        "direction": "YES",
+        "multiplier": 1,
+        "reasoning": "时势可进，但卦象到量化命题仍有解释跳跃，故只取温和偏是。",
+        "transaction": {
+          "kind": "prediction",
+          "label": "高島易断提交预测 #1",
+          "hash": "0x2ac9ae734dbd5f612d6990b8cbbabf271b8458f5627154a1e9b441189b054b81",
+          "blockNumber": "60545641",
+          "gasCostUsdc6": "22130"
+        }
+      },
+      {
+        "id": "2",
+        "divinerKey": "wuxing",
+        "divinerName": "五行易（断易）",
+        "probabilityBps": 4200,
+        "direction": "NO",
+        "multiplier": 1,
+        "reasoning": "用神与外部数据并不相合，在承认解释跳跃后取谨慎偏否。",
+        "transaction": {
+          "kind": "prediction",
+          "label": "五行易（断易）提交预测 #2",
+          "hash": "0x48ca17b967f028016881bebbd46e30b55eb3b55967aeff034fcc8727974ddc2e",
+          "blockNumber": "60545651",
+          "gasCostUsdc6": "17337"
+        }
+      },
+      {
+        "id": "3",
+        "divinerKey": "meihua",
+        "divinerName": "梅花心易",
+        "probabilityBps": 5700,
+        "direction": "YES",
+        "multiplier": 1,
+        "reasoning": "外应略有动象，但证据很弱，只给接近中性的偏是判断。",
+        "transaction": {
+          "kind": "prediction",
+          "label": "梅花心易提交预测 #3",
+          "hash": "0x0ae9a52b52dba6a13308079fe6f4d2ae61cd0dbb9b244f47d8651b241f78f545",
+          "blockNumber": "60545660",
+          "gasCostUsdc6": "17338"
+        }
+      }
+    ],
+    "transactions": [
+      {
+        "kind": "funding",
+        "label": "补足上轮恢复账户 gas 垫",
+        "hash": "0xa9840866cb5daaa65d7fc8fca1658097338332b8b5953b70db38b77d2288cefe",
+        "blockNumber": "60545564",
+        "gasCostUsdc6": "1224"
+      },
+      {
+        "kind": "recovery",
+        "label": "释放未完成轮次 #2",
+        "hash": "0x776f832beb5ac258cda3744cd391cc90d3d635c2bba71918523abc8ceba1cb08",
+        "blockNumber": "60545566",
+        "gasCostUsdc6": "3194"
+      },
+      {
+        "kind": "funding",
+        "label": "补足提问者托管与 gas 垫",
+        "hash": "0x06cc5779acf65244637903608c8368c04562f9af43ed9f7e03c3ae956adaeb9a",
+        "blockNumber": "60545578",
+        "gasCostUsdc6": "1224"
+      },
+      {
+        "kind": "approval",
+        "label": "提问者授权本轮托管",
+        "hash": "0x36abadf21bf29ef02d7fe1ddf7152f4c872b76bdab834d2e8be5ce5df3666697",
+        "blockNumber": "60545587",
+        "gasCostUsdc6": "1386"
+      },
+      {
+        "kind": "commit",
+        "label": "轮次 #3 提交承诺",
+        "hash": "0x6d0d0d8d8d4c8e1289aca6da20ad4c6e5ed99026e38924b24e75484b046d36e6",
+        "blockNumber": "60545598",
+        "gasCostUsdc6": "4954"
+      },
+      {
+        "kind": "reveal",
+        "label": "轮次 #3 揭示成卦",
+        "hash": "0x6d707a0ca0b8f142e603e7cfcb0786f24b49cb1432d43e01d87af5aa2a7d50e8",
+        "blockNumber": "60545618",
+        "gasCostUsdc6": "3050"
+      },
+      {
+        "kind": "prediction",
+        "label": "高島易断提交预测 #1",
+        "hash": "0x2ac9ae734dbd5f612d6990b8cbbabf271b8458f5627154a1e9b441189b054b81",
+        "blockNumber": "60545641",
+        "gasCostUsdc6": "22130"
+      },
+      {
+        "kind": "prediction",
+        "label": "五行易（断易）提交预测 #2",
+        "hash": "0x48ca17b967f028016881bebbd46e30b55eb3b55967aeff034fcc8727974ddc2e",
+        "blockNumber": "60545651",
+        "gasCostUsdc6": "17337"
+      },
+      {
+        "kind": "prediction",
+        "label": "梅花心易提交预测 #3",
+        "hash": "0x0ae9a52b52dba6a13308079fe6f4d2ae61cd0dbb9b244f47d8651b241f78f545",
+        "blockNumber": "60545660",
+        "gasCostUsdc6": "17338"
+      },
+      {
+        "kind": "funding",
+        "label": "补足第三方结算 gas 垫",
+        "hash": "0x72cd005a004ec185a54aad80a994216760d9657491523578e628bea77f7bd643",
+        "blockNumber": "60545671",
+        "gasCostUsdc6": "1224"
+      },
+      {
+        "kind": "settlement",
+        "label": "任何人可触发结算 #1",
+        "hash": "0xf447ebb6f3ab366358aa997ebc6e5bfee95a3a86b9babf56404a5d3180e2a07d",
+        "blockNumber": "60545707",
+        "gasCostUsdc6": "14369"
+      },
+      {
+        "kind": "settlement",
+        "label": "任何人可触发结算 #2",
+        "hash": "0xf85e9262a8061b94eddc16cbaaf7d06f92f4befbb4eba40a75fb7f06bffc58f2",
+        "blockNumber": "60545718",
+        "gasCostUsdc6": "14012"
+      },
+      {
+        "kind": "settlement",
+        "label": "任何人可触发结算 #3",
+        "hash": "0x7880c7fd9a38aad5d620e56a3d6ba5d91512c3614b618f59ab1fc4f0b98c65a6",
+        "blockNumber": "60545720",
+        "gasCostUsdc6": "14127"
+      }
+    ],
+    "vaultChanges": [
+      {
+        "divinerKey": "takashima",
+        "beforeUsdc6": "200000",
+        "afterUsdc6": "175580",
+        "deltaUsdc6": "-24420"
+      },
+      {
+        "divinerKey": "wuxing",
+        "beforeUsdc6": "200000",
+        "afterUsdc6": "214720",
+        "deltaUsdc6": "14720"
+      },
+      {
+        "divinerKey": "meihua",
+        "beforeUsdc6": "200000",
+        "afterUsdc6": "185020",
+        "deltaUsdc6": "-14980"
+      }
+    ],
+    "outcome": false,
+    "provider": {
+      "kind": "mock",
+      "modelId": "mock-yijing-demo-v1"
+    },
+    "error": null
+  }
+}

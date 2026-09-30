@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "1.0",
+  "reportType": "pyth-pull",
+  "generatedAt": "2026-09-04T18:10:28Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002,
+    "rpcUrl": "https://rpc.testnet.arc.io",
+    "blockNumber": "60450338"
+  },
+  "target": {
+    "pythCore": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "version": "1.4.5-alpha.1",
+    "validTimePeriod": "60",
+    "priceId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+  },
+  "conclusion": {
+    "endToEndAvailableWithoutHermesApiKey": "NO",
+    "acceptsCurrentHermesUpdate": "NO",
+    "reason": "Hermes 官方端点返回 HTTP 401；从 Base 当日 Pyth 更新交易回收的 Hermes-origin 当前格式签名 payload 在 Arc 以 InvalidWormholeVaa() 回滚。",
+    "transactionHash": "0x7fb2f44617763bc844d2b0d6252bad925fd4a55a2e2187b9fda3c47287308bcd"
+  },
+  "results": [
+    {
+      "id": "contract-metadata",
+      "title": "Pyth Core 目标部署",
+      "status": "PASS",
+      "observed": "version=1.4.5-alpha.1，validTimePeriod=60"
+    },
+    {
+      "id": "pre-update-price",
+      "title": "更新前 ETH/USD 存量价格",
+      "status": "REVERT",
+      "observed": "getPriceUnsafe 返回 2450.00209871 USD，但 getPriceNoOlderThan(60) 以 0x19abf40e 回滚",
+      "details": {
+        "price": "245000209871",
+        "conf": "106790129",
+        "expo": -8,
+        "publishTime": "1787760956",
+        "ageSeconds": "784014",
+        "freshCallError": "0x19abf40e"
+      }
+    },
+    {
+      "id": "hermes-latest",
+      "title": "Hermes 最新 ETH/USD 签名更新",
+      "status": "FAIL",
+      "observed": "GET /v2/updates/price/latest 返回 HTTP 401 unauthorized",
+      "reason": "Pyth 官方已从 2026-08-26 起要求 Authorization: Bearer PYTH_API_KEY"
+    },
+    {
+      "id": "update-fee",
+      "title": "getUpdateFee 实际更新费用",
+      "status": "PASS",
+      "observed": "对 2927 字节真实签名 blob 返回 8 wei，即 0.000000000000000008 USDC",
+      "details": {
+        "updateDataBlobs": 1,
+        "blobBytes": 2927,
+        "feeWei": "8",
+        "feeUsdc": "0.000000000000000008"
+      }
+    },
+    {
+      "id": "update-price-feeds",
+      "title": "updatePriceFeeds 当前更新上链",
+      "status": "REVERT",
+      "observed": "当前格式签名 payload 被 Arc alpha 部署拒绝",
+      "reason": "InvalidWormholeVaa()，selector=0x2acbe915",
+      "txHash": "0x7fb2f44617763bc844d2b0d6252bad925fd4a55a2e2187b9fda3c47287308bcd",
+      "details": {
+        "blockNumber": "60450338",
+        "gasUsed": "132700",
+        "effectiveGasPrice": "25000000000",
+        "gasCostWei": "3317500000000000",
+        "gasCostUsdc": "0.0033175",
+        "requiredPythFeeWei": "8",
+        "pythFeeActuallyCollectedWei": "0",
+        "sourceChain": "Base Mainnet",
+        "sourceTransactionHash": "0x70d481ed8449f1b8ddbeab374f8be6ed694282caebfff43aabe0626b9455763a",
+        "sourcePricePublishTime": "1788544053",
+        "sourcePrice": "244737694892",
+        "sourcePriceExpo": -8,
+        "sourcePriceUsd": "2447.37694892"
+      }
+    },
+    {
+      "id": "fresh-price-after-update",
+      "title": "更新后 getPriceNoOlderThan(60)",
+      "status": "REVERT",
+      "observed": "更新交易回滚，链上存量价格未变化；getPriceNoOlderThan(60) 仍以 0x19abf40e 回滚",
+      "reason": "StalePrice()",
+      "details": {
+        "storedPublishTime": "1787760956",
+        "checkedBlockTimestamp": "1788545500",
+        "ageSeconds": "784544"
+      }
+    },
+    {
+      "id": "hermes-historical-capability",
+      "title": "Hermes 指定历史时间戳能力",
+      "status": "PASS",
+      "observed": "官方 API 定义 /v2/updates/price/{publish_time}，返回首个 publish_time 大于等于请求时间的更新"
+    },
+    {
+      "id": "hermes-historical-fetch",
+      "title": "历史时间戳签名更新实取",
+      "status": "FAIL",
+      "observed": "请求 publish_time=1788541203 时返回 HTTP 401 unauthorized",
+      "reason": "缺少 PYTH_API_KEY"
+    },
+    {
+      "id": "historical-onchain-parse",
+      "title": "历史更新链上验证",
+      "status": "REVERT",
+      "observed": "以 publishTime=1788544053 固定 min/max 的 parsePriceFeedUpdates 模拟回滚",
+      "reason": "InvalidWormholeVaa()，selector=0x2acbe915"
+    },
+    {
+      "id": "permissionless-update",
+      "title": "无许可推送属性",
+      "status": "PASS",
+      "observed": "IPyth.updatePriceFeeds 为 external payable 且无调用者白名单；官方 price pusher 文档明确任何人可无许可更新",
+      "reason": "是否同时触发项目结算仍取决于项目结算函数，Pyth 更新本身不会自动调用任意业务合约"
+    }
+  ],
+  "accountAfterAllProbes": {
+    "address": "0x737301a6A40ea453A877627c409EF5756a395DB9",
+    "nativeBalanceWei": "19976883675000000000",
+    "nativeBalanceUsdc": "19.976883675",
+    "erc20BalanceSixDecimals": "19976883",
+    "nonce": 7
+  },
+  "sources": [
+    "https://docs.pyth.network/price-feeds/core/fetch-price-updates",
+    "https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm",
+    "https://docs.pyth.network/price-feeds/core/use-historical-price-data",
+    "https://docs.pyth.network/api-reference/pyth-core/hermes/timestamp_price_updates",
+    "https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/IPyth.sol",
+    "https://github.com/pyth-network/pyth-crosschain/blob/main/apps/price_pusher/README.md"
+  ]
+}

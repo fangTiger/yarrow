@@ -1,0 +1,352 @@
+{
+  "schemaVersion": "1.0",
+  "backtested": true,
+  "sampleCount": 20,
+  "yesCount": 8,
+  "actualBaseRateBps": 4000,
+  "allHistoricalRatesWithinTarget": true,
+  "minimumHistoricalBaseRateBps": 4844,
+  "maximumHistoricalBaseRateBps": 5313,
+  "rounds": [
+    {
+      "replayId": 1,
+      "cutoffBlock": "60507985",
+      "resolutionBlock": "60507991",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116014785989",
+        "thresholdDelta": "-100000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507474",
+        "historyEndBlock": "60507984",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 2,
+      "cutoffBlock": "60507993",
+      "resolutionBlock": "60507999",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116014784989",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507482",
+        "historyEndBlock": "60507992",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 3,
+      "cutoffBlock": "60508001",
+      "resolutionBlock": "60508007",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116014783989",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507490",
+        "historyEndBlock": "60508000",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 4,
+      "cutoffBlock": "60508009",
+      "resolutionBlock": "60508015",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116012400581",
+        "thresholdDelta": "-100000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507498",
+        "historyEndBlock": "60508008",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 5,
+      "cutoffBlock": "60508017",
+      "resolutionBlock": "60508023",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116012300581",
+        "thresholdDelta": "-100000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507506",
+        "historyEndBlock": "60508016",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 6,
+      "cutoffBlock": "60508025",
+      "resolutionBlock": "60508031",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116012110594",
+        "thresholdDelta": "-100000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507514",
+        "historyEndBlock": "60508024",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 7,
+      "cutoffBlock": "60508033",
+      "resolutionBlock": "60508039",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116007010594",
+        "thresholdDelta": "-100000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507522",
+        "historyEndBlock": "60508032",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 8,
+      "cutoffBlock": "60508041",
+      "resolutionBlock": "60508047",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116006079594",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507530",
+        "historyEndBlock": "60508040",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 9,
+      "cutoffBlock": "60508049",
+      "resolutionBlock": "60508055",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116004979594",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507538",
+        "historyEndBlock": "60508048",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    },
+    {
+      "replayId": 10,
+      "cutoffBlock": "60508057",
+      "resolutionBlock": "60508063",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116004979594",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 34,
+        "empiricalBaseRateBps": 5313,
+        "historyStartBlock": "60507546",
+        "historyEndBlock": "60508056",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 11,
+      "cutoffBlock": "60508065",
+      "resolutionBlock": "60508071",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116003608594",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507554",
+        "historyEndBlock": "60508064",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    },
+    {
+      "replayId": 12,
+      "cutoffBlock": "60508073",
+      "resolutionBlock": "60508079",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116002158594",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507562",
+        "historyEndBlock": "60508072",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    },
+    {
+      "replayId": 13,
+      "cutoffBlock": "60508081",
+      "resolutionBlock": "60508087",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116002148594",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507570",
+        "historyEndBlock": "60508080",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    },
+    {
+      "replayId": 14,
+      "cutoffBlock": "60508089",
+      "resolutionBlock": "60508095",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116002026658",
+        "thresholdDelta": "-10000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507578",
+        "historyEndBlock": "60508088",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    },
+    {
+      "replayId": 15,
+      "cutoffBlock": "60508097",
+      "resolutionBlock": "60508103",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116002035658",
+        "thresholdDelta": "-1000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507586",
+        "historyEndBlock": "60508096",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    },
+    {
+      "replayId": 16,
+      "cutoffBlock": "60508105",
+      "resolutionBlock": "60508111",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116001926658",
+        "thresholdDelta": "-10000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507594",
+        "historyEndBlock": "60508104",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    },
+    {
+      "replayId": 17,
+      "cutoffBlock": "60508113",
+      "resolutionBlock": "60508119",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987116001926658",
+        "thresholdDelta": "-10000",
+        "sampleCount": 64,
+        "yesCount": 33,
+        "empiricalBaseRateBps": 5156,
+        "historyStartBlock": "60507602",
+        "historyEndBlock": "60508112",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 18,
+      "cutoffBlock": "60508121",
+      "resolutionBlock": "60508127",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987115996926658",
+        "thresholdDelta": "-10000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507610",
+        "historyEndBlock": "60508120",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 19,
+      "cutoffBlock": "60508129",
+      "resolutionBlock": "60508135",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987115886835658",
+        "thresholdDelta": "-100000",
+        "sampleCount": 64,
+        "yesCount": 32,
+        "empiricalBaseRateBps": 5000,
+        "historyStartBlock": "60507618",
+        "historyEndBlock": "60508128",
+        "horizonBlocks": "6"
+      },
+      "outcome": false
+    },
+    {
+      "replayId": 20,
+      "cutoffBlock": "60508137",
+      "resolutionBlock": "60508143",
+      "calibration": {
+        "suitable": true,
+        "threshold": "314987115886735658",
+        "thresholdDelta": "-100000",
+        "sampleCount": 64,
+        "yesCount": 31,
+        "empiricalBaseRateBps": 4844,
+        "historyStartBlock": "60507626",
+        "historyEndBlock": "60508136",
+        "horizonBlocks": "6"
+      },
+      "outcome": true
+    }
+  ]
+}

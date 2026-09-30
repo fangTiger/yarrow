@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-05T03:12:06.207Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002
+  },
+  "predicate": {
+    "predicateId": "0xac77c6f3ea3d3c88a529028cdb1269348dc5faccac1fc9026e34671097d1f09e",
+    "resolver": "0x7332B3acc2B1533081558a01e63bbFaE7141DB0B",
+    "schemaHash": "0xbb2d61503e1677bc2134c820f084a1b82a6882fbe10598a18205afefbac5abc7",
+    "tier": "HEAVEN",
+    "querentControllable": false,
+    "enabled": true
+  },
+  "search": {
+    "ownerOfCalls": 26,
+    "currentCountBeforeTransaction": "891702",
+    "reliable": true,
+    "currentCountGasEstimate": "126134"
+  },
+  "resolution": {
+    "threshold": "891701",
+    "deadline": "60513653",
+    "observedCount": "891702",
+    "observedBlock": "60513658",
+    "outcome": true,
+    "decided": true,
+    "cachedReadVerified": true,
+    "resolveGasEstimate": "176867",
+    "transactionHash": "0x23d30e262edad3f9e4a4909ead29666c0fa3f044e075e8c2343cf8cbe75a9bef",
+    "transactionGasUsed": "174316",
+    "receiptCostWei": "4357900000000000",
+    "receiptCostUsdc": "0.004357900",
+    "accountBalanceDeltaWei": "4357900000000000",
+    "accountBalanceAfterUsdc": "8.046249750"
+  }
+}

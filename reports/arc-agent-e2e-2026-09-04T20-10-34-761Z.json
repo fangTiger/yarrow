@@ -1,0 +1,197 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-04T20:10:34.761Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002
+  },
+  "provider": {
+    "kind": "mock",
+    "modelId": "mock-yijing-v1"
+  },
+  "deploymentFile": "deployments/arc-testnet-agent.json",
+  "steps": [
+    {
+      "title": "审计复验：授权补足高島易断金库",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0xdf8246e1f8b3d922fdbe731b07d826f337385b27f4e42e65f78e5370ca40728f",
+      "blockNumber": "60464558",
+      "gasUsed": "55438",
+      "gasCostUsdc": "0.001385",
+      "observed": "仅授权 0.068000 USDC"
+    },
+    {
+      "title": "审计复验：补足高島易断金库",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0xf7f7cfd86c4155d87ec79596a1bc74141f2ce77b98a958e413a276454e361fae",
+      "blockNumber": "60464560",
+      "gasUsed": "57112",
+      "gasCostUsdc": "0.001427",
+      "observed": "可用余额补足到 0.150000 USDC"
+    },
+    {
+      "title": "审计复验：授权补足五行易（断易）金库",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0x931368708b5e197eb2f66c35a03c9b12fdf11ce65f4f510831aad08944a36b19",
+      "blockNumber": "60464563",
+      "gasUsed": "55438",
+      "gasCostUsdc": "0.001385",
+      "observed": "仅授权 0.148000 USDC"
+    },
+    {
+      "title": "审计复验：补足五行易（断易）金库",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0x86a79c29e36e5f0b2aca7da068e4554368e44f306e94d91dabc7d19f654ff8c3",
+      "blockNumber": "60464572",
+      "gasUsed": "57112",
+      "gasCostUsdc": "0.001427",
+      "observed": "可用余额补足到 0.150000 USDC"
+    },
+    {
+      "title": "审计复验：授权补足梅花心易金库",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0xfbebdfc2b01eac22b00a1783437359b8f7a542ec759153bfff07cf2c5191554e",
+      "blockNumber": "60464575",
+      "gasUsed": "55438",
+      "gasCostUsdc": "0.001385",
+      "observed": "仅授权 0.090500 USDC"
+    },
+    {
+      "title": "审计复验：补足梅花心易金库",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0xf5c88c76113ca9bc2c938f504117ac81c613ac5618721095836181c7f9ac21a3",
+      "blockNumber": "60464585",
+      "gasUsed": "57112",
+      "gasCostUsdc": "0.001427",
+      "observed": "可用余额补足到 0.150000 USDC"
+    },
+    {
+      "title": "审计复验：提问者授权单轮托管",
+      "status": "PASS",
+      "actor": "提问者（0xa606E53c6FF1fcde504773Ce728cda874cE58b0E）",
+      "transactionHash": "0x6d4936dfdda57f0d27963c046f85eb3d2a0f47d1592f1e73801f5265d4824444",
+      "blockNumber": "60464595",
+      "gasUsed": "55426",
+      "gasCostUsdc": "0.001385",
+      "observed": "授权额严格等于单轮 F+D"
+    },
+    {
+      "title": "审计加固复验：commit",
+      "status": "PASS",
+      "actor": "提问者（0xa606E53c6FF1fcde504773Ce728cda874cE58b0E）",
+      "transactionHash": "0x077850606aa6cafde845014a525c2e454a79c52d0f39705210db1190044c2a54",
+      "blockNumber": "60464605",
+      "gasUsed": "198126",
+      "gasCostUsdc": "0.004953",
+      "observed": "roundId=2"
+    },
+    {
+      "title": "审计加固复验：等待起卦块",
+      "status": "PASS",
+      "actor": "链上出块",
+      "observed": "目标 60464613，到达 60464621"
+    },
+    {
+      "title": "审计加固复验：reveal 与成卦",
+      "status": "PASS",
+      "actor": "提问者（0xa606E53c6FF1fcde504773Ce728cda874cE58b0E）",
+      "transactionHash": "0x65fe392a554e64e6fb72f34986a6d6a642119f130ab25b6462e772848384986b",
+      "blockNumber": "60464624",
+      "gasUsed": "120945",
+      "gasCostUsdc": "0.003023",
+      "observed": "六爻=8/8/7/7/6/7；本卦=56 火山旅；之卦=33 天山遁；变爻=5"
+    },
+    {
+      "title": "审计复验：高島易断唯一输出并立即提交",
+      "status": "PASS",
+      "actor": "高島易断",
+      "transactionHash": "0xb923d606b09cda20e674ea92235eab9f2da8aa28355e867ad312b5e32d90c69d",
+      "blockNumber": "60464636",
+      "gasUsed": "664421",
+      "gasCostUsdc": "0.016610",
+      "observed": "YES 概率=4000；完整输入/输出已 fsync；三哈希链上一致"
+    },
+    {
+      "title": "审计复验：五行易（断易）唯一输出并立即提交",
+      "status": "PASS",
+      "actor": "五行易（断易）",
+      "transactionHash": "0x0a37094c17e93c0ee0b7e756300e44de88d427cc5c2530c74d4964346618d0fc",
+      "blockNumber": "60464645",
+      "gasUsed": "604629",
+      "gasCostUsdc": "0.015115",
+      "observed": "YES 概率=3500；完整输入/输出已 fsync；三哈希链上一致"
+    },
+    {
+      "title": "审计复验：梅花心易唯一输出并立即提交",
+      "status": "PASS",
+      "actor": "梅花心易",
+      "transactionHash": "0x2453c33662fdabf4bfe94c1fcf18e358eed793934f32e22b4502f1a4bbde3ffa",
+      "blockNumber": "60464655",
+      "gasUsed": "604641",
+      "gasCostUsdc": "0.015116",
+      "observed": "YES 概率=4500；完整输入/输出已 fsync；三哈希链上一致"
+    },
+    {
+      "title": "审计复验：等待 C5 截止块",
+      "status": "PASS",
+      "actor": "链上出块",
+      "observed": "目标 60464749，到达 60464753"
+    },
+    {
+      "title": "审计复验：第三方结算 predictionId=7",
+      "status": "PASS",
+      "actor": "非部署者第三方（0x82bdA3564bbE6D59F50F8368d1Eb9B979c976297）",
+      "transactionHash": "0x8f8a995f29d38c811c4dc27d04966e964a70e28b67bbd89a517a31da05f12063",
+      "blockNumber": "60464756",
+      "gasUsed": "562608",
+      "gasCostUsdc": "0.014065",
+      "observed": "结算成功，回执含 ReputationRegistry 反馈日志"
+    },
+    {
+      "title": "审计复验：第三方结算 predictionId=8",
+      "status": "PASS",
+      "actor": "非部署者第三方（0x82bdA3564bbE6D59F50F8368d1Eb9B979c976297）",
+      "transactionHash": "0x80d3b5f0112cbfbbf8517fc64a1107ae9c548cbf1c96cce2280cc526e38b31eb",
+      "blockNumber": "60464765",
+      "gasUsed": "513956",
+      "gasCostUsdc": "0.012848",
+      "observed": "结算成功，回执含 ReputationRegistry 反馈日志"
+    },
+    {
+      "title": "审计复验：第三方结算 predictionId=9",
+      "status": "PASS",
+      "actor": "非部署者第三方（0x82bdA3564bbE6D59F50F8368d1Eb9B979c976297）",
+      "transactionHash": "0xdd168d978fd681911b6c8e4e569bf3145e51d7c566227ed2f700e8f3dca91a58",
+      "blockNumber": "60464768",
+      "gasUsed": "552909",
+      "gasCostUsdc": "0.013822",
+      "observed": "结算成功，回执含 ReputationRegistry 反馈日志"
+    }
+  ],
+  "checks": {
+    "mockAgentLifecycle": "PASS",
+    "identicalProposition": "PASS",
+    "auditHashesOnchain": "PASS",
+    "permissionlessSettlement": "PASS",
+    "unresolvedReplay": "PASS",
+    "budgetBelowThreeUsdc": "PASS"
+  },
+  "totals": {
+    "gasCostUsdc": "0.105382",
+    "permanentLockUsdc": "1.000000",
+    "budgetUseUsdc": "2.440439"
+  },
+  "notes": [
+    "命题选择与三位易者概率估计是不同 provider 任务；易者输出 schema 不含命题字段。",
+    "三位易者逐个执行唯一一次推理，输出后立即由各自账户签名提交；失败不会自动重跑。",
+    "C5 使用 12 块/顺序交易、510ms/块、30 秒总推理预算与 24 块安全余量。",
+    "本补充轮专用于链上验证持久审计日志、完整输入/输出哈希与 ERC-8004 反馈路径。",
+    "未决之卦不再消耗资金重复执行；本项 PASS 引用原始真实链上报告。"
+  ]
+}

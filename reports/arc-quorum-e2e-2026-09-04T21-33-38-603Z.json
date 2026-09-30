@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-04T21:33:38.603Z",
+  "status": "PASS",
+  "chainId": 5042002,
+  "predictionBook": "0xc6c6465d314709f6620d8c5a178fd9369edf36f5",
+  "roundId": "1",
+  "predictionId": "2",
+  "observedQuorum": {
+    "submitted": 1,
+    "required": 3
+  },
+  "prematureSettlement": {
+    "status": "REVERT",
+    "error": "QuorumNotReached [\"1\",1,3]"
+  },
+  "timeoutCancellation": {
+    "roundState": "CANCELLED",
+    "predictionState": "CANCELLED",
+    "escrowCleared": true,
+    "vaultReservationReleased": true,
+    "liveScoreUnchanged": true
+  },
+  "transactions": [
+    {
+      "name": "补足提问者托管与 gas 垫",
+      "hash": "0x1746fcef215cab629978f8bfe5eeb865ea24656116ec484f9702652295708433",
+      "blockNumber": "60474244",
+      "gasUsed": "48950",
+      "gasCostWei": "1223750000000000"
+    },
+    {
+      "name": "补足高島易断 gas 垫",
+      "hash": "0x1859b154b7a0c564dcda08a41a0682ac34168bc4faf054569ec00e9a26615698",
+      "blockNumber": "60474247",
+      "gasUsed": "48938",
+      "gasCostWei": "1223450000000000"
+    },
+    {
+      "name": "清理此前中断的不完整轮次 0",
+      "hash": "0x6ae4ca05e4e184c60b251c36fe85b8772eda9666cb1c3e7309dcc1e408984a24",
+      "blockNumber": "60474258",
+      "gasUsed": "156232",
+      "gasCostWei": "3905800000000000"
+    },
+    {
+      "name": "提问者授权单轮托管",
+      "hash": "0xa9bcbf9a1193c9675f2f8165932011e962c8378d9794c37995ef8b75c652baa8",
+      "blockNumber": "60474268",
+      "gasUsed": "55438",
+      "gasCostWei": "1385950000000000"
+    },
+    {
+      "name": "提交问题承诺",
+      "hash": "0xe19e2fb2b86db48f84b3707271a9cf38c552d6cfceb22d8f2042f5836f7472fd",
+      "blockNumber": "60474278",
+      "gasUsed": "198126",
+      "gasCostWei": "4953150000000000"
+    },
+    {
+      "name": "揭示问题并以历史块哈希起卦",
+      "hash": "0x867f519d7f85da2c1c372b5c918ffef03efd4a020690fee7913abe290b47574b",
+      "blockNumber": "60474302",
+      "gasUsed": "120818",
+      "gasCostWei": "3020450000000000"
+    },
+    {
+      "name": "仅高島易断提交预测",
+      "hash": "0x8df50af02798193b41f54e546f3b04ab599a054fc9200b0a2b2a7ed8efe1f077",
+      "blockNumber": "60474313",
+      "gasUsed": "840772",
+      "gasCostWei": "21019300000000000"
+    },
+    {
+      "name": "第三方超时作废不完整轮次",
+      "hash": "0x498e0b2290f23b89e07982b176988834247ed7484543b2edffcffc010be739b9",
+      "blockNumber": "60474380",
+      "gasUsed": "156244",
+      "gasCostWei": "3906100000000000"
+    }
+  ],
+  "gasCostWei": "40637950000000000",
+  "gasCostUsdc": "0.040637"
+}

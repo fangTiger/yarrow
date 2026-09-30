@@ -1,0 +1,334 @@
+{
+  "schemaVersion": "2.0",
+  "generatedAt": "2026-09-05T16:40:53.041Z",
+  "mode": "mock",
+  "modelCostCny": 0,
+  "chainCostUsdc": 0,
+  "walletSignatures": {
+    "firstRound": 2,
+    "steadyRound": 1
+  },
+  "stageTimings": [
+    {
+      "key": "commit",
+      "label": "立誓",
+      "estimatedMilliseconds": 3000,
+      "actualMilliseconds": 900
+    },
+    {
+      "key": "reveal-wait",
+      "label": "等待 N 块",
+      "estimatedMilliseconds": 4590,
+      "actualMilliseconds": 702
+    },
+    {
+      "key": "reveal",
+      "label": "服务端揭示",
+      "estimatedMilliseconds": 1500,
+      "actualMilliseconds": 0
+    },
+    {
+      "key": "inference",
+      "label": "三家推理",
+      "estimatedMilliseconds": 800,
+      "actualMilliseconds": 351
+    },
+    {
+      "key": "predictions",
+      "label": "三笔预测",
+      "estimatedMilliseconds": 4500,
+      "actualMilliseconds": 1055
+    },
+    {
+      "key": "outcome-wait",
+      "label": "等待应验",
+      "estimatedMilliseconds": 30600,
+      "actualMilliseconds": 1200
+    },
+    {
+      "key": "settlement",
+      "label": "三笔结算",
+      "estimatedMilliseconds": 4500,
+      "actualMilliseconds": 1061
+    }
+  ],
+  "steadyStageTimings": [
+    {
+      "key": "commit",
+      "label": "立誓",
+      "estimatedMilliseconds": 3000,
+      "actualMilliseconds": 900
+    },
+    {
+      "key": "reveal-wait",
+      "label": "等待 N 块",
+      "estimatedMilliseconds": 4590,
+      "actualMilliseconds": 703
+    },
+    {
+      "key": "reveal",
+      "label": "服务端揭示",
+      "estimatedMilliseconds": 1500,
+      "actualMilliseconds": 0
+    },
+    {
+      "key": "inference",
+      "label": "三家推理",
+      "estimatedMilliseconds": 800,
+      "actualMilliseconds": 357
+    },
+    {
+      "key": "predictions",
+      "label": "三笔预测",
+      "estimatedMilliseconds": 4500,
+      "actualMilliseconds": 1053
+    },
+    {
+      "key": "outcome-wait",
+      "label": "等待应验",
+      "estimatedMilliseconds": 30600,
+      "actualMilliseconds": 1200
+    },
+    {
+      "key": "settlement",
+      "label": "三笔结算",
+      "estimatedMilliseconds": 4500,
+      "actualMilliseconds": 1055
+    }
+  ],
+  "assertion": {
+    "roundId": "9001",
+    "predictionCount": 3,
+    "transactionCount": 9,
+    "gasCostUsdc6": "0"
+  },
+  "steadyAssertion": {
+    "roundId": "9001",
+    "predictionCount": 3,
+    "transactionCount": 8,
+    "gasCostUsdc6": "0"
+  },
+  "durationMilliseconds": 5283,
+  "steadyDurationMilliseconds": 5278,
+  "session": {
+    "id": "2026-09-05T16:40:58.327Z/mock",
+    "createdAt": "2026-09-05T16:40:58.327Z",
+    "updatedAt": "2026-09-05T16:41:03.604Z",
+    "mode": "mock",
+    "phase": "settled",
+    "question": "稳态复核：Arc Testnet 的 USDC 总量在本次演示截止块后首次观察时会高于历史校准阈值吗？（2026-09-05T16-40-53Z）",
+    "walletAddress": "0x0000000000000000000000000000000000000011",
+    "roundId": "9001",
+    "hexagram": {
+      "lines": [
+        8,
+        6,
+        8,
+        9,
+        8,
+        7
+      ],
+      "primaryKingWenNumber": 35,
+      "primaryName": "火地晋",
+      "derivedKingWenNumber": 4,
+      "derivedName": "山水蒙",
+      "changingLinePositions": [
+        2,
+        4
+      ]
+    },
+    "proposition": {
+      "statement": "截止块 12460 后首次可观察到的 Arc USDC 总量高于固定阈值",
+      "predicateId": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "params": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "deadlineBlock": "12460",
+      "calibration": {
+        "method": "historical-threshold-quantile-v1",
+        "sampleCount": 64,
+        "yesCount": 31,
+        "empiricalBaseRateBps": 4844,
+        "historyStartBlock": "12000",
+        "historyEndBlock": "12300",
+        "horizonBlocks": "160"
+      }
+    },
+    "predictions": [
+      {
+        "id": "4101",
+        "divinerKey": "takashima",
+        "divinerName": "高島易断",
+        "probabilityBps": 6100,
+        "direction": "YES",
+        "multiplier": 1,
+        "reasoning": "晋卦主进，但两处变爻提醒上行并非一路无阻，因此只取温和偏是。",
+        "transaction": {
+          "kind": "prediction",
+          "hash": "0x4444444444444444444444444444444444444444444444444444444444444444",
+          "label": "高島易断提交预测",
+          "blockNumber": "112",
+          "gasCostUsdc6": "0"
+        }
+      },
+      {
+        "id": "4102",
+        "divinerKey": "wuxing",
+        "divinerName": "五行易（断易）",
+        "probabilityBps": 4200,
+        "direction": "NO",
+        "multiplier": 1,
+        "reasoning": "世应之间助力不足，增长条件尚未齐备，判断略偏不会发生。",
+        "transaction": {
+          "kind": "prediction",
+          "hash": "0x5555555555555555555555555555555555555555555555555555555555555555",
+          "label": "五行易提交预测",
+          "blockNumber": "113",
+          "gasCostUsdc6": "0"
+        }
+      },
+      {
+        "id": "4103",
+        "divinerKey": "meihua",
+        "divinerName": "梅花心易",
+        "probabilityBps": 7300,
+        "direction": "YES",
+        "multiplier": 1,
+        "reasoning": "本卦由明出地，外应见升；虽有蒙象，仍给出较明确的上行判断。",
+        "transaction": {
+          "kind": "prediction",
+          "hash": "0x6666666666666666666666666666666666666666666666666666666666666666",
+          "label": "梅花心易提交预测",
+          "blockNumber": "114",
+          "gasCostUsdc6": "0"
+        }
+      }
+    ],
+    "transactions": [
+      {
+        "kind": "commit",
+        "hash": "0x2323232323232323232323232323232323232323232323232323232323232323",
+        "label": "立誓写入链上",
+        "blockNumber": "102",
+        "gasCostUsdc6": "0"
+      },
+      {
+        "kind": "reveal",
+        "hash": "0x3333333333333333333333333333333333333333333333333333333333333333",
+        "label": "服务端自动揭示成卦",
+        "blockNumber": "111",
+        "gasCostUsdc6": "0"
+      },
+      {
+        "kind": "prediction",
+        "hash": "0x4444444444444444444444444444444444444444444444444444444444444444",
+        "label": "高島易断提交预测",
+        "blockNumber": "112",
+        "gasCostUsdc6": "0"
+      },
+      {
+        "kind": "prediction",
+        "hash": "0x5555555555555555555555555555555555555555555555555555555555555555",
+        "label": "五行易提交预测",
+        "blockNumber": "113",
+        "gasCostUsdc6": "0"
+      },
+      {
+        "kind": "prediction",
+        "hash": "0x6666666666666666666666666666666666666666666666666666666666666666",
+        "label": "梅花心易提交预测",
+        "blockNumber": "114",
+        "gasCostUsdc6": "0"
+      },
+      {
+        "kind": "settlement",
+        "hash": "0x7777777777777777777777777777777777777777777777777777777777777777",
+        "label": "服务端结算预测 #4101",
+        "blockNumber": "12501",
+        "gasCostUsdc6": "0"
+      },
+      {
+        "kind": "settlement",
+        "hash": "0x8888888888888888888888888888888888888888888888888888888888888888",
+        "label": "服务端结算预测 #4102",
+        "blockNumber": "12502",
+        "gasCostUsdc6": "0"
+      },
+      {
+        "kind": "settlement",
+        "hash": "0x9999999999999999999999999999999999999999999999999999999999999999",
+        "label": "服务端结算预测 #4103",
+        "blockNumber": "12503",
+        "gasCostUsdc6": "0"
+      }
+    ],
+    "vaultChanges": [
+      {
+        "divinerKey": "takashima",
+        "beforeUsdc6": "175580",
+        "afterUsdc6": "157580",
+        "deltaUsdc6": "-18000"
+      },
+      {
+        "divinerKey": "wuxing",
+        "beforeUsdc6": "214720",
+        "afterUsdc6": "222910",
+        "deltaUsdc6": "8190"
+      },
+      {
+        "divinerKey": "meihua",
+        "beforeUsdc6": "185020",
+        "afterUsdc6": "181020",
+        "deltaUsdc6": "-4000"
+      }
+    ],
+    "outcome": false,
+    "provider": {
+      "kind": "mock",
+      "modelId": "mock-yijing-demo-v1"
+    },
+    "error": null,
+    "timings": [
+      {
+        "key": "commit",
+        "label": "立誓",
+        "estimatedMilliseconds": 3000,
+        "actualMilliseconds": 900
+      },
+      {
+        "key": "reveal-wait",
+        "label": "等待 N 块",
+        "estimatedMilliseconds": 4590,
+        "actualMilliseconds": 703
+      },
+      {
+        "key": "reveal",
+        "label": "服务端揭示",
+        "estimatedMilliseconds": 1500,
+        "actualMilliseconds": 0
+      },
+      {
+        "key": "inference",
+        "label": "三家推理",
+        "estimatedMilliseconds": 800,
+        "actualMilliseconds": 357
+      },
+      {
+        "key": "predictions",
+        "label": "三笔预测",
+        "estimatedMilliseconds": 4500,
+        "actualMilliseconds": 1053
+      },
+      {
+        "key": "outcome-wait",
+        "label": "等待应验",
+        "estimatedMilliseconds": 30600,
+        "actualMilliseconds": 1200
+      },
+      {
+        "key": "settlement",
+        "label": "三笔结算",
+        "estimatedMilliseconds": 4500,
+        "actualMilliseconds": 1055
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0",
+  "createdAt": "2026-09-05T03:32:28.941Z",
+  "chainId": 5042002,
+  "startBlock": "60507985",
+  "fullSampleCount": 1000,
+  "blockStep": "8",
+  "resolutionHorizon": "6",
+  "lookbackBlocks": 4
+}

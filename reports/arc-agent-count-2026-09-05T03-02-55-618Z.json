@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-05T03:02:55.618Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002
+  },
+  "identityRegistry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+  "conclusion": "可行",
+  "fixed": [
+    {
+      "agentId": "0",
+      "behavior": "owner",
+      "owner": "0xb7ACAC0ffe24A867f86D2DE5e03e98c839A41553"
+    },
+    {
+      "agentId": "1",
+      "behavior": "owner",
+      "owner": "0xb7ACAC0ffe24A867f86D2DE5e03e98c839A41553"
+    },
+    {
+      "agentId": "891439",
+      "behavior": "owner",
+      "owner": "0x105dA3Ee3878Caf3D0E8D872fdc48332a2d1256d"
+    },
+    {
+      "agentId": "891440",
+      "behavior": "owner",
+      "owner": "0xBf2831f139B9FfBd374c87D1e2415C494822Da2e"
+    },
+    {
+      "agentId": "891441",
+      "behavior": "owner",
+      "owner": "0xfA9D0488dfef270286C0159f439D6A7940A3F935"
+    },
+    {
+      "agentId": "891442",
+      "behavior": "owner",
+      "owner": "0xB9C8B97AF2ac1c8Aa2401427C8D04Ed848e4a016"
+    },
+    {
+      "agentId": "900000",
+      "behavior": "revert"
+    },
+    {
+      "agentId": "1000000",
+      "behavior": "revert"
+    }
+  ],
+  "watermark": {
+    "highWatermark": "891694",
+    "firstMissing": "891695",
+    "count": "891695",
+    "ownerOfCalls": 19
+  },
+  "continuity": {
+    "exactRecent": {
+      "range": [
+        "891400",
+        "891694"
+      ],
+      "checked": 295,
+      "missingIds": []
+    },
+    "globalSample": {
+      "checked": 65,
+      "missingIds": [],
+      "sampledIds": [
+        "0",
+        "13932",
+        "27865",
+        "41798",
+        "55730",
+        "69663",
+        "83596",
+        "97529",
+        "111461",
+        "125394",
+        "139327",
+        "153259",
+        "167192",
+        "181125",
+        "195058",
+        "208990",
+        "222923",
+        "236856",
+        "250788",
+        "264721",
+        "278654",
+        "292587",
+        "306519",
+        "320452",
+        "334385",
+        "348317",
+        "362250",
+        "376183",
+        "390116",
+        "404048",
+        "417981",
+        "431914",
+        "445847",
+        "459779",
+        "473712",
+        "487645",
+        "501577",
+        "515510",
+        "529443",
+        "543376",
+        "557308",
+        "571241",
+        "585174",
+        "599106",
+        "613039",
+        "626972",
+        "640905",
+        "654837",
+        "668770",
+        "682703",
+        "696635",
+        "710568",
+        "724501",
+        "738434",
+        "752366",
+        "766299",
+        "780232",
+        "794164",
+        "808097",
+        "822030",
+        "835963",
+        "849895",
+        "863828",
+        "877761",
+        "891694"
+      ]
+    }
+  },
+  "gas": {
+    "ownerOfCallsForOffchainSearch": 19,
+    "resolverOwnerOfCalls": 26,
+    "minimumRegisterGas": "108899",
+    "gasPriceWei": "25000000000",
+    "minimumRegisterCostUsdc": "0.002722475"
+  },
+  "observedRate": {
+    "baselineAgentId": "891442",
+    "baselineTransactionHash": "0x49030ef8de2c44302049f656c71ee361561fb79a6061bda5f2014ea624de1d20",
+    "baselineBlock": "60457265",
+    "baselineTimestamp": "1788548889",
+    "currentBlock": "60512644",
+    "currentTimestamp": "1788577401",
+    "newRegistrations": "252",
+    "observedSeconds": 28512,
+    "registrationsPerHour": 31.818181818181817
+  },
+  "manipulation": [
+    {
+      "delta": "1",
+      "requiredRegistrations": "1",
+      "gas": "108899",
+      "costWei": "2722475000000000",
+      "projectedSecondsAtObservedRate": 113.14285714285714
+    },
+    {
+      "delta": "10",
+      "requiredRegistrations": "10",
+      "gas": "1088990",
+      "costWei": "27224750000000000",
+      "projectedSecondsAtObservedRate": 1131.4285714285713
+    },
+    {
+      "delta": "100",
+      "requiredRegistrations": "100",
+      "gas": "10889900",
+      "costWei": "272247500000000000",
+      "projectedSecondsAtObservedRate": 11314.285714285714
+    },
+    {
+      "delta": "1000",
+      "requiredRegistrations": "1000",
+      "gas": "108899000",
+      "costWei": "2722475000000000000",
+      "projectedSecondsAtObservedRate": 113142.85714285714
+    }
+  ],
+  "evidence": {
+    "officialImplementation": "https://github.com/erc-8004/erc-8004-contracts/blob/master/contracts/IdentityRegistryUpgradeable.sol",
+    "standard": "https://eips.ethereum.org/EIPS/eip-8004",
+    "limitations": [
+      "当前官方 v2.0.0 实现按 _lastId++ 连续铸造，且没有公开 burn 入口；链上抽样与近期逐 id 检查没有发现空洞。",
+      "IdentityRegistry 是可升级代理；未来升级若加入销毁或非连续分配，会破坏二分的单调性假设。",
+      "最小注册 gas 使用无参数 register() 估算；实际带 URI/metadata 的注册成本更高。"
+    ]
+  }
+}

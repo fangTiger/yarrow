@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-04T21:04:39.849Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002
+  },
+  "provider": {
+    "kind": "mock",
+    "modelId": "mock-yijing-v1"
+  },
+  "deploymentFile": "deployments/arc-testnet.json",
+  "steps": [
+    {
+      "title": "补足提问者余额",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0xcbf2b11dbe887d48c8cb562feee2c65529b30e5efd948c0e0ca0959989949dec",
+      "blockNumber": "60470871",
+      "gasUsed": "48950",
+      "gasCostUsdc": "0.001223",
+      "observed": "提问者达到 0.550000 USDC"
+    },
+    {
+      "title": "补足第三方结算者余额",
+      "status": "PASS",
+      "actor": "部署者（0x737301a6A40ea453A877627c409EF5756a395DB9）",
+      "transactionHash": "0x12e8bd4848b23aed6dc849ba2b7020560f4c515c7aa862502455262eda34dc31",
+      "blockNumber": "60470875",
+      "gasUsed": "48938",
+      "gasCostUsdc": "0.001223",
+      "observed": "第三方结算者达到 0.100000 USDC"
+    },
+    {
+      "title": "审计复验：提问者授权单轮托管",
+      "status": "PASS",
+      "actor": "提问者（0xa606E53c6FF1fcde504773Ce728cda874cE58b0E）",
+      "transactionHash": "0x36a6bbcffb56f27e71af51b6b64249aa57101d38f3727a698b6aa8a6d2fd79e9",
+      "blockNumber": "60470886",
+      "gasUsed": "55438",
+      "gasCostUsdc": "0.001385",
+      "observed": "授权额严格等于单轮 F+D"
+    }
+  ],
+  "checks": {
+    "mockAgentLifecycle": "FAIL",
+    "identicalProposition": "FAIL",
+    "auditHashesOnchain": "FAIL",
+    "permissionlessSettlement": "FAIL",
+    "unresolvedReplay": "FAIL",
+    "budgetBelowThreeUsdc": "FAIL"
+  },
+  "totals": {
+    "gasCostUsdc": "0.333030",
+    "permanentLockUsdc": "0.000000",
+    "budgetUseUsdc": "0.000000"
+  },
+  "notes": [
+    "命题选择与三位易者概率估计是不同 provider 任务；易者输出 schema 不含命题字段。",
+    "三位易者逐个执行唯一一次推理，输出后立即由各自账户签名提交；失败不会自动重跑。",
+    "C5 使用 12 块/顺序交易、510ms/块、30 秒总推理预算与 24 块安全余量。",
+    "本补充轮专用于链上验证持久审计日志、完整输入/输出哈希与 ERC-8004 反馈路径。",
+    "执行失败：The contract function \"commit\" reverted."
+  ]
+}

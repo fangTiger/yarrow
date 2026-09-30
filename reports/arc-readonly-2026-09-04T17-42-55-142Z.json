@@ -1,0 +1,334 @@
+{
+  "schemaVersion": "1.0",
+  "reportType": "readonly",
+  "generatedAt": "2026-09-04T17:42:55.142Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002,
+    "rpcUrl": "https://rpc.testnet.arc.io",
+    "blockNumber": "60447304"
+  },
+  "results": [
+    {
+      "id": "pyth-core",
+      "title": "Pyth Core",
+      "status": "PASS",
+      "observed": "0x2880aB155794e7179c9eE2e38200202908C17B43 已部署 177 字节代码",
+      "details": {
+        "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+        "codeBytes": 177,
+        "metadata": {
+          "version": "1.4.5-alpha.1",
+          "validTimePeriod": "60"
+        },
+        "readErrors": {},
+        "sourceKind": "官方文档",
+        "sourceUrl": "https://docs.pyth.network/price-feeds/core/contract-addresses/evm",
+        "note": "Pyth 官方 EVM 地址页的 Arc Network Testnet 条目"
+      }
+    },
+    {
+      "id": "pyth-pro",
+      "title": "Pyth Pro (Lazer)",
+      "status": "PASS",
+      "observed": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481 已部署 183 字节代码",
+      "details": {
+        "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+        "codeBytes": 183,
+        "metadata": {
+          "verificationFee": "1"
+        },
+        "readErrors": {},
+        "sourceKind": "官方文档",
+        "sourceUrl": "https://docs.pyth.network/price-feeds/pro/contract-addresses",
+        "note": "Pyth 官方地址页的 Arc Network Testnet 条目；存在性不等于签名更新端到端可用"
+      }
+    },
+    {
+      "id": "chainlink-data-feed",
+      "title": "Chainlink Data Feed",
+      "status": "NOT_FOUND",
+      "observed": "未找到可探测的 Arc Testnet 官方地址",
+      "reason": "Chainlink 官方 Data Feed 地址页未找到 Arc 或 Arc Testnet 条目，无法进行 eth_getCode",
+      "details": {
+        "sourceKind": "官方文档",
+        "sourceUrl": "https://docs.chain.link/data-feeds/price-feeds/addresses"
+      }
+    },
+    {
+      "id": "erc8004-identity",
+      "title": "ERC-8004 IdentityRegistry",
+      "status": "PASS",
+      "observed": "0x8004A818BFB912233c491871b3d84c89A494BD9e 已部署 130 字节代码",
+      "details": {
+        "address": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+        "codeBytes": 130,
+        "metadata": {
+          "name": "AgentIdentity",
+          "symbol": "AGENT",
+          "owner": "0x547289319C3e6aedB179C0b8e8aF0B5ACd062603"
+        },
+        "readErrors": {},
+        "sourceKind": "官方文档",
+        "sourceUrl": "https://docs.arc.io/arc/tutorials/register-your-first-ai-agent"
+      }
+    },
+    {
+      "id": "erc8183-official",
+      "title": "ERC-8183 官方 Arc 部署",
+      "status": "NOT_FOUND",
+      "observed": "未找到可探测的 Arc Testnet 官方地址",
+      "reason": "ERC-8183 官方规范与参考仓库未发布 Arc Testnet 地址",
+      "details": {
+        "sourceKind": "官方文档",
+        "sourceUrl": "https://github.com/erc-8183/base-contracts"
+      }
+    },
+    {
+      "id": "erc8183-community-candidate",
+      "title": "ERC-8183 AgenticCommerce 社区候选",
+      "status": "PASS",
+      "observed": "0x0747EEf0706327138c69792bF28Cd525089e4583 已部署 212 字节代码",
+      "details": {
+        "address": "0x0747EEf0706327138c69792bF28Cd525089e4583",
+        "codeBytes": 212,
+        "metadata": {
+          "paymentToken": "0x3600000000000000000000000000000000000000"
+        },
+        "readErrors": {
+          "owner": "The contract function \"owner\" reverted.",
+          "treasury": "The contract function \"treasury\" reverted.",
+          "version": "The contract function \"version\" reverted."
+        },
+        "sourceKind": "非官方候选",
+        "sourceUrl": "https://github.com/riyannode/ArcLayer",
+        "note": "社区项目声明为 Arc reference；只复核代码，不认定为官方部署"
+      }
+    },
+    {
+      "id": "usdc-erc20",
+      "title": "USDC ERC-20 接口",
+      "status": "PASS",
+      "observed": "0x3600000000000000000000000000000000000000 已部署 1798 字节代码",
+      "details": {
+        "address": "0x3600000000000000000000000000000000000000",
+        "codeBytes": 1798,
+        "metadata": {
+          "name": "USDC",
+          "symbol": "USDC",
+          "decimals": 6,
+          "version": "2"
+        },
+        "readErrors": {},
+        "sourceKind": "用户已确认",
+        "sourceUrl": "https://docs.arc.io/arc/references/contract-addresses"
+      }
+    },
+    {
+      "id": "eip2935-history",
+      "title": "EIP-2935 历史区块哈希合约",
+      "status": "PASS",
+      "observed": "0x0000F90827F1C53a10cb7A02335B175320002935 已部署 83 字节代码",
+      "details": {
+        "address": "0x0000F90827F1C53a10cb7A02335B175320002935",
+        "codeBytes": 83,
+        "metadata": {},
+        "readErrors": {},
+        "sourceKind": "用户已确认",
+        "sourceUrl": "https://docs.arc.io/arc/references/contract-addresses"
+      }
+    },
+    {
+      "id": "multicall3",
+      "title": "Multicall3",
+      "status": "PASS",
+      "observed": "0xcA11bde05977b3631167028862bE2a173976CA11 已部署 3808 字节代码",
+      "details": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "codeBytes": 3808,
+        "metadata": {
+          "currentBlockTimestamp": "1788543772"
+        },
+        "readErrors": {},
+        "sourceKind": "用户已确认",
+        "sourceUrl": "https://docs.arc.io/arc/references/contract-addresses"
+      }
+    },
+    {
+      "id": "permit2",
+      "title": "Permit2",
+      "status": "PASS",
+      "observed": "0x000000000022D473030F116dDEE9F6B43aC78BA3 已部署 9152 字节代码",
+      "details": {
+        "address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+        "codeBytes": 9152,
+        "metadata": {
+          "domainSeparator": "0xe59c8d3fa907f1186bfa334839eb895f53f88b07e4cf5aafaef4af163d83ce93"
+        },
+        "readErrors": {},
+        "sourceKind": "用户已确认",
+        "sourceUrl": "https://docs.arc.io/arc/references/contract-addresses"
+      }
+    },
+    {
+      "id": "create2-factory",
+      "title": "CREATE2 Factory",
+      "status": "PASS",
+      "observed": "0x4e59b44847b379578588920cA78FbF26c0B4956C 已部署 69 字节代码",
+      "details": {
+        "address": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+        "codeBytes": 69,
+        "metadata": {},
+        "readErrors": {},
+        "sourceKind": "用户已确认",
+        "sourceUrl": "https://docs.arc.io/arc/references/contract-addresses"
+      }
+    },
+    {
+      "id": "gateway-wallet",
+      "title": "GatewayWallet",
+      "status": "PASS",
+      "observed": "0x0077777d7EBA4688BDeF3E311b846F25870A19B9 已部署 163 字节代码",
+      "details": {
+        "address": "0x0077777d7EBA4688BDeF3E311b846F25870A19B9",
+        "codeBytes": 163,
+        "metadata": {
+          "owner": "0x5b967871638Eae535056E0578F4f7F41c4479A89",
+          "paused": false
+        },
+        "readErrors": {
+          "version": "The contract function \"version\" reverted."
+        },
+        "sourceKind": "用户已确认",
+        "sourceUrl": "https://docs.arc.io/arc/references/contract-addresses"
+      }
+    },
+    {
+      "id": "gateway-minter",
+      "title": "GatewayMinter",
+      "status": "PASS",
+      "observed": "0x0022222ABE238Cc2C7Bb1f21003F0a260052475B 已部署 163 字节代码",
+      "details": {
+        "address": "0x0022222ABE238Cc2C7Bb1f21003F0a260052475B",
+        "codeBytes": 163,
+        "metadata": {
+          "owner": "0x884eF91aea52d9Cdf67CD71b052E2c36B2C4B844",
+          "paused": false
+        },
+        "readErrors": {
+          "version": "The contract function \"version\" reverted."
+        },
+        "sourceKind": "用户已确认",
+        "sourceUrl": "https://docs.arc.io/arc/references/contract-addresses"
+      }
+    },
+    {
+      "id": "pyth-pro-realtime-path",
+      "title": "Pyth Pro 实时价格端到端路径",
+      "status": "SKIP",
+      "expected": "取得 WebSocket 签名更新，并在 Arc 合约中完成 verifyUpdate 与价格解析",
+      "observed": "官方验证合约已部署；本次无 Pyth Pro 数据订阅凭据和签名 payload，未伪造端到端通过",
+      "reason": "Pyth Pro 需要链外订阅产生的签名更新数据，本只读 RPC 探针无法独立生成",
+      "details": {
+        "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+        "integrationGuide": "https://docs.pyth.network/price-feeds/pro/integrate-as-consumer/evm"
+      }
+    },
+    {
+      "id": "pyth-eth-usd-price",
+      "title": "Pyth ETH/USD 历史价格可读性",
+      "status": "PASS",
+      "expected": "官方 Pyth Core 地址能返回非零 ETH/USD 历史值",
+      "observed": "getPriceUnsafe 可读取，价格年龄 782813 秒",
+      "details": {
+        "priceId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+        "price": "245000209871",
+        "conf": "106790129",
+        "expo": -8,
+        "publishTime": "1787760956",
+        "validTimePeriod": "60",
+        "fresh": false,
+        "ageSeconds": "782813"
+      }
+    },
+    {
+      "id": "pyth-eth-usd-fresh-price",
+      "title": "Pyth ETH/USD 实时价格可用性",
+      "status": "REVERT",
+      "expected": "价格年龄不超过合约有效期 60 秒",
+      "observed": "getPriceNoOlderThan 调用回滚；当前链上值不可作为实时价格直接消费",
+      "reason": "The contract function \"getPriceNoOlderThan\" reverted with the following signature:\n0x19abf40e",
+      "details": {
+        "priceId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+        "validTimePeriod": "60",
+        "fresh": false,
+        "ageSeconds": "782813"
+      }
+    },
+    {
+      "id": "eip2935-latest-hash",
+      "title": "EIP-2935 上一块哈希读取",
+      "status": "PASS",
+      "expected": "返回非零 32 字节区块哈希",
+      "observed": "块 60447303 返回 0x766dfb0fc476fc3a3c340c18a5f3bcc98dc00255a199c3008ef5c157406c83d0",
+      "details": {
+        "targetBlock": "60447303",
+        "hash": "0x766dfb0fc476fc3a3c340c18a5f3bcc98dc00255a199c3008ef5c157406c83d0",
+        "hasExactLength": true
+      }
+    }
+  ],
+  "sources": [
+    {
+      "name": "用户提供的 Arc Testnet 已实测事实",
+      "url": "https://docs.arc.io/arc/references/contract-addresses",
+      "kind": "用户已确认"
+    },
+    {
+      "name": "Pyth Core EVM 合约地址",
+      "url": "https://docs.pyth.network/price-feeds/core/contract-addresses/evm",
+      "kind": "官方文档"
+    },
+    {
+      "name": "Pyth Pro EVM 合约地址",
+      "url": "https://docs.pyth.network/price-feeds/pro/contract-addresses",
+      "kind": "官方文档"
+    },
+    {
+      "name": "Pyth Pro EVM 消费流程",
+      "url": "https://docs.pyth.network/price-feeds/pro/integrate-as-consumer/evm",
+      "kind": "官方文档",
+      "note": "实时价格需要 WebSocket 签名更新、SDK 解析和链上 verifyUpdate"
+    },
+    {
+      "name": "Chainlink Data Feed 地址",
+      "url": "https://docs.chain.link/data-feeds/price-feeds/addresses",
+      "kind": "官方文档",
+      "note": "截至探测时官方地址页没有 Arc 网络条目"
+    },
+    {
+      "name": "Arc ERC-8004 教程",
+      "url": "https://docs.arc.io/arc/tutorials/register-your-first-ai-agent",
+      "kind": "官方文档"
+    },
+    {
+      "name": "ERC-8183 官方参考实现",
+      "url": "https://github.com/erc-8183/base-contracts",
+      "kind": "官方文档",
+      "note": "官方仓库没有发布 Arc Testnet 部署地址"
+    },
+    {
+      "name": "ERC-8183 Arc 社区候选地址",
+      "url": "https://github.com/riyannode/ArcLayer",
+      "kind": "非官方候选",
+      "note": "只验证链上存在性，不代表官方或规范级部署"
+    }
+  ],
+  "summary": {
+    "PASS": 13,
+    "FAIL": 0,
+    "REVERT": 1,
+    "NOT_FOUND": 2,
+    "SKIP": 1
+  }
+}

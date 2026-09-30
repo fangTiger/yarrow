@@ -1,0 +1,369 @@
+{
+  "schemaVersion": "1.0",
+  "updatedAt": "2026-09-04T21:22:52.959Z",
+  "network": {
+    "name": "Arc Testnet",
+    "chainId": 5042002,
+    "rpcUrl": "https://rpc.testnet.arc.io"
+  },
+  "parameters": {
+    "waitBlocks": "8",
+    "revealWindow": "32",
+    "maxResolutionDelay": "64",
+    "mMin": 1,
+    "mMax": 3,
+    "feeUsdc": "0.050000",
+    "bondUsdc": "0.500000",
+    "vaultFundingEachUsdc": "0.200000",
+    "rationale": [
+      "waitBlocks=8 约为四秒，足以形成可观察的提交后等待，同时远小于 8191 块历史窗口。",
+      "m_min=1 让无历史易者只承担基础风险，m_max=3 限制演示期单次尾部损失。",
+      "F=0.05 USDC 保留真实资金约束；每库 0.20 USDC 足以覆盖无历史时 m_min=1 的两轮演示。",
+      "D=0.50 USDC 覆盖三位易者在 m_max=3 时的合计 S=0.45 USDC，D/S≈1.11。"
+    ]
+  },
+  "accounts": {
+    "deployer": "0x737301a6A40ea453A877627c409EF5756a395DB9",
+    "treasury": "0x737301a6A40ea453A877627c409EF5756a395DB9",
+    "querent": "0xa606E53c6FF1fcde504773Ce728cda874cE58b0E",
+    "thirdParty": "0x82bdA3564bbE6D59F50F8368d1Eb9B979c976297",
+    "diviners": [
+      {
+        "key": "takashima",
+        "name": "高島易断",
+        "address": "0xBf2831f139B9FfBd374c87D1e2415C494822Da2e"
+      },
+      {
+        "key": "wuxing",
+        "name": "五行易（断易）",
+        "address": "0xfA9D0488dfef270286C0159f439D6A7940A3F935"
+      },
+      {
+        "key": "meihua",
+        "name": "梅花心易",
+        "address": "0xB9C8B97AF2ac1c8Aa2401427C8D04Ed848e4a016"
+      }
+    ]
+  },
+  "contracts": {
+    "PredicateRegistry": {
+      "address": "0x4810cb880135a69e2fbe78a2a8816e7fd5ef841c",
+      "blockNumber": "60472760",
+      "transactionHash": "0x77ae765a259a1e59da5cedba39878c1f49224a84cd4eb6d7797f8e5113fc6892",
+      "constructorArgs": [],
+      "gasUsed": "355528",
+      "gasCostWei": "8888200000000000",
+      "gasCostUsdc": "0.008888"
+    },
+    "ScoreBook": {
+      "address": "0x76009aa9027d5693dfbef98a6f71417959f3d2c6",
+      "blockNumber": "60472771",
+      "transactionHash": "0x38d3937c73fffe19337083afd2a375b6f9038629b99ebcdebb018ce27716c21d",
+      "constructorArgs": [
+        "0x8004B663056A597Dffe9eCcC1965A193B7388713"
+      ],
+      "gasUsed": "1833191",
+      "gasCostWei": "45829775000000000",
+      "gasCostUsdc": "0.045829"
+    },
+    "DivinationRegistry": {
+      "address": "0x0f5dc0b9a2ec3555e84a10d63fe7c0530c2549da",
+      "blockNumber": "60472775",
+      "transactionHash": "0xc391577fd6983f5dbe4458e451c85c6db4bff883f8c76c8dc4f3a21db930f8b8",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0x737301a6A40ea453A877627c409EF5756a395DB9",
+        "8",
+        "32"
+      ],
+      "gasUsed": "1700283",
+      "gasCostWei": "42507075000000000",
+      "gasCostUsdc": "0.042507"
+    },
+    "PredictionBook": {
+      "address": "0xc6c6465d314709f6620d8c5a178fd9369edf36f5",
+      "blockNumber": "60472789",
+      "transactionHash": "0x068db8e5feaa2054c236ff31b187d8096c3db49afa4d2fffa8ad3bc649827f6e",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0x0f5dc0b9a2ec3555e84a10d63fe7c0530c2549da",
+        "0x4810cb880135a69e2fbe78a2a8816e7fd5ef841c",
+        "0x76009aa9027d5693dfbef98a6f71417959f3d2c6"
+      ],
+      "gasUsed": "2973238",
+      "gasCostWei": "74330950000000000",
+      "gasCostUsdc": "0.074330"
+    },
+    "DivinerVault_takashima": {
+      "address": "0x7a2c36ef0266f5976502d4e4c9c78ac3d82613ee",
+      "blockNumber": "60472800",
+      "transactionHash": "0xd8d9efc840cea116f5a858e32899e1ad723ec43133b6fface13031d82afa0010",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0xc6c6465d314709f6620d8c5a178fd9369edf36f5",
+        "0xBf2831f139B9FfBd374c87D1e2415C494822Da2e",
+        1,
+        3
+      ],
+      "gasUsed": "1081341",
+      "gasCostWei": "27033525000000000",
+      "gasCostUsdc": "0.027033"
+    },
+    "DivinerVault_wuxing": {
+      "address": "0x72bd3866ebfe0cebfe23b497bde3b4514bbb14c8",
+      "blockNumber": "60472811",
+      "transactionHash": "0x6004121351543df65f0c95a8f797770b1b44d352690e82e8b81189fb32ebbb87",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0xc6c6465d314709f6620d8c5a178fd9369edf36f5",
+        "0xfA9D0488dfef270286C0159f439D6A7940A3F935",
+        1,
+        3
+      ],
+      "gasUsed": "1081341",
+      "gasCostWei": "27033525000000000",
+      "gasCostUsdc": "0.027033"
+    },
+    "DivinerVault_meihua": {
+      "address": "0x6f36330b2426bbc5d31137d02270ea32b723ff21",
+      "blockNumber": "60472823",
+      "transactionHash": "0xb91ee4ef2f8bc96120677c16834c868f47daf75d100ad56f71ea4a29f0c91fc5",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "0xc6c6465d314709f6620d8c5a178fd9369edf36f5",
+        "0xB9C8B97AF2ac1c8Aa2401427C8D04Ed848e4a016",
+        1,
+        3
+      ],
+      "gasUsed": "1081341",
+      "gasCostWei": "27033525000000000",
+      "gasCostUsdc": "0.027033"
+    },
+    "MutualResolver": {
+      "address": "0xd598f6c9406949899f04853314f4bfb2f94a3ffe",
+      "blockNumber": "60472835",
+      "transactionHash": "0xf4673c02a6b9faff6c7f7a9bfcf6f39248d210024f90f9e80e666f4ae82dc312",
+      "constructorArgs": [
+        "0x737301a6A40ea453A877627c409EF5756a395DB9"
+      ],
+      "gasUsed": "666386",
+      "gasCostWei": "16659650000000000",
+      "gasCostUsdc": "0.016659"
+    },
+    "UsdcSupplyResolver": {
+      "address": "0x6044734e6008d292a2b00dbeb653ca19926b3aef",
+      "blockNumber": "60472845",
+      "transactionHash": "0x86a66039d656b9269cbe918996796d3a4a3414c2a73f32a15a6854268cb16551",
+      "constructorArgs": [
+        "0x3600000000000000000000000000000000000000",
+        "64"
+      ],
+      "gasUsed": "428065",
+      "gasCostWei": "10701625000000000",
+      "gasCostUsdc": "0.010701"
+    },
+    "AttestedResolver": {
+      "address": "0x20e0ab61ba0b55eeb2374d9a16db3bfb00fef815",
+      "blockNumber": "60472848",
+      "transactionHash": "0xb48aaeb82f17d5d494ecf02997be4685e3eef633b665f89d3daaa87cdeed740d",
+      "constructorArgs": [
+        "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+        "0x737301a6A40ea453A877627c409EF5756a395DB9"
+      ],
+      "gasUsed": "835008",
+      "gasCostWei": "20875200000000000",
+      "gasCostUsdc": "0.020875"
+    }
+  },
+  "externalContracts": {
+    "ValidationRegistry": {
+      "address": "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+      "identityRegistry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+      "version": "2.0.0"
+    }
+  },
+  "transactions": {
+    "设置托管操作员": {
+      "transactionHash": "0x0cc96c355ba2caf76e75fb76cfca2617e41e26c8a6e3fc81945b99162276249a",
+      "blockNumber": "60472851",
+      "gasUsed": "45359",
+      "gasCostWei": "1133975000000000",
+      "gasCostUsdc": "0.001133"
+    },
+    "设置计分记录者": {
+      "transactionHash": "0x61d1b8f84c29b1ab6b052b94650364343485b7747eda7ea807078810b39d6dcd",
+      "blockNumber": "60472860",
+      "gasUsed": "45272",
+      "gasCostWei": "1131800000000000",
+      "gasCostUsdc": "0.001131"
+    },
+    "设置回放记录者": {
+      "transactionHash": "0x7603b5a8e78d07883cd94b49fbfc040a4e9c567eba1237602e70b63b95dab599",
+      "blockNumber": "60472862",
+      "gasUsed": "45341",
+      "gasCostWei": "1133525000000000",
+      "gasCostUsdc": "0.001133"
+    },
+    "注册易者_takashima": {
+      "transactionHash": "0xe238c7f57bedf6b30c267492444b0c308145d7367dd0c0176ccf0032b6c39979",
+      "blockNumber": "60472864",
+      "gasUsed": "117618",
+      "gasCostWei": "2940450000000000",
+      "gasCostUsdc": "0.002940"
+    },
+    "注册易者_wuxing": {
+      "transactionHash": "0x2101545d4f13cdd1ccbdbe85278d486a69ea83f9c478634cb9d108a9d286186b",
+      "blockNumber": "60472867",
+      "gasUsed": "100518",
+      "gasCostWei": "2512950000000000",
+      "gasCostUsdc": "0.002512"
+    },
+    "注册易者_meihua": {
+      "transactionHash": "0x3301f5163a0b201f47bdc0b8d26b64a42572757856c5e84b7090d055dbcb6824",
+      "blockNumber": "60472870",
+      "gasUsed": "100518",
+      "gasCostWei": "2512950000000000",
+      "gasCostUsdc": "0.002512"
+    },
+    "关联ERC8004身份_takashima": {
+      "transactionHash": "0x2dd098fa72c356ca763cfc53b0887c7483c51d45bcc63befcbc491e7d679957c",
+      "blockNumber": "60472880",
+      "gasUsed": "68221",
+      "gasCostWei": "1705525000000000",
+      "gasCostUsdc": "0.001705"
+    },
+    "关联ERC8004身份_wuxing": {
+      "transactionHash": "0xc49bd789dc1df79560eb237af92c1feed9f8eccd61ccaa2682e9372118989776",
+      "blockNumber": "60472891",
+      "gasUsed": "68221",
+      "gasCostWei": "1705525000000000",
+      "gasCostUsdc": "0.001705"
+    },
+    "关联ERC8004身份_meihua": {
+      "transactionHash": "0x7c7cf8c758ecdaed62452e04b85c68ea62bfd4072fa6b7ba43226ff86a5c68d7",
+      "blockNumber": "60472901",
+      "gasUsed": "68221",
+      "gasCostWei": "1705525000000000",
+      "gasCostUsdc": "0.001705"
+    },
+    "登记天层_USDC总量": {
+      "transactionHash": "0xd1113e68f3222643073863837a4b0c9ed5af9514ae03edb86efeebdcefe47835",
+      "blockNumber": "60472911",
+      "gasUsed": "93532",
+      "gasCostWei": "2338300000000000",
+      "gasCostUsdc": "0.002338"
+    },
+    "登记人层_双边确认": {
+      "transactionHash": "0x73c5208af3c6af687c87730ed795da721bad54413c6a2c523dcdc7dba059157b",
+      "blockNumber": "60472920",
+      "gasUsed": "93532",
+      "gasCostWei": "2338300000000000",
+      "gasCostUsdc": "0.002338"
+    },
+    "登记人层_ERC8004验证": {
+      "transactionHash": "0x91d34b3b9adfcfaf16a76c84d53e937b3a7a955da7031d9ab397d1f554d9135b",
+      "blockNumber": "60472930",
+      "gasUsed": "93532",
+      "gasCostWei": "2338300000000000",
+      "gasCostUsdc": "0.002338"
+    }
+  },
+  "vaultFunding": {
+    "takashima": {
+      "amount": "200000",
+      "approve": {
+        "transactionHash": "0x8341056fbbd0b74eced1af679a9fe10e3fee1859510affa07b6e8504674e1193",
+        "blockNumber": "60472940",
+        "gasUsed": "55438",
+        "gasCostWei": "1385950000000000",
+        "gasCostUsdc": "0.001385"
+      },
+      "deposit": {
+        "transactionHash": "0x5840595752e6745046999b3b262ec0722a7b25cd821cbf4371d4f02e3ea97043",
+        "blockNumber": "60472950",
+        "gasUsed": "57112",
+        "gasCostWei": "1427800000000000",
+        "gasCostUsdc": "0.001427"
+      }
+    },
+    "wuxing": {
+      "amount": "200000",
+      "approve": {
+        "transactionHash": "0xaa31769b6ffc033751cfe4ff4be25a1580160058a9c353290485db562dab6382",
+        "blockNumber": "60472960",
+        "gasUsed": "55438",
+        "gasCostWei": "1385950000000000",
+        "gasCostUsdc": "0.001385"
+      },
+      "deposit": {
+        "transactionHash": "0xcd39e52876799e60659324f5c01e7151db59d8450e1057232bcb0fd166a81349",
+        "blockNumber": "60472969",
+        "gasUsed": "57112",
+        "gasCostWei": "1427800000000000",
+        "gasCostUsdc": "0.001427"
+      }
+    },
+    "meihua": {
+      "amount": "200000",
+      "approve": {
+        "transactionHash": "0xfebcaf088770eb2dd756d469b4a59cd2c7fdd265f30d71580c5d34181218422d",
+        "blockNumber": "60472972",
+        "gasUsed": "55438",
+        "gasCostWei": "1385950000000000",
+        "gasCostUsdc": "0.001385"
+      },
+      "deposit": {
+        "transactionHash": "0x819be0cf0e52cf845641d02c64c9cfa15875c97369099075bc7ebb7fc0a33fe9",
+        "blockNumber": "60472981",
+        "gasUsed": "57112",
+        "gasCostWei": "1427800000000000",
+        "gasCostUsdc": "0.001427"
+      }
+    }
+  },
+  "agents": [
+    {
+      "name": "高島易断",
+      "address": "0xBf2831f139B9FfBd374c87D1e2415C494822Da2e",
+      "agentId": "891440",
+      "transactionHash": "0x0712c69deb3cb9697b82f6a76d86b432c20f9849a362e7379c72949de9216a9a",
+      "metadataUri": "data:application/json;base64,eyJ0eXBlIjoiaHR0cHM6Ly9laXBzLmV0aGVyZXVtLm9yZy9FSVBTL2VpcC04MDA0I3JlZ2lzdHJhdGlvbi12MSIsIm5hbWUiOiLpq5jls7bmmJPmlq0iLCJkZXNjcmlwdGlvbiI6IumHjeaXtuWKv+S4juWunuWKoeWGs+aWreeahOmTvuS4iuaYk+iAhe+8jOS7peiHqui6q+mHkeW6k+S4uuamgueOh+mihOa1i+iDjOS5puOAgiIsImltYWdlIjoiaXBmczovL2JhZnliZWlnZHlyenQtcGxhY2Vob2xkZXIvJUU5JUFCJTk4JUU1JUIzJUI2JUU2JTk4JTkzJUU2JTk2JUFELnBuZyIsInNlcnZpY2VzIjpbXSwieDQwMlN1cHBvcnQiOmZhbHNlLCJhY3RpdmUiOnRydWUsInJlZ2lzdHJhdGlvbnMiOlt7ImFnZW50SWQiOjg5MTQ0MCwiYWdlbnRSZWdpc3RyeSI6ImVpcDE1NTo1MDQyMDAyOjB4ODAwNEE4MThCRkI5MTIyMzNjNDkxODcxYjNkODRjODlBNDk0QkQ5ZSJ9XSwic3VwcG9ydGVkVHJ1c3QiOlsicmVwdXRhdGlvbiIsImNyeXB0by1lY29ub21pYyJdfQ=="
+    },
+    {
+      "name": "五行易（断易）",
+      "address": "0xfA9D0488dfef270286C0159f439D6A7940A3F935",
+      "agentId": "891441",
+      "transactionHash": "0xff9d05149beb8b87dbd58537098f8ddfdded60c11df4e8f05fd5ca1cf76787a9",
+      "metadataUri": "data:application/json;base64,eyJ0eXBlIjoiaHR0cHM6Ly9laXBzLmV0aGVyZXVtLm9yZy9FSVBTL2VpcC04MDA0I3JlZ2lzdHJhdGlvbi12MSIsIm5hbWUiOiLkupTooYzmmJPvvIjmlq3mmJPvvIkiLCJkZXNjcmlwdGlvbiI6IumHjeeUqOelnuOAgeS4luW6lOS4juS6lOihjOeUn+WFi+eahOmTvuS4iuaYk+iAhe+8jOS7peiHqui6q+mHkeW6k+S4uuamgueOh+mihOa1i+iDjOS5puOAgiIsImltYWdlIjoiaXBmczovL2JhZnliZWlnZHlyenQtcGxhY2Vob2xkZXIvJUU0JUJBJTk0JUU4JUExJThDJUU2JTk4JTkzJUVGJUJDJTg4JUU2JTk2JUFEJUU2JTk4JTkzJUVGJUJDJTg5LnBuZyIsInNlcnZpY2VzIjpbXSwieDQwMlN1cHBvcnQiOmZhbHNlLCJhY3RpdmUiOnRydWUsInJlZ2lzdHJhdGlvbnMiOlt7ImFnZW50SWQiOjg5MTQ0MSwiYWdlbnRSZWdpc3RyeSI6ImVpcDE1NTo1MDQyMDAyOjB4ODAwNEE4MThCRkI5MTIyMzNjNDkxODcxYjNkODRjODlBNDk0QkQ5ZSJ9XSwic3VwcG9ydGVkVHJ1c3QiOlsicmVwdXRhdGlvbiIsImNyeXB0by1lY29ub21pYyJdfQ=="
+    },
+    {
+      "name": "梅花心易",
+      "address": "0xB9C8B97AF2ac1c8Aa2401427C8D04Ed848e4a016",
+      "agentId": "891442",
+      "transactionHash": "0x49030ef8de2c44302049f656c71ee361561fb79a6061bda5f2014ea624de1d20",
+      "metadataUri": "data:application/json;base64,eyJ0eXBlIjoiaHR0cHM6Ly9laXBzLmV0aGVyZXVtLm9yZy9FSVBTL2VpcC04MDA0I3JlZ2lzdHJhdGlvbi12MSIsIm5hbWUiOiLmooXoirHlv4PmmJMiLCJkZXNjcmlwdGlvbiI6IumHjemaj+acuui1t+WNpuS4juWkluW6lOeahOmTvuS4iuaYk+iAhe+8jOS7peiHqui6q+mHkeW6k+S4uuamgueOh+mihOa1i+iDjOS5puOAgiIsImltYWdlIjoiaXBmczovL2JhZnliZWlnZHlyenQtcGxhY2Vob2xkZXIvJUU2JUEyJTg1JUU4JThBJUIxJUU1JUJGJTgzJUU2JTk4JTkzLnBuZyIsInNlcnZpY2VzIjpbXSwieDQwMlN1cHBvcnQiOmZhbHNlLCJhY3RpdmUiOnRydWUsInJlZ2lzdHJhdGlvbnMiOlt7ImFnZW50SWQiOjg5MTQ0MiwiYWdlbnRSZWdpc3RyeSI6ImVpcDE1NTo1MDQyMDAyOjB4ODAwNEE4MThCRkI5MTIyMzNjNDkxODcxYjNkODRjODlBNDk0QkQ5ZSJ9XSwic3VwcG9ydGVkVHJ1c3QiOlsicmVwdXRhdGlvbiIsImNyeXB0by1lY29ub21pYyJdfQ=="
+    }
+  ],
+  "runs": [
+    {
+      "reportPath": "reports/arc-validation-e2e-2026-09-04T21-27-01-839Z.md",
+      "generatedAt": "2026-09-04T21:27:01.839Z",
+      "status": "PASS"
+    },
+    {
+      "reportPath": "reports/arc-quorum-e2e-2026-09-04T21-33-38-603Z.md",
+      "generatedAt": "2026-09-04T21:33:38.603Z",
+      "status": "PASS"
+    },
+    {
+      "reportPath": "reports/arc-agent-e2e-2026-09-04T21-35-07-638Z.md",
+      "generatedAt": "2026-09-04T21:35:07.638Z",
+      "status": "PASS"
+    },
+    {
+      "reportPath": "reports/arc-walk-forward-2026-09-04T21-40-45-616Z.md",
+      "generatedAt": "2026-09-04T21:40:45.616Z",
+      "status": "PASS"
+    }
+  ]
+}

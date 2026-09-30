@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-04T21:03:40.499Z",
+  "status": "PASS",
+  "chainId": 5042002,
+  "validationRegistry": "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  "validationRegistryVersion": "2.0.0",
+  "identityRegistry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+  "attestedResolver": "0x41ecd1f48562781df372e3c6fcbfed0698924f3b",
+  "agentId": "891440",
+  "agentOwner": "0xBf2831f139B9FfBd374c87D1e2415C494822Da2e",
+  "requestHash": "0x84bdcf0abd111ff21a8b32c0c05a1fc148cfaa22dd0f6429ba3dbc8ac01d4c9d",
+  "deadline": "60470844",
+  "finalStatus": {
+    "validatorAddress": "0x41EcD1F48562781dF372E3C6fCbFeD0698924f3b",
+    "agentId": "891440",
+    "response": 100,
+    "responseHash": "0xf7b70a26e527b71f1ed8b74d9c2d170980c59d335d182553a433df4fc7e09189",
+    "tag": "yijing-outcome-v1",
+    "lastUpdate": "1788555834"
+  },
+  "resolved": {
+    "outcome": true,
+    "decided": true
+  },
+  "transactions": [
+    {
+      "name": "agent 所有者提交 validationRequest",
+      "hash": "0xc8018b93ac141ac33677dbd705731fc0e417e6e5a1830882ee58b1cd207f50fb",
+      "blockNumber": "60470758",
+      "gasUsed": "212303",
+      "gasCostWei": "5307575000000000"
+    },
+    {
+      "name": "登记人层案件",
+      "hash": "0xa94421659cf0742706e5279c4557feef661012ac1399c7c03b0341582cc6ba0d",
+      "blockNumber": "60470768",
+      "gasUsed": "94469",
+      "gasCostWei": "2361725000000000"
+    },
+    {
+      "name": "人类判定者经 resolver 回写 validationResponse",
+      "hash": "0xd81a5087f28ae166611b9e958fef423cbd76cd65a96846f62aa88bc89cb6d55d",
+      "blockNumber": "60470778",
+      "gasUsed": "146626",
+      "gasCostWei": "3665650000000000"
+    }
+  ],
+  "gasCostWei": "11334950000000000",
+  "gasCostUsdc": "0.011334"
+}
