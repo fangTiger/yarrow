@@ -1,0 +1,57 @@
+# single-screen-oracle-workbench Specification
+
+## Purpose
+TBD - created by archiving change user-wallet-workbench. Update Purpose after archive.
+## Requirements
+### Requirement: 单屏六步工作台
+
+系统 SHALL 以 React 组件在工作台顶部常驻“连接钱包、立誓、成卦、三家应卦、等待应验、结算”六步进度轨，并让主流程在同一视口内原地更新。
+
+#### Scenario: 状态推进
+
+- **WHEN** 任一步开始或完成
+- **THEN** 当前步高亮、完成步打勾、未到步灰显
+- **AND** 每步显示“需要你操作”或“自动进行中”
+- **AND** 已确认交易附可点击哈希
+
+### Requirement: 一次主动作后自动编排
+
+系统 SHALL 只提供“求卦”一个主流程按钮，并在其后自动推进成卦、三家应卦、等待和结算；预测失败的重试 SHALL 在后台完成，不出现“再请三家应卦”按钮。
+
+#### Scenario: 可选结算入口
+
+- **WHEN** 到达可结算状态且自动钱包请求没有完成
+- **THEN** 页面说明服务端无许可结算的重试状态，不再要求用户签署结算交易
+
+### Requirement: 阶段耗时与可重开会话
+
+系统 SHALL 在既有单屏工作台内显示 commit、等待 N 块、reveal、三家推理、三笔预测、等待应验和三笔结算的预计与实际耗时；任意失败或中断后 SHALL 提供“弃卦重来 / 开始新的一卦”。
+
+#### Scenario: 旧轮有托管
+
+- **WHEN** 用户放弃一个已有链上 roundId 且尚未终结的轮次
+- **THEN** 页面明确显示资金仍在链上托管
+- **AND** 提供 `demo:recover` 的精确 roundId 命令与到期后释放说明
+- **AND** 新问题可以立即开始，不被旧会话状态阻塞
+
+### Requirement: 三家事实唯一呈现
+
+系统 SHALL 只使用三张常驻易者卡呈现等待、概率与解读、结算输赢和金库变化，不得在其他区块重复同一组事实。
+
+#### Scenario: 结算完成
+
+- **WHEN** 最终事实确定
+- **THEN** 保留“事实最后是：没有发生/发生了”和朱红“决”印
+- **AND** 三张原卡更新输赢与金库，不生成第二套结算卡
+
+### Requirement: 卦历独立路由与自然语言优先
+
+系统 SHALL 将卦历放在独立 `#/history` 路由；正文不得裸用 `resolver`、`BSS`、`Wilson` 或 `bps`，术语只能在自然语言解释之后的小字或说明中出现。
+
+#### Scenario: 查看历史与披露
+
+- **WHEN** 用户切换至卦历
+- **THEN** 工作台不再纵向追加卦历
+- **AND** 回放仍显著标记为 backtested/非现场
+- **AND** 中心化推理、解释跳跃、截止块后首次观察、人类 attestor 等披露仍可见
+
