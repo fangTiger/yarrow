@@ -4936,6 +4936,8 @@ Run: `node --import tsx --test tests/frontend-server.test.ts && npm run typechec
 
 Run: `rg 'frontend/data|demo/|question-oracle|question-interpreter|createDemoProvider' src/frontend/server.ts`
 
+> **执行修正（主管）**：Task 18 改写服务端参数后，旧网站的 `scripts/run-frontend-mock.ts` 仍传入已移除的 `demoActions` 选项，导致类型检查失败。该脚本只服务旧网站，故在 Task 18 中提前删除，并同时移除 `package.json` 的 `frontend:mock` 脚本；Task 32、33 中对应项已完成，执行时跳过。同理，旧 `tests/frontend-content.test.ts` 中针对已删除 mock 启动器与旧服务端的两条用例（「纯 mock 启动器必须把用户改选的事项主题原样传给问轨服务」「真实服务端共享付款复算账本，但每次请求使用独立模型预算」）在 Task 18 一并删除，其余用例留待 Task 32。
+
 ### Task 19: 新增确定性 provider 并改写问事排练
 
 **Files:**
@@ -4944,7 +4946,7 @@ Run: `rg 'frontend/data|demo/|question-oracle|question-interpreter|createDemoPro
 - Create: `tests/sanyi-rehearsal.test.ts`
 - Modify: `package.json`
 
-- [ ] **Step 1: 写排练失败测试（5 分钟）**
+- [x] **Step 1: 写排练失败测试（5 分钟）**
 
 ```ts
 // tests/sanyi-rehearsal.test.ts
@@ -4961,9 +4963,9 @@ test("mock 排练完成六掷与三家落笔", async () => {
 });
 ```
 
-- [ ] **Step 2: 运行排练测试，确认旧脚本没有导出 `runRehearsal`**
+- [x] **Step 2: 运行排练测试，确认旧脚本没有导出 `runRehearsal`**
 
-- [ ] **Step 3: 实现排练专用 provider**
+- [x] **Step 3: 实现排练专用 provider**
 
 ```ts
 // src/sanyi/mock-provider.ts
@@ -5003,7 +5005,7 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
 }
 ```
 
-- [ ] **Step 4: 把脚本改为可调用的完整 mock 流程（8 分钟）**
+- [x] **Step 4: 把脚本改为可调用的完整 mock 流程（8 分钟）**
 
 ```ts
 // scripts/rehearse-demo.ts
@@ -5115,7 +5117,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
 }
 ```
 
-- [ ] **Step 5: 修改唯一相关脚本项（2 分钟）**
+- [x] **Step 5: 修改唯一相关脚本项（2 分钟）**
 
 在 `package.json` 中精确替换：
 
@@ -5123,17 +5125,17 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
 "demo:rehearse": "node --import tsx scripts/rehearse-demo.ts --mode=mock"
 ```
 
-- [ ] **Step 6: GREEN、CLI 与严格类型检查（5 分钟）**
+- [x] **Step 6: GREEN、CLI 与严格类型检查（5 分钟）**
 
 Run: `node --import tsx --test tests/sanyi-rehearsal.test.ts && npm run demo:rehearse && npm run typecheck`
 
 ### Task 20: Chunk 3 交叉验收
 
-- [ ] 运行本 Chunk 的全部测试：
+- [x] 运行本 Chunk 的全部测试：
 
 Run: `node --import tsx --test tests/sanyi-api.test.ts tests/frontend-server.test.ts tests/sanyi-rehearsal.test.ts`
 
-- [ ] 运行 Chunk 1A、1B、2A、2B、2C 的全部测试：
+- [x] 运行 Chunk 1A、1B、2A、2B、2C 的全部测试：
 
 Run: `node --import tsx --test tests/almanac.test.ts tests/qimen.test.ts tests/meihua.test.ts \
   tests/bianzhan.test.ts tests/sanyi-classify.test.ts tests/sanyi-throws.test.ts \
@@ -5141,7 +5143,7 @@ Run: `node --import tsx --test tests/almanac.test.ts tests/qimen.test.ts tests/m
   tests/sanyi-schools.test.ts tests/sanyi-store.test.ts tests/sanyi-school-runner.test.ts \
   tests/sanyi-reading-service.test.ts`
 
-- [ ] 检查计划代码行宽、旧依赖断开和严格类型：
+- [x] 检查计划代码行宽、旧依赖断开和严格类型：
 
 Run: `npm run typecheck`
 
@@ -8847,8 +8849,6 @@ Expected: 无输出、退出码 1；已改写的服务端不得再导入旧演�
 Run:
 
 ```bash
-rg -n 'scripts/run-frontend-mock\.js|run-frontend-mock\.js' scripts src tests web \
-  --glob '!scripts/run-frontend-mock.ts'
 rg -n 'scripts/recover-demo\.js|recover-demo\.js' scripts src tests web \
   --glob '!scripts/recover-demo.ts'
 ```
@@ -8858,7 +8858,7 @@ Expected: 两条命令均无输出、退出码 1。`package.json` 中同名脚�
 Run:
 
 ```bash
-git rm scripts/run-frontend-mock.ts scripts/recover-demo.ts
+git rm scripts/recover-demo.ts  # run-frontend-mock.ts 已在 Task 18 删除
 npm test
 npm run typecheck
 ```
