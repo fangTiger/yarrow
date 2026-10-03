@@ -367,6 +367,9 @@ export interface AlmanacResult {
   };
 }
 
+// 逐一对照传统写法：壁宿獝→貐、胃宿彘→雉，其余 26 宿与传统一致。
+const MANSION_ANIMAL_FIX: Record<string, string> = { 獝: "貐", 彘: "雉" };
+
 const pad = (value: number): string => String(value).padStart(2, "0");
 
 function utc8Parts(timestamp: bigint): [number, number, number, number, number, number] {
@@ -424,7 +427,7 @@ export function almanacAt(timestamp: bigint): AlmanacResult {
     },
     mansion: {
       name: `${lunar.getXiu()}${lunar.getZheng()}${
-        lunar.getAnimal() === "獝" ? "貐" : lunar.getAnimal()
+        MANSION_ANIMAL_FIX[lunar.getAnimal()] ?? lunar.getAnimal()
       }`,
       palace: lunar.getGong(),
       guardian: lunar.getShou(),
@@ -5402,6 +5405,11 @@ Run: `node --import tsx --test tests/frontend-font.test.ts && test $(wc -c < web
 * {
   box-sizing: border-box;
 }
+html, body {
+  min-height: 100%;
+  background: radial-gradient(1100px 560px at 8% -8%, rgb(255 255 255 / 0.055), transparent 62%),
+    radial-gradient(900px 520px at 104% 34%, rgb(201 168 102 / 0.05), transparent 66%), var(--bg);
+}
 html {
   min-width: 0;
   overflow-x: hidden;
@@ -5410,8 +5418,6 @@ body {
   margin: 0;
   min-width: 0;
   overflow-x: hidden;
-  background: radial-gradient(1100px 560px at 8% -8%, rgb(255 255 255 / 0.055), transparent 62%),
-    radial-gradient(900px 520px at 104% 34%, rgb(201 168 102 / 0.05), transparent 66%), var(--bg);
   color: var(--paper);
   font-family: var(--serif);
   font-size: 14px;
@@ -5473,7 +5479,7 @@ button, a, input, select {
 }
 .shikong {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   border: 1px solid var(--line);
   background: rgb(21 24 22 / 0.7);
 }
@@ -5547,6 +5553,17 @@ button, a, input, select {
   text-decoration: none;
   border-bottom: 1px solid var(--line);
   padding: 8px 0;
+}
+
+.shikong-sub {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+@media (max-width: 980px) {
+  .shikong {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 ```
 
@@ -6099,19 +6116,24 @@ import {
 import { RecentReadings } from "../web/components/RecentReadings.js";
 import { ShikongBar } from "../web/components/ShikongBar.js";
 const forbidden = /易者|押钱|赔付|封存|・|[\u3040-\u30ff]/u;
-test("时空栏渲染六格", () => {
-  const html = renderToStaticMarkup(createElement(ShikongBar, {
-    data: {
-      solar: "2026年9月30日 20:15",
-      lunar: "八月二十",
-      pillars: "丙午 丁酉 丁未 庚戌",
-      solarTerm: "秋分",
-      monthDay: "酉月 未日",
-      duty: "开日 天德",
-    },
-  }));
-  const labels = ["公历", "农历", "四柱", "节气", "月建日辰", "值日"];
-  for (const label of labels) assert.match(html, new RegExp(label));
+import { almanacAt } from "../src/calendar/almanac.js";
+import { toView } from "../web/components/ShikongBar.js";
+test("时空栏以真实接口数据渲染六格主值与副注且节气不重复", () => {
+  const value = toView(almanacAt(BigInt(Date.parse("2026-10-03T18:18:00+08:00") / 1000)));
+  assert.deepEqual(value.solar, { label: "公历", main: "2026-10-03 18:18", sub: "北京时间" });
+  assert.deepEqual(value.lunar, { label: "农历", main: "八月廿三", sub: "丙午年 · 酉时 · 下弦" });
+  assert.equal(value.pillars.main, "丙午 丁酉 庚戌 乙酉");
+  assert.equal(value.pillars.sub, "天河水 山下火 钗钏金 泉中水");
+  assert.deepEqual(value.solarTerm, { label: "节气", main: "秋分 · 三候", sub: "水始涸 · 10月8日交寒露" });
+  assert.deepEqual(value.monthDay, { label: "月建日辰", main: "酉月 · 庚戌日", sub: "旬首甲辰 · 旬空寅卯" });
+  assert.deepEqual(value.duty, { label: "值日", main: "除日 · 天牢黑道", sub: "胃土雉 · 冲龙（甲辰）煞北" });
+  const html = renderToStaticMarkup(createElement(ShikongBar, { data: value }));
+  for (const cell of Object.values(value)) {
+    assert.ok(html.includes(cell.label));
+    assert.ok(html.includes(cell.main));
+    assert.ok(html.includes(cell.sub));
+  }
+  assert.equal((html.match(/秋分/gu) ?? []).length, 1);
   assert.doesNotMatch(html, forbidden);
 });
 const view = (overrides: Partial<ClassificationView>): ClassificationView => ({
@@ -6161,6 +6183,172 @@ test("最近记录可以打开", () => {
   assert.match(html, /面试能过吗/u);
   assert.doesNotMatch(html, forbidden);
 });
+
+test("可改事项与服务端白名单一致", async () => {
+  const { QUESTION_SUBJECTS } = await import("../src/oracle/question-classifier.js");
+  const html = renderToStaticMarkup(createElement(ClassificationTags, {
+    view: view({}), onKindChange: () => {}, onQuestionFallback: () => {}, onSubjectChange: () => {},
+  }));
+  for (const item of QUESTION_SUBJECTS) assert.ok(html.includes(item.label), item.key);
+});
+
+import React from "react";
+// Node 测试显式提供浏览器构建期公开常量，不读取本机配置。
+Object.assign(globalThis, {
+  __ARC_CHAIN_ID__: "5042002", __ARC_RPC_URL__: "https://rpc.testnet.arc.io",
+  __ARC_EXPLORER__: "https://testnet.arcscan.app", __WALLETCONNECT_PROJECT_ID__: "0".repeat(32),
+});
+const { QuestionForm } = await import("../web/components/QuestionForm.js");
+const { PaymentButton } = await import("../web/components/PaymentButton.js");
+import { classifyQuestion } from "../src/sanyi/classify.js";
+import { api } from "../web/lib/api.js";
+import { readFileSync } from "node:fs";
+
+// 无 DOM 环境下驱动组件状态和副作用，支付钱包流程不在这里执行。
+function formHarness() {
+  const internals = (React as unknown as {
+    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+      ReactCurrentDispatcher: { current: unknown };
+    };
+  }).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  const states: unknown[] = [];
+  const effects: { deps: unknown[]; cleanup: (() => void) | undefined }[] = [];
+  let stateIndex = 0;
+  let effectIndex = 0;
+  let pending: (() => void)[] = [];
+  const dispatcher = {
+    useState(initial: unknown) {
+      const index = stateIndex++;
+      if (!(index in states)) states[index] = initial;
+      return [states[index], (next: unknown) => { states[index] = next; }];
+    },
+    useEffect(callback: () => (() => void) | undefined, deps: unknown[]) {
+      const index = effectIndex++;
+      const previous = effects[index];
+      if (previous && deps.every((value, i) => Object.is(value, previous.deps[i]))) return;
+      pending.push(() => {
+        previous?.cleanup?.();
+        effects[index] = { deps, cleanup: callback() };
+      });
+    },
+  };
+  return {
+    render() {
+      stateIndex = effectIndex = 0;
+      const previous = internals.ReactCurrentDispatcher.current;
+      internals.ReactCurrentDispatcher.current = dispatcher;
+      try { return QuestionForm(); }
+      finally {
+        internals.ReactCurrentDispatcher.current = previous;
+        const callbacks = pending;
+        pending = [];
+        callbacks.forEach((callback) => callback());
+      }
+    },
+    dispose() { effects.forEach((effect) => effect.cleanup?.()); },
+  };
+}
+function childrenOf(node: ReturnType<typeof QuestionForm>) {
+  return React.Children.toArray(node.props.children).filter(React.isValidElement) as React.ReactElement<any>[];
+}
+
+test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起名提示且禁用", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const classify = t.mock.method(api, "classify", async (question: string) => ({
+    question, kind: question.includes("名字") ? "naming" : "question",
+    supported: !question.includes("名字"), suggestion: "可改为问事",
+    subject: { key: "career", label: "工作官职" },
+  }));
+  const harness = formHarness();
+  t.after(() => harness.dispose());
+  let children = childrenOf(harness.render());
+  const initialButton = children.find((child) => child.type === "button")!;
+  assert.equal(initialButton.props.children, "问卦 · 0.05 USDC");
+  assert.equal(initialButton.props.disabled, true);
+  const input = children.find((child) => child.type === "textarea")!;
+  assert.equal(input.props.placeholder, "例如：这次面试能过吗？");
+  input.props.onChange({ target: { value: "这次面试能过吗" } });
+  harness.render();
+  t.mock.timers.tick(399);
+  assert.equal(classify.mock.callCount(), 0);
+  t.mock.timers.tick(1);
+  assert.ok(childrenOf(harness.render()).some((child) => child.props.children === "识别中"));
+  await Promise.resolve();
+  children = childrenOf(harness.render());
+  assert.ok(children.some((child) => child.type === PaymentButton));
+  children.find((child) => child.type === "textarea")!.props.onChange({ target: { value: "帮我取个名字" } });
+  children = childrenOf(harness.render());
+  assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
+  t.mock.timers.tick(400);
+  await Promise.resolve();
+  children = childrenOf(harness.render());
+  assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
+  const tags = children.find((child) => child.type === ClassificationTags)!;
+  const html = renderToStaticMarkup(tags);
+  assert.match(html, /可改为问事/u);
+  assert.match(html, /改为问事/u);
+});
+
+test("时空栏六列、980px 两列且副注使用小号弱色", () => {
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.match(css, /grid-template-columns:\s*repeat\(6,\s*minmax\(0,\s*1fr\)\)/u);
+  assert.match(css, /@media\s*\(max-width:\s*980px\)[\s\S]*\.shikong\s*\{\s*grid-template-columns:\s*repeat\(2,/u);
+  assert.match(css, /\.shikong-sub[^{}]*\{[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*12\.5px/su);
+});
+
+test("html 与 body 共用背景且最小高度覆盖页面", () => {
+  const css = readFileSync(new URL("../web/styles/layout.css", import.meta.url), "utf8");
+  assert.match(css, /html,\s*body\s*\{[^}]*min-height:\s*100%[^}]*background:/su);
+});
+
+
+test("分类接口规范化空白后仍可问卦", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  t.mock.method(api, "classify", async (question: string) => classifyQuestion(question));
+  const harness = formHarness();
+  t.after(() => harness.dispose());
+  childrenOf(harness.render()).find((child) => child.type === "textarea")!.props.onChange({ target: { value: "  这次面试能过吗  " } });
+  harness.render();
+  t.mock.timers.tick(400);
+  await Promise.resolve();
+  assert.ok(childrenOf(harness.render()).some((child) => child.type === PaymentButton));
+});
+
+test("短问题不分类，快速修改重置防抖，过期响应不能启用问卦", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const responses: ((value: ReturnType<typeof classifyQuestion>) => void)[] = [];
+  const classify = t.mock.method(api, "classify", () => new Promise<ReturnType<typeof classifyQuestion>>((resolve) => responses.push(resolve)));
+  const harness = formHarness();
+  t.after(() => harness.dispose());
+  const input = (question: string) => {
+    childrenOf(harness.render()).find((child) => child.type === "textarea")!.props.onChange({ target: { value: question } });
+    harness.render();
+  };
+  input("面试");
+  t.mock.timers.tick(400);
+  assert.equal(classify.mock.callCount(), 0);
+  input("这次面试能过吗");
+  t.mock.timers.tick(200);
+  input("这次考试能过吗");
+  t.mock.timers.tick(200);
+  assert.equal(classify.mock.callCount(), 0);
+  t.mock.timers.tick(200);
+  assert.equal(classify.mock.callCount(), 1);
+  input("帮我取个名字");
+  responses[0]!(classifyQuestion("这次考试能过吗"));
+  await Promise.resolve();
+  let children = childrenOf(harness.render());
+  assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
+  assert.ok(!children.some((child) => child.type === ClassificationTags));
+  t.mock.timers.tick(400);
+  responses[1]!(classifyQuestion("帮我取个名字"));
+  await Promise.resolve();
+  children = childrenOf(harness.render());
+  const tags = children.find((child) => child.type === ClassificationTags)!;
+  assert.match(renderToStaticMarkup(tags), /起名即将开放/u);
+  tags.props.onQuestionFallback();
+  assert.ok(childrenOf(harness.render()).some((child) => child.type === PaymentButton));
+});
 ```
 
 - [ ] **Step 2: RED 后实现时空栏与最近记录**
@@ -6169,23 +6357,25 @@ test("最近记录可以打开", () => {
 // web/components/ShikongBar.tsx
 import { useEffect, useState } from "react";
 import { api, type NowResponse } from "../lib/api.js";
+export interface ShikongCell { label: string; main: string; sub: string }
 export interface ShikongView {
-  solar: string;
-  lunar: string;
-  pillars: string;
-  solarTerm: string;
-  monthDay: string;
-  duty: string;
+  solar: ShikongCell;
+  lunar: ShikongCell;
+  pillars: ShikongCell;
+  solarTerm: ShikongCell;
+  monthDay: ShikongCell;
+  duty: ShikongCell;
 }
-function toView(value: NowResponse): ShikongView {
-  const item = value as unknown as Record<string, unknown>;
+export function toView(value: NowResponse): ShikongView {
+  const nextDate = value.solarTerms.nextAt.split(" ")[0]!.split("-");
+  const clash = value.clash.description.replace(/^\(([^)]+)\)(.+)$/u, "$2（$1）");
   return {
-    solar: String(item.solar ?? item.gregorian ?? ""),
-    lunar: String(item.lunar ?? ""),
-    pillars: String(item.pillars ?? item.fourPillars ?? ""),
-    solarTerm: String(item.solarTerm ?? ""),
-    monthDay: String(item.monthDay ?? item.monthBuildDayBranch ?? ""),
-    duty: String(item.duty ?? item.dayOfficer ?? ""),
+    solar: { label: "公历", main: value.solar.text.slice(0, 16), sub: "北京时间" },
+    lunar: { label: "农历", main: value.lunar.date.replace(/^.*年/u, ""), sub: `${value.pillars[0]}年 · ${value.lunar.timeBranch}时 · ${value.lunar.moonPhase}` },
+    pillars: { label: "四柱", main: value.pillars.join(" "), sub: value.naYin.join(" ") },
+    solarTerm: { label: "节气", main: `${value.solarTerms.current} · ${value.solarTerms.hou.split(/\s+/u).at(-1)}`, sub: `${value.solarTerms.wuHou} · ${Number(nextDate[1])}月${Number(nextDate[2])}日交${value.solarTerms.next}` },
+    monthDay: { label: "月建日辰", main: `${value.cycle.monthBranch}月 · ${value.cycle.day}日`, sub: `旬首${value.cycle.xun} · 旬空${value.cycle.voidBranches.join("")}` },
+    duty: { label: "值日", main: `${value.dayOfficers.officer}日 · ${value.dayOfficers.deity}${value.dayOfficers.path}`, sub: `${value.mansion.name} · 冲${clash}煞${value.clash.direction}` },
   };
 }
 export function ShikongBar({ data }: { data?: ShikongView }) {
@@ -6208,16 +6398,14 @@ export function ShikongBar({ data }: { data?: ShikongView }) {
       </section>
     );
   }
-  const cells = [
-    ["公历", view.solar], ["农历", view.lunar], ["四柱", view.pillars],
-    ["节气", view.solarTerm], ["月建日辰", view.monthDay], ["值日", view.duty],
-  ];
+  const cells = Object.values(view);
   return (
     <section className="shikong" aria-label="此刻">
-      {cells.map(([label, value]) => (
+      {cells.map(({ label, main, sub }) => (
         <div className="shikong-item" key={label}>
           <span>{label}</span>
-          <b>{value}</b>
+          <b>{main}</b>
+          <small className="shikong-sub">{sub}</small>
         </div>
       ))}
     </section>
@@ -6255,6 +6443,8 @@ export function RecentReadings({ readings }: { readings: readonly RecentReading[
 
 ```tsx
 // web/components/ClassificationTags.tsx
+import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
+// web/components/ClassificationTags.tsx
 export interface ClassificationView {
   question: string;
   kind: string;
@@ -6275,15 +6465,7 @@ const KINDS = [
   ["destiny", "命理"],
   ["fortune", "运势"],
 ] as const;
-const SUBJECTS = [
-  ["career", "工作官职"],
-  ["wealth", "求财"],
-  ["relationship", "感情婚姻"],
-  ["health", "健康疾病"],
-  ["travel", "出行行人"],
-  ["lawsuit", "诉讼是非"],
-  ["other", "其它事项"],
-] as const;
+const SUBJECTS = QUESTION_SUBJECTS.map(({ key, label }) => [key, label] as const);
 export function ClassificationTags(props: ClassificationTagsProps) {
   const { view } = props;
   return (
@@ -6332,7 +6514,7 @@ export function ClassificationTags(props: ClassificationTagsProps) {
 
 ```tsx
 // web/components/QuestionForm.tsx
-import { useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { api, type Classification } from "../lib/api.js";
 import {
   ClassificationTags,
@@ -6355,17 +6537,24 @@ export function QuestionForm() {
   const [question, setQuestion] = useState("");
   const [view, setView] = useState<ClassificationView>();
   const [error, setError] = useState("");
-  const classify = async (event: FormEvent) => {
-    event.preventDefault();
-    if ([...question.trim()].length < 4 || [...question.trim()].length > 280) {
-      setError("问题需为 4 至 280 字");
-      return;
-    }
-    try { setView(fromClassification(await api.classify(question))); setError(""); }
-    catch (caught) { setError(caught instanceof Error ? caught.message : "分类暂不可用"); }
-  };
+  const [classifying, setClassifying] = useState(false);
+  const length = [...question.trim()].length;
+  const valid = length >= 4 && length <= 280;
+  useEffect(() => {
+    if (!valid) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      setClassifying(true);
+      void api.classify(question).then((value) => {
+        if (active) { setView(fromClassification(value)); setError(""); }
+      }).catch((caught: unknown) => {
+        if (active) setError(caught instanceof Error ? caught.message : "分类暂不可用");
+      }).finally(() => { if (active) setClassifying(false); });
+    }, 400);
+    return () => { active = false; clearTimeout(timer); };
+  }, [question, valid]);
   const changeToQuestion = () => setView({
-    question, kind: "question", supported: true, subjectKey: "other", subject: "其它事项",
+    question, kind: "question", supported: true, subjectKey: "peers", subject: "人际／同辈",
   });
   const changeSubject = (subjectKey: string, subject: string) => setView({
     question,
@@ -6387,16 +6576,23 @@ export function QuestionForm() {
     });
   };
   return (
-    <form className="panel" onSubmit={classify}>
+    <form className="panel" onSubmit={(event) => event.preventDefault()}>
       <h1>所问之事</h1>
       <textarea
         aria-label="所问之事"
         className="question-input"
         maxLength={280}
         minLength={4}
-        onChange={(event) => setQuestion(event.target.value)}
+        placeholder="例如：这次面试能过吗？"
+        onChange={(event) => {
+          setQuestion(event.target.value);
+          setView(undefined);
+          setClassifying(false);
+          setError("");
+        }}
         value={question}
       />
+      {classifying ? <p className="hint" role="status">识别中</p> : null}
       {view ? (
         <ClassificationTags
           onKindChange={changeKind}
@@ -6406,10 +6602,10 @@ export function QuestionForm() {
         />
       ) : null}
       {error ? <p className="error">{error}</p> : null}
-      {view?.kind === "question" ? (
+      {valid && view?.kind === "question" && view.supported ? (
         <PaymentButton question={question} classification={view} />
       ) : (
-        <button className="button button-primary" type="submit">识别所问</button>
+        <button className="button button-primary" disabled type="button">问卦 · 0.05 USDC</button>
       )}
     </form>
   );
@@ -6579,6 +6775,10 @@ Run: `! rg 'fonts\.(googleapis|gstatic)\.com|易者|押钱|赔付|封存|・|[�
 > 依赖 React、DOM、钱包配置或系统时钟；组件只消费 Chunk 3 的 `PublicReading`。先锁定阶段与六掷状态机，
 > 再实现交互和展示。旧站说明文字的唯一移植来源是基线 `310afdc:web/app.tsx` 第 415–740 行；移植后
 > 使用中文间隔号「·」，不得保留旧产品称谓。
+
+> **执行修正（主管，Chunk 4）**：Chunk 4 替换前端后，旧 `tests/frontend-content.test.ts` 的其余用例全部针对旧网站界面而失效。其中仍适用于新站的两项（esbuild 只注入公开配置；浏览器不得接触私钥、助记词与账户派生）已迁入 `tests/frontend-boundary.test.ts`，钱包签名断言改为检查 `web/lib/use-fee-payment.ts`；旧文件随即删除。旧 `web/styles.css` 已无引用，同时删除，并因此提前采用 Task 34 Step 3 的 `scripts/check-frontend-secrets.ts` 新版本。Task 32 Step 7 与 Task 34 Step 3 执行时跳过已完成部分。
+
+> **执行修正（主管，Chunk 4 视觉验收）**：无头浏览器实测首页后修正——二十八宿改用校正表（lunar-javascript 壁宿「獝」、胃宿「彘」两处错字，分别校正为「貐」「雉」，`tests/almanac.test.ts` 增加胃宿用例）；时空栏改为「主值 + 副注」两行且移动端两列；首页改为输入时自动分类、主按钮直接为「问卦 · 0.05 USDC」；修正页面底部背景色带。对应代码块已同步为实际版本。
 
 ### Task 27: 建立结果页阶段与六掷纯状态机
 
