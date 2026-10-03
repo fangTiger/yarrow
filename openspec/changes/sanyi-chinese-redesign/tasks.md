@@ -15,11 +15,11 @@
 - [x] 1.7 问事三家提示词与输入组装（程颐、京房、邵雍）及 mock provider 测试
 - [x] 1.8 存档与付款凭证持久化 `src/sanyi/store.ts` 及测试
 - [x] 1.9 编排服务 `src/sanyi/reading-service.ts`：创建、六掷、排盘、三家并行、失败隔离与免费重试、改事项只重跑京房
-- [ ] 1.10 服务端新接口 `/api/now`、`/api/classify`、`/api/readings/*`，下线旧接口，接口安全测试
+- [x] 1.10 服务端新接口 `/api/now`、`/api/classify`、`/api/readings/*`，下线旧接口，接口安全测试
 - [ ] 1.11 字体子集化脚本与 `web/fonts/mashanzheng-subset.woff2`
 - [ ] 1.12 重写前端：tokens、首页、时空栏、分类标签、付款按钮、六掷、问事结果页（卦象、五卦、三家、合议线、排盘表、五行详情、术语说明、奇门、黄历）
 - [ ] 1.13 文化守卫与秘密扫描测试；删除仅服务旧站的前端测试与模块
-- [ ] 1.14 重写 `demo:rehearse`（mock 问事全流程）
+- [x] 1.14 重写 `demo:rehearse`（mock 问事全流程）
 - [ ] 1.15 用户验收里程碑 1A
 
 ## 2. 里程碑 1B：八字命理与运势
