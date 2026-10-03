@@ -56,6 +56,10 @@ test("用户可以否决分类并切换轨道", () => {
 });
 
 test("事项主题独立建议用神，辞职取官鬼且用户可以改选", () => {
+  const interview = classifyQuestion("这次面试能过吗").subject;
+  assert.equal(interview.key, "career");
+  assert.equal(interview.useGod, "官鬼");
+
   const career = classifyQuestion("我该不该辞职");
   assert.deepEqual(
     [career.subject.key, career.subject.label, career.subject.useGod],
