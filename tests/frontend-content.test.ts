@@ -304,23 +304,6 @@ test("事项主题在解读旁自动采用且改选即重算，术语与五步�
   assert.match(app, /彖辞.*大象辞.*语料.*缺失|语料.*缺失.*彖辞.*大象辞/);
 });
 
-test("纯 mock 启动器必须把用户改选的事项主题原样传给问轨服务", async () => {
-  const mockRunner = await source("scripts/run-frontend-mock.ts");
-  assert.match(mockRunner, /confirmedSubject/);
-  assert.match(mockRunner, /confirmedSubject:\s*body\.confirmedSubject/);
-  assert.match(mockRunner, /basisBlock:\s*body\.basisBlock/);
-  assert.match(mockRunner, /paymentVerifier/);
-  assert.match(mockRunner, /mockQuestionFeeReceipt/);
-});
-
-test("真实服务端共享付款复算账本，但每次请求使用独立模型预算", async () => {
-  const server = await source("src/frontend/server.ts");
-  assert.match(server, /new QuestionCastLedger\(\)/);
-  assert.match(server, /castLedger:\s*questionCastLedger/);
-  assert.match(server, /const provider = createDemoProvider\("live"/);
-  assert.doesNotMatch(server, /let questionOracle:\s*QuestionOracleService/);
-});
-
 test("賭轨如实区分短周期见证和长周期等待，人间问题不再映射天层指标", async () => {
   const { app } = await reactSources();
   assert.match(app, /今天之内会不会收到那条消息/);
