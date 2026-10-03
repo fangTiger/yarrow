@@ -113,3 +113,475 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* web/styles/components.css：追加 */
+.reading-hero, .reading-secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+.reading-secondary {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+.reading-column, .coin-throw, .throw-record, .school-copy, .term-grid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.topbar a, .verify-panel a {
+  margin-left: auto;
+  color: var(--gold);
+}
+.boundary-tag, .good-text {
+  width: fit-content;
+  margin: 0;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 4px 8px;
+}
+.ask p, .judgement {
+  margin: 0;
+  line-height: 1.8;
+}
+.ask p {
+  font-size: 21px;
+}
+.subject-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.subject-change select {
+  border: 1px solid var(--line-strong);
+  background: var(--panel-2);
+  color: var(--paper);
+  padding: 8px;
+}
+.subject-change p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.hexagram-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+.luopan-wrap {
+  position: relative;
+  width: min(300px, 100%);
+  aspect-ratio: 1;
+}
+.luopan {
+  width: 100%;
+  height: 100%;
+}
+.luopan-ring, .luopan-tick {
+  fill: none;
+  stroke: var(--line-strong);
+}
+.luopan-stroke {
+  fill: var(--gold);
+  opacity: 0.62;
+}
+.luopan text {
+  fill: var(--muted);
+  font-family: var(--serif);
+  font-size: 12px;
+}
+.luopan text.luopan-cardinal {
+  fill: var(--gold);
+}
+.luopan-wrap > .hexagram-figure {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.hexagram-title h1 {
+  margin: 6px 0;
+  font-family: var(--brush);
+  font-size: clamp(44px, 6vw, 60px);
+}
+.hexagram-title b {
+  color: var(--gold);
+  font-family: var(--brush);
+  font-size: 22px;
+}
+.hexagram-figure {
+  display: grid;
+  gap: 8px;
+  width: 118px;
+}
+.hexagram-figure i {
+  display: block;
+  height: 10px;
+}
+.hexagram-figure .yang {
+  background: var(--paper);
+}
+.hexagram-figure .yin {
+  background: linear-gradient(90deg, var(--paper) 0 42%, transparent 42% 58%, var(--paper) 58% 100%);
+}
+.hexagram-figure .yang.moving {
+  background: var(--cinnabar);
+}
+.hexagram-figure .yin.moving {
+  background: linear-gradient(90deg, var(--cinnabar) 0 42%, transparent 42% 58%, var(--cinnabar) 58% 100%);
+}
+.hexagram-figure.compact {
+  width: 34px;
+  gap: 3px;
+}
+.hexagram-figure.compact i {
+  height: 4px;
+}
+.five-hexagrams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.five-hexagrams figure {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 76px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+}
+.five-hexagrams figure.active {
+  border-color: var(--line-strong);
+  background: var(--gold-soft);
+}
+.five-hexagrams figcaption, .five-hexagrams small {
+  display: grid;
+  text-align: center;
+}
+.five-hexagrams figcaption {
+  font-family: var(--brush);
+}
+.five-hexagrams small, .legend {
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 12px;
+}
+.throw {
+  display: grid;
+  grid-template-columns: 3.2em auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+}
+.throw.moving, .change, .school-verdict.bad, .almanac-grid .bad {
+  color: var(--cinnabar);
+}
+.coins {
+  display: flex;
+  gap: 5px;
+}
+.coin {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+}
+.coin::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--gold);
+  background: var(--panel);
+  content: "";
+  transform: translate(-50%, -50%);
+}
+.coin.back {
+  background: var(--gold);
+}
+.throw-button {
+  min-width: 132px;
+  min-height: 52px;
+  border: 1px solid var(--gold);
+  background: var(--gold-soft);
+  color: var(--gold);
+  cursor: pointer;
+}
+.throw-button.shaking {
+  animation: coin-shake 180ms linear infinite alternate;
+}
+.consensus-track {
+  position: relative;
+  height: 44px;
+  margin: 18px 12px 0;
+  border-bottom: 2px solid var(--line-strong);
+}
+.consensus .mean {
+  position: absolute;
+  bottom: -12px;
+  width: 1px;
+  height: 24px;
+  background: var(--paper);
+}
+.consensus .mean span {
+  position: absolute;
+  bottom: 28px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.consensus .pin {
+  position: absolute;
+  bottom: -10px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  background: var(--seal-bg);
+  color: var(--seal-text);
+  font-family: var(--brush);
+}
+.consensus-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--dim);
+}
+.school-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.school-card h3, .school-card p {
+  margin: 0;
+}
+.school-card h3 small, .school-verdict small {
+  margin-left: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.school-verdict {
+  font-family: var(--dynamic);
+  font-size: 22px;
+}
+.school-verdict.good, .almanac-grid .good {
+  color: var(--jade);
+}
+.school-reason {
+  color: var(--muted);
+  line-height: 1.8;
+}
+.chart-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.chart {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+.chart th, .chart td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+.chart tr.use td {
+  background: var(--gold-soft);
+}
+.chart .mark {
+  color: var(--gold);
+  font-family: var(--brush);
+  text-align: center;
+}
+.state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.state i, .qimen-flags i {
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-style: normal;
+  padding: 1px 5px;
+}
+.reading-guide {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.reading-guide p {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+.term-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+.term-disclosure {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+}
+.term-disclosure summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  align-items: center;
+  cursor: pointer;
+}
+.term-disclosure strong {
+  color: var(--gold);
+}
+.term-disclosure p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.five-elements-detail > summary, .verify-panel > summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+.five-elements-detail svg {
+  width: min(280px, 100%);
+}
+.five-elements-detail circle {
+  fill: var(--panel-2);
+  stroke: var(--line-strong);
+}
+.five-elements-detail circle.active {
+  stroke: var(--gold);
+}
+.five-elements-detail text {
+  fill: var(--paper);
+}
+.generate-edge {
+  stroke: var(--gold);
+}
+.overcome-edge {
+  stroke: var(--cinnabar);
+}
+.qimen-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line-strong);
+}
+.qimen-cell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 4px 6px;
+  min-height: 136px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.qimen-cell::before {
+  position: absolute;
+  right: -4px;
+  bottom: -14px;
+  color: var(--line);
+  content: attr(data-gua);
+  font-family: var(--brush);
+  font-size: 72px;
+}
+.qimen-cell .heaven, .qimen-cell .earth {
+  text-align: right;
+}
+.qimen-cell .star {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+.qimen-cell .star small {
+  margin-left: 6px;
+  color: var(--dim);
+}
+.qimen-flags {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.door {
+  font-family: var(--brush);
+  font-size: 22px;
+}
+.door.good {
+  color: var(--jade);
+}
+.door.bad {
+  color: var(--cinnabar);
+}
+.god.chief, .qimen-flags i {
+  color: var(--gold);
+}
+.qimen-cell.center {
+  place-content: center;
+  text-align: center;
+}
+.qimen-legend, .provenance {
+  color: var(--dim);
+  line-height: 1.7;
+}
+.almanac-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+}
+.almanac-grid div {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.verify-panel dl {
+  display: grid;
+  gap: 8px;
+}
+.verify-panel dl div {
+  display: grid;
+  grid-template-columns: minmax(8em, auto) minmax(0, 1fr);
+  gap: 12px;
+}
+@keyframes coin-shake {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .luopan-rotor {
+    animation: luopan-turn 240s linear infinite;
+    transform-origin: 160px 160px;
+  }
+  @keyframes luopan-turn {
+    to { transform: rotate(360deg); }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .throw-button.shaking, .luopan-rotor {
+    animation: none;
+  }
+}
+@media (max-width: 980px) {
+  .reading-hero, .reading-secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .hexagram-stage {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .qimen-cell {
+    min-height: 120px;
+    padding: 7px;
+  }
+  .qimen-cell::before {
+    font-size: 54px;
+  }
+}

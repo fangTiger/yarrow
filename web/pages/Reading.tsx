@@ -11,13 +11,24 @@ import { ThrowRecord } from "../components/ThrowRecord.js";
 import { api, type PublicReading } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
 import { readingStage, shouldPollReading } from "../lib/reading-state.js";
+import { AlmanacPanel } from "../components/AlmanacPanel.js";
+import { ConsensusTrack } from "../components/ConsensusTrack.js";
+import { FiveElementsDetail } from "../components/FiveElementsDetail.js";
+import { LiuyaoTable } from "../components/LiuyaoTable.js";
+import { QimenBoard } from "../components/QimenBoard.js";
+import { SchoolCard } from "../components/SchoolCard.js";
+import { SubjectChange } from "../components/SubjectChange.js";
+import { VerifyPanel } from "../components/VerifyPanel.js";
+const SCHOOL_KEYS = ["chengyi", "jingfang", "shaoyong"] as const;
 const SUBJECT_LABELS: Record<string, string> = Object.fromEntries(
   QUESTION_SUBJECTS.map(({ key, label }) => [key, label]),
 );
 function Result(props: {
   reading: PublicReading;
+  onReading: (reading: PublicReading) => void;
 }) {
   const { reading } = props;
+  const [retryError, setRetryError] = useState("");
   const chart = reading.chart;
   if (!chart || !reading.lines) {
     return (
@@ -30,6 +41,14 @@ function Result(props: {
   const figures = deriveFiveHexagrams(reading.lines);
   const moving = reading.lines.flatMap((value, index) => [6, 9].includes(value) ? [index + 1] : []);
   const primary = figures.primary;
+  const retry = async (key: typeof SCHOOL_KEYS[number]) => {
+    setRetryError("");
+    try {
+      props.onReading(await api.retrySchool(reading.id, key));
+    } catch (caught) {
+      setRetryError(caught instanceof Error ? caught.message : "此家暂未能重试，请稍后再试");
+    }
+  };
   return (
     <>
       <div className="reading-hero">
@@ -40,6 +59,7 @@ function Result(props: {
             </span>
             <p>{reading.question}</p>
           </div>
+          <SubjectChange onReading={props.onReading} reading={reading} />
           <div className="hexagram-stage">
             <div className="luopan-wrap">
               <Luopan />
@@ -63,7 +83,32 @@ function Result(props: {
           <ThrowRecord throws={reading.throws} />
           <FiveHexagrams figures={figures} moving={moving} />
         </section>
+        <section aria-labelledby="schools-title" className="panel">
+          <header className="panel-head">
+            <h2 id="schools-title">三家断语</h2>
+            <p>同一卦、同一件事，三派独立落笔。</p>
+          </header>
+          <ConsensusTrack schools={reading.schools} />
+          {retryError ? <p className="error" role="alert">{retryError}</p> : null}
+          {SCHOOL_KEYS.map((key) => (
+            <SchoolCard
+              key={key}
+              onRetry={() => void retry(key)}
+              school={reading.schools[key]}
+              schoolKey={key}
+            />
+          ))}
+        </section>
       </div>
+      <div className="reading-secondary">
+        <div className="reading-column">
+          <LiuyaoTable chart={chart} />
+          <FiveElementsDetail chart={chart} />
+        </div>
+        {reading.qimen ? <QimenBoard value={reading.qimen} /> : null}
+      </div>
+      {reading.almanac ? <AlmanacPanel value={reading.almanac} /> : null}
+      <VerifyPanel reading={reading} />
     </>
   );
 }
@@ -133,7 +178,7 @@ export function Reading({ id }: { id: string }) {
           <a className="button" href="#/">返回首页</a>
         </section>
       ) : (
-        <Result reading={reading} />
+        <Result onReading={setReading} reading={reading} />
       )}
     </main>
   );
