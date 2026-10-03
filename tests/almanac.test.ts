@@ -93,3 +93,8 @@ test("一致性错误拒绝返回可能错误的盘", () => {
     /历法不一致：黄历日干支戊申，六爻日干支丁未/,
   );
 });
+
+test("胃宿规范为传统写法胃土雉", () => {
+  const timestamp = BigInt(Date.parse("2026-10-03T12:00:00+08:00") / 1_000);
+  assert.equal(almanacAt(timestamp).mansion.name, "胃土雉");
+});

@@ -27,6 +27,9 @@ export interface AlmanacResult {
   };
 }
 
+// 逐一对照传统写法：壁宿獝→貐、胃宿彘→雉，其余 26 宿与传统一致。
+const MANSION_ANIMAL_FIX: Record<string, string> = { 獝: "貐", 彘: "雉" };
+
 const pad = (value: number): string => String(value).padStart(2, "0");
 
 function utc8Parts(timestamp: bigint): [number, number, number, number, number, number] {
@@ -84,7 +87,7 @@ export function almanacAt(timestamp: bigint): AlmanacResult {
     },
     mansion: {
       name: `${lunar.getXiu()}${lunar.getZheng()}${
-        lunar.getAnimal() === "獝" ? "貐" : lunar.getAnimal()
+        MANSION_ANIMAL_FIX[lunar.getAnimal()] ?? lunar.getAnimal()
       }`,
       palace: lunar.getGong(),
       guardian: lunar.getShou(),
