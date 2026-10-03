@@ -1,8 +1,8 @@
 {
-  "name": "arc-testnet-feasibility-suite",
+  "name": "sanyi",
   "version": "0.1.0",
   "private": true,
-  "description": "Arc Testnet 赛前可行性验证套件",
+  "description": "三易：一问三家的中式命理",
   "type": "module",
   "scripts": {
     "test": "node --import tsx --test tests/*.test.ts",
@@ -31,12 +31,12 @@
     "frontend:start": "node --env-file=.env --import tsx src/frontend/server.ts",
     "frontend:secrets": "node --env-file=.env --import tsx scripts/check-frontend-secrets.ts",
     "demo:rehearse": "node --import tsx scripts/rehearse-demo.ts --mode=mock",
-    "demo:smoke:live": "node --env-file=.env --import tsx scripts/rehearse-demo.ts --mode=live --confirm-live",
-    "demo:recover": "node --env-file=.env --import tsx scripts/recover-demo.ts",
     "probe:readonly": "node --import tsx scripts/probe-readonly.ts",
     "probe:arc": "npm run contracts:compile && node --import tsx scripts/run-arc-probe.ts",
     "probe:agent-count": "node --import tsx scripts/probe-agent-count.ts",
-    "e2e:agent-count": "node --env-file=.env --import tsx scripts/run-agent-count-e2e.ts"
+    "e2e:agent-count": "node --env-file=.env --import tsx scripts/run-agent-count-e2e.ts",
+    "font:charset": "node --import tsx scripts/font-charset.ts",
+    "font:subset": ".venv-tools/bin/python scripts/subset-sanyi-font.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.123.0",
