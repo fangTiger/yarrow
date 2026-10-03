@@ -34,6 +34,10 @@ export function FiveElementsDetail({ chart }: { chart: LiuyaoChart }) {
   return (
     <details className="panel five-elements-detail">
       <summary>五行生克与逐爻六亲来源</summary>
+      <p>
+        上卦 {chart.trigrams.upper.name}（{chart.trigrams.upper.element}）· 下卦 {chart.trigrams.lower.name}
+        （{chart.trigrams.lower.element}）· 卦宫 {chart.palace.name}（{chart.palace.element}）
+      </p>
       <p>卦宫五行为{chart.palace.element}，在六亲比较里称“我”。</p>
       <svg aria-label="五行相生环与相克星" role="img" viewBox="0 0 280 238">
         <defs>
