@@ -18,6 +18,7 @@ import { almanacAt } from "../src/calendar/almanac.js";
 import { qimenAt } from "../src/calendar/qimen.js";
 import { deriveThrow } from "../src/sanyi/throws.js";
 import { AlmanacPanel } from "../web/components/AlmanacPanel.js";
+import { toView } from "../web/components/ShikongBar.js";
 import { VerifyPanel } from "../web/components/VerifyPanel.js";
 import { TIME, LINES, baseOutput, chart } from "./helpers/sample-question.js";
 const forbidden = /易者|押钱|赔付|封存|・|[ぁ-ヿ]/u;
@@ -125,6 +126,12 @@ test("黄历保留完整宜忌和校正后的二十八宿", () => {
   assert.ok(html.includes(value.almanac.avoid.join(" ")));
   assert.match(html, /壁水貐/u);
   assert.doesNotMatch(html, forbidden);
+});
+test("黄历冲煞与时空栏使用相同格式", () => {
+  const value = { ...almanacAt(TIME), clash: { description: "(甲辰)龙", direction: "北" } };
+  const html = renderToStaticMarkup(createElement(AlmanacPanel, { value }));
+  assert.ok(html.includes("冲龙（甲辰）煞北"));
+  assert.ok(toView(value).duty.sub.includes("冲龙（甲辰）煞北"));
 });
 test("复算面板链接付款首笔与真实六掷区块", () => {
   Object.assign(globalThis, { __ARC_EXPLORER__: "https://testnet.arcscan.app/" });

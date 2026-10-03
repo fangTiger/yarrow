@@ -1,10 +1,11 @@
 // web/components/AlmanacPanel.tsx
 import type { AlmanacResult } from "../../src/calendar/almanac.js";
+import { formatClash } from "../lib/almanac-format.js";
 export function AlmanacPanel({ value }: { value: AlmanacResult }) {
   const rows = [
     ["建除 · 值神", `${value.dayOfficers.officer}日 · ${value.dayOfficers.deity}（${value.dayOfficers.path}）`],
     ["二十八宿", `${value.mansion.name} · ${value.mansion.palace}${value.mansion.guardian}`],
-    ["冲煞", `${value.clash.description} · 煞${value.clash.direction}`],
+    ["冲煞", formatClash(value.clash)],
     ["日家九星", value.almanac.nineStar],
     ["吉神方位", `喜神${value.almanac.joy} · 财神${value.almanac.wealth} · 福神${value.almanac.fortune}`],
     ["宜", value.almanac.suitable.join(" ")],
