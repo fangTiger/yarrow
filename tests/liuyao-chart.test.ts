@@ -346,3 +346,9 @@ test("六冲六合、用神四神与爻位象征都返回本卦实际位置", as
     ["妻财", "子孙", "兄弟"],
   );
 });
+
+test("六爻展示事实不含日文中点", async () => {
+  const { buildLiuyaoChart } = await loadChartModule();
+  const chart = buildLiuyaoChart({ lines: [7, 8, 7, 8, 7, 8], timestamp: 1_725_520_000n });
+  assert.doesNotMatch(JSON.stringify(chart), /・/u);
+});

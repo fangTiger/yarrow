@@ -267,7 +267,7 @@ export function deriveFiveHexagrams(lines: readonly number[]): FiveHexagrams {
   const opposite = primary.map((yang) => !yang);
   const reversed = [...primary].reverse();
   return {
-    primary: figure("primary", "本卦", "现状・初始", "原始六爻直接成卦。", primary),
+    primary: figure("primary", "本卦", "现状·初始", "原始六爻直接成卦。", primary),
     mutual: figure("mutual", "互卦", "症结所在", "上卦取本卦五、四、三爻；下卦取四、三、二爻。", mutual),
     derived: figure("derived", "变卦", "最终结果", "仅将老阴六、老阳九的阴阳反转。", derived),
     opposite: figure("opposite", "错卦", "反面的可能", "本卦六爻的阴阳全部反转。", opposite),
@@ -396,7 +396,7 @@ function palaceFor(number: number): { name: PalaceName; element: FiveElement; se
   throw new Error(`文王第 ${number} 卦不在八宫表中`);
 }
 
-function strengthFor(monthElement: FiveElement, lineElement: FiveElement): StrengthState {
+export function strengthFor(monthElement: FiveElement, lineElement: FiveElement): StrengthState {
   if (monthElement === lineElement) return "旺";
   if (FIVE_ELEMENT_GENERATES[monthElement] === lineElement) return "相";
   if (FIVE_ELEMENT_GENERATES[lineElement] === monthElement) return "休";
@@ -514,7 +514,7 @@ export function buildLiuyaoChart(input: {
   });
 
   return {
-    school: "京房纳甲・八宫世应・六甲旬空・节气月；旺相休囚死依《三命通会》五级表",
+    school: "京房纳甲·八宫世应·六甲旬空·节气月；旺相休囚死依《三命通会》五级表",
     dateRule: "区块时间戳按 UTC+8 民用日期、00:00 换日；月建按太阳视黄经节气月（不采用子初换日）",
     day,
     month,
