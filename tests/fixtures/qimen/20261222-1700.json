@@ -1,0 +1,79 @@
+{
+  "localTime": "2026-12-22 17:00:00",
+  "method": "时家转盘拆补法",
+  "dayPillar": "庚午",
+  "hourPillar": "乙酉",
+  "solarTerm": "冬至",
+  "layout": "阳遁七局中元",
+  "xunHead": "甲申",
+  "chiefStem": "庚",
+  "chiefStar": "天英",
+  "chiefStarPalace": "乾六",
+  "chiefDoor": "景门",
+  "chiefDoorPalace": "坎一",
+  "dayVoid": "戌亥",
+  "hourVoid": "午未",
+  "horse": "亥",
+  "palaces": {
+    "乾六": {
+      "heavenStem": "庚",
+      "earthStem": "乙",
+      "door": "杜门",
+      "star": "天英",
+      "god": "值符"
+    },
+    "坎一": {
+      "heavenStem": "壬",
+      "earthStem": "辛",
+      "door": "景门",
+      "star": "天芮",
+      "god": "腾蛇"
+    },
+    "艮八": {
+      "heavenStem": "戊",
+      "earthStem": "己",
+      "door": "死门",
+      "star": "天柱",
+      "god": "太阴"
+    },
+    "震三": {
+      "heavenStem": "乙",
+      "earthStem": "癸",
+      "door": "惊门",
+      "star": "天心",
+      "god": "六合"
+    },
+    "巽四": {
+      "heavenStem": "辛",
+      "earthStem": "丁",
+      "door": "开门",
+      "star": "天蓬",
+      "god": "勾陈"
+    },
+    "离九": {
+      "heavenStem": "己",
+      "earthStem": "庚",
+      "door": "休门",
+      "star": "天任",
+      "god": "朱雀"
+    },
+    "坤二": {
+      "heavenStem": "癸",
+      "earthStem": "壬",
+      "door": "生门",
+      "star": "天冲",
+      "god": "九地"
+    },
+    "兑七": {
+      "heavenStem": "丁",
+      "earthStem": "戊",
+      "door": "伤门",
+      "star": "天辅",
+      "god": "九天"
+    },
+    "中五": {
+      "heavenStem": "丙",
+      "earthStem": "丙"
+    }
+  }
+}
