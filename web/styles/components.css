@@ -1,0 +1,115 @@
+/* web/styles/components.css */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.seal {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  background: var(--seal-bg);
+  color: var(--seal-text);
+  font-family: var(--brush);
+  font-size: 24px;
+}
+.brand, .panel-head h2 {
+  font-family: var(--brush);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.brand {
+  font-size: 26px;
+}
+.shikong {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  background: rgb(21 24 22 / 0.7);
+}
+.shikong-item {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 0 -1px -1px 0;
+}
+.shikong-item span, .hint, .recent time {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 22px clamp(16px, 2.2vw, 26px);
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.question-input {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-2);
+  color: var(--paper);
+  padding: 16px;
+  line-height: 1.7;
+}
+.tags, .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag, .button {
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  padding: 10px 14px;
+}
+.button-primary {
+  background: var(--gold);
+  color: #17130B;
+  cursor: pointer;
+}
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.error {
+  color: var(--cinnabar);
+}
+.recent {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent a {
+  display: grid;
+  gap: 3px;
+  color: var(--paper);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.shikong-sub {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+@media (max-width: 980px) {
+  .shikong {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

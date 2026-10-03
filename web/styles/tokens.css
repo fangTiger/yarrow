@@ -1,0 +1,37 @@
+/* web/styles/tokens.css */
+@font-face {
+  font-family: "Ma Shan Zheng Subset";
+  src: url("/fonts/mashanzheng-subset.woff2") format("woff2");
+  font-display: swap;
+}
+:root {
+  color-scheme: dark;
+  --bg: #0F1110;
+  --panel: #151816;
+  --panel-2: #1B1F1C;
+  --paper: #EAE5D9;
+  --muted: #A6A195;
+  --dim: #75716A;
+  --gold: #C9A866;
+  --gold-soft: rgb(201 168 102 / 0.13);
+  --line: rgb(201 168 102 / 0.18);
+  --line-strong: rgb(201 168 102 / 0.42);
+  --cinnabar: #D0614A;
+  --cinnabar-soft: rgb(208 97 74 / 0.15);
+  --jade: #82B59E;
+  --jade-soft: rgb(130 181 158 / 0.14);
+  --seal-bg: #A63A2B;
+  --seal-text: #F6EFE2;
+  --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+  --brush: "Ma Shan Zheng Subset", "Kaiti SC", "STKaiti", "KaiTi", serif;
+  --dynamic: "Kaiti SC", "STKaiti", "KaiTi", serif;
+  --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
