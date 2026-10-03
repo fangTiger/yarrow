@@ -6,15 +6,15 @@
 
 ## 1. 里程碑 1A：新站骨架与问事
 
-- [ ] 1.1 历法基础：引入 `lunar-javascript`，实现 `src/calendar/almanac.ts` 与六爻引擎的日干支、月建一致性断言及抽样测试
-- [ ] 1.2 奇门：用 kinqimen 生成 ≥ 40 个标准答案 fixtures，实现 `src/calendar/qimen.ts` 并逐字段通过
-- [ ] 1.3 梅花体用 `src/calendar/meihua.ts` 与变占法 `src/calendar/bianzhan.ts` 及测试
-- [ ] 1.4 问题分类 `src/sanyi/classify.ts` 及测试
-- [ ] 1.5 六掷派生与区块约束 `src/sanyi/throws.ts` 及测试
-- [ ] 1.6 断语 Schema、自洽校验与盘面证据核对 `src/sanyi/schema.ts`、`src/sanyi/audit.ts` 及测试
-- [ ] 1.7 问事三家提示词与输入组装（程颐、京房、邵雍）及 mock provider 测试
-- [ ] 1.8 存档与付款凭证持久化 `src/sanyi/store.ts` 及测试
-- [ ] 1.9 编排服务 `src/sanyi/reading-service.ts`：创建、六掷、排盘、三家并行、失败隔离与免费重试、改事项只重跑京房
+- [x] 1.1 历法基础：引入 `lunar-javascript`，实现 `src/calendar/almanac.ts` 与六爻引擎的日干支、月建一致性断言及抽样测试
+- [x] 1.2 奇门：用 kinqimen 生成 ≥ 40 个标准答案 fixtures，实现 `src/calendar/qimen.ts` 并逐字段通过
+- [x] 1.3 梅花体用 `src/calendar/meihua.ts` 与变占法 `src/calendar/bianzhan.ts` 及测试
+- [x] 1.4 问题分类 `src/sanyi/classify.ts` 及测试
+- [x] 1.5 六掷派生与区块约束 `src/sanyi/throws.ts` 及测试
+- [x] 1.6 断语 Schema、自洽校验与盘面证据核对 `src/sanyi/schema.ts`、`src/sanyi/audit.ts` 及测试
+- [x] 1.7 问事三家提示词与输入组装（程颐、京房、邵雍）及 mock provider 测试
+- [x] 1.8 存档与付款凭证持久化 `src/sanyi/store.ts` 及测试
+- [x] 1.9 编排服务 `src/sanyi/reading-service.ts`：创建、六掷、排盘、三家并行、失败隔离与免费重试、改事项只重跑京房
 - [ ] 1.10 服务端新接口 `/api/now`、`/api/classify`、`/api/readings/*`，下线旧接口，接口安全测试
 - [ ] 1.11 字体子集化脚本与 `web/fonts/mashanzheng-subset.woff2`
 - [ ] 1.12 重写前端：tokens、首页、时空栏、分类标签、付款按钮、六掷、问事结果页（卦象、五卦、三家、合议线、排盘表、五行详情、术语说明、奇门、黄历）
