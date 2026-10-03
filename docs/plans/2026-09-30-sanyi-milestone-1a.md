@@ -483,7 +483,9 @@ git add src/calendar/almanac.ts tests/almanac.test.ts && git commit -m "feat(cal
 
 - [ ] **Step 1: 建立隔离工具环境（5 分钟）**
 
-Run: `python3 -m venv .venv-tools && .venv-tools/bin/python -m pip install --upgrade pip && .venv-tools/bin/pip install --only-binary=:all: ephem==4.1.6 sxtwl && .venv-tools/bin/pip install --no-deps kinqimen==0.0.6.6`
+Run: `python3 -m venv .venv-tools && .venv-tools/bin/python -m pip install --upgrade pip && .venv-tools/bin/pip install --only-binary=:all: ephem==4.1.6 && .venv-tools/bin/pip install sxtwl==2.0.6 && .venv-tools/bin/pip install --no-deps kinqimen==0.0.6.6`
+
+（执行时修正：sxtwl 无预编译包，不能与 ephem 合用 `--only-binary`；版本固定为 kinqimen 声明的 2.0.6。pip 关于 ephem 版本与 kinqimen 声明不符的提示可忽略，标准答案以 4.1.6 实测生成。）
 
 Expected: 三次安装均退出码 0；`.venv-tools/bin/python -c 'import ephem,sxtwl; print(ephem.__version__)'` 输出 `4.1.6`。此环境只生成测试资产，不进入运行时依赖。
 
@@ -503,10 +505,10 @@ sys.path.insert(0, str(package_dir))
 from kinqimen import Qimen  # type: ignore[import-not-found]  # 工具依赖不进入 TS 运行时
 
 TIMES = [
-    "2026-01-05T10:59", "2026-01-05T12:01", "2026-01-20T03:00", "2026-02-04T03:01",
-    "2026-02-04T04:01", "2026-02-18T05:00", "2026-03-05T20:00", "2026-03-20T07:00",
+    "2026-01-05T15:52", "2026-01-05T16:52", "2026-01-20T03:00", "2026-02-04T03:01",
+    "2026-02-04T04:31", "2026-02-18T05:00", "2026-03-05T20:00", "2026-03-20T07:00",
     "2026-04-05T09:00", "2026-04-20T11:00", "2026-05-05T13:00", "2026-05-21T15:00",
-    "2026-06-05T17:00", "2026-06-21T18:00", "2026-06-21T19:00", "2026-07-07T21:00",
+    "2026-06-05T17:00", "2026-06-21T15:54", "2026-06-21T16:54", "2026-07-07T21:00",
     "2026-07-23T23:00", "2026-08-07T01:00", "2026-08-23T03:00", "2026-09-07T05:00",
     "2026-09-23T07:30", "2026-09-23T08:30", "2026-09-30T20:15", "2026-10-08T13:45",
     "2026-10-08T15:15", "2026-10-23T09:00", "2026-11-07T11:00", "2026-11-22T13:00",
