@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮按审查修订 B2/B3，并写完 B4a/B4b；B5–B7 后续逐块审查。
+**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮修订 B4 并写完 B5a/B5b，B6–B7 后续逐块审查。
 
 **Architecture:** `src/calendar/` 提供确定性的生辰转换、校正与命盘事实，`src/sanyi/` 扩展按类型区分的断语、核对与编排，前端消费明确字段。原始生辰和逐步校正详情只用于请求与本机展示，持久化边界使用字段白名单；八字出生时刻与问事卦时保持独立。
 
@@ -129,7 +129,7 @@
 - `almanacAt` 返回对象字段，不是字符串数组：如 `solar.text`、`lunar.date`、`solarTerms.current`、`cycle.day`。样稿顶部取解读时刻的既有黄历；出生四柱另外取 `BaziChart.pillars`，绝不混用。
 - `deriveSolarMonth` 用 NOAA/Meeus 量计算太阳视黄经。B1 使用同源的儒略世纪、平黄经、平近点角及黄赤交角计算均时差，不拿节气月函数代替均时差。
 - `openspec list --specs` 与 `openspec list` 已执行；相关规范在现有变更中。CLI 遥测联网失败不影响清单。此轮只写计划，不勾 tasks，不创建重复提案。
-- 本轮不提交、不安装、不修改其它项目文件。下列代码块是将来逐步实施的完整文件；主管可抽取到隔离目录验证。实现者每次先写测试、确认 RED，再落实现并确认 GREEN，最后整理；本轮没有实施这些勾选任务。
+- 本轮不提交、不安装、不修改其它项目文件。下列新建文件用完整代码块，既有文件用精确 diff；主管按文末方法抽取并应用到隔离目录验证。实现者每次先写测试、确认 RED，再落实现并确认 GREEN，最后整理；本轮没有实施这些勾选任务。
 - 设计及 bazi-chart 已更正为癸未、7 年 2 月 20 天、1997-08-04，不再留命例修订疑点。新增窗口、逐年断语、天干相冲、半合/拱与章节摘句规范已纳入；B4 才定义 `years` Schema 与核对。
 
 ## Chunk B1：生辰与出生时刻校正
@@ -145,148 +145,169 @@
 运行：`node --import tsx --test tests/birth-profile.test.ts`。
 预期 RED：新模块不存在。只扩展声明不能把运行时缺失误报为 GREEN。
 
-- [ ] **Step 2：落入完整声明；先不写业务实现。**
+- [ ] **Step 2：应用声明修改片段；先不写业务实现。**
 
-```ts
-// src/types/lunar-javascript.d.ts
-declare module "lunar-javascript" {
-  interface SolarValue {
-    nextYear(years: number): SolarValue;
-    toYmd(): string;
-    toYmdHms(): string;
-    getYear(): number;
-    getMonth(): number;
-    getDay(): number;
-    getHour(): number;
-    getMinute(): number;
-    getSecond(): number;
-    getLunar(): LunarValue;
-  }
-  interface JieQiValue {
-    getName(): string;
-    getSolar(): SolarValue;
-  }
-  interface NineStarValue {
-    toString(): string;
-  }
-  interface LiuYueValue {
-    getMonthInChinese(): string;
-    getGanZhi(): string;
-  }
-  interface LiuNianValue {
-    getYear(): number;
-    getGanZhi(): string;
-    getAge(): number;
-    getLiuYue(): LiuYueValue[];
-  }
-  interface DaYunValue {
-    getIndex(): number;
-    getGanZhi(): string;
-    getStartAge(): number;
-    getEndAge(): number;
-    getStartYear(): number;
-    getEndYear(): number;
-    getLiuNian(count?: number): LiuNianValue[];
-  }
-  interface YunValue {
-    isForward(): boolean;
-    getStartYear(): number;
-    getStartMonth(): number;
-    getStartDay(): number;
-    getStartSolar(): SolarValue;
-    getDaYun(count?: number): DaYunValue[];
-  }
-  interface EightCharValue {
-    setSect(sect: 1 | 2): void;
-    getYear(): string;
-    getMonth(): string;
-    getDay(): string;
-    getTime(): string;
-    getYearNaYin(): string;
-    getMonthNaYin(): string;
-    getDayNaYin(): string;
-    getTimeNaYin(): string;
-    getYearShiShenGan(): string;
-    getMonthShiShenGan(): string;
-    getTimeShiShenGan(): string;
-    getYearHideGan(): string[];
-    getMonthHideGan(): string[];
-    getDayHideGan(): string[];
-    getTimeHideGan(): string[];
-    getYearShiShenZhi(): string[];
-    getMonthShiShenZhi(): string[];
-    getDayShiShenZhi(): string[];
-    getTimeShiShenZhi(): string[];
-    getYearDiShi(): string;
-    getMonthDiShi(): string;
-    getDayDiShi(): string;
-    getTimeDiShi(): string;
-    getTaiYuan(): string;
-    getMingGong(): string;
-    getShenGong(): string;
-    getYun(gender: 0 | 1, startSect?: 1 | 2): YunValue;
-  }
-  interface LunarValue {
-    toString(): string;
-    getYear(): number;
-    getMonth(): number;
-    getDay(): number;
-    getSolar(): SolarValue;
-    getTimeZhi(): string;
-    getYueXiang(): string;
-    getEightChar(): EightCharValue;
-    getDayXun(): string;
-    getDayXunKong(): string;
-    getCurrentJie(): JieQiValue | null;
-    getPrevJieQi(): JieQiValue;
-    getNextJieQi(): JieQiValue;
-    getJieQiTable(): Record<string, SolarValue>;
-    getWuHou(): string;
-    getHou(): string;
-    getXiu(): string;
-    getZheng(): string;
-    getAnimal(): string;
-    getGong(): string;
-    getShou(): string;
-    getZhiXing(): string;
-    getDayTianShen(): string;
-    getDayTianShenType(): string;
-    getDayChongDesc(): string;
-    getDaySha(): string;
-    getDayYi(): string[];
-    getDayJi(): string[];
-    getPengZuGan(): string;
-    getPengZuZhi(): string;
-    getDayNineStar(): NineStarValue;
-    getDayPositionXiDesc(): string;
-    getDayPositionCaiDesc(): string;
-    getDayPositionFuDesc(): string;
-  }
-  interface SolarFactory {
-    fromYmd(year: number, month: number, day: number): SolarValue;
-    fromYmdHms(
-      year: number,
-      month: number,
-      day: number,
-      hour: number,
-      minute: number,
-      second: number,
-    ): SolarValue;
-  }
-  const lunarPkg: {
-    Solar: SolarFactory;
-    Lunar: { fromYmd(year: number, month: number, day: number): LunarValue };
-    LunarYear: { fromYear(year: number): { getLeapMonth(): number } };
-    LunarMonth: {
-      fromYm(year: number, month: number): { getDayCount(): number } | null;
-    };
-    LunarUtil: {
-      SHI_SHEN: Record<string, string>;
-      ZHI_HIDE_GAN: Record<string, string[]>;
-    };
-  };
-  export default lunarPkg;
-}
+修改 `src/types/lunar-javascript.d.ts`，以下 diff 的 `-` 为精确旧片段、`+` 为新片段；上下文与空行保留。
+
+```diff
+--- a/src/types/lunar-javascript.d.ts
++++ b/src/types/lunar-javascript.d.ts
+@@ -1,25 +1,119 @@
+ // src/types/lunar-javascript.d.ts
+ declare module "lunar-javascript" {
+-  interface SolarValue { toYmdHms(): string; }
+-  interface JieQiValue { getName(): string; getSolar(): SolarValue; }
+-  interface NineStarValue { toString(): string; }
++  interface SolarValue {
++    nextYear(years: number): SolarValue;
++    toYmd(): string;
++    toYmdHms(): string;
++    getYear(): number;
++    getMonth(): number;
++    getDay(): number;
++    getHour(): number;
++    getMinute(): number;
++    getSecond(): number;
++    getLunar(): LunarValue;
++  }
++  interface JieQiValue {
++    getName(): string;
++    getSolar(): SolarValue;
++  }
++  interface NineStarValue {
++    toString(): string;
++  }
++  interface LiuYueValue {
++    getMonthInChinese(): string;
++    getGanZhi(): string;
++  }
++  interface LiuNianValue {
++    getYear(): number;
++    getGanZhi(): string;
++    getAge(): number;
++    getLiuYue(): LiuYueValue[];
++  }
++  interface DaYunValue {
++    getIndex(): number;
++    getGanZhi(): string;
++    getStartAge(): number;
++    getEndAge(): number;
++    getStartYear(): number;
++    getEndYear(): number;
++    getLiuNian(count?: number): LiuNianValue[];
++  }
++  interface YunValue {
++    isForward(): boolean;
++    getStartYear(): number;
++    getStartMonth(): number;
++    getStartDay(): number;
++    getStartSolar(): SolarValue;
++    getDaYun(count?: number): DaYunValue[];
++  }
+   interface EightCharValue {
+     setSect(sect: 1 | 2): void;
+-    getYear(): string; getMonth(): string; getDay(): string; getTime(): string;
+-    getYearNaYin(): string; getMonthNaYin(): string; getDayNaYin(): string; getTimeNaYin(): string;
++    getYear(): string;
++    getMonth(): string;
++    getDay(): string;
++    getTime(): string;
++    getYearNaYin(): string;
++    getMonthNaYin(): string;
++    getDayNaYin(): string;
++    getTimeNaYin(): string;
++    getYearShiShenGan(): string;
++    getMonthShiShenGan(): string;
++    getTimeShiShenGan(): string;
++    getYearHideGan(): string[];
++    getMonthHideGan(): string[];
++    getDayHideGan(): string[];
++    getTimeHideGan(): string[];
++    getYearShiShenZhi(): string[];
++    getMonthShiShenZhi(): string[];
++    getDayShiShenZhi(): string[];
++    getTimeShiShenZhi(): string[];
++    getYearDiShi(): string;
++    getMonthDiShi(): string;
++    getDayDiShi(): string;
++    getTimeDiShi(): string;
++    getTaiYuan(): string;
++    getMingGong(): string;
++    getShenGong(): string;
++    getYun(gender: 0 | 1, startSect?: 1 | 2): YunValue;
+   }
+   interface LunarValue {
+-    toString(): string; getTimeZhi(): string; getYueXiang(): string;
+-    getEightChar(): EightCharValue; getDayXun(): string; getDayXunKong(): string;
+-    getPrevJieQi(): JieQiValue; getNextJieQi(): JieQiValue;
+-    getWuHou(): string; getHou(): string; getXiu(): string; getZheng(): string;
+-    getAnimal(): string; getGong(): string; getShou(): string;
+-    getZhiXing(): string; getDayTianShen(): string; getDayTianShenType(): string;
+-    getDayChongDesc(): string; getDaySha(): string; getDayYi(): string[]; getDayJi(): string[];
+-    getPengZuGan(): string; getPengZuZhi(): string; getDayNineStar(): NineStarValue;
+-    getDayPositionXiDesc(): string; getDayPositionCaiDesc(): string; getDayPositionFuDesc(): string;
++    toString(): string;
++    getYear(): number;
++    getMonth(): number;
++    getDay(): number;
++    getSolar(): SolarValue;
++    getTimeZhi(): string;
++    getYueXiang(): string;
++    getEightChar(): EightCharValue;
++    getDayXun(): string;
++    getDayXunKong(): string;
++    getCurrentJie(): JieQiValue | null;
++    getPrevJieQi(): JieQiValue;
++    getNextJieQi(): JieQiValue;
++    getJieQiTable(): Record<string, SolarValue>;
++    getWuHou(): string;
++    getHou(): string;
++    getXiu(): string;
++    getZheng(): string;
++    getAnimal(): string;
++    getGong(): string;
++    getShou(): string;
++    getZhiXing(): string;
++    getDayTianShen(): string;
++    getDayTianShenType(): string;
++    getDayChongDesc(): string;
++    getDaySha(): string;
++    getDayYi(): string[];
++    getDayJi(): string[];
++    getPengZuGan(): string;
++    getPengZuZhi(): string;
++    getDayNineStar(): NineStarValue;
++    getDayPositionXiDesc(): string;
++    getDayPositionCaiDesc(): string;
++    getDayPositionFuDesc(): string;
+   }
+   interface SolarFactory {
++    fromYmd(year: number, month: number, day: number): SolarValue;
+     fromYmdHms(
+       year: number,
+       month: number,
+@@ -27,8 +121,19 @@
+       hour: number,
+       minute: number,
+       second: number,
+-    ): { getLunar(): LunarValue };
++    ): SolarValue;
+   }
+-  const lunarPkg: { Solar: SolarFactory };
++  const lunarPkg: {
++    Solar: SolarFactory;
++    Lunar: { fromYmd(year: number, month: number, day: number): LunarValue };
++    LunarYear: { fromYear(year: number): { getLeapMonth(): number } };
++    LunarMonth: {
++      fromYm(year: number, month: number): { getDayCount(): number } | null;
++    };
++    LunarUtil: {
++      SHI_SHEN: Record<string, string>;
++      ZHI_HIDE_GAN: Record<string, string[]>;
++    };
++  };
+   export default lunarPkg;
+ }
 ```
 
 - [ ] **Step 3：运行 `npm run typecheck`。** 原有 1A 声明不得回退；B1.3 尚不存在时，其失败保持到 B1.3 实现。
@@ -2591,6 +2612,7 @@ test("缺时柱无时柱、时藏干、命宫身宫事实及含时柱节点的�
 
 ```ts
 // src/sanyi/bazi-facts.ts
+import lunarPkg from "lunar-javascript";
 import type { BaziChart, BaziPillar, LiuNianEntry, LuckCycle } from "../calendar/bazi.js";
 import type { BaziAnalysis } from "../calendar/bazi-relations.js";
 import type { QiongtongEntry } from "../calendar/qiongtong.js";
@@ -2657,6 +2679,31 @@ export function buildBaziFacts(chart: BaziChart, analysis: BaziAnalysis, tiaohou
     if (year.year === chart.liunian.anchorYear) {
       add("year:anchor", label, tokens);
     }
+  }
+  const year = chart.liunian.anchorYear;
+  const terms = ["立春", "惊蛰", "清明", "立夏", "芒种", "小暑", "立秋", "白露",
+    "寒露", "立冬", "大雪", "小寒", "立春"];
+  const dates = new Map<string, string>();
+  for (const civilYear of [year, year + 1]) {
+    const table = lunarPkg.Solar.fromYmd(civilYear, 7, 1).getLunar().getJieQiTable();
+    for (const [name, solar] of Object.entries(table)) {
+      dates.set(`${solar.getYear()}:${name}`, solar.toYmdHms());
+    }
+  }
+  const names = ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月",
+    "九月", "十月", "冬月", "腊月"];
+  for (const month of chart.annual?.months ?? []) {
+    const index = month.index - 1;
+    const startYear = index === 11 ? year + 1 : year;
+    const endYear = index >= 10 ? year + 1 : year;
+    const start = dates.get(`${startYear}:${terms[index]}`);
+    const end = dates.get(`${endYear}:${terms[index + 1]}`);
+    let range = "";
+    if (start && end) {
+      range = ` 节气月[${start}, ${end}) 北京时间`;
+    }
+    add(`liuyue:${month.index}`, `${names[index]} ${month.ganZhi} ${month.stemGod}${range}`,
+      [month.ganZhi, month.ganZhi.charAt(0), month.ganZhi.charAt(1), month.stemGod]);
   }
   add("tiaohou", `${tiaohou.section} 用干${tiaohou.useStems.join("、")}`, [...tiaohou.useStems,
     tiaohou.section]);
@@ -2779,82 +2826,25 @@ test("普通判断用语不被问事单字词表误判成盘面事实", () => {
 
 - [ ] **Step 2：原样保留问事核对逻辑，仅为其分词器增加默认空的扩展词表参数；落入八字核对器。** 两字关系倒序归一化后仍须事实中存在完整关系。语法上像关系的未知词也整体匹配，不能靠两个合法单字蒙混过关。
 
-```ts
-// src/sanyi/audit.ts
-import type { FactTable } from "./facts.js";
-import type { QuestionSchoolOutput } from "./schema.js";
+修改 `src/sanyi/audit.ts`，以下 diff 的 `-` 为精确旧片段、`+` 为新片段；上下文与空行保留。
 
-const STEMS = "甲乙丙丁戊己庚辛壬癸";
-const BRANCHES = "子丑寅卯辰巳午未申酉戌亥";
-const CYCLE = Array.from({ length: 60 }, (_, index) => {
-  return `${STEMS[index % 10]}${BRANCHES[index % 12]}`;
-});
-const WORDS = [
-  "回头生", "回头克",
-  "父母", "子孙", "官鬼", "妻财", "兄弟",
-  "青龙", "朱雀", "勾陈", "螣蛇", "白虎", "玄武",
-  "旬空", "月破", "日破", "暗动", "进神", "退神",
-  "用神", "原神", "忌神", "仇神",
-  ...CYCLE,
-  ...STEMS,
-  ...BRANCHES,
-  ..."金木水火土旺相休囚死世应伏动体用",
-].sort((left, right) => right.length - left.length);
-const COMBINATION = new RegExp(
-  "([子丑寅卯辰巳午未申酉戌亥])"+
-  "([金木水火土])"+
-  "(父母|子孙|官鬼|妻财|兄弟)",
-  "g",
-);
+```diff
+--- a/src/sanyi/audit.ts
++++ b/src/sanyi/audit.ts
+@@ -25,10 +25,11 @@
+   "g",
+ );
 
-export function tokenizeClaim(text: string, extraWords: readonly string[] = []): string[] {
-  const words = [...new Set([...WORDS, ...extraWords])].sort((left, right) => right.length - left.length);
-  const tokens: string[] = [];
-  for (let index = 0; index < text.length;) {
-    const token = words.find((candidate) => text.startsWith(candidate, index));
-    if (token) {
-      tokens.push(token);
-      index += token.length;
-    } else {
-      index += 1;
-    }
-  }
-  return tokens;
-}
-
-export function auditOutput(
-  output: QuestionSchoolOutput,
-  facts: FactTable,
-): { ok: boolean; errors: string[] } {
-  const errors: string[] = [];
-  for (const evidence of output.evidence) {
-    const fact = facts.get(evidence.ref);
-    if (!fact) {
-      errors.push(`事实编号不存在：${evidence.ref}`);
-      continue;
-    }
-    for (const token of tokenizeClaim(evidence.claim)) {
-      if (!fact.tokens.has(token)) {
-        errors.push(`${evidence.ref} 不支持关键词：${token}`);
-      }
-    }
-  }
-  const lineTokens = [...facts]
-    .filter(([id]) => id.startsWith("line:"))
-    .map(([, fact]) => fact.tokens);
-  const prose = [
-    output.headline,
-    output.reason,
-    ...output.sections.map((section) => section.text),
-  ].join("\n");
-  for (const match of prose.matchAll(COMBINATION)) {
-    const tokens = match.slice(1);
-    if (!lineTokens.some((set) => tokens.every((token) => set.has(token)))) {
-      errors.push(`正文出现不存在的盘面组合：${match[0]}`);
-    }
-  }
-  return { ok: errors.length === 0, errors };
-}
+-export function tokenizeClaim(text: string): string[] {
++export function tokenizeClaim(text: string, extraWords: readonly string[] = []): string[] {
++  const words = [...new Set([...WORDS, ...extraWords])].sort((left, right) => right.length - left.length);
+   const tokens: string[] = [];
+   for (let index = 0; index < text.length;) {
+-    const token = WORDS.find((candidate) => text.startsWith(candidate, index));
++    const token = words.find((candidate) => text.startsWith(candidate, index));
+     if (token) {
+       tokens.push(token);
+       index += token.length;
 ```
 
 ```ts
@@ -3040,7 +3030,7 @@ export interface BaziSchool {
 }
 const ALLOWED: Record<BaziSchoolKey, readonly string[]> = {
   shenxiaozhan: ["pillar:", "hidden:", "structure:month", "structure:roots", "relation:", "luck:"],
-  yuchuntai: ["pillar:day", "pillar:month", "tiaohou", "elements", "luck:"],
+  yuchuntai: ["pillar:", "hidden:", "tiaohou", "elements", "luck:"],
   rentieqiao: ["pillar:", "hidden:", "structure:roots", "relation:", "elements", "luck:"],
 };
 export const BAZI_BOUNDARIES = `只能引用随请求提供的原文，不得补写或编造引文。
@@ -3049,6 +3039,7 @@ export const BAZI_BOUNDARIES = `只能引用随请求提供的原文，不得补
 缺时柱时须说明判断限制，不得引用时柱、命宫或身宫事实。
 evidence.ref 只能使用可用事实编号，claim 只陈述该事实支持的关键词。
 命理不得输出吉凶、把握、逐年列表或 timing，五分项依次为性格、事业、财运、感情、健康。
+正文与 timing 只谈所问时间范围；其它年份的干支、关系只写在对应年份的短评中。
 运势须回应所问时间范围，years 按逐年窗口升序每年一项，通常十年；出生年与上限裁剪后以实际窗口为准。
 每项包含 year、verdict、confidenceTenths、note，短评不超过十六字，只用该年与原局事实。
 问整年时锚年那项的 verdict 和 confidenceTenths 与总断相同，今天、本月不要求一致。
@@ -3059,8 +3050,9 @@ export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): Fac
   const facts: FactTable = new Map();
   for (const [id, fact] of input.facts) {
     const allowed = ALLOWED[key].some((prefix) => id === prefix || id.startsWith(prefix));
+    const monthFact = input.kind === "fortune" && id.startsWith("liuyue:");
     const yearFact = input.kind === "fortune" && id.startsWith("year:");
-    if (id === "chart:limit" || allowed || yearFact) {
+    if (id === "chart:limit" || allowed || yearFact || monthFact) {
       if (input.kind === "destiny" && id.startsWith("relation:") && fact.label.startsWith("year ")) {
         continue;
       }
@@ -3087,7 +3079,15 @@ export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): Fac
       if (!id.startsWith("period:")) {
         throw new Error("时间范围事实编号须以 period: 开头");
       }
-      facts.set(id, fact);
+      if (key === "yuchuntai") {
+        const tokens = [...fact.tokens].filter((token) => {
+          return /^[甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥]{1,2}$/u.test(token)
+            || ["比肩", "劫财", "食神", "伤官", "偏财", "正财", "七杀", "正官", "偏印", "正印"].includes(token);
+        });
+        facts.set(id, { id, label: `${input.period.label} ${tokens.join(" ")}`, tokens: new Set(tokens) });
+      } else {
+        facts.set(id, fact);
+      }
     }
   }
   return facts;
@@ -3420,92 +3420,116 @@ export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
 }
 ```
 
-```ts
-// src/sanyi/mock-provider.ts
-import { encodeAbiParameters, encodeEventTopics, parseAbi, type Hex } from "viem";
-import { USDC_TOKEN_ADDRESS } from "../frontend/wallet.js";
-import { feeRecipientFromEnv, FEE_USDC6, verifySingleFeeTransfer, type SanyiFeeProof } from "./fee.js";
-import { hashJson } from "../agent/audit.js";
-import type { StructuredOutputProvider, StructuredOutputRequest, } from "../agent/provider.js";
-import type { FactTable } from "./facts.js";
-import { mockSchoolOutput } from "./mock-schools.js";
-import type { QuestionSchoolKey } from "./schools/index.js";
-import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
-import type { BaziSchoolKey } from "./schools/bazi-shared.js";
-function baziFactsFromPrompt(prompt: string): FactTable {
-  const line = prompt.split("\n").find((row) => row.startsWith("事实表 JSON："));
-  if (!line) {
-    throw new Error("八字 mock 请求缺少事实表");
-  }
-  const rows: unknown = JSON.parse(line.slice("事实表 JSON：".length));
-  if (!Array.isArray(rows)) {
-    throw new Error("八字 mock 事实表格式错误");
-  }
-  const facts: FactTable = new Map();
-  for (const row of rows) {
-    if (!row || typeof row.id !== "string" || typeof row.label !== "string"
-      || !Array.isArray(row.tokens) || !row.tokens.every((token: unknown) => typeof token === "string")) {
-      throw new Error("八字 mock 事实条目格式错误");
-    }
-    facts.set(row.id, { id: row.id, label: row.label, tokens: new Set<string>(row.tokens) });
-  }
-  return facts;
-}
-function factsFromPrompt(prompt: string): FactTable {
-  const facts: FactTable = new Map();
-  for (const line of prompt.split("\n")) {
-    const match = line.match(/^([a-z-]+(?::\w+)?)[：](.+)$/u);
-    if (match?.[1] && match[2]) {
-      facts.set(match[1], {
-        id: match[1],
-        label: match[2],
-        tokens: new Set<string>(),
-      });
-    }
-  }
-  return facts;
-}
-export class MockSchoolsProvider implements StructuredOutputProvider {
-  readonly modelId = "sanyi-mock-schools";
-  readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
-  readonly providerConfigHash = hashJson(this.providerConfig);
-  async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
-    const bazi = request.taskId.match(/^sanyi\/(destiny|fortune)\/(shenxiaozhan|yuchuntai|rentieqiao)$/u);
-    if (bazi) {
-      return mockBaziSchoolOutput(bazi[2] as BaziSchoolKey, baziFactsFromPrompt(request.userPrompt),
-        bazi[1] as "destiny" | "fortune") as T;
-    }
-    const key = request.taskId.split("/").at(-1) as QuestionSchoolKey;
-    if (!["chengyi", "jingfang", "shaoyong"].includes(key)) {
-      throw new Error(`mock provider 不支持任务：${request.taskId}`);
-    }
-    return mockSchoolOutput(key, factsFromPrompt(request.userPrompt)) as T;
-  }
-}
-/** 排练也使用标准转账日志，走与真实付款相同的纯函数核验。 */
-export function mockSingleFeeReceipt(proof: SanyiFeeProof): ReturnType<typeof verifySingleFeeTransfer> {
-  const recipient = feeRecipientFromEnv({});
-  const abi = parseAbi(["event Transfer(address indexed from,address indexed to,uint256 value)"]);
-  return verifySingleFeeTransfer({
-    payer: proof.payer, recipient, amountUsdc6: FEE_USDC6,
-    receipt: {
-      status: "success", blockNumber: 1n, transactionHash: proof.transactionHash,
-      logs: [{
-          address: USDC_TOKEN_ADDRESS,
-          topics: encodeEventTopics({
-            abi, eventName: "Transfer", args: { from: proof.payer, to: recipient },
-          }) as [
-            Hex,
-            ...Hex[]
-          ],
-          data: encodeAbiParameters([{ type: "uint256" }], [FEE_USDC6]),
-        }],
-    },
-  });
-}
+修改 `src/sanyi/mock-provider.ts`，以下 diff 的 `-` 为精确旧片段、`+` 为新片段；上下文与空行保留。
+
+```diff
+--- a/src/sanyi/mock-provider.ts
++++ b/src/sanyi/mock-provider.ts
+@@ -10,6 +10,27 @@
+ import type { FactTable } from "./facts.js";
+ import { mockSchoolOutput } from "./mock-schools.js";
+ import type { QuestionSchoolKey } from "./schools/index.js";
++import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
++import type { BaziSchoolKey } from "./schools/bazi-shared.js";
++function baziFactsFromPrompt(prompt: string): FactTable {
++  const line = prompt.split("\n").find((row) => row.startsWith("事实表 JSON："));
++  if (!line) {
++    throw new Error("八字 mock 请求缺少事实表");
++  }
++  const rows: unknown = JSON.parse(line.slice("事实表 JSON：".length));
++  if (!Array.isArray(rows)) {
++    throw new Error("八字 mock 事实表格式错误");
++  }
++  const facts: FactTable = new Map();
++  for (const row of rows) {
++    if (!row || typeof row.id !== "string" || typeof row.label !== "string"
++      || !Array.isArray(row.tokens) || !row.tokens.every((token: unknown) => typeof token === "string")) {
++      throw new Error("八字 mock 事实条目格式错误");
++    }
++    facts.set(row.id, { id: row.id, label: row.label, tokens: new Set<string>(row.tokens) });
++  }
++  return facts;
++}
+ function factsFromPrompt(prompt: string): FactTable {
+   const facts: FactTable = new Map();
+   for (const line of prompt.split("\n")) {
+@@ -29,6 +50,11 @@
+   readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
+   readonly providerConfigHash = hashJson(this.providerConfig);
+   async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
++    const bazi = request.taskId.match(/^sanyi\/(destiny|fortune)\/(shenxiaozhan|yuchuntai|rentieqiao)$/u);
++    if (bazi) {
++      return mockBaziSchoolOutput(bazi[2] as BaziSchoolKey, baziFactsFromPrompt(request.userPrompt),
++        bazi[1] as "destiny" | "fortune") as T;
++    }
+     const key = request.taskId.split("/").at(-1) as QuestionSchoolKey;
+     if (!["chengyi", "jingfang", "shaoyong"].includes(key)) {
+       throw new Error(`mock provider 不支持任务：${request.taskId}`);
 ```
 
 - [ ] **Step 3：运行 B4 的全部测试，预期 22 项通过。** 三家 × 命理/运势 × 已知/缺时柱均通过 Schema、一致性、核对与真实 mock provider 路由；原有问事 mock 路径、事实解析与付款 mock 行为保持回归。
+
+### Task B4.6R：第 4 轮阻断项回归
+
+**文件：** 新建 `tests/sanyi-bazi-round4.test.ts`。
+
+- [ ] **Step 1：先落入以下测试，对第 3 轮事实表与共同提示词运行，预期 4 项失败。**
+- [ ] **Step 2：应用 B4.2 流月事实、B4.4 余家四柱藏干与正文分工修订，重跑预期 4 项通过。** 月名指节气月，不是农历初一到月底；日期用现场节气表，起点包含、终点不包含。`isNatalFact` 原样保留，流月不能为其它年份短评背书。
+
+```ts
+// tests/sanyi-bazi-round4.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+import { auditBaziOutput } from "../src/sanyi/bazi-audit.js";
+import { mockBaziSchoolOutput } from "../src/sanyi/mock-bazi-schools.js";
+import { BAZI_SCHOOLS } from "../src/sanyi/schools/bazi-index.js";
+import { selectBaziFacts } from "../src/sanyi/schools/bazi-shared.js";
+test("锚年五月甲午、六月乙未、十月己亥及节气日期进入三家事实表", () => {
+  const input = sampleBazi();
+  for (const school of BAZI_SCHOOLS) {
+    const facts = selectBaziFacts(school.key, input);
+    for (const [index, gz] of [[5, "甲午"], [6, "乙未"], [10, "己亥"]] as const) {
+      assert.ok(facts.get(`liuyue:${index}`)?.tokens.has(gz));
+      assert.match(facts.get(`liuyue:${index}`)!.label, /2026-\d{2}-\d{2}/);
+    }
+  }
+});
+test("正文 timing 可写五月甲午，五月甲子无任何可用事实仍拒绝", () => {
+  const input = sampleBazi();
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  assert.ok(![...input.facts].filter(([id]) => !/^year:\d{4}$/.test(id))
+    .some(([, fact]) => fact.tokens.has("甲子")));
+  const timing = { window: "五月甲午", condition: "核实条件后行动" };
+  assert.equal(auditBaziOutput({ ...output, timing }, input.facts).ok, true);
+  assert.equal(auditBaziOutput({ ...output, timing: { ...timing, window: "五月甲子" } }, input.facts).ok, false);
+  const years = output.years.map((item) => {
+    if (item.year === 2031) {
+      return { ...item, note: "甲午宜留意" };
+    }
+    return item;
+  });
+  assert.equal(auditBaziOutput({ ...output, years }, input.facts).ok, false);
+});
+test("余春台看到全部四柱藏干，时干癸水通过，午未合失败", () => {
+  const input = sampleBazi();
+  const facts = selectBaziFacts("yuchuntai", input);
+  for (const key of ["year", "month", "day", "time"]) {
+    assert.ok(facts.has(`pillar:${key}`));
+    assert.ok(facts.has(`hidden:${key}`));
+  }
+  assert.ok(![...facts.keys()].some((id) => /^(relation|shensha|structure):/.test(id)));
+  const output = mockBaziSchoolOutput("yuchuntai", facts, "fortune");
+  assert.equal(auditBaziOutput({ ...output, reason: "时干癸水可借" }, facts).ok, true);
+  assert.equal(auditBaziOutput({ ...output, reason: "午未合" }, facts).ok, false);
+});
+test("三家提示词明确正文与逐年短评分工", () => {
+  for (const school of BAZI_SCHOOLS) {
+    assert.match(school.systemPrompt, /正文与 timing 只谈所问时间范围/);
+    assert.match(school.systemPrompt, /其它年份的干支、关系只写在对应年份的短评中/);
+  }
+});
+```
 
 ### Task B4.7：字段契约与交叉验收
 
@@ -3514,9 +3538,1585 @@ export function mockSingleFeeReceipt(proof: SanyiFeeProof): ReturnType<typeof ve
 - [ ] **Step 3：运行 `npm test`，保留所有监听端口测试与 1A 回归。** 沙箱拒绝本机监听时如实记录 EPERM，不跳过或改动测试；主管在允许监听的隔离环境复跑。
 - [ ] **Step 4：核对 bazi-three-schools 的逐年输出、核对、缺时柱及失败隔离场景。** B4 只准备完整代码，项目尚未实施，不勾 OpenSpec 2.5；逐年合议算术平均与失败家排除由 B5 完成。
 
-## Chunk B5：编排、接口与排练（命理、运势、换日切换、生辰隐私）
+## Chunk B5a：时间范围、存储联合、隐私投影与编排
 
-后续轮次补充完整任务、代码与测试，沿用真实 1A 接口并解决换日重新提交生辰和分享隐私。
+沿用 `sanyi-chinese-redesign` 的 birth-profile、bazi-chart、bazi-three-schools、unified-question-entry、reading-archive、paid-oracle-flow 六份 spec delta；本轮只编写计划及隔离验证，不勾 OpenSpec 或计划实施任务。浏览器本机生辰保存与使用告知在 B6 完成，B5 不引入服务端原始生辰缓存。
+
+**隐私局限：** 起运年月日和交运日期可能反推出生日期，这是八字本身的性质；保留这些派生字段，由 B6 生辰表单「分享会公开命盘」告知覆盖。原始出生日期时间、校正时刻、城市、经度与逐步校正只存在请求期，不存档、不记日志、不返回公开响应。B6 在本机用同一校正函数展示详情。服务端摘要只含 dst、solar、timeKnown、sect。
+
+**分工：** `ReadingService` 继续负责问事，`BaziReadingService` 负责八字，两者共用同一 `ReadingStore` 与付款索引。问事 `withReadingLock`、原子写、付款 `wx` 索引及 update 队列保持不变；八字用同样的 promise 队列策略串行保护重试和换日。`kind` 是存档判别，旧 `kind: question` 不需要迁移或新增版本字段。泛型 read/update 默认问事，八字显式指定联合类型且运行时检查 kind。
+
+### Task B5.1：注入时钟解析时间范围
+
+**文件：** 新建 `tests/sanyi-fortune-context.test.ts`、`src/sanyi/fortune-context.ts`。
+
+- [ ] **Step 1：写以下完整测试，运行 `node --import tsx --test tests/sanyi-fortune-context.test.ts`，模块未创建时 RED。**
+
+```ts
+// tests/sanyi-fortune-context.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import lunarPkg from "lunar-javascript";
+import { resolveFortuneContext, periodFacts } from "../src/sanyi/fortune-context.js";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+function at(text: string, horizon = "year" as Parameters<typeof resolveFortuneContext>[0], sect: 1 | 2 = 1) {
+  return resolveFortuneContext(horizon, () => new Date(text + "+08:00"), sect);
+}
+test("立春交接与五种范围锚年，公历跨年仍为旧立春年", () => {
+  const term = lunarPkg.Solar.fromYmd(2026, 7, 1).getLunar().getJieQiTable()["立春"]!;
+  const ms = Date.parse(term.toYmdHms().replace(" ", "T") + "+08:00");
+  assert.equal(resolveFortuneContext("year", () => new Date(ms - 1_000), 1).anchorYear, 2025);
+  assert.equal(resolveFortuneContext("year", () => new Date(ms), 1).anchorYear, 2026);
+  for (const horizon of ["today", "month", "year"] as const) {
+    assert.equal(at("2026-01-01T00:00:00", horizon).anchorYear, 2025);
+    assert.equal(at("2026-10-06T21:00:00", horizon).anchorYear, 2026);
+  }
+  assert.equal(at("2026-01-01T00:00:00", "next-year").anchorYear, 2026);
+  assert.equal(at("2026-10-06T21:00:00", "next-year").anchorYear, 2027);
+  assert.equal(at("2026-10-06T21:00:00", "year:2030").anchorYear, 2030);
+});
+test("交节前后当前流月改变，与农历初一无关", () => {
+  const term = lunarPkg.Solar.fromYmd(2026, 7, 1).getLunar().getJieQiTable()["寒露"]!;
+  const ms = Date.parse(term.toYmdHms().replace(" ", "T") + "+08:00");
+  const before = resolveFortuneContext("month", () => new Date(ms - 1_000), 1);
+  const after = resolveFortuneContext("month", () => new Date(ms), 1);
+  assert.equal(before.ganZhi, "丁酉");
+  assert.equal(after.ganZhi, "戊戌");
+});
+test("流日按 sect 在 23 点或零点交接", () => {
+  const before = at("2026-10-06T22:59:59", "today");
+  const after = at("2026-10-06T23:00:00", "today");
+  assert.notEqual(before.ganZhi, after.ganZhi);
+  assert.equal(at("2026-10-06T23:00:00", "today", 2).ganZhi, before.ganZhi);
+  assert.equal(at("2026-10-07T00:00:00", "today", 2).ganZhi, after.ganZhi);
+});
+test("流日事实含日干十神与原局关系，不混入大运", () => {
+  const input = sampleBazi();
+  const context = { ...at("2026-10-06T21:00:00", "today"), ganZhi: "壬子" };
+  const fact = periodFacts(context, input.chart).get("period:day")!;
+  assert.ok(fact.tokens.has("壬子"));
+  assert.ok(fact.tokens.has("食神"));
+  assert.ok(fact.tokens.has("子午冲"));
+  const month = periodFacts(at("2026-10-06T21:00:00", "month"), input.chart).get("period:month")!;
+  assert.ok(month.tokens.has("丁酉"));
+});
+```
+
+- [ ] **Step 2：落入以下实现并重跑，预期 4 项通过。** 时钟只调用一次，转换为北京时间民用字段；年界用节气表立春精确时刻，流日按 sect，流月用当前节气月。today/month/year 取当前立春年，next-year 加一，指定年直接取该年，全部传入 buildBaziChart.targetYear。日/月关系只连接原局，不加大运；余家输入在 B4.4 再过滤掉关系词。
+
+```ts
+// src/sanyi/fortune-context.ts
+import lunarPkg from "lunar-javascript";
+import type { BaziChart } from "../calendar/bazi.js";
+import { findRelations, makeNodes } from "../calendar/bazi-relations.js";
+import type { FortuneHorizon } from "./classify.js";
+import type { FactTable } from "./facts.js";
+export interface FortuneContext {
+  horizon: FortuneHorizon;
+  anchorYear: number;
+  label: string;
+  ganZhi: string | null;
+}
+export function resolveFortuneContext(
+  horizon: FortuneHorizon,
+  clock: () => Date,
+  sect: 1 | 2,
+): FortuneContext {
+  const now = clock();
+  if (!Number.isFinite(now.getTime()) || (sect !== 1 && sect !== 2)) {
+    throw new Error("提问时刻或换日口径无效");
+  }
+  const local = new Date(now.getTime() + 8 * 3_600_000);
+  const civilYear = local.getUTCFullYear();
+  const eight = lunarPkg.Solar.fromYmdHms(civilYear, local.getUTCMonth() + 1,
+    local.getUTCDate(), local.getUTCHours(), local.getUTCMinutes(), local.getUTCSeconds())
+    .getLunar().getEightChar();
+  eight.setSect(sect);
+  const table = lunarPkg.Solar.fromYmd(civilYear, 7, 1).getLunar().getJieQiTable();
+  const lichun = table["立春"];
+  if (!lichun) {
+    throw new Error("节气表缺少立春");
+  }
+  const boundary = Date.parse(lichun.toYmdHms().replace(" ", "T") + "+08:00");
+  let anchorYear = civilYear;
+  if (now.getTime() < boundary) {
+    anchorYear -= 1;
+  }
+  if (horizon === "next-year") {
+    anchorYear += 1;
+  }
+  if (horizon.startsWith("year:")) {
+    if (!/^year:(19|20)\d{2}$/.test(horizon)) {
+      throw new Error("指定年份无效");
+    }
+    anchorYear = Number(horizon.slice(5));
+  }
+  if (anchorYear < 1900 || anchorYear > 2099) {
+    throw new Error("所问立春年超出支持范围");
+  }
+  let ganZhi: string | null = null;
+  let label = `${anchorYear} 立春年`;
+  if (horizon === "today") {
+    ganZhi = eight.getDay();
+    label = `今日 ${local.toISOString().slice(0, 10)} ${ganZhi}（北京时间）`;
+  }
+  if (horizon === "month") {
+    ganZhi = eight.getMonth();
+    label = `当前节气月 ${ganZhi}（北京时间）`;
+  }
+  return { horizon, anchorYear, label, ganZhi };
+}
+export function periodFacts(context: FortuneContext, chart: BaziChart): FactTable {
+  const facts: FactTable = new Map();
+  if (!context.ganZhi) {
+    return facts;
+  }
+  const gz = context.ganZhi;
+  const stem = gz.charAt(0);
+  const branch = gz.charAt(1);
+  const god = lunarPkg.LunarUtil.SHI_SHEN[chart.dayMaster + stem];
+  if (!god) {
+    throw new Error("流日或流月十神缺失");
+  }
+  const nodes = makeNodes(chart, null, gz);
+  const relations = findRelations(nodes).filter((relation) => {
+    return relation.nodeIds.some((id) => id.startsWith("year."));
+  });
+  const tokens = [gz, stem, branch, god, ...relations.map((relation) => relation.label)];
+  const id = context.horizon === "today" ? "period:day" : "period:month";
+  facts.set(id, { id, label: `${context.label} ${tokens.join(" ")}`, tokens: new Set(tokens) });
+  return facts;
+}
+```
+
+### Task B5.2：判别联合与派生命盘公开白名单
+
+**文件：** 修改 `src/sanyi/store.ts`、`src/sanyi/reading-service.ts`；新建 `src/sanyi/bazi-public.ts`。
+
+- [ ] **Step 1：先落入 B5.3 的测试和辅助文件，对旧类型与尚缺的新模块运行，确认 RED。** 旧问事原样读出、跨类型交易复用、三家合议与公开字段都是行为断言，不新增迁移层或第二套付款索引。
+- [ ] **Step 2：应用以下既有文件修改。** read/update 的默认问事类型仅供 1A 调用；读取跨类型存档必须指定联合并检查 kind。问事所有读取改为受保护的 readQuestion，防止向八字 id 投掷、重试问事家或修改事项。事项与付款原有逻辑保留。
+
+修改 `src/sanyi/store.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/src/sanyi/store.ts
++++ b/src/sanyi/store.ts
+@@ -21,7 +21,7 @@
+   error?: string;
+ }
+
+-export interface StoredReading {
++export interface StoredQuestionReading {
+   id: string;
+   kind: "question";
+   createdAt: string;
+@@ -50,6 +50,36 @@
+   almanac?: AlmanacResult;
+   qimen?: QimenResult;
+ }
++
++export interface BaziSchoolState {
++  status: "pending" | "writing" | "done" | "failed";
++  output?: import("./bazi-schema.js").BaziSchoolOutput;
++  attempts: number;
++  retries: number;
++  error?: string;
++}
++export interface StoredBaziReading {
++  id: string;
++  kind: "destiny" | "fortune";
++  createdAt: string;
++  question: string;
++  payment: StoredQuestionReading["payment"];
++  status: "writing" | "done" | "failed";
++  chart: import("../calendar/bazi.js").BaziChart;
++  analysis: import("../calendar/bazi-relations.js").BaziAnalysis;
++  tiaohou: import("../calendar/qiongtong.js").QiongtongEntry;
++  correction: {
++    dst: "applied" | "not-applied" | "skipped-region";
++    solar: "applied" | "not-applied";
++    timeKnown: boolean;
++    sect: 1 | 2;
++  };
++  context: import("./fortune-context.js").FortuneContext;
++  almanac: AlmanacResult;
++  changes: number;
++  schools: Record<import("./schools/bazi-shared.js").BaziSchoolKey, BaziSchoolState>;
++}
++export type StoredReading = StoredQuestionReading | StoredBaziReading;
+
+ const ALPHABET = "abcdefghijklmnopqrstuvwxyz234567";
+
+@@ -90,9 +120,9 @@
+     return join(this.root, "readings", `${id}.json`);
+   }
+
+-  async read(id: string): Promise<StoredReading> {
++  async read<T extends StoredReading = StoredQuestionReading>(id: string): Promise<T> {
+     const text = await readFile(this.readingPath(id), "utf8");
+-    return JSON.parse(text) as StoredReading;
++    return JSON.parse(text) as T;
+   }
+
+   async write(reading: StoredReading): Promise<void> {
+@@ -104,14 +134,14 @@
+     await rename(temporary, target);
+   }
+
+-  async update(
++  async update<T extends StoredReading = StoredQuestionReading>(
+     id: string,
+-    change: (reading: StoredReading) => StoredReading,
+-  ): Promise<StoredReading> {
+-    let result: StoredReading | undefined;
++    change: (reading: T) => T,
++  ): Promise<T> {
++    let result: T | undefined;
+     const previous = this.queues.get(id) ?? Promise.resolve();
+     const next = previous.catch(() => {}).then(async () => {
+-      result = change(await this.read(id));
++      result = change(await this.read<T>(id));
+       await this.write(result);
+     });
+     this.queues.set(id, next);
+```
+
+修改 `src/sanyi/reading-service.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/src/sanyi/reading-service.ts
++++ b/src/sanyi/reading-service.ts
+@@ -9,7 +9,7 @@
+ import { buildLiuyaoChart, deriveFiveHexagrams } from "../oracle/liuyao-chart.js";
+ import type { QuestionBlockSource } from "../oracle/question-oracle.js";
+ import type { StructuredOutputProvider } from "../agent/provider.js";
+-import { classifyQuestion, normalizeQuestion } from "./classify.js";
++import { classifyQuestion, normalizeQuestion, overrideClassification } from "./classify.js";
+ import { buildQuestionFacts, type FactTable } from "./facts.js";
+ import type { SanyiLogger } from "./log.js";
+ import { buildOriginalTexts } from "./original-texts.js";
+@@ -20,7 +20,7 @@
+   ReadingStore,
+   newReadingId,
+   type SchoolState,
+-  type StoredReading,
++  type StoredQuestionReading as StoredReading,
+ } from "./store.js";
+ import {
+   assertNextThrow,
+@@ -110,9 +110,13 @@
+   async createQuestionReading(input: {
+     question: string;
+     subjectKey?: QuestionSubjectKey;
++    kind?: "question";
+     feeProof: SanyiFeeProof;
+   }): Promise<StoredReading> {
+-    const classification = classifyQuestion(input.question);
++    let classification = classifyQuestion(input.question);
++    if (input.kind === "question") {
++      classification = overrideClassification(classification, { kind: "question" });
++    }
+     if (classification.kind !== "question" || !classification.subject) {
+       throw new Error("此服务只接受问事问题");
+     }
+@@ -158,7 +162,7 @@
+
+   async throwCoin(id: string, index: number): Promise<RecordedThrow> {
+     return this.withReadingLock(id, async () => {
+-      const reading = await this.deps.store.read(id);
++      const reading = await this.readQuestion(id);
+       const recorded = reading.throws.find((item) => item.index === index);
+       if (recorded) {
+         return recorded;
+@@ -195,7 +199,7 @@
+
+   async retrySchool(id: string, key: QuestionSchoolKey): Promise<StoredReading> {
+     return this.withReadingLock(id, async () => {
+-      const reading = await this.deps.store.read(id);
++      const reading = await this.readQuestion(id);
+       const state = reading.schools[key];
+       if (state.status !== "failed" && state.status !== "rejected") {
+         throw new StateConflictError("此家当前状态不可重试");
+@@ -224,7 +228,7 @@
+     subjectKey: QuestionSubjectKey,
+   ): Promise<StoredReading> {
+     return this.withReadingLock(id, async () => {
+-      const reading = await this.deps.store.read(id);
++      const reading = await this.readQuestion(id);
+       if (reading.status !== "done") {
+         throw new StateConflictError("三家尚未全部落笔，请稍后再改事项");
+       }
+@@ -267,7 +271,15 @@
+   }
+
+   async getReading(id: string): Promise<StoredReading> {
+-    return this.deps.store.read(id);
++    return this.readQuestion(id);
++  }
++
++  private async readQuestion(id: string): Promise<StoredReading> {
++    const reading = await this.deps.store.read<import("./store.js").StoredReading>(id);
++    if (reading.kind !== "question") {
++      throw new StateConflictError("此接口只适用于问事");
++    }
++    return reading;
+   }
+
+   async whenSettled(id: string): Promise<void> {
+@@ -381,7 +393,7 @@
+     id: string,
+     key: QuestionSchoolKey,
+   ): Promise<void> {
+-    const reading = await this.deps.store.read(id);
++    const reading = await this.readQuestion(id);
+     const context = this.rebuildContext(reading);
+     const school = QUESTION_SCHOOLS.find((item) => item.key === key);
+     if (!school) {
+@@ -396,7 +408,7 @@
+     context: RebuiltContext,
+     preserveRetries: boolean,
+   ): Promise<void> {
+-    const reading = await this.deps.store.read(id);
++    const reading = await this.readQuestion(id);
+     const result = await runSchool(
+       { provider: this.deps.provider },
+       {
+```
+
+- [ ] **Step 3：落入隐私投影和合议。** 总断合议沿用 1A 的算术平均逻辑；逐年保留一位小数，每项 year/average/min/max/count，只有 done 家参加。一家 done 也照算，无 done 的年份为 null；年份位置与 chart.liunian.years 一一对应，所以全失败仍有十项 null。命理无总断合议与顶层 years。warnings 只存固定缺时柱说明，请求期节气/校正详情由本机展示。
+
+```ts
+// src/sanyi/bazi-public.ts
+import type { BaziChart } from "../calendar/bazi.js";
+import type { BaziSchoolState, StoredBaziReading } from "./store.js";
+import type { FortuneSchoolOutput } from "./bazi-schema.js";
+export interface YearConsensus {
+  year: number;
+  average: number;
+  min: number;
+  max: number;
+  count: number;
+}
+export function derivedChart(chart: BaziChart): BaziChart {
+  // 显式列举允许存档的派生字段，不复制请求、校正过程或出生地点。
+  return { sect: chart.sect, dayBoundary: chart.dayBoundary, timeKnown: chart.timeKnown,
+    dayMaster: chart.dayMaster, pillars: chart.pillars, taiYuan: chart.taiYuan,
+    mingGong: chart.mingGong, shenGong: chart.shenGong, luck: chart.luck, annual: chart.annual,
+    birthLiChunYear: chart.birthLiChunYear, liunian: chart.liunian,
+    // 请求期警示可能包含节气时刻；公开只给固定、不可逆的缺时柱说明。
+    warnings: chart.timeKnown ? [] : ["时辰未知，缺时柱，起运仅供参考"] };
+}
+function doneOutputs(reading: StoredBaziReading): FortuneSchoolOutput[] {
+  return Object.values(reading.schools).flatMap((state) => {
+    if (state.status === "done" && state.output && "years" in state.output) {
+      return [state.output];
+    }
+    return [];
+  });
+}
+export function yearConsensus(reading: StoredBaziReading): (YearConsensus | null)[] {
+  const outputs = doneOutputs(reading);
+  return reading.chart.liunian.years.map(({ year }) => {
+    const values = outputs.flatMap((output) => {
+      const entry = output.years.find((item) => item.year === year);
+      return entry ? [entry.confidenceTenths] : [];
+    });
+    if (values.length === 0) {
+      return null;
+    }
+    const average = Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1));
+    return { year, average, min: Math.min(...values), max: Math.max(...values), count: values.length };
+  });
+}
+function visibleSchool(state: BaziSchoolState): Omit<BaziSchoolState, "attempts"> {
+  const { attempts: _attempts, ...visible } = state;
+  return visible;
+}
+function common(reading: StoredBaziReading) {
+  return { id: reading.id, createdAt: reading.createdAt, question: reading.question,
+    status: reading.status, payment: { firstHash: reading.payment.transactionHash },
+    chart: derivedChart(reading.chart), analysis: reading.analysis, tiaohou: reading.tiaohou,
+    correction: reading.correction, context: reading.context, almanac: reading.almanac,
+    changes: reading.changes, schools: {
+      shenxiaozhan: visibleSchool(reading.schools.shenxiaozhan),
+      yuchuntai: visibleSchool(reading.schools.yuchuntai),
+      rentieqiao: visibleSchool(reading.schools.rentieqiao),
+    } };
+}
+export function publicBaziReading(reading: StoredBaziReading) {
+  const value = common(reading);
+  if (reading.kind === "destiny") {
+    return { ...value, kind: "destiny" as const };
+  }
+  const outputs = doneOutputs(reading);
+  let consensusTenths: number | null = null;
+  if (outputs.length > 0) {
+    consensusTenths = outputs.reduce((sum, output) => sum + output.confidenceTenths, 0) / outputs.length;
+  }
+  return { ...value, kind: "fortune" as const, consensusTenths, years: yearConsensus(reading) };
+}
+export type PublicBaziReading = ReturnType<typeof publicBaziReading>;
+```
+
+### Task B5.3：八字编排与免费重跑
+
+**文件：** 新建 `tests/helpers/bazi-service.ts`、`tests/sanyi-bazi-reading-service.test.ts`、`src/sanyi/bazi-reading-service.ts`。
+
+- [ ] **Step 1：落入辅助文件与完整测试，运行 `node --import tsx --test tests/sanyi-bazi-reading-service.test.ts`，新服务不存在时 RED。** 测试中的支付拒绝早于任何排盘，另测 3 类型互相复用和新 store 实例读取持久化索引；并行门闩验证三家调用先全部开始。一家失败、全失败、免费重试两次、四柱身份校验、晚子时日柱变化、两次切换与并发限额均须通过。
+
+```ts
+// tests/helpers/bazi-service.ts
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { ReadingService } from "../../src/sanyi/reading-service.js";
+import { BaziReadingService } from "../../src/sanyi/bazi-reading-service.js";
+import { ReadingStore } from "../../src/sanyi/store.js";
+import { createSanyiLogger } from "../../src/sanyi/log.js";
+import { MockSchoolsProvider, mockSingleFeeReceipt } from "../../src/sanyi/mock-provider.js";
+import { createSanyiApi } from "../../src/sanyi/api.js";
+import type { StructuredOutputProvider } from "../../src/agent/provider.js";
+export const birth = {
+  calendar: "solar", isLeapMonth: false, year: 1990, month: 5, day: 15,
+  time: { hour: 15, minute: 30 }, gender: "male",
+};
+export function proof(index = 1) {
+  return { payer: `0x${"11".repeat(20)}` as `0x${string}`,
+    transactionHash: `0x${index.toString(16).padStart(64, "0")}` as `0x${string}` };
+}
+export async function baziFixture(provider: StructuredOutputProvider = new MockSchoolsProvider()) {
+  const root = await mkdtemp(join(tmpdir(), "sanyi-b5-"));
+  const store = new ReadingStore(root);
+  const calls = { payments: 0 };
+  const clock = () => new Date("2026-10-06T21:00:00+08:00");
+  const deps = {
+    store, provider, clock, logger: createSanyiLogger(join(root, "log"), clock),
+    feeVerifier: { verify: async (value: Parameters<typeof mockSingleFeeReceipt>[0]) => {
+      calls.payments += 1;
+      return mockSingleFeeReceipt(value);
+    } },
+    blockSource: { latest: async () => {
+      throw new Error("八字不得取摇卦区块");
+    } },
+  };
+  const question = new ReadingService(deps);
+  const bazi = new BaziReadingService(deps);
+  const api = createSanyiApi(question, { now: clock, bazi });
+  return { root, store, calls, bazi, question, api,
+    close: async () => rm(root, { recursive: true, force: true }) };
+}
+```
+
+```ts
+// tests/sanyi-bazi-reading-service.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { baziFixture, birth, proof } from "./helpers/bazi-service.js";
+import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
+import { statusForError } from "../src/sanyi/http-errors.js";
+import { yearConsensus } from "../src/sanyi/bazi-public.js";
+import type { StoredBaziReading } from "../src/sanyi/store.js";
+async function create(f: Awaited<ReturnType<typeof baziFixture>>, index = 1,
+  kind: "destiny" | "fortune" = "fortune") {
+  const value = await f.bazi.create({ kind, question: kind === "fortune" ? "我今年运势如何" : "看看我的八字",
+    birth, sect: 1, horizon: "year", feeProof: proof(index) });
+  await f.bazi.whenSettled(value.id);
+  return f.bazi.getReading(value.id);
+}
+test("缺生辰入口返回中文 400，非法生辰不调用付款", async () => {
+  const f = await baziFixture();
+  try {
+    for (const question of ["我今年运势如何", "看看我的八字"]) {
+      await assert.rejects(f.api.createReading({ question, feeProof: proof() }), (error: unknown) => {
+        return error instanceof Error && error.message === "请先填写生辰" && statusForError(error) === 400;
+      });
+    }
+    await assert.rejects(f.api.createReading({ question: "我今年运势如何", birth: {}, feeProof: proof() }));
+    assert.equal(f.calls.payments, 0);
+  } finally {
+    await f.close();
+  }
+});
+test("付款核验在排盘模型之前；跨三类型及重启后付款不可复用", async () => {
+  const f = await baziFixture();
+  try {
+    const first = await create(f);
+    for (const kind of ["destiny", "fortune"] as const) {
+      await assert.rejects(create(f, 1, kind), /付款凭证已用于/);
+    }
+    await assert.rejects(f.question.createQuestionReading({ question: "这次面试能过吗", feeProof: proof() }),
+      /付款凭证已用于/);
+    const q = await f.question.createQuestionReading({ question: "这次面试能过吗", feeProof: proof(2) });
+    await assert.rejects(create(f, 2), /付款凭证已用于/);
+    const second = await create(f, 3, "destiny");
+    await assert.rejects(create(f, 3), /付款凭证已用于/);
+    assert.notEqual(q.id, first.id);
+    assert.notEqual(second.id, first.id);
+    // 同一目录新 store 实例验证持久化付款索引。
+    const { ReadingStore } = await import("../src/sanyi/store.js");
+    assert.equal(await new ReadingStore(f.root).claimPayment(proof().transactionHash, "unused"), first.id);
+    // 核验拒绝时，即使排盘模块依赖抛错，也必须优先返回付款错误。
+    const { BaziReadingService } = await import("../src/sanyi/bazi-reading-service.js");
+    let modelCalls = 0;
+    const denied = new BaziReadingService({ store: f.store, clock: () => new Date("2026-10-06T13:00:00Z"),
+      logger: { write: async () => {} }, feeVerifier: { verify: async () => {
+        throw new Error("付款核验拒绝");
+      } }, provider: { ...new MockSchoolsProvider(), generateStructured: async <T>() => {
+        modelCalls += 1;
+        return {} as T;
+      } } });
+    await assert.rejects(denied.create({ kind: "fortune", question: "运势如何", birth: {},
+      sect: 1, horizon: "year", feeProof: proof(4) }), /付款核验拒绝/);
+    assert.equal(modelCalls, 0);
+  } finally {
+    await f.close();
+  }
+});
+test("三家并行、一家失败隔离，免费重试最多两次", { timeout: 2_000 }, async () => {
+  const mock = new MockSchoolsProvider();
+  let fail = true;
+  let started = 0;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const f = await baziFixture({ ...mock,
+    generateStructured: async <T>(request: Parameters<typeof mock.generateStructured>[0]) => {
+    started += 1;
+    if (started === 3) {
+      release();
+    }
+    await gate;
+    if (fail && request.taskId.endsWith("yuchuntai")) {
+      throw new Error("供应商失败");
+    }
+    return mock.generateStructured<T>(request);
+  } });
+  try {
+    const r = await create(f);
+    assert.equal(started, 3);
+    assert.equal(r.status, "done");
+    assert.equal(r.schools.yuchuntai.status, "failed");
+    assert.equal(r.schools.shenxiaozhan.status, "done");
+    assert.equal(r.schools.rentieqiao.status, "done");
+    assert.equal(yearConsensus(r)[0]?.count, 2);
+    await f.bazi.retrySchool(r.id, "yuchuntai");
+    await f.bazi.whenSettled(r.id);
+    fail = false;
+    await f.bazi.retrySchool(r.id, "yuchuntai");
+    await f.bazi.whenSettled(r.id);
+    assert.equal((await f.bazi.getReading(r.id)).schools.yuchuntai.status, "done");
+    assert.equal(f.calls.payments, 1);
+    await assert.rejects(f.bazi.retrySchool(r.id, "yuchuntai"), /不可重试/);
+  } finally {
+    release();
+    await f.close();
+  }
+});
+test("全失败免费重试限额，合议每年 null", async () => {
+  const mock = new MockSchoolsProvider();
+  const f = await baziFixture({ ...mock, generateStructured: async () => {
+    throw new Error("失败");
+  } });
+  try {
+    const r = await create(f);
+    assert.deepEqual(yearConsensus(r), Array(10).fill(null));
+    for (let index = 0; index < 2; index += 1) {
+      await f.bazi.retrySchool(r.id, "yuchuntai");
+      await f.bazi.whenSettled(r.id);
+    }
+    await assert.rejects(f.bazi.retrySchool(r.id, "yuchuntai"), /次数已用尽/);
+    assert.equal(f.calls.payments, 1);
+  } finally {
+    await f.close();
+  }
+});
+test("逐年算术平均保留一位，范围与 count 只含 done，一家也照算", async () => {
+  const f = await baziFixture();
+  try {
+    const r = await create(f);
+    for (const [key, value] of [["shenxiaozhan", 7], ["yuchuntai", 5], ["rentieqiao", 7]] as const) {
+      const state = r.schools[key];
+      if (!state.output || !("years" in state.output)) {
+        throw new Error("缺运势输出");
+      }
+      state.output.years = state.output.years.map((item) => ({ ...item, confidenceTenths: value }));
+    }
+    assert.deepEqual(yearConsensus(r)[0], { year: 2023, average: 6.3, min: 5, max: 7, count: 3 });
+    r.schools.yuchuntai.status = "failed";
+    r.schools.rentieqiao.status = "failed";
+    assert.deepEqual(yearConsensus(r)[0], { year: 2023, average: 7, min: 7, max: 7, count: 1 });
+    r.schools.shenxiaozhan.status = "failed";
+    assert.equal(yearConsensus(r)[0], null);
+  } finally {
+    await f.close();
+  }
+});
+test("换日重传核验四柱，两次免费重跑；并发请求不越限", async () => {
+  const f = await baziFixture();
+  try {
+    const r = await create(f);
+    await assert.rejects(f.bazi.changeDayBoundary(r.id, { ...birth, day: 16 }, 2), (error: unknown) => {
+      return error instanceof Error && error.message === "生辰与本卦命盘不符" && statusForError(error) === 400;
+    });
+    const changed = await f.bazi.changeDayBoundary(r.id, birth, 2);
+    assert.equal(changed.changes, 1);
+    await f.bazi.whenSettled(r.id);
+    const done = await f.bazi.getReading(r.id);
+    assert.equal(done.chart.sect, 2);
+    assert.ok(Object.values(done.schools).every((state) => state.status === "done" && state.attempts === 2));
+    const both = await Promise.allSettled([
+      f.bazi.changeDayBoundary(r.id, birth, 1), f.bazi.changeDayBoundary(r.id, birth, 1),
+    ]);
+    assert.equal(both.filter((item) => item.status === "fulfilled").length, 1);
+    await f.bazi.whenSettled(r.id);
+    await assert.rejects(f.bazi.changeDayBoundary(r.id, birth, 2), (error: unknown) => {
+      return error instanceof Error && /换日切换次数已用尽/.test(error.message) && statusForError(error) === 409;
+    });
+    assert.equal(f.calls.payments, 1);
+    assert.equal((await f.bazi.getReading(r.id)).changes, 2);
+  } finally {
+    await f.close();
+  }
+});
+test("晚子时切换日柱，重启后凭派生盘可免费重试，无原始缓存", async () => {
+  const f = await baziFixture();
+  try {
+    const late = { ...birth, year: 2000, month: 11, day: 3, time: { hour: 23, minute: 20 } };
+    const r = await f.bazi.create({ kind: "fortune", question: "今年运势如何", birth: late,
+      sect: 1, horizon: "year", feeProof: proof() });
+    await f.bazi.whenSettled(r.id);
+    await f.bazi.changeDayBoundary(r.id, late, 2);
+    await f.bazi.whenSettled(r.id);
+    assert.notEqual((await f.bazi.getReading(r.id)).chart.pillars.day.ganZhi, r.chart.pillars.day.ganZhi);
+    const text = await readFile(join(f.root, "readings", `${r.id}.json`), "utf8");
+    assert.ok(!text.includes("23:20"));
+    assert.ok(!text.includes("2000-11-03"));
+  } finally {
+    await f.close();
+  }
+});
+test("旧问事存档原样读出，公开响应按类型区分并附此刻黄历", async () => {
+  const f = await baziFixture();
+  try {
+    const q = await f.question.createQuestionReading({ question: "这次面试能过吗", feeProof: proof() });
+    assert.deepEqual(await f.store.read(q.id), q);
+    const old = await f.api.getReading(q.id);
+    assert.equal(old.kind, "question");
+    const destiny = await f.api.createReading({ question: "看看我的八字", birth, feeProof: proof(2) });
+    await f.bazi.whenSettled(destiny.id);
+    const d = await f.api.getReading(destiny.id);
+    assert.equal(d.kind, "destiny");
+    assert.ok("almanac" in d && d.almanac);
+    assert.ok(!("years" in d) && !("consensusTenths" in d) && !("verdict" in d));
+    assert.ok(!JSON.stringify(d).includes('"verdict"'));
+    const fortune = await f.api.createReading({ question: "我今年运势如何", birth, feeProof: proof(3) });
+    await f.bazi.whenSettled(fortune.id);
+    const r = await f.api.getReading(fortune.id);
+    assert.equal(r.kind, "fortune");
+    if (r.kind !== "fortune") {
+      throw new Error("类型错误");
+    }
+    assert.equal(r.years.length, 10);
+    assert.equal(r.consensusTenths, 5);
+    assert.deepEqual(r.chart.pillars.time?.ganZhi, "癸未");
+    assert.equal((await f.store.read<StoredBaziReading>(r.id)).kind, "fortune");
+  } finally {
+    await f.close();
+  }
+});
+
+test("付款前可覆盖分类和范围，问事覆盖不要求生辰，非法范围拒绝", async () => {
+  const f = await baziFixture();
+  try {
+    const q = await f.api.createReading({ question: "我今年运势如何", kind: "question", feeProof: proof() });
+    assert.equal(q.kind, "question");
+    const r = await f.api.createReading({ question: "这次面试能过吗", kind: "fortune", horizon: "next-year",
+      birth, feeProof: proof(2) });
+    await f.bazi.whenSettled(r.id);
+    const done = await f.api.getReading(r.id);
+    assert.equal(done.kind, "fortune");
+    if (done.kind !== "fortune") {
+      throw new Error("类型不符");
+    }
+    assert.equal(done.chart.liunian.anchorYear, 2027);
+    for (const patch of [{ kind: "bad" }, { horizon: "yesterday" }, { sect: 3 }]) {
+      await assert.rejects(f.api.createReading({ question: "我今年运势如何", birth, feeProof: proof(3), ...patch }));
+    }
+    assert.equal(f.calls.payments, 2);
+    await assert.rejects(f.api.changeDayBoundary(r.id, {}), /请先填写生辰/);
+    await assert.rejects(f.question.throwCoin(r.id, 1), /此接口只适用于问事/);
+    await assert.rejects(f.api.retrySchool(r.id, "chengyi"), /此接口只适用于问事/);
+    await assert.rejects(f.api.retrySchool(q.id, "yuchuntai"), /此接口只适用于命理或运势/);
+  } finally {
+    await f.close();
+  }
+});
+```
+
+- [ ] **Step 2：落入实现。** API 只做生辰格式校验，服务付款核验先于 chartFrom 和模型调用。存档之后后台只捕获派生 reading，不捕获原始请求。失败家不影响另外两家；失败及核对错误落盘使用固定中文，避免模型异常回显敏感数据。免费重试用存档重建事实，无须生辰；换日必须重传生辰，先按存档旧 sect 核对四柱，再按新 sect 重排并三家全部重跑。所问时刻固定为 createdAt，切换时重新按 sect 计算该时刻流日，保留原问题与付款。
+
+```ts
+// src/sanyi/bazi-reading-service.ts
+import { almanacAt } from "../calendar/almanac.js";
+import { buildBaziChart } from "../calendar/bazi.js";
+import { analyzeBazi } from "../calendar/bazi-relations.js";
+import { lookupQiongtong } from "../calendar/qiongtong.js";
+import { correctBirthTime } from "../calendar/solar-time.js";
+import type { StructuredOutputProvider } from "../agent/provider.js";
+import { normalizeBirthProfile } from "./birth-profile.js";
+import { buildBaziFacts } from "./bazi-facts.js";
+import { derivedChart } from "./bazi-public.js";
+import { runBaziSchool } from "./bazi-school-runner.js";
+import { resolveFortuneContext, periodFacts } from "./fortune-context.js";
+import type { FortuneHorizon } from "./classify.js";
+import type { SanyiFeeProof, SanyiFeeVerifier } from "./fee.js";
+import type { SanyiLogger } from "./log.js";
+import { LimitExceededError, PaymentAlreadyUsedError, StateConflictError } from "./reading-service.js";
+import { SanyiInputError } from "./http-errors.js";
+import { BAZI_SCHOOLS } from "./schools/bazi-index.js";
+import type { BaziSchool, BaziSchoolInput, BaziSchoolKey } from "./schools/bazi-shared.js";
+import { ReadingStore, newReadingId, type BaziSchoolState, type StoredBaziReading,
+  type StoredReading } from "./store.js";
+interface Dependencies {
+  store: ReadingStore;
+  provider: StructuredOutputProvider;
+  feeVerifier: SanyiFeeVerifier;
+  logger: SanyiLogger;
+  clock: () => Date;
+}
+function schools(previous?: StoredBaziReading["schools"]): StoredBaziReading["schools"] {
+  function state(key: BaziSchoolKey): BaziSchoolState {
+    return { status: "writing", attempts: previous?.[key].attempts ?? 0,
+      retries: previous?.[key].retries ?? 0 };
+  }
+  return { shenxiaozhan: state("shenxiaozhan"), yuchuntai: state("yuchuntai"),
+    rentieqiao: state("rentieqiao") };
+}
+function chartFrom(birth: unknown, sect: 1 | 2, targetYear: number) {
+  try {
+    const profile = normalizeBirthProfile(birth);
+    const corrected = correctBirthTime(profile.civil, profile.timeKnown, profile.longitude,
+      { mainlandDst: profile.mainlandDst, birthplace: profile.birthplace });
+    const chart = derivedChart(buildBaziChart({ corrected: corrected.effective, gender: profile.gender,
+      timeKnown: profile.timeKnown, sect, targetYear }));
+    let dst: StoredBaziReading["correction"]["dst"] = "not-applied";
+    if (!profile.mainlandDst) {
+      dst = "skipped-region";
+    } else if (corrected.steps.some((step) => step.kind === "dst" && step.applied)) {
+      dst = "applied";
+    }
+    const solar = corrected.steps.some((step) => step.kind === "solar" && step.applied)
+      ? "applied" as const : "not-applied" as const;
+    return { chart, correction: { dst, solar, timeKnown: profile.timeKnown, sect } };
+  } catch {
+    // 校验或底层错误可能包含输入，不把异常原文传播到日志或存档。
+    throw new SanyiInputError("生辰格式或排盘口径无效，请检查填写内容");
+  }
+}
+export class BaziReadingService {
+  private readonly queues = new Map<string, Promise<void>>();
+  private readonly background = new Map<string, Promise<void>>();
+  constructor(private readonly deps: Dependencies) {}
+  async create(input: {
+    kind: "destiny" | "fortune";
+    question: string;
+    birth: unknown;
+    sect: 1 | 2;
+    horizon: FortuneHorizon;
+    feeProof: SanyiFeeProof;
+  }): Promise<StoredBaziReading> {
+    // 付款核验先于排盘；API 仅先做请求格式校验，不生成命盘。
+    const receipt = await this.deps.feeVerifier.verify(input.feeProof);
+    if (receipt.feeUsdc6 !== "50000") {
+      throw new SanyiInputError("卦金付款凭证金额不完整");
+    }
+    const now = this.deps.clock();
+    const context = resolveFortuneContext(input.horizon, () => now, input.sect);
+    const { chart, correction } = chartFrom(input.birth, input.sect, context.anchorYear);
+    const id = newReadingId();
+    const existing = await this.deps.store.claimPayment(receipt.transactionHash.toLowerCase(), id);
+    if (existing) {
+      throw new PaymentAlreadyUsedError(existing);
+    }
+    const reading: StoredBaziReading = { id, kind: input.kind, question: input.question,
+      createdAt: now.toISOString(), payment: { payer: receipt.payer, recipient: receipt.recipient,
+        transactionHash: receipt.transactionHash, feeUsdc6: receipt.feeUsdc6 },
+      chart, correction, context, analysis: analyzeBazi(chart),
+      tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
+      almanac: almanacAt(BigInt(Math.floor(now.getTime() / 1_000))),
+      changes: 0, status: "writing", schools: schools() };
+    await this.deps.store.write(reading);
+    this.start(id, () => this.runAll(reading));
+    return reading;
+  }
+  async readAny(id: string): Promise<StoredReading> {
+    return this.deps.store.read<StoredReading>(id);
+  }
+  async getReading(id: string): Promise<StoredBaziReading> {
+    const reading = await this.deps.store.read<StoredReading>(id);
+    if (reading.kind === "question") {
+      throw new StateConflictError("此接口只适用于命理或运势");
+    }
+    return reading;
+  }
+  async whenSettled(id: string): Promise<void> {
+    await (this.background.get(id) ?? Promise.resolve());
+  }
+  private async lock<T>(id: string, action: () => Promise<T>): Promise<T> {
+    const previous = this.queues.get(id) ?? Promise.resolve();
+    const result = previous.catch(() => {}).then(action);
+    const tail = result.then(() => {}, () => {});
+    this.queues.set(id, tail);
+    try {
+      return await result;
+    } finally {
+      if (this.queues.get(id) === tail) {
+        this.queues.delete(id);
+      }
+    }
+  }
+  async changeDayBoundary(id: string, birth: unknown, sect: 1 | 2): Promise<StoredBaziReading> {
+    return this.lock(id, async () => {
+      const current = await this.getReading(id);
+      if (current.changes >= 2) {
+        throw new LimitExceededError("换日切换次数已用尽");
+      }
+      const writing = Object.values(current.schools).some((state) => state.status === "writing");
+      if (current.status !== "done" || writing) {
+        throw new StateConflictError("三家尚未全部落笔，请稍后切换换日口径");
+      }
+      if (sect === current.chart.sect || (sect !== 1 && sect !== 2)) {
+        throw new SanyiInputError("请选择另一种换日口径");
+      }
+      const original = chartFrom(birth, current.chart.sect, current.context.anchorYear).chart;
+      const signature = (chart: typeof original) => {
+        return Object.values(chart.pillars).map((pillar) => pillar?.ganZhi ?? null);
+      };
+      if (JSON.stringify(signature(original)) !== JSON.stringify(signature(current.chart))) {
+        throw new SanyiInputError("生辰与本卦命盘不符");
+      }
+      const { chart, correction } = chartFrom(birth, sect, current.context.anchorYear);
+      // 所问时刻保持创建时刻，today 的流日按新 sect 重算，不漂移到切换当天。
+      const context = resolveFortuneContext(current.context.horizon, () => new Date(current.createdAt), sect);
+      const updated: StoredBaziReading = { ...current, chart, correction, context,
+        analysis: analyzeBazi(chart), tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
+        changes: current.changes + 1, status: "writing", schools: schools(current.schools) };
+      await this.deps.store.write(updated);
+      this.start(id, () => this.runAll(updated));
+      return updated;
+    });
+  }
+  async retrySchool(id: string, key: BaziSchoolKey): Promise<StoredBaziReading> {
+    return this.lock(id, async () => {
+      const current = await this.getReading(id);
+      const state = current.schools[key];
+      if (!state || state.status !== "failed" || current.status !== "done") {
+        throw new StateConflictError("此家当前状态不可重试");
+      }
+      if (state.retries >= 2) {
+        throw new LimitExceededError("此家重试次数已用尽");
+      }
+      const school = BAZI_SCHOOLS.find((item) => item.key === key);
+      if (!school) {
+        throw new SanyiInputError("三家键无效");
+      }
+      const updated = await this.deps.store.update<StoredBaziReading>(id, (reading) => ({ ...reading,
+        status: "writing", schools: { ...reading.schools,
+          [key]: { status: "writing", attempts: state.attempts, retries: state.retries + 1 } } }));
+      this.start(id, async () => {
+        await this.runOne(updated, school);
+        await this.finish(id);
+      });
+      return updated;
+    });
+  }
+  private input(reading: StoredBaziReading, school: BaziSchool): BaziSchoolInput & { school: BaziSchool } {
+    return { school, kind: reading.kind, question: reading.question, horizon: reading.context.horizon,
+      chart: reading.chart, facts: buildBaziFacts(reading.chart, reading.analysis, reading.tiaohou),
+      tiaohou: reading.tiaohou,
+      period: { label: reading.context.label, facts: periodFacts(reading.context, reading.chart) } };
+  }
+  private async runOne(reading: StoredBaziReading, school: BaziSchool): Promise<void> {
+    const result = await runBaziSchool({ provider: this.deps.provider }, this.input(reading, school));
+    await this.deps.store.update<StoredBaziReading>(reading.id, (current) => {
+      const old = current.schools[school.key];
+      const state: BaziSchoolState = { status: result.status,
+        attempts: old.attempts + result.calls, retries: old.retries };
+      if (result.status === "done") {
+        state.output = result.output;
+      } else {
+        // 错误详情可能含模型回显；落盘只用固定中文说明。
+        state.error = "此家解读失败，可免费重试";
+      }
+      return { ...current, schools: { ...current.schools, [school.key]: state } };
+    });
+  }
+  private async runAll(reading: StoredBaziReading): Promise<void> {
+    await Promise.all(BAZI_SCHOOLS.map((school) => this.runOne(reading, school)));
+    await this.finish(reading.id);
+  }
+  private async finish(id: string): Promise<void> {
+    await this.deps.store.update<StoredBaziReading>(id, (reading) => ({ ...reading, status: "done" }));
+    await this.deps.logger.write("八字三家落笔完成", { readingId: id });
+  }
+  private start(id: string, operation: () => Promise<void>): void {
+    const task = operation().catch(async () => {
+      try {
+        await this.deps.store.update<StoredBaziReading>(id, (reading) => ({ ...reading, status: "failed" }));
+        await this.deps.logger.write("八字编排失败", { readingId: id });
+      } catch {
+        // 存储和日志异常不得产生未处理拒绝，也不得回显生辰。
+      }
+    });
+    this.background.set(id, task);
+    void task.then(() => {
+      if (this.background.get(id) === task) {
+        this.background.delete(id);
+      }
+    });
+  }
+}
+```
+
+- [ ] **Step 3：B5b 接口落入后重跑上述测试，预期 9 项通过。** 三家均终止即 reading.done，包括全失败；家状态分别保留 failed 供免费重试，公开合议排除它们。
+
+## Chunk B5b：统一接口、HTTP 安全、隐私验收与排练
+
+B6 使用 `src/sanyi/api.ts` 导出的公开判别联合；不读取服务端存档结构。此块只为旧问事前端保留显式 question 类型别名，不提前实现八字页面；B6 需从 AnyPublicReading 按 kind 分流，不能把八字响应传给问事组件。
+
+### Task B5.4：类型入口与公开响应
+
+**文件：** 修改 `src/sanyi/api.ts`、`tests/sanyi-api.test.ts`、`tests/sanyi-store.test.ts`、`web/lib/api.ts`。
+
+- [ ] **Step 1：先运行 B5.3 入口、覆盖分类及公开响应测试，对旧 API 预期失败。** 命理/运势缺生辰中文 400「请先填写生辰」；非法生辰不付款；kind/horizon 支持付款前覆盖，改问事不要求生辰。未开放类型保留原建议和行为。
+- [ ] **Step 2：精确应用以下修改。** 生辰仅格式化校验，不在 API 排盘。命理运势由已配置的八字服务承担，命理与运势不再使用 NotOpenYetError；服务器实际启动总会注入八字服务。getReading 读取 kind 分流，三家重试键按家与类型匹配；新增 changeDayBoundary 接口，不接付款参数。此刻黄历来自创建时的注入时钟，与出生时刻无关。
+
+修改 `src/sanyi/api.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/src/sanyi/api.ts
++++ b/src/sanyi/api.ts
+@@ -5,19 +5,26 @@
+ import { ARC_CHAIN_ID, USDC_TOKEN_ADDRESS } from "../frontend/wallet.js";
+ import { feeRecipientFromEnv, FEE_USDC6, type SanyiFeeProof } from "./fee.js";
+ import { classifyQuestion } from "./classify.js";
+-import { NotFoundError, NotOpenYetError, SanyiInputError } from "./http-errors.js";
++import { NotFoundError, SanyiInputError } from "./http-errors.js";
+ import type { ReadingService } from "./reading-service.js";
+ import type { QuestionSchoolKey } from "./schools/index.js";
+-import type { StoredReading } from "./store.js";
++import type { StoredQuestionReading as StoredReading } from "./store.js";
++import type { StoredReading as AnyStoredReading } from "./store.js";
++import { normalizeBirthProfile } from "./birth-profile.js";
++import { overrideClassification, type FortuneHorizon, type QuestionKind } from "./classify.js";
++import type { BaziReadingService } from "./bazi-reading-service.js";
++import { publicBaziReading, type PublicBaziReading } from "./bazi-public.js";
++import type { BaziSchoolKey } from "./schools/bazi-shared.js";
+ type ServiceBoundary = Pick<
+   ReadingService,
+   "createQuestionReading" | "throwCoin" | "getReading" | "retrySchool" | "changeSubject"
+ >;
+ type SubjectKey = StoredReading["subject"]["finalKey"];
+-export interface PublicReading extends Omit<StoredReading, "payment" | "schools"> {
++export interface PublicQuestionReading extends Omit<StoredReading, "payment" | "schools"> {
+   payment: { firstHash: StoredReading["payment"]["transactionHash"] };
+   schools: Record<QuestionSchoolKey, Omit<StoredReading["schools"][QuestionSchoolKey], "attempts">>;
+ }
++export type PublicReading = PublicQuestionReading | PublicBaziReading;
+ export interface PaymentConfiguration {
+   recipient: Address;
+   amountUsdc6: string;
+@@ -31,8 +38,9 @@
+   createReading(input: unknown): Promise<PublicReading>;
+   throwCoin(id: string, input: unknown): Promise<StoredReading["throws"][number]>;
+   getReading(id: string): Promise<PublicReading>;
+-  retrySchool(id: string, key: QuestionSchoolKey): Promise<PublicReading>;
++  retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey): Promise<PublicReading>;
+   changeSubject(id: string, input: unknown): Promise<PublicReading>;
++  changeDayBoundary(id: string, input: unknown): Promise<PublicReading>;
+ }
+ function record(value: unknown): Record<string, unknown> {
+   if (!value || typeof value !== "object" || Array.isArray(value)) {
+@@ -74,7 +82,7 @@
+   }
+   return { payer: getAddress(proof.payer), transactionHash: proof.transactionHash as `0x${string}` };
+ }
+-function publicReading(reading: StoredReading): PublicReading {
++function publicReading(reading: StoredReading): PublicQuestionReading {
+   const school = (key: QuestionSchoolKey) => {
+     const { attempts: _attempts, ...visible } = reading.schools[key];
+     return visible;
+@@ -101,7 +109,7 @@
+ }
+ export function createSanyiApi(
+   service: ServiceBoundary,
+-  options: { now?: () => Date; recipient?: Address } = {},
++  options: { now?: () => Date; recipient?: Address; bazi?: BaziReadingService } = {},
+ ): SanyiApi {
+   const clock = options.now ?? (() => new Date());
+   let cache: { createdAt: number; value: ReturnType<typeof almanacAt> } | undefined;
+@@ -124,9 +132,34 @@
+     },
+     async createReading(input) {
+       const body = record(input);
+-      const classification = classifyQuestion(questionFrom(body));
++      let classification = classifyQuestion(questionFrom(body));
++      try {
++        classification = overrideClassification(classification, {
++          ...(body.kind === undefined ? {} : { kind: body.kind as QuestionKind }),
++          ...(body.horizon === undefined ? {} : { horizon: body.horizon as FortuneHorizon }),
++        });
++      } catch {
++        throw new SanyiInputError("问题类型或时间范围无效");
++      }
+       if (classification.kind === "destiny" || classification.kind === "fortune") {
+-        throw new NotOpenYetError("命理与运势将在下一阶段开放，可先改为问事");
++        if (body.birth === undefined || body.birth === null) {
++          throw new SanyiInputError("请先填写生辰");
++        }
++        try {
++          normalizeBirthProfile(body.birth);
++        } catch {
++          throw new SanyiInputError("生辰格式无效，请检查填写内容");
++        }
++        const sect = body.sect ?? 1;
++        if (sect !== 1 && sect !== 2) {
++          throw new SanyiInputError("换日口径须为 1 或 2");
++        }
++        if (!options.bazi) {
++          throw new Error("八字服务尚未配置");
++        }
++        return publicBaziReading(await options.bazi.create({ kind: classification.kind,
++          question: classification.question, birth: body.birth, sect,
++          horizon: classification.horizon ?? "year", feeProof: feeProofFrom(body.feeProof) }));
+       }
+       if (classification.kind !== "question") {
+         throw new SanyiInputError(classification.suggestion ?? "请改为一件具体的事来问");
+@@ -134,6 +167,7 @@
+       const subjectKey = subjectFrom(body.subjectKey);
+       const reading = await service.createQuestionReading({
+         question: classification.question,
++        ...(body.kind === "question" ? { kind: "question" as const } : {}),
+         feeProof: feeProofFrom(body.feeProof),
+         ...(subjectKey === undefined ? {} : { subjectKey }),
+       });
+@@ -147,10 +181,39 @@
+       return notFound(() => service.throwCoin(id, index));
+     },
+     async getReading(id) {
+-      return publicReading(await notFound(() => service.getReading(id)));
++      const reading = await notFound(async (): Promise<AnyStoredReading> => {
++        if (options.bazi) {
++          // 共用 store 读取判别，问事仍走原服务，不重新排盘或调用模型。
++          return options.bazi.readAny(id);
++        }
++        return service.getReading(id);
++      });
++      return reading.kind === "question" ? publicReading(reading) : publicBaziReading(reading);
+     },
+     async retrySchool(id, key) {
++      if (key === "shenxiaozhan" || key === "yuchuntai" || key === "rentieqiao") {
++        if (!options.bazi) {
++          throw new SanyiInputError("八字服务尚未配置");
++        }
++        return publicBaziReading(await notFound(() => options.bazi!.retrySchool(id, key)));
++      }
+       return publicReading(await notFound(() => service.retrySchool(id, key)));
++    },
++    async changeDayBoundary(id, input) {
++      const body = record(input);
++      if (body.birth === undefined || body.birth === null) {
++        throw new SanyiInputError("请先填写生辰");
++      }
++      if (body.sect !== 1 && body.sect !== 2) {
++        throw new SanyiInputError("换日口径须为 1 或 2");
++      }
++      if (!options.bazi) {
++        throw new SanyiInputError("八字服务尚未配置");
++      }
++      const changed = await notFound(() => {
++        return options.bazi!.changeDayBoundary(id, body.birth, body.sect as 1 | 2);
++      });
++      return publicBaziReading(changed);
+     },
+     async changeSubject(id, input) {
+       const subjectKey = subjectFrom(record(input).subjectKey);
+```
+
+修改 `tests/sanyi-api.test.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/tests/sanyi-api.test.ts
++++ b/tests/sanyi-api.test.ts
+@@ -5,10 +5,9 @@
+ import { createSanyiApi } from "../src/sanyi/api.js";
+ import {
+   NotFoundError,
+-  NotOpenYetError,
+   SanyiInputError,
+ } from "../src/sanyi/http-errors.js";
+-import type { StoredReading } from "../src/sanyi/store.js";
++import type { StoredQuestionReading as StoredReading } from "../src/sanyi/store.js";
+ const ID = "abcdefghijklmnopqrstuvwxyz";
+ const PROOF: SanyiFeeProof = {
+   payer: `0x${"11".repeat(20)}`,
+@@ -96,12 +95,12 @@
+   );
+   await assert.rejects(api.throwCoin(ID, { index: "1" }), SanyiInputError);
+ });
+-test("命理与运势明确留待下一阶段", async () => {
++test("命理与运势缺生辰先给中文 400", async () => {
+   const { api } = fixture();
+   for (const question of ["看看我的八字", "我今年运势如何"]) {
+     await assert.rejects(api.createReading({ question, feeProof: PROOF }), (error: unknown) => {
+-      return error instanceof NotOpenYetError
+-        && error.message === "命理与运势将在下一阶段开放，可先改为问事";
++      return error instanceof SanyiInputError
++        && error.message === "请先填写生辰";
+     });
+   }
+ });
+@@ -119,6 +118,10 @@
+   const text = JSON.stringify(value);
+   assert.equal(value.question, "这次面试能过吗");
+   assert.equal(value.payment.firstHash, PROOF.transactionHash);
++  assert.equal(value.kind, "question");
++  if (value.kind !== "question") {
++    throw new Error("问事类型不符");
++  }
+   assert.equal(value.throws[0]?.blockNumber, "8");
+   assert.deepEqual(value.lines, [7, 8, 7, 8, 7, 8]);
+   assert.equal(value.castTime, "1790770501");
+```
+
+修改 `tests/sanyi-store.test.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/tests/sanyi-store.test.ts
++++ b/tests/sanyi-store.test.ts
+@@ -5,7 +5,7 @@
+ import { join } from "node:path";
+ import test from "node:test";
+ import { ReadingStore, isReadingId, newReadingId } from "../src/sanyi/store.js";
+-import type { StoredReading } from "../src/sanyi/store.js";
++import type { StoredQuestionReading as StoredReading } from "../src/sanyi/store.js";
+
+ function emptyReading(id = newReadingId()): StoredReading {
+   return {
+```
+
+修改 `web/lib/api.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/web/lib/api.ts
++++ b/web/lib/api.ts
+@@ -5,7 +5,8 @@
+ export type PaymentConfiguration = Awaited<ReturnType<SanyiApi["payment"]>>;
+ export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
+ export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
+-export type PublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
++export type AnyPublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
++export type PublicReading = Extract<AnyPublicReading, { kind: "question" }>;
+ export type ThrowResult = Awaited<ReturnType<SanyiApi["throwCoin"]>>;
+ export interface CreateReadingInput {
+   question: string;
+```
+
+- [ ] **Step 3：运行 `node --import tsx --test tests/sanyi-api.test.ts tests/sanyi-store.test.ts tests/sanyi-bazi-reading-service.test.ts`，旧问事与新类型全部通过。** `http-errors.ts` 的中文 400 与领域冲突 409 映射原样复用，`log.ts` 不变；新服务严格只传 readingId，不传请求或异常原文。
+
+### Task B5.5：路由与实际启动编排
+
+**文件：** 修改 `src/frontend/server.ts`、`tests/frontend-server.test.ts`。
+
+- [ ] **Step 1：先应用测试片段并运行 `node --import tsx --test tests/frontend-server.test.ts`。** 新路由尚未实现时成功断言 RED；Origin、Content-Type、非法 JSON、8 KiB、非法 id 与中文错误映射同测换日及八字重试路由。测试需允许本机监听；沙箱 EPERM 不算业务 RED 或通过。
+- [ ] **Step 2：应用服务端修改。** day-boundary 放在已有 requireSameOrigin/readJsonBody 之后，与所有 POST 共用解析器、8 KiB 上限和统一错误映射；实际启动注入同一 store、logger、feeVerifier，付款索引跨类型共享。问事保留原 2048 token，八字用 4096 token 容纳五分项和十年短评；不安装或更换 provider。
+
+修改 `tests/frontend-server.test.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/tests/frontend-server.test.ts
++++ b/tests/frontend-server.test.ts
+@@ -22,6 +22,7 @@
+     getReading: async () => reading as never,
+     retrySchool: async () => reading as never,
+     changeSubject: async () => reading as never,
++    changeDayBoundary: async () => reading as never,
+     ...overrides,
+   };
+ }
+@@ -193,3 +194,45 @@
+     await close(item);
+   }
+ });
++
++test("换日与八字重试路由沿用 Origin、JSON、8 KiB 和 id 边界", async () => {
++  const item = await fixture();
++  try {
++    const id = "abcdefghijklmnopqrstuvwxyz";
++    for (const path of [`/api/readings/${id}/day-boundary`, `/api/readings/${id}/schools/yuchuntai/retry`]) {
++      assert.equal((await post(item.base, path, {})).status, 200);
++      assert.equal((await fetch(`${item.base}${path}`, { method: "POST",
++        headers: { "content-type": "application/json" }, body: "{}" })).status, 403);
++      assert.equal((await post(item.base, path, {}, { origin: "https://evil.example" })).status, 403);
++      assert.equal((await post(item.base, path, {}, { "content-type": "text/plain" })).status, 415);
++      assert.equal((await post(item.base, path, "{")).status, 400);
++      assert.equal((await post(item.base, path, "x".repeat(9 * 1_024))).status, 413);
++      assert.equal((await post(item.base, path.replace(id, "bad"), {})).status, 404);
++    }
++  } finally {
++    await close(item);
++  }
++});
++test("换日与八字重试中文错误沿用 400 与 409 映射", async () => {
++  const { SanyiInputError } = await import("../src/sanyi/http-errors.js");
++  const { LimitExceededError } = await import("../src/sanyi/reading-service.js");
++  const item = await fixture(fakeApi({
++    changeDayBoundary: async () => {
++      throw new SanyiInputError("生辰与本卦命盘不符");
++    },
++    retrySchool: async () => {
++      throw new LimitExceededError("此家重试次数已用尽");
++    },
++  }));
++  try {
++    const base = "/api/readings/abcdefghijklmnopqrstuvwxyz";
++    const wrong = await post(item.base, `${base}/day-boundary`, {});
++    assert.equal(wrong.status, 400);
++    assert.deepEqual(await wrong.json(), { error: "生辰与本卦命盘不符" });
++    const limit = await post(item.base, `${base}/schools/yuchuntai/retry`, {});
++    assert.equal(limit.status, 409);
++    assert.deepEqual(await limit.json(), { error: "此家重试次数已用尽" });
++  } finally {
++    await close(item);
++  }
++});
+```
+
+修改 `src/frontend/server.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/src/frontend/server.ts
++++ b/src/frontend/server.ts
+@@ -16,6 +16,8 @@
+ } from "../sanyi/http-errors.js";
+ import { createSanyiLogger } from "../sanyi/log.js";
+ import { ReadingService, PaymentAlreadyUsedError } from "../sanyi/reading-service.js";
++import { BaziReadingService } from "../sanyi/bazi-reading-service.js";
++import type { BaziSchoolKey } from "../sanyi/schools/bazi-shared.js";
+ import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
+ import { isReadingId, ReadingStore } from "../sanyi/store.js";
+ interface FrontendServerOptions {
+@@ -31,7 +33,9 @@
+   ".svg": "image/svg+xml",
+   ".woff2": "font/woff2",
+ };
+-const SCHOOL_KEYS = new Set<QuestionSchoolKey>(["chengyi", "jingfang", "shaoyong"]);
++const SCHOOL_KEYS = new Set<QuestionSchoolKey | BaziSchoolKey>([
++  "chengyi", "jingfang", "shaoyong", "shenxiaozhan", "yuchuntai", "rentieqiao",
++]);
+ export function resolveStaticPath(publicDir: string, pathname: string): string | null {
+   let decoded: string;
+   try {
+@@ -110,6 +114,7 @@
+       const retryRoute = url.pathname.match(
+         /^\/api\/readings\/([^/]+)\/schools\/([^/]+)\/retry$/,
+       );
++      const boundaryRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/day-boundary$/);
+       const subjectRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/subject$/);
+       const isApi = url.pathname.startsWith("/api/");
+       const writing = request.method === "POST";
+@@ -141,7 +146,7 @@
+         json(response, 200, await api.throwCoin(throwRoute[1] as string, body));
+         return;
+       }
+-      const retryKey = retryRoute?.[2] as QuestionSchoolKey | undefined;
++      const retryKey = retryRoute?.[2] as QuestionSchoolKey | BaziSchoolKey | undefined;
+       if (
+         retryRoute
+         && request.method === "POST"
+@@ -151,6 +156,10 @@
+         && SCHOOL_KEYS.has(retryKey)
+       ) {
+         json(response, 200, await api.retrySchool(retryRoute[1] as string, retryKey));
++        return;
++      }
++      if (boundaryRoute && request.method === "POST" && api && isReadingId(boundaryRoute[1] ?? "")) {
++        json(response, 200, await api.changeDayBoundary(boundaryRoute[1] as string, body));
+         return;
+       }
+       if (subjectRoute && request.method === "POST" && api && isReadingId(subjectRoute[1] ?? "")) {
+@@ -190,8 +199,13 @@
+ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+   const publicClient = createArcPublicClient();
+   const recipient = feeRecipientFromEnv(process.env);
++  const store = new ReadingStore("data");
++  const logger = createSanyiLogger();
++  const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
++  const bazi = new BaziReadingService({ store, logger, feeVerifier,
++    provider: createDefaultProvider({ maxTokens: 4_096 }), clock: () => new Date() });
+   const service = new ReadingService({
+-    feeVerifier: new ArcFeeVerifier(publicClient, recipient),
++    feeVerifier,
+     blockSource: {
+       latest: async () => {
+         const block = await publicClient.getBlock({ blockTag: "latest" });
+@@ -202,11 +216,12 @@
+       },
+     },
+     provider: createDefaultProvider({ maxTokens: 2_048 }),
+-    store: new ReadingStore("data"),
+-    logger: createSanyiLogger(),
++    store,
++    logger,
+   });
+   const port = Number(process.env.FRONTEND_PORT ?? "4173");
+-  createFrontendServer({ api: createSanyiApi(service, { recipient }) }).listen(port, "127.0.0.1", () => {
++  const api = createSanyiApi(service, { recipient, bazi });
++  createFrontendServer({ api }).listen(port, "127.0.0.1", () => {
+     console.log(`三易服务已启动：http://127.0.0.1:${port}`);
+     console.log(`三易收款地址：${recipient}`);
+     console.log("问事卦金：0.05 USDC；付款后亲手六掷，三家依同一卦独立落笔");
+```
+
+- [ ] **Step 3：同命令回归，预期共 10 项通过；不改安全守卫，不跳过旧测试。**
+
+### Task B5.6：隐私全文扫描与重启重试
+
+**文件：** 新建 `tests/sanyi-bazi-privacy.test.ts`。
+
+- [ ] **Step 1：先写以下测试，对未实现白名单与编排模块运行，确认 RED。** 输入包含不填地点、城市、手填经度及另一组出生日期时间；每组扫描实际存档文件全文、真实日志全文、公开响应 JSON 全文。模型异常回显输入仍不得落盘；服务重启后无需原始生辰可免费重试，switch 仍需重新提交。
+
+```ts
+// tests/sanyi-bazi-privacy.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFile, readdir } from "node:fs/promises";
+import { join } from "node:path";
+import { baziFixture, birth, proof } from "./helpers/bazi-service.js";
+import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
+import { BaziReadingService } from "../src/sanyi/bazi-reading-service.js";
+import { createSanyiLogger } from "../src/sanyi/log.js";
+const forbidden = ["1990-05-15", "15:30", "14:30", "乌鲁木齐", "87.6", "2000-11-03", "09:10"];
+async function directoryText(path: string): Promise<string> {
+  const names = await readdir(path);
+  return (await Promise.all(names.map((name) => readFile(join(path, name), "utf8")))).join("\n");
+}
+test("未填地点、城市、手填经度：存档日志公开 JSON 全文无原始输入串", async () => {
+  const f = await baziFixture();
+  try {
+    const inputs = [birth, { ...birth, city: "乌鲁木齐" }, { ...birth, longitude: 87.6 },
+      { ...birth, year: 2000, month: 11, day: 3, time: { hour: 9, minute: 10 }, longitude: 87.6 }];
+    for (const [index, value] of inputs.entries()) {
+      const r = await f.api.createReading({ question: "我今年运势如何", birth: value, feeProof: proof(index + 1) });
+      await f.bazi.whenSettled(r.id);
+      await f.api.changeDayBoundary(r.id, { birth: value, sect: 2 });
+      await f.bazi.whenSettled(r.id);
+      const texts = [await directoryText(join(f.root, "readings")), await directoryText(join(f.root, "log")),
+        JSON.stringify(await f.api.getReading(r.id))];
+      for (const text of texts) {
+        for (const word of forbidden) {
+          assert.ok(!text.includes(word), `隐私扫描发现：${word}`);
+        }
+        assert.doesNotMatch(text, /"(?:civil|effective|birthplace|longitude|steps|before|after)"\s*:/);
+      }
+    }
+    const stored = await f.bazi.getReading((await f.api.createReading({ question: "看看我的八字",
+      birth: { ...birth, city: "香港" }, feeProof: proof(9) })).id);
+    await f.bazi.whenSettled(stored.id);
+    assert.equal(stored.correction.dst, "skipped-region");
+    assert.equal(stored.correction.solar, "applied");
+    assert.ok(stored.chart.luck?.start.solarDate);
+  } finally {
+    await f.close();
+  }
+});
+test("模型错误回显生辰不会进入存档、日志或公开响应，重启后重试无需生辰", async () => {
+  const mock = new MockSchoolsProvider();
+  const f = await baziFixture({ ...mock, generateStructured: async () => {
+    throw new Error(forbidden.join(" "));
+  } });
+  try {
+    const r = await f.api.createReading({ question: "我今年运势如何", birth, feeProof: proof() });
+    await f.bazi.whenSettled(r.id);
+    const restarted = new BaziReadingService({ store: f.store, provider: mock,
+      clock: () => new Date("2026-10-06T13:00:00Z"), logger: createSanyiLogger(join(f.root, "log")),
+      feeVerifier: { verify: async () => {
+        throw new Error("免费重试不得核验新付款");
+      } } });
+    await restarted.retrySchool(r.id, "yuchuntai");
+    await restarted.whenSettled(r.id);
+    assert.equal((await restarted.getReading(r.id)).schools.yuchuntai.status, "done");
+    const texts = [await directoryText(join(f.root, "readings")), await directoryText(join(f.root, "log")),
+      JSON.stringify(await f.api.getReading(r.id))];
+    for (const text of texts) {
+      for (const word of forbidden) {
+        assert.ok(!text.includes(word));
+      }
+    }
+    assert.equal(f.calls.payments, 1);
+  } finally {
+    await f.close();
+  }
+});
+```
+
+- [ ] **Step 2：使用 B5a/B5.4 的派生白名单与固定中文失败说明，运行 `node --import tsx --test tests/sanyi-bazi-privacy.test.ts`，预期 2 项通过。** 不因全文扫描而删起运年月日或交运日期；可反推局限已在 B5a 写明，并由 B6 告知覆盖。
+
+### Task B5.7：mock 排练追加运势与一次免费换日
+
+**文件：** 修改 `scripts/rehearse-demo.ts`、`tests/sanyi-rehearsal.test.ts`。
+
+- [ ] **Step 1：先应用排练测试修改，运行 `node --import tsx --test tests/sanyi-rehearsal.test.ts`，新 summary.bazi 尚不存在时 RED。** 保留原问事断言，新增命例四柱、2023–2032 窗口、三家 done、十项合议、sect=2、切换一次、总付款两笔的完整断言。
+
+修改 `tests/sanyi-rehearsal.test.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/tests/sanyi-rehearsal.test.ts
++++ b/tests/sanyi-rehearsal.test.ts
+@@ -10,3 +10,14 @@
+   assert.equal(summary.schools.map((item) => item.name).join("、"), "程颐、京房、邵雍");
+   assert.equal(Number.isFinite(summary.consensusTenths), true);
+ });
++
++test("mock 排练追加十年运势与免费换日，只有两笔付款", async () => {
++  const summary = await runRehearsal();
++  assert.deepEqual(summary.bazi.pillars, ["庚午", "辛巳", "庚辰", "癸未"]);
++  assert.deepEqual(summary.bazi.window, [2023, 2032]);
++  assert.deepEqual(summary.bazi.schools, ["done", "done", "done"]);
++  assert.equal(summary.bazi.years, 10);
++  assert.equal(summary.bazi.sectAfterSwitch, 2);
++  assert.equal(summary.bazi.changes, 1);
++  assert.equal(summary.payments, 2);
++});
+```
+
+- [ ] **Step 2：应用排练修改，命理使用同一付款核验纯函数与 mock provider。** 问事先做完一卦，运势再用另一交易哈希；固定 2026-10-06 21:00 北京时间，出生地点不填。免费换日后检查三家 attempts 从 1 到 2、均 done，并比较付款计数不变。
+
+修改 `scripts/rehearse-demo.ts`（精确旧片段 → 新片段，上下文排版保留）：
+
+```diff
+--- a/scripts/rehearse-demo.ts
++++ b/scripts/rehearse-demo.ts
+@@ -3,6 +3,9 @@
+ import { tmpdir } from "node:os";
+ import { join, resolve } from "node:path";
+ import { pathToFileURL } from "node:url";
++import assert from "node:assert/strict";
++import { BaziReadingService } from "../src/sanyi/bazi-reading-service.js";
++import { publicBaziReading } from "../src/sanyi/bazi-public.js";
+ import type { SanyiFeeProof } from "../src/sanyi/fee.js";
+ import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
+ import { createSanyiLogger } from "../src/sanyi/log.js";
+@@ -22,17 +25,34 @@
+     confidenceTenths: number;
+   }>;
+   consensusTenths: number;
++  payments: number;
++  bazi: {
++    pillars: (string | null)[];
++    window: number[];
++    schools: string[];
++    years: number;
++    sectAfterSwitch: number;
++    changes: number;
++  };
+ }
+ export async function runRehearsal(): Promise<RehearsalSummary> {
+   const root = await mkdtemp(join(tmpdir(), "sanyi-rehearsal-"));
+   let height = 0n;
++  let payments = 0;
+   try {
+     const proof: SanyiFeeProof = {
+       payer: `0x${"11".repeat(20)}`,
+       transactionHash: `0x${"22".repeat(32)}`,
+     };
++    const store = new ReadingStore(root);
++    const logger = createSanyiLogger(join(root, "log"));
++    const provider = new MockSchoolsProvider();
++    const feeVerifier = { verify: async (value: SanyiFeeProof) => {
++      payments += 1;
++      return mockSingleFeeReceipt(value);
++    } };
+     const service = new ReadingService({
+-      feeVerifier: { verify: async (value) => mockSingleFeeReceipt(value) },
++      feeVerifier,
+       blockSource: {
+         latest: async () => {
+           height += 1n;
+@@ -43,9 +63,9 @@
+           };
+         },
+       },
+-      provider: new MockSchoolsProvider(),
+-      store: new ReadingStore(root),
+-      logger: createSanyiLogger(join(root, "log")),
++      provider,
++      store,
++      logger,
+       waitOptions: { pollMs: 1, timeoutMs: 100, sleep: async () => {} },
+     });
+     const created = await service.createQuestionReading({
+@@ -74,7 +94,37 @@
+         confidenceTenths: state.output.confidenceTenths,
+       };
+     });
++    const baziService = new BaziReadingService({ store, provider, logger, feeVerifier,
++      clock: () => new Date("2026-10-06T21:00:00+08:00") });
++    const birth = { calendar: "solar", isLeapMonth: false, year: 1990, month: 5, day: 15,
++      time: { hour: 15, minute: 30 }, gender: "male" };
++    const fortune = await baziService.create({ kind: "fortune", question: "我今年运势如何",
++      birth, sect: 1, horizon: "year", feeProof: { ...proof, transactionHash: `0x${"44".repeat(32)}` } });
++    await baziService.whenSettled(fortune.id);
++    const before = await baziService.getReading(fortune.id);
++    const pillars = Object.values(before.chart.pillars).map((pillar) => pillar?.ganZhi ?? null);
++    const window = [before.chart.liunian.years[0]!.year, before.chart.liunian.years.at(-1)!.year];
++    assert.deepEqual(pillars, ["庚午", "辛巳", "庚辰", "癸未"]);
++    assert.deepEqual(window, [2023, 2032]);
++    assert.ok(Object.values(before.schools).every((state) => state.status === "done"));
++    const publicBefore = publicBaziReading(before);
++    assert.equal(publicBefore.kind, "fortune");
++    if (publicBefore.kind !== "fortune") {
++      throw new Error("排练类型不符");
++    }
++    assert.equal(publicBefore.years.length, 10);
++    const paymentsBeforeSwitch = payments;
++    await baziService.changeDayBoundary(fortune.id, birth, 2);
++    await baziService.whenSettled(fortune.id);
++    const after = await baziService.getReading(fortune.id);
++    assert.equal(after.chart.sect, 2);
++    assert.equal(after.changes, 1);
++    assert.ok(Object.values(after.schools).every((state) => state.status === "done" && state.attempts === 2));
++    assert.equal(payments, paymentsBeforeSwitch);
+     return {
++      payments,
++      bazi: { pillars, window, schools: Object.values(after.schools).map((state) => state.status),
++        years: publicBefore.years.length, sectAfterSwitch: after.chart.sect, changes: after.changes },
+       status: "done",
+       primary: five.primary.name,
+       derived: five.derived.name,
+@@ -98,6 +148,9 @@
+       console.log(`${school.name}：${school.verdict}，${school.confidenceTenths}成`);
+     }
+     console.log(`合议平均：约${summary.consensusTenths.toFixed(1)}成`);
++    console.log(`运势四柱：${summary.bazi.pillars.join(" ")}；窗口：${summary.bazi.window.join("–")}`);
++    console.log(`三家已完成，逐年合议 ${summary.bazi.years} 项；免费换日后重跑完成`);
++    console.log(`付款共 ${summary.payments} 笔，换日未新增付款`);
+   } catch (error) {
+     console.error(error instanceof Error ? error.message : String(error));
+     process.exitCode = 1;
+```
+
+- [ ] **Step 3：运行 `node --import tsx --test tests/sanyi-rehearsal.test.ts`，预期 2 项通过；再运行 `node --import tsx scripts/rehearse-demo.ts --mode=mock`，预期四柱与窗口正确、共两笔付款、换日无新增付款。**
+
+### Task B5.8：交叉验收与全量回归
+
+- [ ] **Step 1：运行 B1–B5 所有新增测试和上述已修改测试，使用文末验证命令。** 各范围事实、旧存档、两类公开 shape、并发隔离、隐私全文扫描必须有真实断言。
+- [ ] **Step 2：运行项目 typecheck 及 skipLibCheck=false 的代码块严格类型检查。** 禁止靠前端未使用八字页而忽略服务端联合类型。
+- [ ] **Step 3：运行 `npm test`，回归 1A 全部测试，保留监听端口测试；记录实际失败原因。**
+- [ ] **Step 4：逐项核对六份相关 spec delta 与计划任务状态。** 本轮隔离演练不是工作区实施，所有实施步骤保持未勾，OpenSpec 仍不勾；生辰本机保存、表单告知、八字结果页属于 B6，B5 不宣称整份 1B 已实现。
 
 ## Chunk B6：生辰表单与八字结果页
 
@@ -3528,12 +5128,50 @@ export function mockSingleFeeReceipt(proof: SanyiFeeProof): ReturnType<typeof ve
 
 ## 本轮计划代码验证记录
 
-全部代码块按首行路径抽到 `/private/tmp/sanyi-round3`；JSON/Python 去路径标记，TypeScript 保留路径注释。隔离目录复制既有 src/tests/scripts/web/tools、README、示例配置与 contracts，复用现有 node_modules。Python 使用项目现有 `.venv-tools/bin/python`，不安装依赖。最终从计划重新抽取后执行下列命令，记录仅证明计划代码可复现，不代表工作区实现，不勾选任务或 OpenSpec tasks。
+第 4 轮最终代码从当前计划重新抽到 `/private/tmp/sanyi-round4-final`，不依赖第 3 轮目录里的已修改文件。基线复制工作区的 src/tests/scripts/web/tools/contracts、README、package.json、tsconfig.json 与 `.env.example`；node_modules 仅建立指向工作区现有依赖的符号链接。只读复制示例配置，不复制运行时密钥或本地 `.env`。39 个完整文件块按首行 `// 路径` 写入，JSON/Python 去标记，TypeScript 保留注释；13 个既有文件修改块单独抽出，先 `git apply --check`，再 `git apply` 应用到隔离目录，不能将 diff 当完整文件覆盖。空白上下文行可为空行，git apply 实跑接受，既有文件原有空行保持。
 
-- RED：B2/B3 修订测试先对旧代码失败，见 `/private/tmp/sanyi-round3-revision-red.log`；B4 全部测试在新模块缺失时失败，见 `/private/tmp/sanyi-round3-b4-red.log`。不存在关系词、普通判断用语各有独立 RED→GREEN 日志，前缀分别为 `sanyi-round3-invalid-relation`、`sanyi-round3-prose`。
-- Python 语法：`/Users/captain/python/Claude/arc-main-first/.venv-tools/bin/python -m py_compile tools/bazi/generate_fixtures.py`，退出码 0。
-- 双源基准：同一 Python 运行 `tools/bazi/generate_fixtures.py`，生成 55 个时刻；测试逐字段核验 55 × 2 × 4 四柱，全部通过。
-- 新增测试：下列 11 文件共 50 项（B1–B3 28 项，B4 22 项），50 通过、0 失败，日志 `/private/tmp/sanyi-round3-all-new.log`。
+下面是实际使用的抽取与应用方法（只操作隔离目录；重复验证时选一个新的空隔离目录，避免上轮新文件残留）：
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import re,shutil,subprocess
+base=Path('/Users/captain/python/Claude/arc-main-first')
+root=Path('/private/tmp/sanyi-round4-final')
+root.mkdir(exist_ok=True)
+for name in ['src','tests','scripts','web','tools','contracts']:
+ shutil.copytree(base/name,root/name,dirs_exist_ok=True)
+for name in ['package.json','tsconfig.json','README.md','.env.example']:
+ shutil.copy2(base/name,root/name)
+if not (root/'node_modules').exists():
+ (root/'node_modules').symlink_to(base/'node_modules',target_is_directory=True)
+plan=(base/'docs/plans/2026-10-06-sanyi-milestone-1b.md').read_text()
+blocks=list(re.finditer(r'```(ts|json|python)\n// ([^\n]+)\n(.*?)\n```',plan,re.S))
+for m in blocks:
+ path=root/m[2]
+ path.parent.mkdir(parents=True,exist_ok=True)
+ code=m[3]+'\n'
+ if m[1]=='ts':
+  code='// '+m[2]+'\n'+code
+ path.write_text(code)
+patch=root/'plan-modifications.patch'
+patches=re.findall(r'```diff\n(.*?)```',plan,re.S)
+patch.write_text(''.join(patches))
+subprocess.run(['git','apply','--check',str(patch)],cwd=root,check=True)
+subprocess.run(['git','apply',str(patch)],cwd=root,check=True)
+print(f'抽取 {len(blocks)} 个完整块，应用 {len(patches)} 个修改片段：{root}')
+PY
+cd /private/tmp/sanyi-round4-final
+/Users/captain/python/Claude/arc-main-first/.venv-tools/bin/python tools/bazi/generate_fixtures.py
+/Users/captain/python/Claude/arc-main-first/.venv-tools/bin/python -m py_compile tools/bazi/generate_fixtures.py
+```
+
+抽取、补丁检查/应用、Python 语法检查退出码均为 0；生成 55 个双源时刻，每个含双 sect、四柱标准答案。首次重建漏拷贝 `.env.example` 导致一项 README 回归 ENOENT，已补入上述复制清单；未改 README 测试，随后重新全量运行。以下结果全部来自最终重新抽取的目录，不是工作区实现，不勾选计划或 OpenSpec tasks。
+
+- B4 RED：将第 3 轮的 bazi-facts 与 bazi-shared 放入开发隔离目录，新增 4 项全部失败，见 `/private/tmp/sanyi-round4-b4-red.log`；修订后 4 项通过。失败干支选甲子，避开原局、大运、锚年丙午及全年流月；短评测试同时证明流月不进入原局可用集合。
+- B5 RED：时间范围和编排模块缺失时失败，日志 `/private/tmp/sanyi-round4-context-red.log`、`/private/tmp/sanyi-round4-service-red.log`。排练先落新断言，旧实现没有 summary.bazi 而失败，日志 `/private/tmp/sanyi-round4-rehearsal-red.log`。
+- 隐私负向验证：在开发隔离目录临时将 normalized profile 与 corrected.effective 合并进 chart，全文扫描失败，日志 `/private/tmp/sanyi-round4-privacy-red.log`；恢复字段白名单后 2 项通过，日志 `/private/tmp/sanyi-round4-privacy-green.log`。最终重新抽取不含该负向实验。HTTP 的 RED/GREEN 受 EPERM 限制未完成，不能把监听失败说成业务断言失败。
+- 新增范围回归：以下 16 个测试文件共 71 项，71 通过、0 失败、0 跳过。包含 B1–B3 28 项、B4 26 项、B5 非监听新断言 16 项和 1A 原有排练 1 项；日志 `/private/tmp/sanyi-round4-all-new.log`。
 
 ```bash
 node --import tsx --test \
@@ -3542,11 +5180,13 @@ node --import tsx --test \
   tests/bazi-relations.test.ts tests/qiongtong.test.ts \
   tests/sanyi-bazi-schema.test.ts tests/sanyi-bazi-facts.test.ts \
   tests/sanyi-bazi-audit.test.ts tests/sanyi-bazi-schools.test.ts \
-  tests/sanyi-bazi-school-runner.test.ts
+  tests/sanyi-bazi-school-runner.test.ts tests/sanyi-bazi-round4.test.ts \
+  tests/sanyi-fortune-context.test.ts tests/sanyi-bazi-reading-service.test.ts \
+  tests/sanyi-bazi-privacy.test.ts tests/sanyi-rehearsal.test.ts
 ```
 
-- 项目类型：隔离目录 `npm run typecheck`，原有 strict、noUncheckedIndexedAccess、exactOptionalPropertyTypes 均开启，退出码 0，日志 `/private/tmp/sanyi-round3-typecheck.log`。
-- 代码块严格类型：下列命令覆盖全部新增模块、测试及新增声明，关闭 skipLibCheck，退出码 0、0 错，日志 `/private/tmp/sanyi-round3-strict.log`。
+- 项目类型：`npm run typecheck`，strict、noUncheckedIndexedAccess、exactOptionalPropertyTypes 保持开启，退出码 0；日志 `/private/tmp/sanyi-round4-typecheck.log`。
+- 代码块严格类型：以下命令覆盖 B1–B5 新代码及接口、排练与 HTTP 测试，额外关闭 skipLibCheck，退出码 0、0 错；日志 `/private/tmp/sanyi-round4-strict.log`。不改依赖声明或 tsconfig。
 
 ```bash
 node_modules/.bin/tsc --noEmit --strict \
@@ -3558,30 +5198,36 @@ node_modules/.bin/tsc --noEmit --strict \
   tests/bazi-relations.test.ts tests/qiongtong.test.ts \
   tests/sanyi-bazi-schema.test.ts tests/sanyi-bazi-facts.test.ts \
   tests/sanyi-bazi-audit.test.ts tests/sanyi-bazi-schools.test.ts \
-  tests/sanyi-bazi-school-runner.test.ts
+  tests/sanyi-bazi-school-runner.test.ts tests/sanyi-bazi-round4.test.ts \
+  tests/sanyi-fortune-context.test.ts tests/sanyi-bazi-reading-service.test.ts \
+  tests/sanyi-bazi-privacy.test.ts tests/sanyi-rehearsal.test.ts \
+  tests/frontend-server.test.ts
 ```
 
-- 全量回归：最终抽取后执行 `npm test`，402 项中 394 项通过，8 项既有 frontend-server 测试均因沙箱拒绝监听 `127.0.0.1`（`listen EPERM`）失败；未跳过或改动这些测试，不能宣称全量通过。日志 `/private/tmp/sanyi-round3-regression.log`，主管可在允许本机监听的隔离环境复跑。其余 1A 问事、mock、核对、黄历、奇门、付款与 API 回归通过。
-- 限制：全项目类型检查沿用原 tsconfig 的 skipLibCheck；上述新代码依赖范围额外关闭 skipLibCheck 验证，不改第三方声明或依赖。
+- 排练：`node --import tsx scripts/rehearse-demo.ts --mode=mock`，退出码 0；先完成问事，追加运势命盘为庚午 辛巳 庚辰 癸未、窗口 2023–2032、三家 done、逐年合议 10 项，再免费切换重跑。总付款 2 笔，切换未新增付款。日志 `/private/tmp/sanyi-round4-rehearsal.log`。
+- 全量回归：`npm test`，424 项中 414 通过、10 失败、0 跳过；失败均为 `tests/frontend-server.test.ts` 的 `listen EPERM 127.0.0.1`，包括 8 项既有测试与 2 项新增安全测试。未跳过或修改监听行为，不能宣称全量通过；日志 `/private/tmp/sanyi-round4-regression.log`。主管须在允许监听的隔离目录复跑这 10 项与全量回归，其余 1A 回归均通过。
 
 ### 分块行数与交付清单
 
-从对应 `## Chunk` 标题计至下一同级标题之前，含文字与代码围栏。
+从对应 `## Chunk` 标题计至下一同级标题之前，含文字与代码围栏；下表是最终计划实际行数。
 
 | Chunk | 行数 | 交付 |
 |---|---:|---|
-| B1 | 755 | 保持前轮已核验内容 |
-| B2 | 727 | 展开代码风格，警示去重，补输出与样稿字段契约 |
-| B3 | 701 | 通行关系标签、原局半合保留、风格展开、调候裁定与回归 |
-| B4a | 637 | B4.1 Schema；B4.2 事实表；B4.3 最长匹配核对，完整测试与实现 |
-| B4b | 562 | B4.4 三家输入；B4.5 单家运行器；B4.6 mock 路由；B4.7 交叉验收 |
+| B1 | 776 | 声明改为精确 diff，其余已核验内容保留 |
+| B2 | 727 | 既有双源与派生命盘实现 |
+| B3 | 701 | 既有关系与调候实现 |
+| B4a | 606 | 锚年流月事实和节气日期，audit 只列修改片段 |
+| B4b | 596 | 余家全部四柱藏干、提示词分工、mock 精确片段与 4 项回归 |
+| B5a | 945 | B5.1 时间范围、B5.2 存储与公开投影、B5.3 编排和完整测试 |
+| B5b | 635 | B5.4 API、B5.5 HTTP、B5.6 隐私、B5.7 排练、B5.8 交叉验收 |
 
-五个完整 Chunk 均 ≤ 1000 行；B3 无需拆分，B4 拆为两块。全部 TypeScript 非 JSON 代码行 ≤ 110 字符，文件代码块首行为路径注释。修订清单：B2/B3 风格、关系通行字序、跨范围三合保留原局半合/拱、交节警示合并、乙巳与戊午删酌用丙、取材规则与已裁定歧义记录；B4 全部范围及测试已给出。
+所有完整 Chunk 均 ≤ 1000 行；B5 分为 a/b 两块。既有文件只有精确 diff，新建文件才有路径标记完整块；修改片段新增语句保留 1A 排版，新增 TypeScript 代码每行一条语句，if/for 均使用换行花括号，无嵌套三元。本轮只修改本计划文件，不提交、不安装依赖。
 
 ## 待主管确认的口径
 
-1. 本轮无新增字段或阻塞疑点需主管确认。沿用已授权隐私边界：原始生辰及校正前后时刻只在本机或请求期展示，服务端只存派生盘与非可逆校正状态；分享者不能重排，免费换日重传本机生辰。
-2. B4 没有新增输出字段；「留意 某月」沿用 timing。取材裁定全部落实，无需重复确认。下表保留已裁定理由供后续实施和复核。
+1. 无新增业务口径或阻塞疑点。按主管已定边界，原始生辰与校正详情只在请求期和本机使用；服务端保存派生命盘与不可逆校正摘要。起运与交运日期可能反推出生日期的局限已写明，不删除字段。
+2. 唯一剩余验证项是允许监听环境里的 HTTP 复跑：沙箱拒绝本机端口，10 项监听测试不能据此判定业务通过。需主管实跑 `node --import tsx --test tests/frontend-server.test.ts` 与 `npm test`，不需重新确认已经裁定的实现口径。
+3. B6 要按公开 kind 联合接八字页和本机生辰；B5 不展示原始校正详情，旧问事组件使用 question 类型别名。免费切换需要重传生辰，服务端只比较旧口径四柱，这就是本轮已定的身份核验边界。
 
 ### 已裁定的取材歧义记录
 
