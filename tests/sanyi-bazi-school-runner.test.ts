@@ -29,18 +29,18 @@ test("首次核对失败，带中文错误完整重写一次后成功", async ()
   assert.equal(result.status, "done");
   assert.equal(result.calls, 2);
 });
-test("两次失败无模型原文回显，另两家独立成功", async () => {
+test("三次都不过时删错留对照常展示，另两家独立成功", async () => {
   const input = sampleBazi();
   const provider = new DeterministicMockProvider("bad", {
     "sanyi/fortune/shenxiaozhan": { ...mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune"),
       reason: "私人原文子午冲" },
   });
   const result = await runBaziSchool({ provider }, { ...input, school: BAZI_SCHOOLS[0] });
-  assert.equal(result.status, "failed");
-  assert.equal(result.calls, 2);
-  if (result.status === "failed") {
-    assert.doesNotMatch(result.error, /私人原文/);
-    assert.match(result.error, /核对/);
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 3);
+  if (result.status === "done") {
+    assert.doesNotMatch(result.output.reason, /子午冲/);
+    assert.ok(result.removed >= 1);
   }
   for (const school of BAZI_SCHOOLS.slice(1)) {
     assert.equal((await runBaziSchool({ provider: new MockSchoolsProvider() }, { ...input,
@@ -56,7 +56,7 @@ test("provider 抛错返回 failed，错误消息不回显", async () => {
   const result = await runBaziSchool({ provider }, { ...sampleBazi(), school: BAZI_SCHOOLS[0] });
   assert.deepEqual(result, { status: "failed", calls: 1, error: "模型调用失败，请稍后重试" });
 });
-test("运行器自行校验 Schema，结构失败也只重写一次", async () => {
+test("运行器自行校验 Schema，结构三次都不合格才判失败", async () => {
   const provider = new MockSchoolsProvider();
   let calls = 0;
   provider.generateStructured = async <T>(): Promise<T> => {
@@ -65,7 +65,7 @@ test("运行器自行校验 Schema，结构失败也只重写一次", async () =
   };
   const result = await runBaziSchool({ provider }, { ...sampleBazi(), school: BAZI_SCHOOLS[0] });
   assert.equal(result.status, "failed");
-  assert.equal(calls, 2);
+  assert.equal(calls, 3);
 });
 test("结构失败时重写提示写明具体字段与限制", async () => {
   const input = sampleBazi("fortune");

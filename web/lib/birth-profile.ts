@@ -129,7 +129,11 @@ export function loadBirthProfile(storage?: BirthStorage): BirthProfileInput | nu
   }
 }
 
-export function useBirthProfile(input: BirthProfileInput, remember: boolean, storage?: BirthStorage): BirthProfileInput {
+export function useBirthProfile(
+  input: BirthProfileInput,
+  remember: boolean,
+  storage?: BirthStorage,
+): BirthProfileInput {
   normalizeBirthProfile(input);
   if (remember) {
     try {

@@ -180,13 +180,24 @@ export class BaziReadingService {
       period: { label: reading.context.label, facts: periodFacts(reading.context, reading.chart) } };
   }
   private async runOne(reading: StoredBaziReading, school: BaziSchool): Promise<void> {
-    const result = await runBaziSchool({ provider: this.deps.provider }, this.input(reading, school));
+    let result = await runBaziSchool({ provider: this.deps.provider }, this.input(reading, school));
+    if (result.status === "failed") {
+      // 模型调用偶发失败（超时、网络）时后台自动再试一次，不占用户的免费重试次数。
+      const again = await runBaziSchool({ provider: this.deps.provider }, this.input(reading, school));
+      result = { ...again, calls: again.calls + result.calls };
+    }
     await this.deps.store.update<StoredBaziReading>(reading.id, (current) => {
       const old = current.schools[school.key];
       const state: BaziSchoolState = { status: result.status,
         attempts: old.attempts + result.calls, retries: old.retries };
       if (result.status === "done") {
         state.output = result.output;
+        if (result.removed > 0) {
+          state.removed = result.removed;
+        }
+        if (result.adjusted > 0) {
+          state.adjusted = result.adjusted;
+        }
       } else {
         // 错误详情可能含模型回显；落盘只用固定中文说明。
         state.error = "此家解读失败，可免费重试";

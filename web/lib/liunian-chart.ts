@@ -129,3 +129,14 @@ export function labelLayout(years: readonly (YearConsensus | null)[], currentYea
     return placed;
 }
 
+
+/** 某家某年没有断语时的说明：调用失败为「未落笔」，落笔但缺该年为「未给出」，仍在落笔为「落笔中」。 */
+export function yearGapLabel(status: string): string {
+  if (status === "failed") {
+    return "未落笔";
+  }
+  if (status === "done") {
+    return "未给出";
+  }
+  return "落笔中";
+}

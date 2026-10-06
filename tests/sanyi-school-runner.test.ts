@@ -1,9 +1,10 @@
 // tests/sanyi-school-runner.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
-import type {
-  StructuredOutputProvider,
-  StructuredOutputRequest,
+import {
+  StructuredOutputError,
+  type StructuredOutputProvider,
+  type StructuredOutputRequest,
 } from "../src/agent/provider.js";
 import { mockSchoolOutput } from "../src/sanyi/mock-schools.js";
 import { runSchool } from "../src/sanyi/school-runner.js";
@@ -63,12 +64,28 @@ test("首次核对失败后重写通过，并附带上次错误", async () => {
   assert.match(provider.requests[1]?.userPrompt ?? "", /吉对应的把握不得低于六成/);
 });
 
-test("连续两次核对失败返回 rejected", async () => {
-  const provider = new FakeProvider([invalid, invalid]);
+test("三次都不过时删错留对，照常返回 done 并记录校正", async () => {
+  const provider = new FakeProvider([invalid, invalid, invalid]);
   const result = await runSchool({ provider }, input);
-  assert.equal(result.status, "rejected");
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 3);
+  if (result.status === "done") {
+    assert.equal(result.output.confidenceTenths, 6);
+    assert.equal(result.adjusted, 1);
+    assert.equal(result.removed, 0);
+  }
+});
+
+test("结构不合 Schema 时带具体字段提示重写", async () => {
+  const schemaError = new StructuredOutputError("结构化输出不符合 JSON Schema", [{
+    instancePath: "/headline", schemaPath: "#/properties/headline/maxLength", keyword: "maxLength",
+    params: { limit: 16 }, message: "must NOT have more than 16 characters",
+  }]);
+  const provider = new FakeProvider([schemaError, valid]);
+  const result = await runSchool({ provider }, input);
+  assert.equal(result.status, "done");
   assert.equal(result.calls, 2);
-  assert.match(result.status === "rejected" ? result.error : "", /未通过盘面核对/);
+  assert.match(provider.requests[1]?.userPrompt ?? "", /\/headline 不超过 16 字/);
 });
 
 test("模型抛错返回 failed 与中文错误", async () => {

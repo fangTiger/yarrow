@@ -56,16 +56,34 @@ export function BirthFields(props: BirthFieldsProps) {
               type="number"
               value={values.year}
             />
-            <select aria-label="农历月" className="birth-input" onChange={(event) => update({ month: event.target.value })} value={values.month}>
+            <select
+              aria-label="农历月"
+              className="birth-input"
+              onChange={(event) => update({ month: event.target.value })}
+              value={values.month}
+            >
               <option value="">月</option>
-              {LUNAR_MONTHS.map((label, index) => <option key={label} value={String(index + 1)}>{label}</option>)}
+              {LUNAR_MONTHS.map((label, index) => (
+                <option key={label} value={String(index + 1)}>{label}</option>
+              ))}
             </select>
-            <select aria-label="农历日" className="birth-input" onChange={(event) => update({ day: event.target.value })} value={values.day}>
+            <select
+              aria-label="农历日"
+              className="birth-input"
+              onChange={(event) => update({ day: event.target.value })}
+              value={values.day}
+            >
               <option value="">日</option>
-              {LUNAR_DAYS.map((label, index) => <option key={label} value={String(index + 1)}>{label}</option>)}
+              {LUNAR_DAYS.map((label, index) => (
+                <option key={label} value={String(index + 1)}>{label}</option>
+              ))}
             </select>
             <label className="check">
-              <input checked={values.isLeapMonth} onChange={(event) => update({ isLeapMonth: event.target.checked })} type="checkbox" />
+              <input
+                checked={values.isLeapMonth}
+                onChange={(event) => update({ isLeapMonth: event.target.checked })}
+                type="checkbox"
+              />
               闰月
             </label>
           </span>
@@ -79,16 +97,32 @@ export function BirthFields(props: BirthFieldsProps) {
           value={values.time}
         />
         <label className="check">
-          <input checked={values.unknownTime} onChange={(event) => update({ unknownTime: event.target.checked })} type="checkbox" />
+          <input
+            checked={values.unknownTime}
+            onChange={(event) => update({ unknownTime: event.target.checked })}
+            type="checkbox"
+          />
           不知道时辰
         </label>
         <div aria-label="性别" className="seg" role="group">
-          <button aria-pressed={values.gender === "male"} onClick={() => update({ gender: "male" })} type="button">男</button>
-          <button aria-pressed={values.gender === "female"} onClick={() => update({ gender: "female" })} type="button">女</button>
+          {(["male", "female"] as const).map((gender) => (
+            <button
+              aria-pressed={values.gender === gender}
+              key={gender}
+              onClick={() => update({ gender })}
+              type="button"
+            >
+              {gender === "male" ? "男" : "女"}
+            </button>
+          ))}
         </div>
       </div>
       <label className="check">
-        <input checked={props.remember} onChange={(event) => props.onRememberChange(event.target.checked)} type="checkbox" />
+        <input
+          checked={props.remember}
+          onChange={(event) => props.onRememberChange(event.target.checked)}
+          type="checkbox"
+        />
         记住为本人生辰（仅存本机）
       </label>
       <p className="hint">生辰只存本机；解读时会发送给模型，分享链接会显示命盘（可反推出生日期）。</p>

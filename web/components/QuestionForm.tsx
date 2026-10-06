@@ -60,7 +60,9 @@ export function QuestionForm() {
   }, [question, valid]);
   const entry = deriveEntry(view, choice);
   const problem = birthProblem(birthValues);
-  const gate = entryGate({ questionLength: length, classified: view !== undefined, entry, birthProblem: problem });
+  const gate = entryGate({
+    questionLength: length, classified: view !== undefined, entry, birthProblem: problem,
+  });
   // 分类结果一到就显示结果，不再停留在「识别中」。
   let status = "";
   if (entry.unsupported) {
@@ -131,7 +133,9 @@ export function QuestionForm() {
       ) : (
         <button className="button button-primary" disabled type="button">问卦 · 0.05 USDC</button>
       )}
-      {!gate.ready && gate.reason && gate.reason !== status ? <p className="hint gate">{gate.reason}</p> : null}
+      {!gate.ready && gate.reason && gate.reason !== status ? (
+        <p className="hint gate">{gate.reason}</p>
+      ) : null}
     </form>
   );
 }

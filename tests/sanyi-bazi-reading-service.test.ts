@@ -86,7 +86,8 @@ test("三家并行、一家失败隔离，免费重试最多两次", { timeout: 
   } });
   try {
     const r = await create(f);
-    assert.equal(started, 3);
+    // 三家并行各调一次，余春台失败后后台自动再试一次，共 4 次。
+    assert.equal(started, 4);
     assert.equal(r.status, "done");
     assert.equal(r.schools.yuchuntai.status, "failed");
     assert.equal(r.schools.shenxiaozhan.status, "done");
@@ -102,6 +103,45 @@ test("三家并行、一家失败隔离，免费重试最多两次", { timeout: 
     await assert.rejects(f.bazi.retrySchool(r.id, "yuchuntai"), /不可重试/);
   } finally {
     release();
+    await f.close();
+  }
+});
+test("模型调用偶发失败时后台自动再试一次，不占用户免费重试", async () => {
+  const mock = new MockSchoolsProvider();
+  let failures = 1;
+  const f = await baziFixture({ ...mock,
+    generateStructured: async <T>(request: Parameters<typeof mock.generateStructured>[0]) => {
+      if (failures > 0 && request.taskId.endsWith("rentieqiao")) {
+        failures -= 1;
+        throw new Error("供应商超时");
+      }
+      return mock.generateStructured<T>(request);
+    } });
+  try {
+    const r = await create(f);
+    assert.equal(r.schools.rentieqiao.status, "done");
+    assert.equal(r.schools.rentieqiao.retries, 0);
+  } finally {
+    await f.close();
+  }
+});
+test("三家落笔不合格时删错留对照常展示，并记录删去处数", async () => {
+  const mock = new MockSchoolsProvider();
+  const f = await baziFixture({ ...mock,
+    generateStructured: async <T>(request: Parameters<typeof mock.generateStructured>[0]) => {
+      const output = await mock.generateStructured<Record<string, unknown>>(request);
+      if (request.taskId.endsWith("shenxiaozhan")) {
+        return { ...output, reason: `${String(output.reason)}子午冲。` } as T;
+      }
+      return output as T;
+    } });
+  try {
+    const r = await create(f);
+    const state = r.schools.shenxiaozhan;
+    assert.equal(state.status, "done");
+    assert.doesNotMatch(String(state.output?.reason), /子午冲/);
+    assert.ok((state.removed ?? 0) >= 1);
+  } finally {
     await f.close();
   }
 });

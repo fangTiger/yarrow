@@ -10,7 +10,8 @@ function shortTime(value: string): string {
     return value;
   }
   const pad = (part: number) => String(part).padStart(2, "0");
-  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  const day = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return `${day} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 /** 右上角「卦历」小图标：点开以浮层列出本机最近记录。 */
@@ -25,7 +26,8 @@ export function HistoryMenu(props: { readings: readonly RecentReading[]; default
       if (event instanceof KeyboardEvent && event.key !== "Escape") {
         return;
       }
-      if (event.type === "click" && event.target instanceof Element && event.target.closest(".history-menu")) {
+      const inside = event.target instanceof Element && event.target.closest(".history-menu") !== null;
+      if (event.type === "click" && inside) {
         return;
       }
       setOpen(false);
@@ -51,7 +53,13 @@ export function HistoryMenu(props: { readings: readonly RecentReading[]; default
       >
         <svg aria-hidden="true" height="20" viewBox="0 0 24 24" width="20">
           <circle cx="12" cy="12" fill="none" r="8.5" stroke="currentColor" strokeWidth="1.6" />
-          <path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+          <path
+            d="M12 7.5V12l3 2"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.6"
+          />
         </svg>
         {count > 0 ? <span className="history-count">{count}</span> : null}
       </button>

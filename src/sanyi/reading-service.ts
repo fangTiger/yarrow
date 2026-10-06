@@ -494,15 +494,18 @@ export class ReadingService {
     preserveRetries: boolean,
   ): Promise<void> {
     const reading = await this.readQuestion(id);
-    const result = await runSchool(
-      { provider: this.deps.provider },
-      {
-        school,
-        question: reading.question,
-        facts: context.facts,
-        originalTexts: context.originalTexts,
-      },
-    );
+    const input = {
+      school,
+      question: reading.question,
+      facts: context.facts,
+      originalTexts: context.originalTexts,
+    };
+    let result = await runSchool({ provider: this.deps.provider }, input);
+    if (result.status === "failed") {
+      // 模型调用偶发失败（超时、网络）时后台自动再试一次，不占用户的免费重试次数。
+      const again = await runSchool({ provider: this.deps.provider }, input);
+      result = { ...again, calls: again.calls + result.calls };
+    }
     await this.deps.store.update(id, (current) => ({
       ...current,
       schools: {
@@ -523,12 +526,19 @@ export class ReadingService {
   ): SchoolState {
     const retries = preserveRetries ? previous.retries : 0;
     if (result.status === "done") {
-      return {
+      const state: SchoolState = {
         status: "done",
         output: result.output,
         attempts: previous.attempts + result.calls,
         retries,
       };
+      if (result.removed > 0) {
+        state.removed = result.removed;
+      }
+      if (result.adjusted > 0) {
+        state.adjusted = result.adjusted;
+      }
+      return state;
     }
     return {
       status: result.status,

@@ -79,6 +79,8 @@ class FakeProvider implements StructuredOutputProvider {
   readonly providerConfigHash = `0x${"00".repeat(32)}` as const;
   readonly calls = new Map<QuestionSchoolKey, number>();
   throwFor: QuestionSchoolKey | null = null;
+  /** 只在前 N 次调用时抛错，用来测后台自动再试。 */
+  throwTimes = new Map<QuestionSchoolKey, number>();
   rejectFor: QuestionSchoolKey | null = null;
   private readonly gates = new Map<
     QuestionSchoolKey,
@@ -110,6 +112,11 @@ class FakeProvider implements StructuredOutputProvider {
     }
     if (this.throwFor === key) {
       throw new Error("模型暂不可用");
+    }
+    const remaining = this.throwTimes.get(key) ?? 0;
+    if (remaining > 0) {
+      this.throwTimes.set(key, remaining - 1);
+      throw new Error("模型暂时超时");
     }
     const output = mockSchoolOutput(key, factsFromPrompt(request.userPrompt));
     if (this.rejectFor === key) {
@@ -300,15 +307,33 @@ test("一家失败被隔离、可成功重试且每卦第三次重试超限", as
   }
 });
 
-test("京房连续两次核对失败后标为 rejected", async () => {
+test("京房三次核对不过后删错留对照常展示，并记录校正处数", async () => {
   const item = await fixture();
   try {
     item.provider.rejectFor = "jingfang";
     const reading = await create(item.service);
     await castAll(item.service, reading.id);
     const done = await item.service.getReading(reading.id);
-    assert.equal(done.schools.jingfang.status, "rejected");
-    assert.equal(item.provider.calls.get("jingfang"), 2);
+    assert.equal(done.schools.jingfang.status, "done");
+    assert.equal(done.schools.jingfang.output?.confidenceTenths, 6);
+    assert.equal(done.schools.jingfang.adjusted, 1);
+    assert.equal(done.schools.jingfang.removed, undefined);
+    assert.equal(item.provider.calls.get("jingfang"), 3);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("模型调用偶发失败时后台自动再试一次，不占用户的免费重试", async () => {
+  const item = await fixture();
+  try {
+    item.provider.throwTimes.set("shaoyong", 1);
+    const reading = await create(item.service);
+    await castAll(item.service, reading.id);
+    const done = await item.service.getReading(reading.id);
+    assert.equal(done.schools.shaoyong.status, "done");
+    assert.equal(done.schools.shaoyong.retries, 0);
+    assert.equal(item.provider.calls.get("shaoyong"), 2);
   } finally {
     await rm(item.root, { recursive: true, force: true });
   }

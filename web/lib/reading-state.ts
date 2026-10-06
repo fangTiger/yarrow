@@ -45,3 +45,15 @@ export function consensusTenths(schools: Schools): number | undefined {
   }
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
+
+/** 删错留对后在卡片上给出的说明；没有删改时返回 null。 */
+export function repairNote(state: { removed?: number; adjusted?: number }): string | null {
+  const parts: string[] = [];
+  if (state.removed && state.removed > 0) {
+    parts.push(`已删去 ${state.removed} 处与盘面不符的内容`);
+  }
+  if (state.adjusted && state.adjusted > 0) {
+    parts.push("几成已按吉凶等级校正");
+  }
+  return parts.length > 0 ? parts.join("；") : null;
+}

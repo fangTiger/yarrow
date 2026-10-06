@@ -54,7 +54,19 @@ test("流年一家失败不展示，全失败合议破折号且无折线", async
             throw new Error("类型错误");
         }
         let html = renderToStaticMarkup(createElement(LiuNianPanel, { reading, currentYear: 2026 }));
-        assert.match(html, /未展示/);
+        // 模型调用失败的一家显示「未落笔」；落了笔但删错留对后缺某年的显示「未给出」。
+        assert.match(html, /未落笔/);
+        assert.doesNotMatch(html, /未展示/);
+        const gap = await f.bazi.getReading(value.id);
+        const shen = gap.schools.shenxiaozhan.output;
+        if (shen && "years" in shen) {
+            gap.schools.shenxiaozhan.output = { ...shen, years: shen.years.filter((item) => item.year !== 2029) };
+        }
+        const gapReading = publicBaziReading(gap);
+        if (gapReading.kind === "fortune") {
+            assert.match(renderToStaticMarkup(createElement(LiuNianPanel, { reading: gapReading, currentYear: 2026 })),
+                /未给出/);
+        }
         assert.match(html, /虚岁/);
         assert.match(html, /回看/);
         assert.match(html, /甲申→乙酉/);

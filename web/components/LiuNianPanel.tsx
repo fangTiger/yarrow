@@ -1,6 +1,6 @@
 // web/components/LiuNianPanel.tsx
 import { useEffect, useRef, useState } from "react";
-import { BAZI_KEYS, BAZI_NAMES, CHART, LABEL_BAND, consensusText, labelLayout, yunLabel, chartGeometry, relationClass, schoolYear, yearGroups, type FortuneReading } from "../lib/liunian-chart.js";
+import { BAZI_KEYS, BAZI_NAMES, CHART, LABEL_BAND, consensusText, labelLayout, yunLabel, chartGeometry, relationClass, schoolYear, yearGapLabel, yearGroups, type FortuneReading } from "../lib/liunian-chart.js";
 export function LiuNianPanel({ reading, currentYear }: {
     reading: FortuneReading;
     currentYear: number;
@@ -48,7 +48,7 @@ export function LiuNianPanel({ reading, currentYear }: {
                 const relations = reading.analysis.years.find(item => item.year === years[i]?.year)?.relations.filter(item => item.scope === 'year') ?? [];
                 return [...new Map(relations.map(item => [item.label, item])).values()].map(item => <span className={relationClass(item.kind)} key={item.label}>{item.label}</span>);
             } },
-        ...BAZI_KEYS.map(key => ({ label: BAZI_NAMES[key], className: 'v', render: (i: number) => { const entry = schoolYear(reading, key, years[i]!.year); return entry ? <>{entry.verdict} {entry.confidenceTenths}成</> : '未展示'; } })),
+        ...BAZI_KEYS.map(key => ({ label: BAZI_NAMES[key], className: 'v', render: (i: number) => { const entry = schoolYear(reading, key, years[i]!.year); if (entry) { return <>{entry.verdict} {entry.confidenceTenths}成</>; } return yearGapLabel(reading.schools[key].status); } })),
         { label: '合议', render: i => reading.years[i] ? consensusText(reading.years[i]!.average) : '—' }
     ];
     const active = years.find(year => year.year === selected)!;
@@ -78,6 +78,6 @@ export function LiuNianPanel({ reading, currentYear }: {
                 const entry = key ? schoolYear(reading, key, year.year) : undefined;
                 return <td className={[year.year === currentYear ? 'now' : '', row.className ?? '', entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''].join(' ')} key={year.year}>{row.render(i)}</td>;
             })}</tr>)}</tbody></table></div>
- <div className="ln-detail"><div className="ln-detail-head"><span>合议 {reading.years.find(item => item?.year === selected) ? consensusText(reading.years.find(item => item?.year === selected)!.average) : '—'}</span><b>{selected} {active.ganZhi}</b><span>虚岁 {active.age} · {active.luck?.ganZhi ?? active.luckLabel} · {active.stemGod}</span></div><div className="ln-detail-rows">{BAZI_KEYS.map(key => { const entry = schoolYear(reading, key, selected); return <div key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><strong className={entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''}>{entry ? `${entry.verdict} ${entry.confidenceTenths}成` : '未展示'}<small>{BAZI_NAMES[key]}</small></strong><p>{entry?.note ?? '未展示'}</p></div>; })}</div></div>
+ <div className="ln-detail"><div className="ln-detail-head"><span>合议 {reading.years.find(item => item?.year === selected) ? consensusText(reading.years.find(item => item?.year === selected)!.average) : '—'}</span><b>{selected} {active.ganZhi}</b><span>虚岁 {active.age} · {active.luck?.ganZhi ?? active.luckLabel} · {active.stemGod}</span></div><div className="ln-detail-rows">{BAZI_KEYS.map(key => { const entry = schoolYear(reading, key, selected); return <div key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><strong className={entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''}>{entry ? `${entry.verdict} ${entry.confidenceTenths}成` : yearGapLabel(reading.schools[key].status)}<small>{BAZI_NAMES[key]}</small></strong><p>{entry ? (entry.note || '短评与盘面不符，已删去') : yearGapLabel(reading.schools[key].status)}</p></div>; })}</div></div>
  </div></section>;
 }

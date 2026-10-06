@@ -77,63 +77,89 @@ function hiddenStemErrors(text: string): string[] {
   }
   return [...errors];
 }
-export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
-  ok: boolean;
-  errors: string[];
-} {
+function textErrors(text: string, allowed: ReadonlySet<string>, label: string): string[] {
   const errors: string[] = [];
-  // 引证与正文共享该家当前事实，窗口其它年份不能为跨柱断语背书。
-  const currentFacts = new Map([...facts].filter(([id]) => !/^year:\d{4}$/u.test(id)));
-  const currentTokens = union(currentFacts);
-  function check(text: string, allowed: ReadonlySet<string>, label: string): void {
-    for (const error of hiddenStemErrors(text)) {
-      errors.push(`${label} ${error}`);
-    }
-    for (const word of words(text)) {
-      if (!allowed.has(word)) {
-        errors.push(`${label} 不支持关键词：${word}`);
-      }
+  for (const error of hiddenStemErrors(text)) {
+    errors.push(`${label} ${error}`);
+  }
+  for (const word of words(text)) {
+    if (!allowed.has(word)) {
+      errors.push(`${label} 不支持关键词：${word}`);
     }
   }
-  for (const evidence of output.evidence) {
-    const fact = facts.get(evidence.ref);
-    if (!fact) {
-      errors.push("事实编号不存在，请使用所供事实表中的 ref");
-      continue;
-    }
-    const keywords = words(evidence.claim);
-    // 所引事实本身没有可核对词（如五行计数只有金木水火土）时无从锚定，只做全盘存在核对。
-    const anchorable = words([...fact.tokens].join(" ")).length > 0;
-    if (anchorable && keywords.length > 0 && !keywords.some((word) => fact.tokens.has(word))) {
-      errors.push(`${evidence.ref} 引证与所引事实无关`);
-    }
-    check(evidence.claim, new Set([...currentTokens, ...fact.tokens]), evidence.ref);
+  return errors;
+}
+
+/** 引证与正文共享该家当前事实；窗口其它年份不能为跨柱断语背书。 */
+function currentTokens(facts: FactTable): Set<string> {
+  return union(new Map([...facts].filter(([id]) => !/^year:\d{4}$/u.test(id))));
+}
+
+/** 核对一条引证：编号存在、可锚定时至少一词属于所引事实、其余关键词属于当前事实、藏干归属正确。 */
+export function auditBaziEvidence(evidence: { ref: string; claim: string }, facts: FactTable): string[] {
+  const fact = facts.get(evidence.ref);
+  if (!fact) {
+    return ["事实编号不存在，请使用所供事实表中的 ref"];
   }
-  // 正文只能用原局、运和锚年；窗口其它年份不会为总断虚构关系背书。
+  const errors: string[] = [];
+  const keywords = words(evidence.claim);
+  // 所引事实本身没有可核对词（如五行计数只有金木水火土）时无从锚定，只做全盘存在核对。
+  const anchorable = words([...fact.tokens].join(" ")).length > 0;
+  if (anchorable && keywords.length > 0 && !keywords.some((word) => fact.tokens.has(word))) {
+    errors.push(`${evidence.ref} 引证与所引事实无关`);
+  }
+  const allowed = new Set([...currentTokens(facts), ...fact.tokens]);
+  errors.push(...textErrors(evidence.claim, allowed, evidence.ref));
+  return errors;
+}
+
+/** 核对一段正文：关键词只认原局、运与锚年事实；缺时柱时不得把干支归给时柱、命宫或身宫。 */
+export function auditBaziProse(text: string, facts: FactTable): string[] {
+  const errors = textErrors(text, currentTokens(facts), "正文");
+  // 同名干支可能属于合法大运，缺时柱时仍拒绝将其归给时柱、命宫或身宫。
+  if (facts.has("chart:limit") && /(?:时柱|命宫|身宫)[^。；\n]{0,8}[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/u
+    .test(text)) {
+    errors.push("缺时柱，不得引用时柱、命宫或身宫干支");
+  }
+  return errors;
+}
+
+/** 核对一年短评：只认该年流年事实与原局事实。 */
+export function auditBaziNote(item: { year: number; note: string }, facts: FactTable): string[] {
+  const year = facts.get(`year:${item.year}`);
+  if (!year) {
+    return [`${item.year} 年事实不存在`];
+  }
+  const natal = new Map([...facts].filter(([id, fact]) => isNatalFact(id, fact.label)));
+  return textErrors(item.note, new Set([...union(natal), ...year.tokens]), `${item.year} 年短评`);
+}
+
+/** 各家正文（直断、理由、详断、建议、应期）汇成一段，供核对与修补共用。 */
+export function baziProse(output: BaziSchoolOutput): string[] {
   const prose = [output.useGod, output.headline, output.reason,
     ...output.sections.flatMap((section) => [section.title, section.text]), ...output.advice];
   if ("timing" in output && output.timing) {
     prose.push(output.timing.window, output.timing.condition);
   }
-  check(prose.join("\n"), currentTokens, "正文");
-  // 同名干支可能属于合法大运，缺时柱时仍拒绝将其归给时柱、命宫或身宫。
-  if (facts.has("chart:limit") && /(?:时柱|命宫|身宫)[^。；\n]{0,8}[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/u
-    .test(prose.join("\n"))) {
-    errors.push("缺时柱，不得引用时柱、命宫或身宫干支");
+  return prose;
+}
+
+export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
+  ok: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+  for (const evidence of output.evidence) {
+    errors.push(...auditBaziEvidence(evidence, facts));
   }
-  if (facts.has("chart:limit") && !/缺时柱|时辰未知/u.test(prose.join("\n"))) {
+  const prose = baziProse(output).join("\n");
+  errors.push(...auditBaziProse(prose, facts));
+  if (facts.has("chart:limit") && !/缺时柱|时辰未知/u.test(prose)) {
     errors.push("缺时柱时须说明判断限制");
   }
   if ("years" in output) {
-    const natal = new Map([...facts].filter(([id, fact]) => isNatalFact(id, fact.label)));
     for (const item of output.years) {
-      const year = facts.get(`year:${item.year}`);
-      if (!year) {
-        errors.push(`${item.year} 年事实不存在`);
-        continue;
-      }
-      const allowed = new Set([...union(natal), ...year.tokens]);
-      check(item.note, allowed, `${item.year} 年短评`);
+      errors.push(...auditBaziNote(item, facts));
     }
   }
   return { ok: errors.length === 0, errors };

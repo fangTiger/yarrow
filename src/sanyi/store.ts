@@ -19,6 +19,10 @@ export interface SchoolState {
   attempts: number;
   retries: number;
   error?: string;
+  /** 删错留对时删去的处数（不保存被删原文）。 */
+  removed?: number;
+  /** 删错留对时校正的吉凶把握处数。 */
+  adjusted?: number;
 }
 
 export interface StoredQuestionReading {
@@ -61,6 +65,10 @@ export interface BaziSchoolState {
   attempts: number;
   retries: number;
   error?: string;
+  /** 删错留对时删去的处数（不保存被删原文）。 */
+  removed?: number;
+  /** 删错留对时校正的吉凶把握处数。 */
+  adjusted?: number;
 }
 export interface StoredBaziReading {
   id: string;

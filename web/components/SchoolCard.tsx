@@ -1,5 +1,6 @@
 // web/components/SchoolCard.tsx
 import type { PublicReading } from "../lib/api.js";
+import { repairNote } from "../lib/reading-state.js";
 
 type School = PublicReading["schools"][keyof PublicReading["schools"]];
 const META = {
@@ -57,6 +58,7 @@ export function SchoolCard(props: {
           <small>{output.confidenceTenths}成</small>
         </p>
         <p className="school-reason">{output.reason}</p>
+        {repairNote(props.school) ? <p className="hint repair-note">{repairNote(props.school)}</p> : null}
         <details>
           <summary>展开详断</summary>
           {output.sections.map((section) => (

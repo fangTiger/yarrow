@@ -149,3 +149,11 @@ test("结果页事项标签逐一符合服务端真实事项白名单", () => {
     assert.ok(html.includes(subject.label), subject.key);
   }
 });
+
+test("删错留对的卡片说明：删去处数与把握校正", async () => {
+  const { repairNote } = await import("../web/lib/reading-state.js");
+  assert.equal(repairNote({}), null);
+  assert.equal(repairNote({ removed: 2 }), "已删去 2 处与盘面不符的内容");
+  assert.equal(repairNote({ adjusted: 1 }), "几成已按吉凶等级校正");
+  assert.equal(repairNote({ removed: 1, adjusted: 2 }), "已删去 1 处与盘面不符的内容；几成已按吉凶等级校正");
+});

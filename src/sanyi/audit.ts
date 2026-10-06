@@ -129,68 +129,84 @@ function questionWords(text: string): string[] {
   return tokenizeClaim(text, [...QUESTION_COMMON_WORDS]).filter((word) => !QUESTION_COMMON_WORDS.has(word));
 }
 
-export function auditOutput(
-  output: QuestionSchoolOutput,
+function lineTokenSets(facts: FactTable): ReadonlySet<string>[] {
+  return [...facts].filter(([id]) => id.startsWith("line:")).map(([, fact]) => fact.tokens);
+}
+
+/** 核对一条引证：编号可解析、至少一词锚定所引事实、其余关键词全盘存在、组合真实存在。 */
+export function auditQuestionEvidence(
+  evidence: { ref: string; claim: string },
   facts: FactTable,
-): { ok: boolean; errors: string[] } {
+): string[] {
   const errors: string[] = [];
-  const allTokens = new Set([...facts.values()].flatMap((fact) => [...fact.tokens]));
-  const lineTokens = [...facts]
-    .filter(([id]) => id.startsWith("line:"))
-    .map(([, fact]) => fact.tokens);
-  const originals = facts.originalTexts ?? [];
-  for (const evidence of output.evidence) {
-    const ref = resolveRef(evidence.ref, facts);
-    const fact = facts.get(ref);
-    if (!fact) {
-      errors.push(`事实编号不存在：${evidence.ref}`);
-      continue;
+  const ref = resolveRef(evidence.ref, facts);
+  const fact = facts.get(ref);
+  if (!fact) {
+    return [`事实编号不存在：${evidence.ref}`];
+  }
+  const allTokens = new Set([...facts.values()].flatMap((item) => [...item.tokens]));
+  const lineTokens = lineTokenSets(facts);
+  const claim = stripOriginals(evidence.claim, facts.originalTexts ?? []);
+  const keywords = questionWords(claim);
+  const anchorable = questionWords([...fact.tokens].join(" ")).length > 0;
+  if (anchorable && keywords.length > 0 && !keywords.some((word) => fact.tokens.has(word))) {
+    errors.push(`${evidence.ref} 引证与所引事实无关`);
+  }
+  for (const token of keywords) {
+    if (!allTokens.has(token)) {
+      errors.push(`${evidence.ref} 不支持关键词：${token}`);
     }
-    const claim = stripOriginals(evidence.claim, originals);
-    const keywords = questionWords(claim);
-    const anchorable = questionWords([...fact.tokens].join(" ")).length > 0;
-    if (anchorable && keywords.length > 0 && !keywords.some((word) => fact.tokens.has(word))) {
-      errors.push(`${evidence.ref} 引证与所引事实无关`);
-    }
-    for (const token of keywords) {
-      if (!allTokens.has(token)) {
-        errors.push(`${evidence.ref} 不支持关键词：${token}`);
+  }
+  // 明确归属于所引爻的组合及状态仍须属实，不能借其它爻为错误爻位背书。
+  if (ref.startsWith("line:")) {
+    for (const match of claim.matchAll(COMBINATION)) {
+      if (!match.slice(1).every((token) => fact.tokens.has(token))) {
+        errors.push(`${evidence.ref} 不支持盘面组合：${match[0]}`);
       }
     }
-    // 明确归属于所引爻的组合及状态仍须属实，不能借其它爻为错误爻位背书。
-    if (ref.startsWith("line:")) {
-      for (const match of claim.matchAll(COMBINATION)) {
-        if (!match.slice(1).every((token) => fact.tokens.has(token))) {
-          errors.push(`${evidence.ref} 不支持盘面组合：${match[0]}`);
+    if ([...claim.matchAll(COMBINATION)].length > 0) {
+      for (const token of keywords.filter((word) => ["旬空", "月破", "日破", "动", "暗动"].includes(word))) {
+        if (!fact.tokens.has(token)) {
+          errors.push(`${evidence.ref} 不支持关键词：${token}`);
         }
       }
-      if ([...claim.matchAll(COMBINATION)].length > 0) {
-        for (const token of keywords.filter((word) => ["旬空", "月破", "日破", "动", "暗动"].includes(word))) {
-          if (!fact.tokens.has(token)) {
-            errors.push(`${evidence.ref} 不支持关键词：${token}`);
-          }
-        }
-      }
-    } else {
-      // 引用月建、卦名等非爻事实时，顺带写出的「地支五行六亲」组合也必须真实存在于某一爻。
-      for (const match of claim.matchAll(COMBINATION)) {
-        const tokens = match.slice(1);
-        if (!lineTokens.some((set) => tokens.every((token) => set.has(token)))) {
-          errors.push(`${evidence.ref} 不支持盘面组合：${match[0]}`);
-        }
+    }
+  } else {
+    // 引用月建、卦名等非爻事实时，顺带写出的「地支五行六亲」组合也必须真实存在于某一爻。
+    for (const match of claim.matchAll(COMBINATION)) {
+      const tokens = match.slice(1);
+      if (!lineTokens.some((set) => tokens.every((token) => set.has(token)))) {
+        errors.push(`${evidence.ref} 不支持盘面组合：${match[0]}`);
       }
     }
   }
-  const prose = stripOriginals([
-    output.headline,
-    output.reason,
-    ...output.sections.map((section) => section.text),
-  ].join("\n"), originals);
+  return errors;
+}
+
+/** 核对一段正文：出现的「地支五行六亲」组合必须真实存在于某一爻；所供原文片段不参与。 */
+export function auditQuestionProse(text: string, facts: FactTable): string[] {
+  const errors: string[] = [];
+  const lineTokens = lineTokenSets(facts);
+  const prose = stripOriginals(text, facts.originalTexts ?? []);
   for (const match of prose.matchAll(COMBINATION)) {
     const tokens = match.slice(1);
     if (!lineTokens.some((set) => tokens.every((token) => set.has(token)))) {
       errors.push(`正文出现不存在的盘面组合：${match[0]}`);
     }
   }
+  return errors;
+}
+
+export function auditOutput(
+  output: QuestionSchoolOutput,
+  facts: FactTable,
+): { ok: boolean; errors: string[] } {
+  const errors: string[] = [];
+  for (const evidence of output.evidence) {
+    errors.push(...auditQuestionEvidence(evidence, facts));
+  }
+  const sections = output.sections.map((section) => section.text);
+  const prose = [output.headline, output.reason, ...sections].join("\n");
+  errors.push(...auditQuestionProse(prose, facts));
   return { ok: errors.length === 0, errors };
 }
