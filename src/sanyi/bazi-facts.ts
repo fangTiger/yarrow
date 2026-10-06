@@ -32,7 +32,8 @@ export function buildBaziFacts(chart: BaziChart, analysis: BaziAnalysis, tiaohou
       pillar.ganZhi, pillar.stem, pillar.branch, pillar.stemGod,
     ]);
     const tokens = hiddenTokens(pillar.hidden);
-    add(`hidden:${pillar.key}`, `${pillar.label}藏干 ${tokens.join(" ")}`, tokens);
+    add(`hidden:${pillar.key}`, `${pillar.label}藏干 ${tokens.join(" ")}`,
+      [...tokens, pillar.branch, pillar.ganZhi]);
   }
   // 固定排序编号，保证同一派生命盘多次构建时 ref 可复算；label 保留范围和节点供隔离审查。
   const relations = [...analysis.relations].sort((left, right) => left.id.localeCompare(right.id, "en"));
@@ -102,7 +103,7 @@ export function buildBaziFacts(chart: BaziChart, analysis: BaziAnalysis, tiaohou
   if (monthMain) {
     const exposed = stems.includes(monthMain.stem) ? "已透干" : "未透干";
     add("structure:month", `月令本气 ${monthMain.stem} ${monthMain.god} ${exposed}`, [monthMain.stem,
-      monthMain.god]);
+      monthMain.god, chart.pillars.month.branch]);
   }
   const roots = pillars.map((pillar) => {
     const exposed = pillar.hidden.filter((item) => stems.includes(item.stem)).map((item) => item.stem);
@@ -113,7 +114,8 @@ export function buildBaziFacts(chart: BaziChart, analysis: BaziAnalysis, tiaohou
     return pillar.hidden.some((item) => sameElement?.includes(item.stem));
   });
   add("structure:roots", [...roots, `日主同五行通根 ${rootPillars.map((pillar) => pillar.label).join("、") || "无"}`]
-    .join("；"), [...stems, ...pillars.flatMap((pillar) => hiddenTokens(pillar.hidden))]);
+    .join("；"), ["日主", ...stems, ...pillars.map((pillar) => pillar.branch),
+      ...pillars.flatMap((pillar) => hiddenTokens(pillar.hidden))]);
   // 限制也使用事实编号，方便请求级 mock 和核对器共同识别缺时柱。
   if (!chart.pillars.time) {
     add("chart:limit", "时辰未知，缺时柱，判断存在限制", []);

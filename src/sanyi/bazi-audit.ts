@@ -18,6 +18,18 @@ const EXTRA_WORDS = [
     return [..."春夏秋冬"].map((season) => `三${season}${stem}${"木木火火土土金金水水".charAt(index)}`);
   }),
 ];
+// 常用词整体参与最长匹配，但不作为干支事实核对；干支术语仍保留。
+const NON_GANZHI_WORDS = new Set([
+  "未透干", "未透", "未见", "未得", "未成", "未能", "未必", "未有", "未曾", "尚未", "并未", "从未", "未来", "未免",
+  "子女", "孩子", "儿子", "女子", "男子", "君子", "日子", "样子", "房子", "妻子", "子孙",
+  "自己", "知己", "己见", "异己",
+  "辛苦", "辛劳", "辛勤", "艰辛",
+  "申请", "申报", "申明", "重申",
+  "中午", "上午", "下午", "午后", "正午",
+  "生辰", "时辰", "良辰", "辰光",
+  "人丁", "园丁", "丁点",
+  "甲方", "指甲", "盔甲", "乙方", "小丑", "丑陋", "卯足",
+]);
 const RELATION_PHRASE = new RegExp(
   "[子丑寅卯辰巳午未申酉戌亥]{3}(?:三合|三会)[金木水火土]"
   + "|[子丑寅卯辰巳午未申酉戌亥]{2}(?:半合|拱)[金木水火土]"
@@ -29,7 +41,10 @@ function words(text: string): string[] {
   // 分词仍由 1A 的最长匹配循环完成；有效关系再按通行标签归一化。
   const candidates = [...text.matchAll(RELATION_PHRASE)].map((match) => match[0]);
   const vocabulary = new Set([...EXTRA_WORDS, ...candidates]);
-  return tokenizeClaim(text, [...vocabulary]).filter((word) => {
+  return tokenizeClaim(text, [...vocabulary, ...NON_GANZHI_WORDS]).filter((word) => {
+    if (NON_GANZHI_WORDS.has(word)) {
+      return false;
+    }
     // 八字核对干支、十神、关系等完整词，不把问事的“体、用、相”等单字当成事实。
     return vocabulary.has(word) || /^[甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥]$/u.test(word)
       || /^[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]$/u.test(word);
@@ -43,6 +58,9 @@ export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
   errors: string[];
 } {
   const errors: string[] = [];
+  // 引证与正文共享该家当前事实，窗口其它年份不能为跨柱断语背书。
+  const currentFacts = new Map([...facts].filter(([id]) => !/^year:\d{4}$/u.test(id)));
+  const currentTokens = union(currentFacts);
   function check(text: string, allowed: ReadonlySet<string>, label: string): void {
     for (const word of words(text)) {
       if (!allowed.has(word)) {
@@ -56,16 +74,21 @@ export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
       errors.push("事实编号不存在，请使用所供事实表中的 ref");
       continue;
     }
-    check(evidence.claim, fact.tokens, evidence.ref);
+    const keywords = words(evidence.claim);
+    // 所引事实本身没有可核对词（如五行计数只有金木水火土）时无从锚定，只做全盘存在核对。
+    const anchorable = words([...fact.tokens].join(" ")).length > 0;
+    if (anchorable && keywords.length > 0 && !keywords.some((word) => fact.tokens.has(word))) {
+      errors.push(`${evidence.ref} 引证与所引事实无关`);
+    }
+    check(evidence.claim, new Set([...currentTokens, ...fact.tokens]), evidence.ref);
   }
   // 正文只能用原局、运和锚年；窗口其它年份不会为总断虚构关系背书。
-  const currentFacts = new Map([...facts].filter(([id]) => !/^year:\d{4}$/u.test(id)));
   const prose = [output.useGod, output.headline, output.reason,
     ...output.sections.flatMap((section) => [section.title, section.text]), ...output.advice];
   if ("timing" in output && output.timing) {
     prose.push(output.timing.window, output.timing.condition);
   }
-  check(prose.join("\n"), union(currentFacts), "正文");
+  check(prose.join("\n"), currentTokens, "正文");
   // 同名干支可能属于合法大运，缺时柱时仍拒绝将其归给时柱、命宫或身宫。
   if (facts.has("chart:limit") && /(?:时柱|命宫|身宫)[^。；\n]{0,8}[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/u
     .test(prose.join("\n"))) {
