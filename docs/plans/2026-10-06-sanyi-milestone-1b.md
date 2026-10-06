@@ -2355,6 +2355,8 @@ export function lookupQiongtong(dayStem: string, monthBranch: string): Qiongtong
 
 ## Chunk B4a：命理与运势的 Schema、事实表与核对
 
+本批执行记录（2026-10-06）：B4.1–B4.7 已落地并核验，完整文件块原样抽取，既有文件按 diff 应用；未执行提交，也未勾选 OpenSpec 2.5（B5 合议仍未实施）。B4.6R 在临时隔离副本使用 `/private/tmp/sanyi-round3` 的事实表及共同提示词确认 4 项 RED，当前实现 4 项 GREEN。B4 新增测试 26/26 通过；全量测试 406 项，398 通过、8 项均因 `listen EPERM 127.0.0.1` 失败。项目 `tsc --noEmit` 与关闭 `skipLibCheck` 的 B1–B4 严格检查均退出 0。B4.7 的测试清单随第 4 轮回归为 12 个文件；测试及类型检查直接调用 node/tsc，按本批环境规则替代 npm 命令。以下“隔离目录验证、尚未实施”描述保留为计划编写时的历史状态，本记录说明本批实际完成状态。
+
 本块给出 B4.1–B4.3 的完整文件；代码只在隔离目录验证，工作区未实施、不勾选任务。B4b 接着提供这些测试引用的 mock 与三家；执行者先落测试确认 RED，再按任务顺序落实现。Ajv 复用 `validateStructuredOutput`，自洽复用 `checkVerdictConsistency`，分词复用 `tokenizeClaim`，不改变 1A 问事默认行为。
 
 ### B4 事实编号契约
@@ -2382,7 +2384,7 @@ export function lookupQiongtong(dayStem: string, monthBranch: string): Qiongtong
 
 **文件：** 新建 `tests/helpers/sample-bazi.ts`、`tests/sanyi-bazi-schema.test.ts`、`src/sanyi/bazi-schema.ts`。
 
-- [ ] **Step 1：写下列共用输入与 Schema 测试，运行 `node --import tsx --test tests/sanyi-bazi-schema.test.ts`，确认新模块缺失 RED。**
+- [x] **Step 1：写下列共用输入与 Schema 测试，运行 `node --import tsx --test tests/sanyi-bazi-schema.test.ts`，确认新模块缺失 RED。**
 
 ```ts
 // tests/helpers/sample-bazi.ts
@@ -2475,7 +2477,7 @@ test("总断和每一项复用问事自洽规则，裁剪窗口仍精确覆盖",
 });
 ```
 
-- [ ] **Step 2：实现两套 Schema 与一致性函数。** 命理用 draft-07 元组限定五标题，拒绝多余字段；运势按实际窗口允许 1–10 项，完整覆盖由业务函数检查。出生年与 2099 上限裁剪后不强造十项。
+- [x] **Step 2：实现两套 Schema 与一致性函数。** 命理用 draft-07 元组限定五标题，拒绝多余字段；运势按实际窗口允许 1–10 项，完整覆盖由业务函数检查。出生年与 2099 上限裁剪后不强造十项。
 
 ```ts
 // src/sanyi/bazi-schema.ts
@@ -2568,13 +2570,13 @@ export function checkBaziConsistency(output: BaziSchoolOutput, chart: BaziChart,
 }
 ```
 
-- [ ] **Step 3：B4b mock 落入后重跑测试，预期 5 项通过；strict 类型检查不得报错。** 总断、每年自洽及整年锚项分开核验。
+- [x] **Step 3：B4b mock 落入后重跑测试，预期 5 项通过；strict 类型检查不得报错。** 总断、每年自洽及整年锚项分开核验。
 
 ### Task B4.2：事实表与缺时柱隔离
 
 **文件：** 新建 `tests/sanyi-bazi-facts.test.ts`、`src/sanyi/bazi-facts.ts`。
 
-- [ ] **Step 1：写测试，运行 `node --import tsx --test tests/sanyi-bazi-facts.test.ts`，确认模块缺失 RED。**
+- [x] **Step 1：写测试，运行 `node --import tsx --test tests/sanyi-bazi-facts.test.ts`，确认模块缺失 RED。**
 
 ```ts
 // tests/sanyi-bazi-facts.test.ts
@@ -2625,7 +2627,7 @@ test("缺时柱无时柱、时藏干、命宫身宫事实及含时柱节点的�
 });
 ```
 
-- [ ] **Step 2：实现确定性事实表。** 窗口各年使用 B3 各自重新分析的关系和神煞，禁止重用锚年列表。
+- [x] **Step 2：实现确定性事实表。** 窗口各年使用 B3 各自重新分析的关系和神煞，禁止重用锚年列表。
 
 ```ts
 // src/sanyi/bazi-facts.ts
@@ -2756,13 +2758,13 @@ export function isNatalFact(id: string, label: string): boolean {
 }
 ```
 
-- [ ] **Step 3：运行同命令，预期 3 项通过。** 缺时柱不能删掉恰好同干支的合法大运，如命例第二步癸未；事实按角色隔离。
+- [x] **Step 3：运行同命令，预期 3 项通过。** 缺时柱不能删掉恰好同干支的合法大运，如命例第二步癸未；事实按角色隔离。
 
 ### Task B4.3：复用最长匹配的八字核对器
 
 **文件：** 修改 `src/sanyi/audit.ts`；新建 `tests/sanyi-bazi-audit.test.ts`、`src/sanyi/bazi-audit.ts`；关系词表使用 B3 的 `baziRelationWords`。
 
-- [ ] **Step 1：写核对测试，运行 `node --import tsx --test tests/sanyi-bazi-audit.test.ts`，确认新模块缺失 RED。**
+- [x] **Step 1：写核对测试，运行 `node --import tsx --test tests/sanyi-bazi-audit.test.ts`，确认新模块缺失 RED。**
 
 ```ts
 // tests/sanyi-bazi-audit.test.ts
@@ -2841,7 +2843,7 @@ test("普通判断用语不被问事单字词表误判成盘面事实", () => {
 });
 ```
 
-- [ ] **Step 2：原样保留问事核对逻辑，仅为其分词器增加默认空的扩展词表参数；落入八字核对器。** 两字关系倒序归一化后仍须事实中存在完整关系。语法上像关系的未知词也整体匹配，不能靠两个合法单字蒙混过关。
+- [x] **Step 2：原样保留问事核对逻辑，仅为其分词器增加默认空的扩展词表参数；落入八字核对器。** 两字关系倒序归一化后仍须事实中存在完整关系。语法上像关系的未知词也整体匹配，不能靠两个合法单字蒙混过关。
 
 修改 `src/sanyi/audit.ts`，以下 diff 的 `-` 为精确旧片段、`+` 为新片段；上下文与空行保留。
 
@@ -2957,7 +2959,7 @@ export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
 }
 ```
 
-- [ ] **Step 3：B4b mock 落入后重跑核对与 1A `tests/sanyi-audit.test.ts`，新增 7 项及原有问事测试通过。** 正文额外核对 useGod、标题、timing；普通判断用语不套用问事单字词表；缺时柱说明与明显的时柱干支归属同时检查。逐年可用集合严格限定为该年加原局四柱、藏干、原局关系、调候。
+- [x] **Step 3：B4b mock 落入后重跑核对与 1A `tests/sanyi-audit.test.ts`，新增 7 项及原有问事测试通过。** 正文额外核对 useGod、标题、timing；普通判断用语不套用问事单字词表；缺时柱说明与明显的时柱干支归属同时检查。逐年可用集合严格限定为该年加原局四柱、藏干、原局关系、调候。
 
 ## Chunk B4b：三家输入、单家落笔与确定性 mock
 
@@ -2967,7 +2969,7 @@ export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
 
 **文件：** 新建 `tests/sanyi-bazi-schools.test.ts`、`src/sanyi/schools/bazi-shared.ts`、`shenxiaozhan.ts`、`yuchuntai.ts`、`rentieqiao.ts`、`bazi-index.ts`（后五项同目录）。
 
-- [ ] **Step 1：写输入隔离与文化守卫测试，运行 `node --import tsx --test tests/sanyi-bazi-schools.test.ts`，确认模块缺失 RED。** 守卫正则原样取自 1A 测试，不另造较宽松列表。
+- [x] **Step 1：写输入隔离与文化守卫测试，运行 `node --import tsx --test tests/sanyi-bazi-schools.test.ts`，确认模块缺失 RED。** 守卫正则原样取自 1A 测试，不另造较宽松列表。
 
 ```ts
 // tests/sanyi-bazi-schools.test.ts
@@ -3016,7 +3018,7 @@ test("命理无流年窗口输入，透干通根按原局确定性组装", () =>
 });
 ```
 
-- [ ] **Step 2：实现共同边界、事实筛选与三家定义。** `period` 由 B5 提供 today/month 的真实事实，B4 只传递；示例整年无须额外 period 事实。提示词保留缺时柱、引文、应期条件、医疗法律投资边界；用本名自称。
+- [x] **Step 2：实现共同边界、事实筛选与三家定义。** `period` 由 B5 提供 today/month 的真实事实，B4 只传递；示例整年无须额外 period 事实。提示词保留缺时柱、引文、应期条件、医疗法律投资边界；用本名自称。
 
 ```ts
 // src/sanyi/schools/bazi-shared.ts
@@ -3186,13 +3188,13 @@ export const BAZI_SCHOOLS = [shenxiaozhan, yuchuntai, rentieqiao] as const;
 export type { BaziSchoolKey } from "./bazi-shared.js";
 ```
 
-- [ ] **Step 3：运行同命令，预期 2 项通过；检查余家 quote 逐字包含「但先壬水」，沈任没有 quote。** B6 以 timing.window 展示关注月标签，以 timing.condition 展示成立条件。
+- [x] **Step 3：运行同命令，预期 2 项通过；检查余家 quote 逐字包含「但先壬水」，沈任没有 quote。** B6 以 timing.window 展示关注月标签，以 timing.condition 展示成立条件。
 
 ### Task B4.5：单家调用、校验与一次重写
 
 **文件：** 新建 `tests/sanyi-bazi-school-runner.test.ts`、`src/sanyi/bazi-school-runner.ts`。测试文件同时覆盖 B4.6 mock，完整一次给出。
 
-- [ ] **Step 1：写运行器及 mock 测试，运行 `node --import tsx --test tests/sanyi-bazi-school-runner.test.ts`，确认模块缺失 RED。**
+- [x] **Step 1：写运行器及 mock 测试，运行 `node --import tsx --test tests/sanyi-bazi-school-runner.test.ts`，确认模块缺失 RED。**
 
 ```ts
 // tests/sanyi-bazi-school-runner.test.ts
@@ -3293,7 +3295,7 @@ test("三家命理运势 mock 全通过，窗口年份与锚项吻合", async ()
 });
 ```
 
-- [ ] **Step 2：按 1A 的两轮结构实现单家运行器。** 顺序为一次调用 → Ajv → 一致性 → 核对；带中文问题重写一次，最终只返回 failed 和原因，无模型原文或 provider 异常消息回显。传输错误立即 failed。不抽改 1A 运行器，以免其 rejected 行为发生变化。
+- [x] **Step 2：按 1A 的两轮结构实现单家运行器。** 顺序为一次调用 → Ajv → 一致性 → 核对；带中文问题重写一次，最终只返回 failed 和原因，无模型原文或 provider 异常消息回显。传输错误立即 failed。不抽改 1A 运行器，以免其 rejected 行为发生变化。
 
 ```ts
 // src/sanyi/bazi-school-runner.ts
@@ -3357,15 +3359,15 @@ export async function runBaziSchool(deps: {
 }
 ```
 
-- [ ] **Step 3：B4.6 mock 落入后重跑同命令，预期 5 项通过。** 先测单家及另外两家独立调用；并行合议、存档状态和换日由 B5 验证。
+- [x] **Step 3：B4.6 mock 落入后重跑同命令，预期 5 项通过。** 先测单家及另外两家独立调用；并行合议、存档状态和换日由 B5 验证。
 
 ### Task B4.6：确定性八字 mock 与任务路由
 
 **文件：** 新建 `src/sanyi/mock-bazi-schools.ts`，修改 `src/sanyi/mock-provider.ts`；使用 B4.5 最后一项测试。
 
-- [ ] **Step 1：先运行 B4.5 mock 测试，确认八字任务尚无路由时 RED。**
+- [x] **Step 1：先运行 B4.5 mock 测试，确认八字任务尚无路由时 RED。**
 
-- [ ] **Step 2：实现事实驱动输出及 mock 路由。** 命例格局派取正印、调候派取第一用干壬、扶抑派取比肩，属于排练示例取法；正式判断仍由模型根据各派路径生成。运势按家与年份小哈希生成 3–7 成，以 ≥6 吉、≤4 凶、其余平推出吉凶；从该年事实取关系或十神写 ≤16 字短评。总断直接取锚项，各家有区分度。B6.3 的第 6 轮测试先对旧 mock 确认 RED，再运行本块及 B4.5 核对器测试确认 GREEN。
+- [x] **Step 2：实现事实驱动输出及 mock 路由。** 命例格局派取正印、调候派取第一用干壬、扶抑派取比肩，属于排练示例取法；正式判断仍由模型根据各派路径生成。运势按家与年份小哈希生成 3–7 成，以 ≥6 吉、≤4 凶、其余平推出吉凶；从该年事实取关系或十神写 ≤16 字短评。总断直接取锚项，各家有区分度。B6.3 的第 6 轮测试先对旧 mock 确认 RED，再运行本块及 B4.5 核对器测试确认 GREEN。
 
 ```ts
 // src/sanyi/mock-bazi-schools.ts
@@ -3486,14 +3488,14 @@ export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable, kind:
        throw new Error(`mock provider 不支持任务：${request.taskId}`);
 ```
 
-- [ ] **Step 3：运行 B4 的全部测试，预期 22 项通过。** 三家 × 命理/运势 × 已知/缺时柱均通过 Schema、一致性、核对与真实 mock provider 路由；原有问事 mock 路径、事实解析与付款 mock 行为保持回归。
+- [x] **Step 3：运行 B4 的全部测试，预期 22 项通过。** 三家 × 命理/运势 × 已知/缺时柱均通过 Schema、一致性、核对与真实 mock provider 路由；原有问事 mock 路径、事实解析与付款 mock 行为保持回归。
 
 ### Task B4.6R：第 4 轮阻断项回归
 
 **文件：** 新建 `tests/sanyi-bazi-round4.test.ts`。
 
-- [ ] **Step 1：先落入以下测试，对第 3 轮事实表与共同提示词运行，预期 4 项失败。**
-- [ ] **Step 2：应用 B4.2 流月事实、B4.4 余家四柱藏干与正文分工修订，重跑预期 4 项通过。** 月名指节气月，不是农历初一到月底；日期用现场节气表，起点包含、终点不包含。`isNatalFact` 原样保留，流月不能为其它年份短评背书。
+- [x] **Step 1：先落入以下测试，对第 3 轮事实表与共同提示词运行，预期 4 项失败。**
+- [x] **Step 2：应用 B4.2 流月事实、B4.4 余家四柱藏干与正文分工修订，重跑预期 4 项通过。** 月名指节气月，不是农历初一到月底；日期用现场节气表，起点包含、终点不包含。`isNatalFact` 原样保留，流月不能为其它年份短评背书。
 
 ```ts
 // tests/sanyi-bazi-round4.test.ts
@@ -3552,10 +3554,10 @@ test("三家提示词明确正文与逐年短评分工", () => {
 
 ### Task B4.7：字段契约与交叉验收
 
-- [ ] **Step 1：核对 B2.3 样稿字段契约。** 命理不含吉凶把握；运势逐年格子按 year 取 verdict/confidenceTenths，点选短评取 note；「留意 某月」取 timing.window，并显示 condition，无值不造标签。
-- [ ] **Step 2：运行 11 个新增测试文件及两种类型检查。** 使用下方验证记录中的完整命令，禁止仅凭 mock 返回 done 就宣称所有要求通过。
-- [ ] **Step 3：运行 `npm test`，保留所有监听端口测试与 1A 回归。** 沙箱拒绝本机监听时如实记录 EPERM，不跳过或改动测试；主管在允许监听的隔离环境复跑。
-- [ ] **Step 4：核对 bazi-three-schools 的逐年输出、核对、缺时柱及失败隔离场景。** B4 只准备完整代码，项目尚未实施，不勾 OpenSpec 2.5；逐年合议算术平均与失败家排除由 B5 完成。
+- [x] **Step 1：核对 B2.3 样稿字段契约。** 命理不含吉凶把握；运势逐年格子按 year 取 verdict/confidenceTenths，点选短评取 note；「留意 某月」取 timing.window，并显示 condition，无值不造标签。
+- [x] **Step 2：运行 11 个新增测试文件及两种类型检查。** 使用下方验证记录中的完整命令，禁止仅凭 mock 返回 done 就宣称所有要求通过。
+- [x] **Step 3：运行 `npm test`，保留所有监听端口测试与 1A 回归。** 沙箱拒绝本机监听时如实记录 EPERM，不跳过或改动测试；主管在允许监听的隔离环境复跑。
+- [x] **Step 4：核对 bazi-three-schools 的逐年输出、核对、缺时柱及失败隔离场景。** B4 只准备完整代码，项目尚未实施，不勾 OpenSpec 2.5；逐年合议算术平均与失败家排除由 B5 完成。
 
 ## Chunk B5a：时间范围、存储联合、隐私投影与编排
 

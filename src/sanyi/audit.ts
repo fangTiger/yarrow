@@ -25,10 +25,11 @@ const COMBINATION = new RegExp(
   "g",
 );
 
-export function tokenizeClaim(text: string): string[] {
+export function tokenizeClaim(text: string, extraWords: readonly string[] = []): string[] {
+  const words = [...new Set([...WORDS, ...extraWords])].sort((left, right) => right.length - left.length);
   const tokens: string[] = [];
   for (let index = 0; index < text.length;) {
-    const token = WORDS.find((candidate) => text.startsWith(candidate, index));
+    const token = words.find((candidate) => text.startsWith(candidate, index));
     if (token) {
       tokens.push(token);
       index += token.length;

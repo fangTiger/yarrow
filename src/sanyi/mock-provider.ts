@@ -10,6 +10,27 @@ import type {
 import type { FactTable } from "./facts.js";
 import { mockSchoolOutput } from "./mock-schools.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
+import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
+import type { BaziSchoolKey } from "./schools/bazi-shared.js";
+function baziFactsFromPrompt(prompt: string): FactTable {
+  const line = prompt.split("\n").find((row) => row.startsWith("事实表 JSON："));
+  if (!line) {
+    throw new Error("八字 mock 请求缺少事实表");
+  }
+  const rows: unknown = JSON.parse(line.slice("事实表 JSON：".length));
+  if (!Array.isArray(rows)) {
+    throw new Error("八字 mock 事实表格式错误");
+  }
+  const facts: FactTable = new Map();
+  for (const row of rows) {
+    if (!row || typeof row.id !== "string" || typeof row.label !== "string"
+      || !Array.isArray(row.tokens) || !row.tokens.every((token: unknown) => typeof token === "string")) {
+      throw new Error("八字 mock 事实条目格式错误");
+    }
+    facts.set(row.id, { id: row.id, label: row.label, tokens: new Set<string>(row.tokens) });
+  }
+  return facts;
+}
 function factsFromPrompt(prompt: string): FactTable {
   const facts: FactTable = new Map();
   for (const line of prompt.split("\n")) {
@@ -29,6 +50,11 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
   readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
   readonly providerConfigHash = hashJson(this.providerConfig);
   async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    const bazi = request.taskId.match(/^sanyi\/(destiny|fortune)\/(shenxiaozhan|yuchuntai|rentieqiao)$/u);
+    if (bazi) {
+      return mockBaziSchoolOutput(bazi[2] as BaziSchoolKey, baziFactsFromPrompt(request.userPrompt),
+        bazi[1] as "destiny" | "fortune") as T;
+    }
     const key = request.taskId.split("/").at(-1) as QuestionSchoolKey;
     if (!["chengyi", "jingfang", "shaoyong"].includes(key)) {
       throw new Error(`mock provider 不支持任务：${request.taskId}`);
