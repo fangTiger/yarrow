@@ -1,9 +1,10 @@
 // src/sanyi/facts.ts
+import { buildOriginalTexts } from "./original-texts.js";
 import type { FiveHexagrams, LiuyaoChart } from "../oracle/liuyao-chart.js";
 import type { MeihuaResult } from "../calendar/meihua.js";
 import type { OracleSelection } from "../calendar/bianzhan.js";
 export interface Fact { id: string; label: string; tokens: ReadonlySet<string> }
-export type FactTable = Map<string, Fact>;
+export type FactTable = Map<string, Fact> & { originalTexts?: readonly string[] };
 type TokenValue = string | null | undefined | false;
 
 function words(values: readonly TokenValue[]): Set<string> {
@@ -23,6 +24,7 @@ export function buildQuestionFacts(
   main: OracleSelection,
 ): FactTable {
   const facts: FactTable = new Map();
+  facts.originalTexts = buildOriginalTexts(five, main);
   for (const row of chart.rows) {
     const tokens = words([
       row.primary.stemBranch,
@@ -52,17 +54,30 @@ export function buildQuestionFacts(
       row.hidden?.element,
       row.hidden?.relation,
     ]);
+    if (chart.focus) {
+      for (const [word, relation] of [
+        ["用神", chart.focus.useGod],
+        ["原神", chart.focus.originalGod],
+        ["忌神", chart.focus.tabooGod],
+        ["仇神", chart.focus.enemyGod],
+      ] as const) {
+        if (row.primary.relation === relation || row.hidden?.relation === relation) {
+          tokens.add(word);
+        }
+      }
+    }
     const id = `line:${row.position}`;
     facts.set(id, { id, label: `${row.position}爻：${[...tokens].join(" ")}`, tokens });
   }
   const add = (id: string, label: string, tokens: readonly string[]): void => {
     facts.set(id, { id, label, tokens: new Set(tokens) });
   };
-  add("month", `月建${chart.month.branch}`, [chart.month.branch, chart.month.element, "月建"]);
+  // 月令本气当月必旺，模型常写「月建酉金旺」，属定义而非编造。
+  add("month", `月建${chart.month.branch}`, [chart.month.branch, chart.month.element, "月建", "旺"]);
   add(
     "day",
     `日辰${chart.day.ganzhi}，旬空${chart.day.voidBranches.join("")}`,
-    [chart.day.ganzhi, chart.day.stem, chart.day.branch, ...chart.day.voidBranches, "旬空"],
+    [chart.day.ganzhi, chart.day.stem, chart.day.branch, ...chart.day.voidBranches, "旬空", "日辰"],
   );
   if (chart.focus) {
     add("use-god", `用神${chart.focus.useGod}`, [
@@ -79,9 +94,11 @@ export function buildQuestionFacts(
   add("body-use", `${meihua.body.name}为体，${meihua.use.name}为用`, [
     "体",
     meihua.body.name,
+    `${meihua.body.name}${meihua.body.element}`,
     meihua.body.element,
     "用",
     meihua.use.name,
+    `${meihua.use.name}${meihua.use.element}`,
     meihua.use.element,
     meihua.bodyUseRelation,
   ]);

@@ -1,7 +1,8 @@
 // src/sanyi/bazi-audit.ts
+import { NON_GANZHI_WORDS } from "./common-words.js";
 import { baziRelationWords } from "../calendar/bazi-relations.js";
 import lunarPkg from "lunar-javascript";
-import { tokenizeClaim } from "./audit.js";
+import { tokenizeGanzhiClaim as tokenizeClaim } from "./audit.js";
 import { isNatalFact } from "./bazi-facts.js";
 import type { BaziSchoolOutput } from "./bazi-schema.js";
 import type { FactTable } from "./facts.js";
@@ -26,18 +27,6 @@ const EXTRA_WORDS = [
     return [..."春夏秋冬"].map((season) => `三${season}${stem}${"木木火火土土金金水水".charAt(index)}`);
   }),
 ];
-// 常用词整体参与最长匹配，但不作为干支事实核对；干支术语仍保留。
-const NON_GANZHI_WORDS = new Set([
-  "未透干", "未透", "未见", "未得", "未成", "未能", "未必", "未有", "未曾", "尚未", "并未", "从未", "未来", "未免",
-  "子女", "孩子", "儿子", "女子", "男子", "君子", "日子", "样子", "房子", "妻子", "子孙",
-  "自己", "知己", "己见", "异己",
-  "辛苦", "辛劳", "辛勤", "艰辛",
-  "申请", "申报", "申明", "重申",
-  "中午", "上午", "下午", "午后", "正午",
-  "生辰", "时辰", "良辰", "辰光",
-  "人丁", "园丁", "丁点",
-  "甲方", "指甲", "盔甲", "乙方", "小丑", "丑陋", "卯足",
-]);
 const RELATION_PHRASE = new RegExp(
   "[子丑寅卯辰巳午未申酉戌亥]{3}(?:三合|三会)[金木水火土]"
   + "|[子丑寅卯辰巳午未申酉戌亥]{2}(?:半合|拱)[金木水火土]"
