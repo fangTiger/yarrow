@@ -8,24 +8,17 @@ import { baziFixture, birth as rawBirth, proof } from "./helpers/bazi-service.js
 import { publicBaziReading } from "../src/sanyi/bazi-public.js";
 import { BaziLuck } from "../web/components/BaziLuck.js";
 import { BaziTable } from "../web/components/BaziTable.js";
-import { BirthForm } from "../web/components/BirthForm.js";
 import { BaziReading } from "../web/pages/BaziReading.js";
 import { LiuNianPanel } from "../web/components/LiuNianPanel.js";
 import { DayBoundaryChange } from "../web/components/DayBoundaryChange.js";
 import { BAZI_KEYS } from "../web/lib/liunian-chart.js";
 const birth = { ...rawBirth, calendar: "solar" as const, gender: "male" as const };
 const noop = () => { };
-test("缺时柱四柱表显示缺，生辰表单告知与港澳台提示", () => {
+test("缺时柱四柱表显示缺", () => {
     const input = sampleBazi("fortune", false);
     const table = renderToStaticMarkup(createElement(BaziTable, { chart: input.chart, analysis: requireAnalysis(input.chart) }));
     assert.match(table, /时柱/);
     assert.match(table, /<td>缺<\/td>/);
-    for (const city of ["香港", "澳门", "台北"]) {
-        const form = renderToStaticMarkup(createElement(BirthForm, { initial: { ...birth, city }, onBirth: noop, onFallback: noop, onCancel: noop }));
-        assert.match(form, /生辰会发送给解读模型提供方/);
-        assert.match(form, /命盘可反推出生日期/);
-        assert.match(form, /当地历史夏令时不自动校正/);
-    }
 });
 import { analyzeBazi as requireAnalysis } from "../src/calendar/bazi-relations.js";
 test("命理无流年合议，分享不显示原始时刻，无档案切换禁用", async () => {

@@ -3,11 +3,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import {
-  ClassificationTags,
-  type ClassificationView,
-} from "../web/components/ClassificationTags.js";
-import { RecentReadings } from "../web/components/RecentReadings.js";
 import { ShikongBar } from "../web/components/ShikongBar.js";
 const forbidden = /易者|押钱|赔付|封存|・|[\u3040-\u30ff]/u;
 import { almanacAt } from "../src/calendar/almanac.js";
@@ -30,63 +25,6 @@ test("时空栏以真实接口数据渲染六格主值与副注且节气不重�
   assert.equal((html.match(/秋分/gu) ?? []).length, 1);
   assert.doesNotMatch(html, forbidden);
 });
-const view = (overrides: Partial<ClassificationView>): ClassificationView => ({
-  question: "这次面试能过吗", kind: "question", supported: true, subject: "工作官职", ...overrides,
-});
-test("问事、运势与起名标签提供正确动作", () => {
-  const callbacks = {
-    onKindChange: () => {},
-    onQuestionFallback: () => {},
-    onSubjectChange: () => {},
-  };
-  const question = renderToStaticMarkup(createElement(ClassificationTags, {
-    ...callbacks,
-    view: view({}),
-  }));
-  const fortune = renderToStaticMarkup(createElement(ClassificationTags, {
-    ...callbacks,
-    view: view({
-      kind: "fortune",
-      supported: true,
-      horizon: "今年",
-    }),
-  }));
-  const naming = renderToStaticMarkup(createElement(ClassificationTags, {
-    ...callbacks,
-    view: view({
-      kind: "naming",
-      supported: false,
-      suggestion: "可改为问事",
-    }),
-  }));
-  assert.match(question, /问事.*工作官职/su);
-  assert.doesNotMatch(fortune, /即将开放/u);
-  assert.match(fortune, /改为问事/u);
-  assert.match(naming, /可改为问事/u);
-  assert.doesNotMatch(question + fortune + naming, forbidden);
-});
-test("最近记录可以打开", () => {
-  const html = renderToStaticMarkup(createElement(RecentReadings, {
-    readings: [{
-      id: "abc",
-      kind: "question",
-      question: "面试能过吗",
-      createdAt: "2026-09-30T12:15:00Z",
-    }],
-  }));
-  assert.match(html, /href="#\/r\/abc"/u);
-  assert.match(html, /面试能过吗/u);
-  assert.doesNotMatch(html, forbidden);
-});
-
-test("可改事项与服务端白名单一致", async () => {
-  const { QUESTION_SUBJECTS } = await import("../src/oracle/question-classifier.js");
-  const html = renderToStaticMarkup(createElement(ClassificationTags, {
-    view: view({}), onKindChange: () => {}, onQuestionFallback: () => {}, onSubjectChange: () => {},
-  }));
-  for (const item of QUESTION_SUBJECTS) assert.ok(html.includes(item.label), item.key);
-});
-
 import React from "react";
 // Node 测试显式提供浏览器构建期公开常量，不读取本机配置。
 Object.assign(globalThis, {
@@ -96,6 +34,10 @@ Object.assign(globalThis, {
 const { QuestionForm } = await import("../web/components/QuestionForm.js");
 const { PaymentButton } = await import("../web/components/PaymentButton.js");
 import { classifyQuestion } from "../src/sanyi/classify.js";
+const { KindOptions } = await import("../web/components/KindOptions.js");
+const { BirthFields } = await import("../web/components/BirthFields.js");
+const { HorizonChips } = await import("../web/components/HorizonChips.js");
+const { PLACEHOLDERS } = await import("../web/lib/home-entry.js");
 import { api } from "../web/lib/api.js";
 import { readFileSync } from "node:fs";
 
@@ -147,30 +89,37 @@ function childrenOf(node: ReturnType<typeof QuestionForm>) {
   return React.Children.toArray(node.props.children).filter(React.isValidElement) as React.ReactElement<any>[];
 }
 
-test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起名提示且禁用", async (t) => {
+function textOf(children: React.ReactElement<any>[]): string {
+  return children.map((child) => typeof child.props.children === "string" ? child.props.children : "").join("\n");
+}
+
+test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起名提示且禁用、点选问事放行", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const classify = t.mock.method(api, "classify", async (question: string) => ({
     question, kind: question.includes("名字") ? "naming" : "question",
-    supported: !question.includes("名字"), suggestion: "可改为问事",
+    supported: !question.includes("名字"), suggestion: "起名即将开放，可改为问事",
     subject: { key: "career", label: "工作官职" },
   }));
   const harness = formHarness();
   t.after(() => harness.dispose());
   let children = childrenOf(harness.render());
+  assert.equal(children.find((child) => child.type === "h1")!.props.children, "想问什么？");
+  assert.ok(children.some((child) => child.type === KindOptions));
   const initialButton = children.find((child) => child.type === "button")!;
   assert.equal(initialButton.props.children, "问卦 · 0.05 USDC");
   assert.equal(initialButton.props.disabled, true);
   const input = children.find((child) => child.type === "textarea")!;
-  assert.equal(input.props.placeholder, "例如：这次面试能过吗？");
+  assert.equal(input.props.placeholder, PLACEHOLDERS.question);
   input.props.onChange({ target: { value: "这次面试能过吗" } });
   harness.render();
   t.mock.timers.tick(399);
   assert.equal(classify.mock.callCount(), 0);
   t.mock.timers.tick(1);
-  assert.ok(childrenOf(harness.render()).some((child) => child.props.children === "识别中"));
+  assert.match(textOf(childrenOf(harness.render())), /识别中/);
   await Promise.resolve();
   children = childrenOf(harness.render());
   assert.ok(children.some((child) => child.type === PaymentButton));
+  assert.match(textOf(children), /已自动识别为问事 · 工作官职/);
   children.find((child) => child.type === "textarea")!.props.onChange({ target: { value: "帮我取个名字" } });
   children = childrenOf(harness.render());
   assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
@@ -178,10 +127,31 @@ test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起�
   await Promise.resolve();
   children = childrenOf(harness.render());
   assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
-  const tags = children.find((child) => child.type === ClassificationTags)!;
-  const html = renderToStaticMarkup(tags);
-  assert.match(html, /可改为问事/u);
-  assert.match(html, /改为问事/u);
+  assert.match(textOf(children), /起名即将开放，可改为问事/);
+  children.find((child) => child.type === KindOptions)!.props.onChange("question");
+  assert.ok(childrenOf(harness.render()).some((child) => child.type === PaymentButton));
+});
+
+test("识别为运势时出现时间范围与生辰行，没有生辰不能问卦", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  t.mock.method(api, "classify", async (question: string) => classifyQuestion(question));
+  const harness = formHarness();
+  t.after(() => harness.dispose());
+  childrenOf(harness.render()).find((child) => child.type === "textarea")!.props.onChange({ target: { value: "我明年运势如何" } });
+  harness.render();
+  t.mock.timers.tick(400);
+  await Promise.resolve();
+  const children = childrenOf(harness.render());
+  assert.equal(children.find((child) => child.type === KindOptions)!.props.value, "fortune");
+  assert.equal(children.find((child) => child.type === HorizonChips)!.props.value, "next-year");
+  assert.ok(children.some((child) => child.type === BirthFields));
+  assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
+  assert.match(textOf(children), /请先填好生辰/);
+  assert.ok(!children.some((child) => child.type === PaymentButton));
+  children.find((child) => child.type === KindOptions)!.props.onChange("question");
+  const back = childrenOf(harness.render());
+  assert.ok(!back.some((child) => child.type === BirthFields));
+  assert.ok(back.some((child) => child.type === PaymentButton));
 });
 
 test("时空栏六列、980px 两列且副注使用小号弱色", () => {
@@ -234,13 +204,12 @@ test("短问题不分类，快速修改重置防抖，过期响应不能启用�
   await Promise.resolve();
   let children = childrenOf(harness.render());
   assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
-  assert.ok(!children.some((child) => child.type === ClassificationTags));
+  assert.ok(!children.some((child) => child.type === PaymentButton));
   t.mock.timers.tick(400);
   responses[1]!(classifyQuestion("帮我取个名字"));
   await Promise.resolve();
   children = childrenOf(harness.render());
-  const tags = children.find((child) => child.type === ClassificationTags)!;
-  assert.match(renderToStaticMarkup(tags), /起名即将开放/u);
-  tags.props.onQuestionFallback();
+  assert.match(textOf(children), /起名即将开放/u);
+  children.find((child) => child.type === KindOptions)!.props.onChange("question");
   assert.ok(childrenOf(harness.render()).some((child) => child.type === PaymentButton));
 });

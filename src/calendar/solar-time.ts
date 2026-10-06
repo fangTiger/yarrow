@@ -134,8 +134,9 @@ export function correctBirthTime(
   if (!options.mainlandDst) {
     descriptions.splice(0, 1,
       `出生地为${options.birthplace}，未按中国大陆夏令时校正；当地历史夏令时请按出生记录自行核对`);
-  } else if (options.birthplace === null && longitude === null) {
-    descriptions.push("若出生在港澳台或海外，请填写出生地");
+  } else if (options.birthplace === null && longitude === null && dst.active) {
+    // 产品不收出生地，统一按中国大陆夏令时口径说明。
+    descriptions.push("按中国大陆夏令时");
   }
   if (dst.repeated) {
     descriptions.push("重复时段，按夏令时计");
@@ -154,7 +155,7 @@ export function correctBirthTime(
         kind: "solar", applied: longitude !== null, before: standard,
         deltaMinutes: solarDelta, after: effective,
         description: longitude === null
-          ? "未填出生地经度，未作真太阳时校正"
+          ? "未作真太阳时校正"
           : `经度差 ${longitudeMinutes.toFixed(2)} 分钟；均时差 ${equationMinutes.toFixed(2)} 分钟`,
       },
     ],

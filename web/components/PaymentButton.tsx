@@ -8,7 +8,7 @@ import { formatUnits } from "viem";
 import { api, ApiError } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
 import { useFeePayment } from "../lib/use-fee-payment.js";
-import type { ClassificationView } from "./ClassificationTags.js";
+import type { ClassificationView } from "../lib/home-entry.js";
 export function PaymentButton(props: { question: string; classification: ClassificationView; birth?: BirthProfileInput | null; onMissingBirth?(): void }) {
   const { pay, payment, estimatedGasWei18, connectionMessage } = useFeePayment();
   const [paidProof, setPaidProof] = useState<SanyiFeeProof>();

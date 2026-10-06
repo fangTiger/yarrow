@@ -1,13 +1,9 @@
 // web/lib/birth-entry.ts
 import { ApiError } from "./api.js";
-import type { BirthProfileInput } from "./birth-profile.js";
-export function needsBirth(kind: string, birth: BirthProfileInput | null): boolean {
-    return (kind === "destiny" || kind === "fortune") && birth === null;
-}
 export function isMissingBirth(error: unknown): boolean {
     return error instanceof ApiError && error.status === 400 && error.message === "请先填写生辰";
 }
+/** 分类返回的时间范围直接作为首页时间范围标签的值，缺省为今年。 */
 export function entryHorizon(horizon?: string): string {
-    const value = horizon ?? "year";
-    return value.startsWith("year:") ? "custom" : value;
+    return horizon ?? "year";
 }

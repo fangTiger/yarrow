@@ -59,7 +59,7 @@ test("构建产物与源码不加载 Google Fonts", async () => {
 });
 
  test("八字新组件纳入文化守卫且没有外部字体", async () => {
-  const paths = ["BirthForm", "BirthEntry", "BirthCorrection", "BaziTable", "BaziLuck", "BaziSchools", "BaziRelations", "BaziElements", "DayBoundaryChange", "LiuNianPanel"].map((name) => `web/components/${name}.tsx`);
+  const paths = ["BirthFields", "HistoryMenu", "KindOptions", "SubjectSelect", "HorizonChips", "QuestionForm", "BirthCorrection", "BaziTable", "BaziLuck", "BaziSchools", "BaziRelations", "BaziElements", "DayBoundaryChange", "LiuNianPanel"].map((name) => `web/components/${name}.tsx`);
   paths.push("web/pages/BaziReading.tsx");
   await assertNoMatch(paths, CULTURE_FORBIDDEN, "八字文化守卫");
   await assertNoMatch(paths, VISIBLE_FORBIDDEN, "八字可见文案");

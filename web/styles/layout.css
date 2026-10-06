@@ -34,14 +34,3 @@ button, a, input, select {
   max-width: 1280px;
   margin: 0 auto;
 }
-.home-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
-  gap: 26px;
-  align-items: start;
-}
-@media (max-width: 980px) {
-  .home-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}

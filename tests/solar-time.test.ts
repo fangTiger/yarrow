@@ -127,5 +127,8 @@ test("先夏令时再太阳时、跨日期运算、未填经度与缺时辰", ()
   assert.equal(bj.steps[0]?.applied, true);
   const empty = correctBirthTime(civil, true, null);
   assert.equal(empty.effective.hour, 7);
-  assert.match(empty.steps[0]?.description ?? "", /若出生在港澳台或海外，请填写出生地/);
+  // 不收出生地后，不再提示用户去填写出生地；只说明按大陆夏令时校正、未作真太阳时校正。
+  assert.doesNotMatch(empty.steps[0]?.description ?? "", /填写出生地/);
+  assert.match(empty.steps[0]?.description ?? "", /按中国大陆夏令时/);
+  assert.equal(empty.steps[1]?.description, "未作真太阳时校正");
 });

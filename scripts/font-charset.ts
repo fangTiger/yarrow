@@ -16,6 +16,7 @@ const FIXED_COPY = [
   "程颐", "京房", "邵雍", "问",
   "问题与生辰", "三家用神对照", "流年运势", "大运", "合冲刑害", "五行分布",
   "胎元", "命宫", "身宫", "起运", "沈孝瞻", "余春台", "任铁樵",
+  "想问什么？", "生辰",
 ] as const;
 export function buildFontCharset(): string {
   const source = [
