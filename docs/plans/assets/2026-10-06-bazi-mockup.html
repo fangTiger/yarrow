@@ -18,8 +18,8 @@
   --line-strong: rgb(201 168 102 / 0.42);
   --cinnabar: #D0614A;
   --cinnabar-soft: rgb(208 97 74 / 0.15);
-  --jade: #82B59E;
-  --jade-soft: rgb(130 181 158 / 0.14);
+  --jade: #45A07E;
+  --jade-soft: rgb(69 160 126 / 0.16);
   --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
   --brush: "Ma Shan Zheng", "Kaiti SC", "STKaiti", "KaiTi", serif;
   --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -36,7 +36,7 @@ body {
   padding-inline: clamp(16px, 3.5vw, 44px);
   padding-block: 0 72px;
 }
-.page { max-width: 1280px; margin: 0 auto; display: grid; gap: 26px; }
+.page { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
 .label { font-family: var(--sans); font-size: 12px; letter-spacing: 0.14em; color: var(--dim); }
 .panel { background: var(--panel); border: 1px solid var(--line); padding: 22px clamp(16px, 2.2vw, 26px); display: grid; gap: 16px; align-content: start; }
 .panel-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
@@ -251,6 +251,88 @@ table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-a
 .diviner .seal { grid-row: span 4; }
 .verdict.dyn { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; font-weight: 600; font-size: 21px; }
 .mock-note { color: var(--cinnabar); }
+/* ── 流年运势：十年窗口（回看三年、今年、展望六年） ── */
+.ln-grid { --axis: 76px; --axis-chart: 76px; display: grid; gap: 10px; }
+.ln-scroll { overflow-x: auto; }
+.ln-scroll table { min-width: 900px; }
+.ln-chart { display: grid; grid-template-columns: var(--axis-chart) minmax(0, 1fr); grid-template-rows: 194px auto; padding-top: 10px; }
+.ln-x { grid-column: 2; display: none; grid-template-columns: repeat(10, minmax(0, 1fr)); padding-top: 6px; text-align: center; font-size: 11.5px; color: var(--muted); }
+.ln-x span { display: grid; line-height: 1.35; }
+.ln-x span.now { color: var(--gold); }
+.ln-x small { font-family: var(--sans); font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.ln-y { position: relative; }
+.ln-y span { position: absolute; right: 12px; transform: translateY(-50%); font-family: var(--sans); font-size: 11.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.ln-plot { position: relative; border-bottom: 1px solid var(--line-strong); }
+.ln-plot > i { position: absolute; display: block; }
+.ln-now { top: 0; bottom: 0; width: 10%; background: var(--gold-soft); }
+.ln-grid-y { left: 0; right: 0; height: 0; border-top: 1px solid rgb(201 168 102 / 0.1); }
+.ln-ref { left: 0; right: 0; height: 0; border-top: 1px dashed rgb(234 229 217 / 0.32); }
+.ln-yun { top: 0; bottom: 0; border-left: 1px dashed var(--line-strong); }
+.ln-yun.first { border-left: 0; }
+.ln-yun span { position: absolute; top: 4px; left: 8px; font-family: var(--sans); font-size: 11.5px; font-style: normal; color: var(--muted); white-space: nowrap; }
+.ln-range { width: 2px; margin-left: -1px; background: rgb(234 229 217 / 0.34); border-radius: 1px; }
+.ln-range::before, .ln-range::after { content: ""; position: absolute; left: -3px; width: 8px; height: 2px; background: rgb(234 229 217 / 0.34); }
+.ln-range::before { top: -1px; }
+.ln-range::after { bottom: -1px; }
+.ln-plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.ln-dot { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px var(--panel); pointer-events: none; }
+.ln-dot.now { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: var(--paper); }
+.ln-lab { position: absolute; transform: translate(-50%, -100%); margin-top: -8px; font-family: var(--sans); font-size: 12px; color: var(--paper); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+.ln-hit { position: absolute; top: 0; bottom: 0; width: 10%; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.ln-hit:hover, .ln-hit:focus-visible { background: rgb(234 229 217 / 0.05); outline: none; }
+.ln-hit.sel { box-shadow: inset 0 0 0 1px var(--line-strong); }
+.ln-tip { position: absolute; z-index: 2; transform: translate(-50%, calc(-100% - 14px)); min-width: 148px; padding: 8px 10px; background: #0B0D0C; border: 1px solid var(--line-strong); font-family: var(--sans); font-size: 12px; line-height: 1.6; color: var(--muted); white-space: nowrap; pointer-events: none; }
+.ln-tip b { color: var(--paper); font-weight: 600; }
+.ln-key { display: flex; flex-wrap: wrap; gap: 6px 18px; padding-left: var(--axis-chart); font-family: var(--sans); font-size: 12px; color: var(--dim); }
+.ln-key span { display: inline-flex; align-items: center; gap: 6px; }
+.ln-key i { display: inline-block; }
+.ln-key .k-line { width: 18px; height: 2px; background: var(--gold); }
+.ln-key .k-range { width: 2px; height: 12px; background: rgb(234 229 217 / 0.34); }
+.ln-key .k-ref { width: 18px; border-top: 1px dashed rgb(234 229 217 / 0.5); }
+table.ln-table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ln-table col.ln-axis { width: var(--axis); }
+.ln-table th, .ln-table td { padding: 7px 3px; border-bottom: 1px solid var(--line); vertical-align: middle; line-height: 1.45; }
+.ln-table thead th { font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--dim); }
+.ln-table .ln-span th { padding-bottom: 2px; border-bottom: 0; letter-spacing: 0.08em; }
+.ln-table .ln-span th[colspan] { border-top: 1px solid var(--line); }
+.ln-table tbody th { text-align: left; padding-left: 0; font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--dim); white-space: nowrap; }
+.ln-table .now { background: var(--gold-soft); }
+.ln-year { min-height: 32px; width: 100%; padding: 4px 0; border: 1px solid transparent; background: none; color: var(--paper); font-family: var(--sans); font-size: 13px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.ln-year:hover, .ln-year:focus-visible { border-color: var(--line-strong); outline: none; }
+.ln-year.sel { border-color: var(--gold); color: var(--gold); }
+.ln-table td.gz { font-family: var(--brush); font-size: 22px; line-height: 1.2; color: var(--paper); }
+.ln-table td.gz small { display: block; font-family: var(--sans); font-size: 11px; color: var(--dim); }
+.ln-table td.rels { vertical-align: top; }
+.ln-table td.rels .tag { display: block; width: fit-content; margin: 0 auto 3px; font-size: 11px; padding: 0 4px; white-space: normal; }
+.ln-table td.v { color: var(--paper); font-size: 12.5px; }
+.ln-table td.v b { font-family: var(--serif); font-weight: 600; margin-right: 3px; }
+.ln-table td.v.ji { background: rgb(69 160 126 / 0.22); box-shadow: inset 3px 0 0 var(--jade); }
+.ln-table td.v.xiong { background: rgb(208 97 74 / 0.18); box-shadow: inset 3px 0 0 var(--cinnabar); }
+.ln-table tr.avg td { color: var(--paper); font-weight: 600; }
+.ln-detail { display: grid; gap: 10px; padding-top: 4px; }
+.ln-detail-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.ln-detail-head b { font-family: var(--brush); font-weight: 400; font-size: 26px; letter-spacing: 0.06em; }
+.ln-detail-head span { font-size: 13.5px; color: var(--muted); }
+.ln-detail-rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); }
+.ln-detail-rows div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 12px 14px; border-right: 1px solid var(--line); }
+.ln-detail-rows div:last-child { border-right: 0; }
+.ln-detail-rows .seal { width: 30px; height: 30px; font-size: 18px; grid-row: span 2; }
+.ln-detail-rows strong { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; font-size: 18px; font-weight: 600; }
+.ln-detail-rows strong.ji { color: var(--jade); }
+.ln-detail-rows strong.xiong { color: var(--cinnabar); }
+.ln-detail-rows strong small { margin-left: 6px; font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--muted); }
+.ln-detail-rows p { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+@media (max-width: 760px) { .ln-detail-rows { grid-template-columns: minmax(0, 1fr); } .ln-detail-rows div { border-right: 0; border-bottom: 1px solid var(--line); } .ln-detail-rows div:last-child { border-bottom: 0; } }
+/* 面板宽度不足 900px 时，表格单独横向滚动，与图表不再逐列对齐：图表自带干支与年份刻度 */
+@media (max-width: 1060px) { .ln-x { display: grid; } }
+@media (max-width: 620px) {
+  .ln-grid { --axis-chart: 34px; }
+  .ln-y span { right: 6px; }
+  .ln-lab.wide-only { display: none; }
+  .ln-yun span { font-size: 10.5px; left: 4px; }
+}
+/* 表格横滚时行名列固定在左侧 */
+.ln-table tbody th, .ln-table thead th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); }
 </style>
 
 <div class="page">
@@ -342,7 +424,7 @@ table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-a
   </div>
 
   <section class="panel" aria-labelledby="luck-title">
-    <div class="panel-head"><h2 id="luck-title">大运流年</h2><p>阳年男命，大运顺行；7 岁 2 个月 20 天起运。</p></div>
+    <div class="panel-head"><h2 id="luck-title">大运</h2><p>阳年男命，大运顺行；7 岁 2 个月 20 天起运。</p></div>
     <div class="luck" aria-label="大运时间轴">
       <div><b>壬午</b><small>食神<br>8–17 岁<br>1997–2006</small></div>
       <div><b>癸未</b><small>伤官<br>18–27 岁<br>2007–2016</small></div>
@@ -355,6 +437,80 @@ table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-a
     </div>
   </section>
 
+  <section class="panel" aria-labelledby="ln-title">
+    <div class="panel-head"><h2 id="ln-title">流年运势</h2><p>以所问之年（2026 丙午）为锚，回看三年、展望六年，共十年；流年以立春为界。回看的年份可与亲身经历对照，看哪一家断得合你。<span class="mock-note">样稿：逐年吉凶与几成为示意。</span></p></div>
+    <div class="ln-grid">
+        <div class="ln-chart" role="img" aria-label="三家合议十年走势：2023年4.7成，2024年4.3成，2025年3.7成，2026年4.0成，2027年3.7成，2028年6.0成，2029年6.3成，2030年5.0成，2031年5.3成，2032年5.7成">
+          <div class="ln-y" aria-hidden="true"><span style="top:25%">7成</span><span style="top:50%">5成</span><span style="top:75%">3成</span></div>
+          <div class="ln-plot" id="ln-plot">
+            <i class="ln-now" style="left:30%" aria-hidden="true"></i>
+            <i class="ln-grid-y" style="top:25%"></i><i class="ln-grid-y" style="top:75%"></i>
+            <i class="ln-ref" style="top:50%"></i>
+            <i class="ln-yun first" style="left:0"><span>甲申运</span></i>
+            <i class="ln-yun" style="left:45%"><span>乙酉运 · 2027 年 8 月交运</span></i>
+            <i class="ln-range" style="left:5.0%;top:50.00%;height:12.50%"></i>
+            <i class="ln-range" style="left:15.0%;top:50.00%;height:12.50%"></i>
+            <i class="ln-range" style="left:25.0%;top:62.50%;height:12.50%"></i>
+            <i class="ln-range" style="left:35.0%;top:50.00%;height:25.00%"></i>
+            <i class="ln-range" style="left:45.0%;top:62.50%;height:12.50%"></i>
+            <i class="ln-range" style="left:55.0%;top:25.00%;height:25.00%"></i>
+            <i class="ln-range" style="left:65.0%;top:25.00%;height:25.00%"></i>
+            <i class="ln-range" style="left:75.0%;top:37.50%;height:25.00%"></i>
+            <i class="ln-range" style="left:85.0%;top:37.50%;height:12.50%"></i>
+            <i class="ln-range" style="left:95.0%;top:25.00%;height:37.50%"></i>
+            <svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="50,53.75 150,58.75 250,66.25 350,62.50 450,66.25 550,37.50 650,33.75 750,50.00 850,46.25 950,41.25" fill="none" stroke="#C9A866" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
+            <i class="ln-dot" style="left:5.0%;top:53.75%"></i>
+            <i class="ln-dot" style="left:15.0%;top:58.75%"></i>
+            <i class="ln-dot" style="left:25.0%;top:66.25%"></i>
+            <i class="ln-dot now" style="left:35.0%;top:62.50%"></i>
+            <i class="ln-dot" style="left:45.0%;top:66.25%"></i>
+            <i class="ln-dot" style="left:55.0%;top:37.50%"></i>
+            <i class="ln-dot" style="left:65.0%;top:33.75%"></i>
+            <i class="ln-dot" style="left:75.0%;top:50.00%"></i>
+            <i class="ln-dot" style="left:85.0%;top:46.25%"></i>
+            <i class="ln-dot" style="left:95.0%;top:41.25%"></i>
+            <span class="ln-lab" style="left:35.0%;top:50.00%">今年 4.0成</span>
+            <span class="ln-lab" style="left:65.0%;top:25.00%">6.3成 · 十年最顺</span>
+            <span class="ln-lab wide-only" style="left:25.0%;top:62.50%">3.7成</span>
+            <button class="ln-hit" type="button" data-i="0" style="left:0%" aria-label="2023 癸卯，合议4.7成"></button>
+            <button class="ln-hit" type="button" data-i="1" style="left:10%" aria-label="2024 甲辰，合议4.3成"></button>
+            <button class="ln-hit" type="button" data-i="2" style="left:20%" aria-label="2025 乙巳，合议3.7成"></button>
+            <button class="ln-hit sel" type="button" data-i="3" style="left:30%" aria-label="2026 丙午，合议4.0成"></button>
+            <button class="ln-hit" type="button" data-i="4" style="left:40%" aria-label="2027 丁未，合议3.7成"></button>
+            <button class="ln-hit" type="button" data-i="5" style="left:50%" aria-label="2028 戊申，合议6.0成"></button>
+            <button class="ln-hit" type="button" data-i="6" style="left:60%" aria-label="2029 己酉，合议6.3成"></button>
+            <button class="ln-hit" type="button" data-i="7" style="left:70%" aria-label="2030 庚戌，合议5.0成"></button>
+            <button class="ln-hit" type="button" data-i="8" style="left:80%" aria-label="2031 辛亥，合议5.3成"></button>
+            <button class="ln-hit" type="button" data-i="9" style="left:90%" aria-label="2032 壬子，合议5.7成"></button>
+            <div class="ln-tip" id="ln-tip" hidden></div>
+          </div>
+          <div class="ln-x" aria-hidden="true"><span>癸卯<small>2023</small></span><span>甲辰<small>2024</small></span><span>乙巳<small>2025</small></span><span class="now">丙午<small>2026</small></span><span>丁未<small>2027</small></span><span>戊申<small>2028</small></span><span>己酉<small>2029</small></span><span>庚戌<small>2030</small></span><span>辛亥<small>2031</small></span><span>壬子<small>2032</small></span></div>
+        </div>
+        <div class="ln-key" aria-hidden="true"><span><i class="k-line"></i>三家合议（平均）</span><span><i class="k-range"></i>三家最低至最高</span><span><i class="k-ref"></i>五五之数</span><span>点选某年，看三家逐年断语</span></div>
+        <div class="ln-scroll" id="ln-scroll" tabindex="0" aria-label="十年流年表，可横向滚动">
+        <table class="ln-table">
+          <colgroup><col class="ln-axis"><col span="10"></colgroup>
+          <thead>
+            <tr class="ln-span"><th></th><th colspan="3">回看 · 可对照亲历</th><th class="now">今年</th><th colspan="6">展望</th></tr>
+            <tr><th></th><th><button type="button" class="ln-year" data-i="0">2023</button></th><th><button type="button" class="ln-year" data-i="1">2024</button></th><th><button type="button" class="ln-year" data-i="2">2025</button></th><th class="now"><button type="button" class="ln-year sel" data-i="3">2026</button></th><th><button type="button" class="ln-year" data-i="4">2027</button></th><th><button type="button" class="ln-year" data-i="5">2028</button></th><th><button type="button" class="ln-year" data-i="6">2029</button></th><th><button type="button" class="ln-year" data-i="7">2030</button></th><th><button type="button" class="ln-year" data-i="8">2031</button></th><th><button type="button" class="ln-year" data-i="9">2032</button></th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">流年</th><td class="gz">癸卯<small>虚34</small></td><td class="gz">甲辰<small>虚35</small></td><td class="gz">乙巳<small>虚36</small></td><td class="gz now">丙午<small>虚37</small></td><td class="gz">丁未<small>虚38</small></td><td class="gz">戊申<small>虚39</small></td><td class="gz">己酉<small>虚40</small></td><td class="gz">庚戌<small>虚41</small></td><td class="gz">辛亥<small>虚42</small></td><td class="gz">壬子<small>虚43</small></td></tr>
+            <tr><th scope="row">十神</th><td>伤官<br>正财</td><td>偏财<br>偏印</td><td>正财<br>七杀</td><td class="now">七杀<br>正官</td><td>正官<br>正印</td><td>偏印<br>比肩</td><td>正印<br>劫财</td><td>比肩<br>偏印</td><td>劫财<br>食神</td><td>食神<br>伤官</td></tr>
+            <tr><th scope="row">大运</th><td>甲申</td><td>甲申</td><td>甲申</td><td class="now">甲申</td><td>甲申<br>→乙酉</td><td>乙酉</td><td>乙酉</td><td>乙酉</td><td>乙酉</td><td>乙酉</td></tr>
+            <tr><th scope="row">合冲刑害</th><td class="rels"><span class="tag bad">卯午破</span><span class="tag bad">卯辰害</span><span class="tag gold">卯未半合木</span></td><td class="rels"><span class="tag bad">甲庚冲</span><span class="tag bad">辰辰自刑</span><span class="tag gold">申辰拱水</span></td><td class="rels"><span class="tag good">乙庚合</span><span class="tag bad">乙辛冲</span><span class="tag bad">巳申合刑破</span></td><td class="rels now"><span class="tag good">丙辛合</span><span class="tag bad">午午自刑</span><span class="tag good">午未合</span></td><td class="rels"><span class="tag bad">丁癸冲</span><span class="tag good">午未合</span></td><td class="rels"><span class="tag good">戊癸合</span><span class="tag bad">巳申合刑破</span><span class="tag gold">申辰拱水</span></td><td class="rels"><span class="tag good">辰酉合</span><span class="tag gold">巳酉半合金</span><span class="tag bad">酉酉自刑</span></td><td class="rels"><span class="tag good">乙庚合</span><span class="tag bad">辰戌冲</span><span class="tag bad">戌未刑破</span><span class="tag gold">午戌半合火</span><span class="tag bad">酉戌害</span></td><td class="rels"><span class="tag bad">乙辛冲</span><span class="tag bad">巳亥冲</span><span class="tag gold">亥未拱木</span></td><td class="rels"><span class="tag bad">子午冲</span><span class="tag gold">子辰半合水</span><span class="tag bad">子未害</span><span class="tag bad">子酉破</span></td></tr>
+            <tr class="sch"><th scope="row">沈 · 格局</th><td class="v ping"><b>平</b>5成</td><td class="v ping"><b>平</b>4成</td><td class="v xiong"><b>凶</b>4成</td><td class="v xiong"><b>凶</b>4成</td><td class="v xiong"><b>凶</b>4成</td><td class="v ji"><b>吉</b>6成</td><td class="v ji"><b>吉</b>7成</td><td class="v ping"><b>平</b>5成</td><td class="v ping"><b>平</b>5成</td><td class="v ji"><b>吉</b>6成</td></tr>
+            <tr class="sch"><th scope="row">余 · 调候</th><td class="v ping"><b>平</b>5成</td><td class="v ping"><b>平</b>5成</td><td class="v xiong"><b>凶</b>4成</td><td class="v xiong"><b>凶</b>3成</td><td class="v xiong"><b>凶</b>3成</td><td class="v ping"><b>平</b>5成</td><td class="v ping"><b>平</b>5成</td><td class="v ping"><b>平</b>4成</td><td class="v ji"><b>吉</b>6成</td><td class="v ji"><b>吉</b>7成</td></tr>
+            <tr class="sch"><th scope="row">任 · 扶抑</th><td class="v ping"><b>平</b>4成</td><td class="v ping"><b>平</b>4成</td><td class="v xiong"><b>凶</b>3成</td><td class="v ping"><b>平</b>5成</td><td class="v ping"><b>平</b>4成</td><td class="v ji"><b>吉</b>7成</td><td class="v ji"><b>吉</b>7成</td><td class="v ji"><b>吉</b>6成</td><td class="v ping"><b>平</b>5成</td><td class="v ping"><b>平</b>4成</td></tr>
+            <tr class="avg"><th scope="row">合议</th><td>4.7成</td><td>4.3成</td><td>3.7成</td><td class="now">4.0成</td><td>3.7成</td><td>6.0成</td><td>6.3成</td><td>5.0成</td><td>5.3成</td><td>5.7成</td></tr>
+          </tbody>
+        </table>
+        </div>
+    </div>
+    <div class="ln-detail" id="ln-detail" aria-live="polite"></div>
+    <script type="application/json" id="ln-data">[{"y":2023,"gz":"癸卯","age":34,"ss":["伤官","正财"],"yun":"甲申","s":[["平",5,"伤官生财，财来坏印，得失互见"],["平",5,"癸水透出稍润，火势未退"],["平",4,"财星耗身，卯辰相害，宜守成"]],"avg":4.7,"min":4,"max":5},{"y":2024,"gz":"甲辰","age":35,"ss":["偏财","偏印"],"yun":"甲申","s":[["平",4,"财透冲比，辰土虽印而自刑"],["平",5,"辰为湿土，申辰拱水，燥气稍解"],["平",4,"甲庚相冲，身弱逢财，劳而少得"]],"avg":4.3,"min":4,"max":5},{"y":2025,"gz":"乙巳","age":36,"ss":["正财","七杀"],"yun":"甲申","s":[["凶",4,"巳火七杀再至，杀势加重"],["凶",4,"巳月复逢巳年，火炎金熔"],["凶",3,"财合日主而杀旺，身弱难任"]],"avg":3.7,"min":3,"max":4},{"y":2026,"gz":"丙午","age":37,"ss":["七杀","正官"],"yun":"甲申","s":[["凶",4,"杀重无制，宜守"],["凶",3,"火炎缺水，入冬见转机"],["平",5,"运扶身弱，得失参半"]],"avg":4,"min":3,"max":5},{"y":2027,"gz":"丁未","age":38,"ss":["正官","正印"],"yun":"甲申→乙酉","s":[["凶",4,"官杀混杂，未土印星力弱"],["凶",3,"未为燥土，火势未退"],["平",4,"八月交乙酉运，比劫渐得力"]],"avg":3.7,"min":3,"max":4},{"y":2028,"gz":"戊申","age":39,"ss":["偏印","比肩"],"yun":"乙酉","s":[["吉",6,"偏印透干化杀，格局转清"],["平",5,"申中壬水长生，水源初见"],["吉",7,"印比同至，身弱得扶"]],"avg":6,"min":5,"max":7},{"y":2029,"gz":"己酉","age":40,"ss":["正印","劫财"],"yun":"乙酉","s":[["吉",7,"正印当头，杀印相生"],["平",5,"金水渐旺，惟壬水未透"],["吉",7,"印劫帮身，辰酉合金"]],"avg":6.3,"min":5,"max":7},{"y":2030,"gz":"庚戌","age":41,"ss":["比肩","偏印"],"yun":"乙酉","s":[["平",5,"比肩助身，惟辰戌相冲"],["平",4,"戌为燥土，午戌半合火"],["吉",6,"比印帮身，冲动日支防变动"]],"avg":5,"min":4,"max":6},{"y":2031,"gz":"辛亥","age":42,"ss":["劫财","食神"],"yun":"乙酉","s":[["平",5,"亥中壬水食神制杀"],["吉",6,"亥水有源，调候得用"],["平",5,"冲动月令，劫财夺财"]],"avg":5.3,"min":5,"max":6},{"y":2032,"gz":"壬子","age":43,"ss":["食神","伤官"],"yun":"乙酉","s":[["吉",6,"壬水食神透干，制杀有力"],["吉",7,"壬水透出，火炎得济"],["平",4,"食伤泄身，子午相冲"]],"avg":5.7,"min":4,"max":7}]</script>
+  </section>
+
   <div class="row2">
     <section class="panel" aria-labelledby="rel-title">
       <div class="panel-head"><h2 id="rel-title">合冲刑害</h2><p>原局四支，与当前大运、今年流年之间的关系。</p></div>
@@ -365,16 +521,16 @@ table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-a
             <text x="480" y="152">大运</text><text x="580" y="152">流年</text>
           </g>
           <line x1="420" y1="88" x2="420" y2="150" stroke="rgb(201 168 102 / .3)" stroke-dasharray="3 4"/>
-          <path d="M60 100 Q210 30 360 100" fill="none" stroke="#82B59E" stroke-width="1.6"/>
-          <text x="210" y="56" font-size="13" fill="#82B59E" font-family="-apple-system, PingFang SC, sans-serif">午未合</text>
-          <path d="M360 100 Q470 40 580 100" fill="none" stroke="#82B59E" stroke-width="1.6"/>
-          <text x="470" y="62" font-size="13" fill="#82B59E" font-family="-apple-system, PingFang SC, sans-serif">午未合</text>
+          <path d="M60 100 Q210 30 360 100" fill="none" stroke="#45A07E" stroke-width="1.6"/>
+          <text x="210" y="56" font-size="13" fill="#45A07E" font-family="-apple-system, PingFang SC, sans-serif">午未合</text>
+          <path d="M360 100 Q470 40 580 100" fill="none" stroke="#45A07E" stroke-width="1.6"/>
+          <text x="470" y="62" font-size="13" fill="#45A07E" font-family="-apple-system, PingFang SC, sans-serif">午未合</text>
           <path d="M60 96 Q320 -20 580 96" fill="none" stroke="#D0614A" stroke-width="1.6" stroke-dasharray="5 4"/>
           <text x="320" y="22" font-size="13" fill="#D0614A" font-family="-apple-system, PingFang SC, sans-serif">午午自刑</text>
           <path d="M160 170 Q320 236 480 170" fill="none" stroke="#D0614A" stroke-width="1.6"/>
           <text x="320" y="214" font-size="13" fill="#D0614A" font-family="-apple-system, PingFang SC, sans-serif">巳申合·刑·破</text>
           <path d="M260 170 Q370 206 480 170" fill="none" stroke="#C9A866" stroke-width="1.6"/>
-          <text x="400" y="182" font-size="12" fill="#C9A866" font-family="-apple-system, PingFang SC, sans-serif">申辰半合水</text>
+          <text x="400" y="182" font-size="12" fill="#C9A866" font-family="-apple-system, PingFang SC, sans-serif">申辰拱水</text>
           <g font-size="34" fill="#EAE5D9">
             <text x="60" y="132">午</text><text x="160" y="132">巳</text><text x="260" y="132" fill="#C9A866">辰</text><text x="360" y="132">未</text>
             <text x="480" y="132">申</text><text x="580" y="132">午</text>
@@ -383,7 +539,7 @@ table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-a
       </svg>
       <ul class="rel-list">
         <li><b>原局</b>巳午未三会南方火局；午未合。</li>
-        <li><b>大运甲申</b>巳申合，兼刑、兼破；申辰半合水局；申为禄神、驿马。</li>
+        <li><b>大运甲申</b>巳申合，兼刑、兼破；申辰拱水（缺子，不成半合）；申为禄神、驿马。</li>
         <li><b>流年丙午</b>丙辛合（流年干合月干）；午午自刑；午未合并入火局。</li>
       </ul>
     </section>
@@ -401,5 +557,61 @@ table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-a
     </section>
   </div>
 
-  <p class="provenance"><b>数据来源：</b>四柱、十神、藏干、十二长生、纳音、胎元、命宫、身宫、起运与大运流年由 lunar-javascript 推算（23:00 换日）；出生时刻按 1990 年中国夏令时区间自动校正；合冲刑害与神煞按传统查表（天乙、华盖、驿马、禄神依日干、年支、日支起法）。三家用神与断语为样稿示意，调候派所据《穷通宝鉴》条目在实施时逐条核对原文。</p>
+  <p class="provenance"><b>数据来源：</b>四柱、十神、藏干、十二长生、纳音、胎元、命宫、身宫、起运与大运流年由 lunar-javascript 推算（23:00 换日）；出生时刻按 1990 年中国夏令时区间自动校正；合冲刑害与神煞按传统查表（天乙、华盖、驿马、禄神依日干、年支、日支起法）。流年窗口以所问之年为锚，回看三年、展望六年，流年以立春为界；三家用神、断语与逐年吉凶几成为样稿示意，调候派所据《穷通宝鉴》条目在实施时逐条核对原文。</p>
 </div>
+<script>
+// 流年面板交互：悬停显示读数，点选某年展开三家逐年断语
+(() => {
+  const data = JSON.parse(document.getElementById("ln-data").textContent);
+  const plot = document.getElementById("ln-plot");
+  const tip = document.getElementById("ln-tip");
+  const detail = document.getElementById("ln-detail");
+  const scroller = document.getElementById("ln-scroll");
+  // 表格横向滚动时，把所选年份那一列滚到可见处
+  const reveal = (i) => {
+    const th = scroller.querySelector(`.ln-year[data-i="${i}"]`).parentElement;
+    if (scroller.scrollWidth <= scroller.clientWidth) {
+      return;
+    }
+    scroller.scrollLeft = th.offsetLeft - (scroller.clientWidth - th.offsetWidth) / 2;
+  };
+  const names = [["沈", "沈孝瞻 · 格局"], ["余", "余春台 · 调候"], ["任", "任铁樵 · 扶抑"]];
+  const cls = { 吉: "ji", 平: "", 凶: "xiong" };
+  const showTip = (i) => {
+    const d = data[i];
+    tip.innerHTML = `<b>${d.y} ${d.gz}</b> · 合议 <b>${d.avg.toFixed(1)}成</b><br>`
+      + d.s.map((s, k) => `${names[k][0]} ${s[0]}${s[1]}成`).join(" · ");
+    tip.hidden = false;
+    // 读数框不越出图区左右边界
+    const w = plot.clientWidth;
+    const half = tip.offsetWidth / 2;
+    const x = Math.min(Math.max(((i * 10 + 5) / 100) * w, half), w - half);
+    tip.style.left = `${x}px`;
+    tip.style.top = `${((9 - d.max) / 8) * 100}%`;
+  };
+  const select = (i) => {
+    const d = data[i];
+    document.querySelectorAll(".ln-hit, .ln-year").forEach((el) => {
+      el.classList.toggle("sel", Number(el.dataset.i) === i);
+    });
+    const tags = d.y === 2026 ? "今年" : d.y < 2026 ? "已过，可对照亲历" : "展望";
+    detail.innerHTML = `<div class="ln-detail-head"><b>${d.y} ${d.gz}</b>`
+      + `<span>${tags} · 虚岁 ${d.age} · ${d.yun.replace("→", " 转 ")}运 · 流年十神 ${d.ss.join("／")}</span></div>`
+      + `<div class="ln-detail-rows">${d.s.map((s, k) => `<div><span class="seal">${names[k][0]}</span>`
+      + `<strong class="${cls[s[0]]}">${s[0]}<small>${s[1]}成 · ${names[k][1]}</small></strong><p>${s[2]}</p></div>`).join("")}</div>`;
+    reveal(i);
+  };
+  plot.querySelectorAll(".ln-hit").forEach((el) => {
+    const i = Number(el.dataset.i);
+    el.addEventListener("pointerenter", () => showTip(i));
+    el.addEventListener("focus", () => showTip(i));
+    el.addEventListener("pointerleave", () => { tip.hidden = true; });
+    el.addEventListener("blur", () => { tip.hidden = true; });
+    el.addEventListener("click", () => select(i));
+  });
+  document.querySelectorAll(".ln-year").forEach((el) => {
+    el.addEventListener("click", () => select(Number(el.dataset.i)));
+  });
+  select(data.findIndex((d) => d.y === 2026));
+})();
+</script>
