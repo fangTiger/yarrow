@@ -22,6 +22,7 @@ function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
     getReading: async () => reading as never,
     retrySchool: async () => reading as never,
     changeSubject: async () => reading as never,
+    changeDayBoundary: async () => reading as never,
     ...overrides,
   };
 }
@@ -189,6 +190,48 @@ test("付款配置 GET 无需同源校验", async () => {
     });
     assert.equal(response.status, 200);
     assert.equal((await response.json() as { amountUsdc6: string }).amountUsdc6, "50000");
+  } finally {
+    await close(item);
+  }
+});
+
+test("换日与八字重试路由沿用 Origin、JSON、8 KiB 和 id 边界", async () => {
+  const item = await fixture();
+  try {
+    const id = "abcdefghijklmnopqrstuvwxyz";
+    for (const path of [`/api/readings/${id}/day-boundary`, `/api/readings/${id}/schools/yuchuntai/retry`]) {
+      assert.equal((await post(item.base, path, {})).status, 200);
+      assert.equal((await fetch(`${item.base}${path}`, { method: "POST",
+        headers: { "content-type": "application/json" }, body: "{}" })).status, 403);
+      assert.equal((await post(item.base, path, {}, { origin: "https://evil.example" })).status, 403);
+      assert.equal((await post(item.base, path, {}, { "content-type": "text/plain" })).status, 415);
+      assert.equal((await post(item.base, path, "{")).status, 400);
+      assert.equal((await post(item.base, path, "x".repeat(9 * 1_024))).status, 413);
+      assert.equal((await post(item.base, path.replace(id, "bad"), {})).status, 404);
+    }
+  } finally {
+    await close(item);
+  }
+});
+test("换日与八字重试中文错误沿用 400 与 409 映射", async () => {
+  const { SanyiInputError } = await import("../src/sanyi/http-errors.js");
+  const { LimitExceededError } = await import("../src/sanyi/reading-service.js");
+  const item = await fixture(fakeApi({
+    changeDayBoundary: async () => {
+      throw new SanyiInputError("生辰与本卦命盘不符");
+    },
+    retrySchool: async () => {
+      throw new LimitExceededError("此家重试次数已用尽");
+    },
+  }));
+  try {
+    const base = "/api/readings/abcdefghijklmnopqrstuvwxyz";
+    const wrong = await post(item.base, `${base}/day-boundary`, {});
+    assert.equal(wrong.status, 400);
+    assert.deepEqual(await wrong.json(), { error: "生辰与本卦命盘不符" });
+    const limit = await post(item.base, `${base}/schools/yuchuntai/retry`, {});
+    assert.equal(limit.status, 409);
+    assert.deepEqual(await limit.json(), { error: "此家重试次数已用尽" });
   } finally {
     await close(item);
   }

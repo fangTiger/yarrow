@@ -5,7 +5,8 @@ import type { QuestionSchoolKey } from "../../src/sanyi/schools/index.js";
 export type PaymentConfiguration = Awaited<ReturnType<SanyiApi["payment"]>>;
 export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
 export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
-export type PublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
+export type AnyPublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
+export type PublicReading = Extract<AnyPublicReading, { kind: "question" }>;
 export type ThrowResult = Awaited<ReturnType<SanyiApi["throwCoin"]>>;
 export interface CreateReadingInput {
   question: string;

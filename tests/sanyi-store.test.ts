@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { ReadingStore, isReadingId, newReadingId } from "../src/sanyi/store.js";
-import type { StoredReading } from "../src/sanyi/store.js";
+import type { StoredQuestionReading as StoredReading } from "../src/sanyi/store.js";
 
 function emptyReading(id = newReadingId()): StoredReading {
   return {

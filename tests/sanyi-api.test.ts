@@ -5,10 +5,9 @@ import type { SanyiFeeProof } from "../src/sanyi/fee.js";
 import { createSanyiApi } from "../src/sanyi/api.js";
 import {
   NotFoundError,
-  NotOpenYetError,
   SanyiInputError,
 } from "../src/sanyi/http-errors.js";
-import type { StoredReading } from "../src/sanyi/store.js";
+import type { StoredQuestionReading as StoredReading } from "../src/sanyi/store.js";
 const ID = "abcdefghijklmnopqrstuvwxyz";
 const PROOF: SanyiFeeProof = {
   payer: `0x${"11".repeat(20)}`,
@@ -96,12 +95,12 @@ test("校验问题、事项与掷序", async () => {
   );
   await assert.rejects(api.throwCoin(ID, { index: "1" }), SanyiInputError);
 });
-test("命理与运势明确留待下一阶段", async () => {
+test("命理与运势缺生辰先给中文 400", async () => {
   const { api } = fixture();
   for (const question of ["看看我的八字", "我今年运势如何"]) {
     await assert.rejects(api.createReading({ question, feeProof: PROOF }), (error: unknown) => {
-      return error instanceof NotOpenYetError
-        && error.message === "命理与运势将在下一阶段开放，可先改为问事";
+      return error instanceof SanyiInputError
+        && error.message === "请先填写生辰";
     });
   }
 });
@@ -119,6 +118,10 @@ test("公开 reading 保留复算材料但移除内部字段", async () => {
   const text = JSON.stringify(value);
   assert.equal(value.question, "这次面试能过吗");
   assert.equal(value.payment.firstHash, PROOF.transactionHash);
+  assert.equal(value.kind, "question");
+  if (value.kind !== "question") {
+    throw new Error("问事类型不符");
+  }
   assert.equal(value.throws[0]?.blockNumber, "8");
   assert.deepEqual(value.lines, [7, 8, 7, 8, 7, 8]);
   assert.equal(value.castTime, "1790770501");

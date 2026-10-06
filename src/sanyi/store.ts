@@ -21,7 +21,7 @@ export interface SchoolState {
   error?: string;
 }
 
-export interface StoredReading {
+export interface StoredQuestionReading {
   id: string;
   kind: "question";
   createdAt: string;
@@ -50,6 +50,36 @@ export interface StoredReading {
   almanac?: AlmanacResult;
   qimen?: QimenResult;
 }
+
+export interface BaziSchoolState {
+  status: "pending" | "writing" | "done" | "failed";
+  output?: import("./bazi-schema.js").BaziSchoolOutput;
+  attempts: number;
+  retries: number;
+  error?: string;
+}
+export interface StoredBaziReading {
+  id: string;
+  kind: "destiny" | "fortune";
+  createdAt: string;
+  question: string;
+  payment: StoredQuestionReading["payment"];
+  status: "writing" | "done" | "failed";
+  chart: import("../calendar/bazi.js").BaziChart;
+  analysis: import("../calendar/bazi-relations.js").BaziAnalysis;
+  tiaohou: import("../calendar/qiongtong.js").QiongtongEntry;
+  correction: {
+    dst: "applied" | "not-applied" | "skipped-region";
+    solar: "applied" | "not-applied";
+    timeKnown: boolean;
+    sect: 1 | 2;
+  };
+  context: import("./fortune-context.js").FortuneContext;
+  almanac: AlmanacResult;
+  changes: number;
+  schools: Record<import("./schools/bazi-shared.js").BaziSchoolKey, BaziSchoolState>;
+}
+export type StoredReading = StoredQuestionReading | StoredBaziReading;
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz234567";
 
@@ -90,9 +120,9 @@ export class ReadingStore {
     return join(this.root, "readings", `${id}.json`);
   }
 
-  async read(id: string): Promise<StoredReading> {
+  async read<T extends StoredReading = StoredQuestionReading>(id: string): Promise<T> {
     const text = await readFile(this.readingPath(id), "utf8");
-    return JSON.parse(text) as StoredReading;
+    return JSON.parse(text) as T;
   }
 
   async write(reading: StoredReading): Promise<void> {
@@ -104,14 +134,14 @@ export class ReadingStore {
     await rename(temporary, target);
   }
 
-  async update(
+  async update<T extends StoredReading = StoredQuestionReading>(
     id: string,
-    change: (reading: StoredReading) => StoredReading,
-  ): Promise<StoredReading> {
-    let result: StoredReading | undefined;
+    change: (reading: T) => T,
+  ): Promise<T> {
+    let result: T | undefined;
     const previous = this.queues.get(id) ?? Promise.resolve();
     const next = previous.catch(() => {}).then(async () => {
-      result = change(await this.read(id));
+      result = change(await this.read<T>(id));
       await this.write(result);
     });
     this.queues.set(id, next);

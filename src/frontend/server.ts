@@ -16,6 +16,8 @@ import {
 } from "../sanyi/http-errors.js";
 import { createSanyiLogger } from "../sanyi/log.js";
 import { ReadingService, PaymentAlreadyUsedError } from "../sanyi/reading-service.js";
+import { BaziReadingService } from "../sanyi/bazi-reading-service.js";
+import type { BaziSchoolKey } from "../sanyi/schools/bazi-shared.js";
 import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
 import { isReadingId, ReadingStore } from "../sanyi/store.js";
 interface FrontendServerOptions {
@@ -31,7 +33,9 @@ const CONTENT_TYPES: Record<string, string> = {
   ".svg": "image/svg+xml",
   ".woff2": "font/woff2",
 };
-const SCHOOL_KEYS = new Set<QuestionSchoolKey>(["chengyi", "jingfang", "shaoyong"]);
+const SCHOOL_KEYS = new Set<QuestionSchoolKey | BaziSchoolKey>([
+  "chengyi", "jingfang", "shaoyong", "shenxiaozhan", "yuchuntai", "rentieqiao",
+]);
 export function resolveStaticPath(publicDir: string, pathname: string): string | null {
   let decoded: string;
   try {
@@ -110,6 +114,7 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
       const retryRoute = url.pathname.match(
         /^\/api\/readings\/([^/]+)\/schools\/([^/]+)\/retry$/,
       );
+      const boundaryRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/day-boundary$/);
       const subjectRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/subject$/);
       const isApi = url.pathname.startsWith("/api/");
       const writing = request.method === "POST";
@@ -141,7 +146,7 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         json(response, 200, await api.throwCoin(throwRoute[1] as string, body));
         return;
       }
-      const retryKey = retryRoute?.[2] as QuestionSchoolKey | undefined;
+      const retryKey = retryRoute?.[2] as QuestionSchoolKey | BaziSchoolKey | undefined;
       if (
         retryRoute
         && request.method === "POST"
@@ -151,6 +156,10 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         && SCHOOL_KEYS.has(retryKey)
       ) {
         json(response, 200, await api.retrySchool(retryRoute[1] as string, retryKey));
+        return;
+      }
+      if (boundaryRoute && request.method === "POST" && api && isReadingId(boundaryRoute[1] ?? "")) {
+        json(response, 200, await api.changeDayBoundary(boundaryRoute[1] as string, body));
         return;
       }
       if (subjectRoute && request.method === "POST" && api && isReadingId(subjectRoute[1] ?? "")) {
@@ -190,8 +199,13 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const publicClient = createArcPublicClient();
   const recipient = feeRecipientFromEnv(process.env);
+  const store = new ReadingStore("data");
+  const logger = createSanyiLogger();
+  const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
+  const bazi = new BaziReadingService({ store, logger, feeVerifier,
+    provider: createDefaultProvider({ maxTokens: 4_096 }), clock: () => new Date() });
   const service = new ReadingService({
-    feeVerifier: new ArcFeeVerifier(publicClient, recipient),
+    feeVerifier,
     blockSource: {
       latest: async () => {
         const block = await publicClient.getBlock({ blockTag: "latest" });
@@ -202,11 +216,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       },
     },
     provider: createDefaultProvider({ maxTokens: 2_048 }),
-    store: new ReadingStore("data"),
-    logger: createSanyiLogger(),
+    store,
+    logger,
   });
   const port = Number(process.env.FRONTEND_PORT ?? "4173");
-  createFrontendServer({ api: createSanyiApi(service, { recipient }) }).listen(port, "127.0.0.1", () => {
+  const api = createSanyiApi(service, { recipient, bazi });
+  createFrontendServer({ api }).listen(port, "127.0.0.1", () => {
     console.log(`三易服务已启动：http://127.0.0.1:${port}`);
     console.log(`三易收款地址：${recipient}`);
     console.log("问事卦金：0.05 USDC；付款后亲手六掷，三家依同一卦独立落笔");

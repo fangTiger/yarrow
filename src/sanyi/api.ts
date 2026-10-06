@@ -5,19 +5,26 @@ import { isAddress, getAddress, type Address } from "viem";
 import { ARC_CHAIN_ID, USDC_TOKEN_ADDRESS } from "../frontend/wallet.js";
 import { feeRecipientFromEnv, FEE_USDC6, type SanyiFeeProof } from "./fee.js";
 import { classifyQuestion } from "./classify.js";
-import { NotFoundError, NotOpenYetError, SanyiInputError } from "./http-errors.js";
+import { NotFoundError, SanyiInputError } from "./http-errors.js";
 import type { ReadingService } from "./reading-service.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
-import type { StoredReading } from "./store.js";
+import type { StoredQuestionReading as StoredReading } from "./store.js";
+import type { StoredReading as AnyStoredReading } from "./store.js";
+import { normalizeBirthProfile } from "./birth-profile.js";
+import { overrideClassification, type FortuneHorizon, type QuestionKind } from "./classify.js";
+import type { BaziReadingService } from "./bazi-reading-service.js";
+import { publicBaziReading, type PublicBaziReading } from "./bazi-public.js";
+import type { BaziSchoolKey } from "./schools/bazi-shared.js";
 type ServiceBoundary = Pick<
   ReadingService,
   "createQuestionReading" | "throwCoin" | "getReading" | "retrySchool" | "changeSubject"
 >;
 type SubjectKey = StoredReading["subject"]["finalKey"];
-export interface PublicReading extends Omit<StoredReading, "payment" | "schools"> {
+export interface PublicQuestionReading extends Omit<StoredReading, "payment" | "schools"> {
   payment: { firstHash: StoredReading["payment"]["transactionHash"] };
   schools: Record<QuestionSchoolKey, Omit<StoredReading["schools"][QuestionSchoolKey], "attempts">>;
 }
+export type PublicReading = PublicQuestionReading | PublicBaziReading;
 export interface PaymentConfiguration {
   recipient: Address;
   amountUsdc6: string;
@@ -31,8 +38,9 @@ export interface SanyiApi {
   createReading(input: unknown): Promise<PublicReading>;
   throwCoin(id: string, input: unknown): Promise<StoredReading["throws"][number]>;
   getReading(id: string): Promise<PublicReading>;
-  retrySchool(id: string, key: QuestionSchoolKey): Promise<PublicReading>;
+  retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey): Promise<PublicReading>;
   changeSubject(id: string, input: unknown): Promise<PublicReading>;
+  changeDayBoundary(id: string, input: unknown): Promise<PublicReading>;
 }
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -74,7 +82,7 @@ function feeProofFrom(value: unknown): SanyiFeeProof {
   }
   return { payer: getAddress(proof.payer), transactionHash: proof.transactionHash as `0x${string}` };
 }
-function publicReading(reading: StoredReading): PublicReading {
+function publicReading(reading: StoredReading): PublicQuestionReading {
   const school = (key: QuestionSchoolKey) => {
     const { attempts: _attempts, ...visible } = reading.schools[key];
     return visible;
@@ -101,7 +109,7 @@ async function notFound<T>(operation: () => Promise<T>): Promise<T> {
 }
 export function createSanyiApi(
   service: ServiceBoundary,
-  options: { now?: () => Date; recipient?: Address } = {},
+  options: { now?: () => Date; recipient?: Address; bazi?: BaziReadingService } = {},
 ): SanyiApi {
   const clock = options.now ?? (() => new Date());
   let cache: { createdAt: number; value: ReturnType<typeof almanacAt> } | undefined;
@@ -124,9 +132,34 @@ export function createSanyiApi(
     },
     async createReading(input) {
       const body = record(input);
-      const classification = classifyQuestion(questionFrom(body));
+      let classification = classifyQuestion(questionFrom(body));
+      try {
+        classification = overrideClassification(classification, {
+          ...(body.kind === undefined ? {} : { kind: body.kind as QuestionKind }),
+          ...(body.horizon === undefined ? {} : { horizon: body.horizon as FortuneHorizon }),
+        });
+      } catch {
+        throw new SanyiInputError("问题类型或时间范围无效");
+      }
       if (classification.kind === "destiny" || classification.kind === "fortune") {
-        throw new NotOpenYetError("命理与运势将在下一阶段开放，可先改为问事");
+        if (body.birth === undefined || body.birth === null) {
+          throw new SanyiInputError("请先填写生辰");
+        }
+        try {
+          normalizeBirthProfile(body.birth);
+        } catch {
+          throw new SanyiInputError("生辰格式无效，请检查填写内容");
+        }
+        const sect = body.sect ?? 1;
+        if (sect !== 1 && sect !== 2) {
+          throw new SanyiInputError("换日口径须为 1 或 2");
+        }
+        if (!options.bazi) {
+          throw new Error("八字服务尚未配置");
+        }
+        return publicBaziReading(await options.bazi.create({ kind: classification.kind,
+          question: classification.question, birth: body.birth, sect,
+          horizon: classification.horizon ?? "year", feeProof: feeProofFrom(body.feeProof) }));
       }
       if (classification.kind !== "question") {
         throw new SanyiInputError(classification.suggestion ?? "请改为一件具体的事来问");
@@ -134,6 +167,7 @@ export function createSanyiApi(
       const subjectKey = subjectFrom(body.subjectKey);
       const reading = await service.createQuestionReading({
         question: classification.question,
+        ...(body.kind === "question" ? { kind: "question" as const } : {}),
         feeProof: feeProofFrom(body.feeProof),
         ...(subjectKey === undefined ? {} : { subjectKey }),
       });
@@ -147,10 +181,39 @@ export function createSanyiApi(
       return notFound(() => service.throwCoin(id, index));
     },
     async getReading(id) {
-      return publicReading(await notFound(() => service.getReading(id)));
+      const reading = await notFound(async (): Promise<AnyStoredReading> => {
+        if (options.bazi) {
+          // 共用 store 读取判别，问事仍走原服务，不重新排盘或调用模型。
+          return options.bazi.readAny(id);
+        }
+        return service.getReading(id);
+      });
+      return reading.kind === "question" ? publicReading(reading) : publicBaziReading(reading);
     },
     async retrySchool(id, key) {
+      if (key === "shenxiaozhan" || key === "yuchuntai" || key === "rentieqiao") {
+        if (!options.bazi) {
+          throw new SanyiInputError("八字服务尚未配置");
+        }
+        return publicBaziReading(await notFound(() => options.bazi!.retrySchool(id, key)));
+      }
       return publicReading(await notFound(() => service.retrySchool(id, key)));
+    },
+    async changeDayBoundary(id, input) {
+      const body = record(input);
+      if (body.birth === undefined || body.birth === null) {
+        throw new SanyiInputError("请先填写生辰");
+      }
+      if (body.sect !== 1 && body.sect !== 2) {
+        throw new SanyiInputError("换日口径须为 1 或 2");
+      }
+      if (!options.bazi) {
+        throw new SanyiInputError("八字服务尚未配置");
+      }
+      const changed = await notFound(() => {
+        return options.bazi!.changeDayBoundary(id, body.birth, body.sect as 1 | 2);
+      });
+      return publicBaziReading(changed);
     },
     async changeSubject(id, input) {
       const subjectKey = subjectFrom(record(input).subjectKey);

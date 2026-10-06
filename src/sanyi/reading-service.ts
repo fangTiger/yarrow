@@ -9,7 +9,7 @@ import type { SanyiFeeProof, SanyiFeeVerifier } from "./fee.js";
 import { buildLiuyaoChart, deriveFiveHexagrams } from "../oracle/liuyao-chart.js";
 import type { QuestionBlockSource } from "../oracle/question-oracle.js";
 import type { StructuredOutputProvider } from "../agent/provider.js";
-import { classifyQuestion, normalizeQuestion } from "./classify.js";
+import { classifyQuestion, normalizeQuestion, overrideClassification } from "./classify.js";
 import { buildQuestionFacts, type FactTable } from "./facts.js";
 import type { SanyiLogger } from "./log.js";
 import { buildOriginalTexts } from "./original-texts.js";
@@ -20,7 +20,7 @@ import {
   ReadingStore,
   newReadingId,
   type SchoolState,
-  type StoredReading,
+  type StoredQuestionReading as StoredReading,
 } from "./store.js";
 import {
   assertNextThrow,
@@ -110,9 +110,13 @@ export class ReadingService {
   async createQuestionReading(input: {
     question: string;
     subjectKey?: QuestionSubjectKey;
+    kind?: "question";
     feeProof: SanyiFeeProof;
   }): Promise<StoredReading> {
-    const classification = classifyQuestion(input.question);
+    let classification = classifyQuestion(input.question);
+    if (input.kind === "question") {
+      classification = overrideClassification(classification, { kind: "question" });
+    }
     if (classification.kind !== "question" || !classification.subject) {
       throw new Error("此服务只接受问事问题");
     }
@@ -158,7 +162,7 @@ export class ReadingService {
 
   async throwCoin(id: string, index: number): Promise<RecordedThrow> {
     return this.withReadingLock(id, async () => {
-      const reading = await this.deps.store.read(id);
+      const reading = await this.readQuestion(id);
       const recorded = reading.throws.find((item) => item.index === index);
       if (recorded) {
         return recorded;
@@ -195,7 +199,7 @@ export class ReadingService {
 
   async retrySchool(id: string, key: QuestionSchoolKey): Promise<StoredReading> {
     return this.withReadingLock(id, async () => {
-      const reading = await this.deps.store.read(id);
+      const reading = await this.readQuestion(id);
       const state = reading.schools[key];
       if (state.status !== "failed" && state.status !== "rejected") {
         throw new StateConflictError("此家当前状态不可重试");
@@ -224,7 +228,7 @@ export class ReadingService {
     subjectKey: QuestionSubjectKey,
   ): Promise<StoredReading> {
     return this.withReadingLock(id, async () => {
-      const reading = await this.deps.store.read(id);
+      const reading = await this.readQuestion(id);
       if (reading.status !== "done") {
         throw new StateConflictError("三家尚未全部落笔，请稍后再改事项");
       }
@@ -267,7 +271,15 @@ export class ReadingService {
   }
 
   async getReading(id: string): Promise<StoredReading> {
-    return this.deps.store.read(id);
+    return this.readQuestion(id);
+  }
+
+  private async readQuestion(id: string): Promise<StoredReading> {
+    const reading = await this.deps.store.read<import("./store.js").StoredReading>(id);
+    if (reading.kind !== "question") {
+      throw new StateConflictError("此接口只适用于问事");
+    }
+    return reading;
   }
 
   async whenSettled(id: string): Promise<void> {
@@ -381,7 +393,7 @@ export class ReadingService {
     id: string,
     key: QuestionSchoolKey,
   ): Promise<void> {
-    const reading = await this.deps.store.read(id);
+    const reading = await this.readQuestion(id);
     const context = this.rebuildContext(reading);
     const school = QUESTION_SCHOOLS.find((item) => item.key === key);
     if (!school) {
@@ -396,7 +408,7 @@ export class ReadingService {
     context: RebuiltContext,
     preserveRetries: boolean,
   ): Promise<void> {
-    const reading = await this.deps.store.read(id);
+    const reading = await this.readQuestion(id);
     const result = await runSchool(
       { provider: this.deps.provider },
       {

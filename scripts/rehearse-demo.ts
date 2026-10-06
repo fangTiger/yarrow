@@ -3,6 +3,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import assert from "node:assert/strict";
+import { BaziReadingService } from "../src/sanyi/bazi-reading-service.js";
+import { publicBaziReading } from "../src/sanyi/bazi-public.js";
 import type { SanyiFeeProof } from "../src/sanyi/fee.js";
 import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
 import { createSanyiLogger } from "../src/sanyi/log.js";
@@ -22,17 +25,34 @@ export interface RehearsalSummary {
     confidenceTenths: number;
   }>;
   consensusTenths: number;
+  payments: number;
+  bazi: {
+    pillars: (string | null)[];
+    window: number[];
+    schools: string[];
+    years: number;
+    sectAfterSwitch: number;
+    changes: number;
+  };
 }
 export async function runRehearsal(): Promise<RehearsalSummary> {
   const root = await mkdtemp(join(tmpdir(), "sanyi-rehearsal-"));
   let height = 0n;
+  let payments = 0;
   try {
     const proof: SanyiFeeProof = {
       payer: `0x${"11".repeat(20)}`,
       transactionHash: `0x${"22".repeat(32)}`,
     };
+    const store = new ReadingStore(root);
+    const logger = createSanyiLogger(join(root, "log"));
+    const provider = new MockSchoolsProvider();
+    const feeVerifier = { verify: async (value: SanyiFeeProof) => {
+      payments += 1;
+      return mockSingleFeeReceipt(value);
+    } };
     const service = new ReadingService({
-      feeVerifier: { verify: async (value) => mockSingleFeeReceipt(value) },
+      feeVerifier,
       blockSource: {
         latest: async () => {
           height += 1n;
@@ -43,9 +63,9 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
           };
         },
       },
-      provider: new MockSchoolsProvider(),
-      store: new ReadingStore(root),
-      logger: createSanyiLogger(join(root, "log")),
+      provider,
+      store,
+      logger,
       waitOptions: { pollMs: 1, timeoutMs: 100, sleep: async () => {} },
     });
     const created = await service.createQuestionReading({
@@ -74,7 +94,37 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
         confidenceTenths: state.output.confidenceTenths,
       };
     });
+    const baziService = new BaziReadingService({ store, provider, logger, feeVerifier,
+      clock: () => new Date("2026-10-06T21:00:00+08:00") });
+    const birth = { calendar: "solar", isLeapMonth: false, year: 1990, month: 5, day: 15,
+      time: { hour: 15, minute: 30 }, gender: "male" };
+    const fortune = await baziService.create({ kind: "fortune", question: "我今年运势如何",
+      birth, sect: 1, horizon: "year", feeProof: { ...proof, transactionHash: `0x${"44".repeat(32)}` } });
+    await baziService.whenSettled(fortune.id);
+    const before = await baziService.getReading(fortune.id);
+    const pillars = Object.values(before.chart.pillars).map((pillar) => pillar?.ganZhi ?? null);
+    const window = [before.chart.liunian.years[0]!.year, before.chart.liunian.years.at(-1)!.year];
+    assert.deepEqual(pillars, ["庚午", "辛巳", "庚辰", "癸未"]);
+    assert.deepEqual(window, [2023, 2032]);
+    assert.ok(Object.values(before.schools).every((state) => state.status === "done"));
+    const publicBefore = publicBaziReading(before);
+    assert.equal(publicBefore.kind, "fortune");
+    if (publicBefore.kind !== "fortune") {
+      throw new Error("排练类型不符");
+    }
+    assert.equal(publicBefore.years.length, 10);
+    const paymentsBeforeSwitch = payments;
+    await baziService.changeDayBoundary(fortune.id, birth, 2);
+    await baziService.whenSettled(fortune.id);
+    const after = await baziService.getReading(fortune.id);
+    assert.equal(after.chart.sect, 2);
+    assert.equal(after.changes, 1);
+    assert.ok(Object.values(after.schools).every((state) => state.status === "done" && state.attempts === 2));
+    assert.equal(payments, paymentsBeforeSwitch);
     return {
+      payments,
+      bazi: { pillars, window, schools: Object.values(after.schools).map((state) => state.status),
+        years: publicBefore.years.length, sectAfterSwitch: after.chart.sect, changes: after.changes },
       status: "done",
       primary: five.primary.name,
       derived: five.derived.name,
@@ -98,6 +148,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       console.log(`${school.name}：${school.verdict}，${school.confidenceTenths}成`);
     }
     console.log(`合议平均：约${summary.consensusTenths.toFixed(1)}成`);
+    console.log(`运势四柱：${summary.bazi.pillars.join(" ")}；窗口：${summary.bazi.window.join("–")}`);
+    console.log(`三家已完成，逐年合议 ${summary.bazi.years} 项；免费换日后重跑完成`);
+    console.log(`付款共 ${summary.payments} 笔，换日未新增付款`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
