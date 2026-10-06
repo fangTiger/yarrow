@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮补四柱身份与公开警示小修，写完 B6a/B6b 表单、结果页及 B7 清理验收，全部代码在隔离目录演练。
+**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；第 6 轮按确认样稿重写 B6b，修正逐年关系、mock 区分度与神煞去重，并补 B7 截图守卫，全部代码在隔离目录演练。
 
 **Architecture:** `src/calendar/` 提供确定性的生辰转换、校正与命盘事实，`src/sanyi/` 扩展按类型区分的断语、核对与编排，前端消费明确字段。原始生辰和逐步校正详情只用于请求与本机展示，持久化边界使用字段白名单；八字出生时刻与问事卦时保持独立。
 
@@ -60,6 +60,9 @@
 | `web/lib/birth-entry.ts` | 付款前与 400 补问的纯函数 | B6a |
 | `web/lib/liunian-chart.ts` | 流年几何、分组与数据对齐 | B6b |
 | `web/components/BirthEntry.tsx` | 表单与付款插槽隔离 | B6a |
+| `web/styles/bazi.css` | 样稿八字样式，.bazi 隔离 | B6b |
+| `tests/frontend-bazi-round6.test.ts` | 样稿结构、关系过滤、神煞去重与 mock 区分 | B6b |
+| `scripts/bazi-screenshot-server.ts` | 四类 mock 存档与固定时钟截图服务 | B7 |
 | `web/components/LiuNianPanel.tsx` | 流年图表及逐年短评 | B6b |
 | `tests/frontend-birth-entry.test.ts` | 缺档案不挂载付款 | B6a |
 | `tests/frontend-liunian-chart.test.ts` | 坐标、交运与空值断线 | B6b |
@@ -105,7 +108,8 @@
 | `web/components/QuestionForm.tsx` | 付款前生辰补问与改问事退路 | B6 |
 | `web/components/RecentReadings.tsx` | 命理、运势记录标签 | B6 |
 | `web/pages/Reading.tsx` | 根据联合类型路由至问事或八字结果 | B6 |
-| `web/styles/components.css` | 八字组件样式 | B6 |
+| `web/main.tsx` | 引入隔离 bazi.css | B6b2 |
+| `web/styles/components.css` | 仅补生辰表单样式，问事规则原样保留 | B6 |
 | `web/styles/layout.css` | 经确认的八字响应式布局 | B6 |
 | `web/fonts/mashanzheng-chars.txt` | 补齐三家姓氏和八字固定标题 | B6 |
 | `web/styles/tokens.css` | 翠色及透明 token 同步 | B6b |
@@ -129,7 +133,8 @@
 - Chunk B4b：三家输入与提示词、单家运行器、确定性 mock 与路由（Task B4.4–B4.7）。
 - Chunk B5：编排、接口与排练（命理、运势、换日切换、生辰隐私）。
 - Chunk B6a：生辰表单、本机档案与付款前补问。
-- Chunk B6b：八字结果页、流年面板、样式与字体字表。
+- Chunk B6b1：流年几何、样稿结构与数据回归。
+- Chunk B6b2：客观命盘、三家、本机校正、样稿样式与字体字表。
 - Chunk B7：清理与 1B 验收。
 
 ## 已核对的接口与执行约束
@@ -3360,75 +3365,77 @@ export async function runBaziSchool(deps: {
 
 - [ ] **Step 1：先运行 B4.5 mock 测试，确认八字任务尚无路由时 RED。**
 
-- [ ] **Step 2：实现事实驱动输出及 mock 路由。** 命例格局派取正印、调候派取第一用干壬、扶抑派取比肩，属于排练示例取法；正式判断仍由模型根据各派路径生成。运势每年都取该年干支写短评，全部平五成，锚项自然与总断一致。
+- [ ] **Step 2：实现事实驱动输出及 mock 路由。** 命例格局派取正印、调候派取第一用干壬、扶抑派取比肩，属于排练示例取法；正式判断仍由模型根据各派路径生成。运势按家与年份小哈希生成 3–7 成，以 ≥6 吉、≤4 凶、其余平推出吉凶；从该年事实取关系或十神写 ≤16 字短评。总断直接取锚项，各家有区分度。B6.3 的第 6 轮测试先对旧 mock 确认 RED，再运行本块及 B4.5 核对器测试确认 GREEN。
 
 ```ts
 // src/sanyi/mock-bazi-schools.ts
 import type { FactTable } from "./facts.js";
-import { DESTINY_TITLES, type BaziSchoolOutput, type DestinySchoolOutput,
-  type FortuneSchoolOutput } from "./bazi-schema.js";
+import { DESTINY_TITLES, type BaziSchoolOutput, type DestinySchoolOutput, type FortuneSchoolOutput } from "./bazi-schema.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
 function useGodFor(key: BaziSchoolKey, facts: FactTable): {
-  ref: string;
-  word: string;
+    ref: string;
+    word: string;
 } {
-  if (key === "yuchuntai") {
-    const tiaohou = facts.get("tiaohou");
-    const word = [...tiaohou?.tokens ?? []].find((token) => /^[甲乙丙丁戊己庚辛壬癸]$/u.test(token));
+    if (key === "yuchuntai") {
+        const tiaohou = facts.get("tiaohou");
+        const word = [...tiaohou?.tokens ?? []].find((token) => /^[甲乙丙丁戊己庚辛壬癸]$/u.test(token));
+        if (!word) {
+            throw new Error("调候 mock 缺少用神干");
+        }
+        return { ref: "tiaohou", word };
+    }
+    // 排练展示两派的典型取法，不把示例选择充当正式格局或强弱算法。
+    const wanted = key === "shenxiaozhan" ? ["正印", "偏印", "正官", "七杀"] : ["比肩", "劫财", "正印", "偏印"];
+    for (const word of wanted) {
+        const fact = [...facts.values()].find((item) => {
+            return (item.id.startsWith("pillar:") || item.id.startsWith("hidden:")) && item.tokens.has(word);
+        });
+        if (fact) {
+            return { ref: fact.id, word };
+        }
+    }
+    const day = facts.get("pillar:day");
+    const word = [...day?.tokens ?? []].find((token) => /^[甲乙丙丁戊己庚辛壬癸]$/u.test(token));
     if (!word) {
-      throw new Error("调候 mock 缺少用神干");
+        throw new Error("八字 mock 缺少日干事实");
     }
-    return { ref: "tiaohou", word };
-  }
-  // 排练展示两派的典型取法，不把示例选择充当正式格局或强弱算法。
-  const wanted = key === "shenxiaozhan" ? ["正印", "偏印", "正官", "七杀"] : ["比肩", "劫财", "正印", "偏印"];
-  for (const word of wanted) {
-    const fact = [...facts.values()].find((item) => {
-      return (item.id.startsWith("pillar:") || item.id.startsWith("hidden:")) && item.tokens.has(word);
-    });
-    if (fact) {
-      return { ref: fact.id, word };
-    }
-  }
-  const day = facts.get("pillar:day");
-  const word = [...day?.tokens ?? []].find((token) => /^[甲乙丙丁戊己庚辛壬癸]$/u.test(token));
-  if (!word) {
-    throw new Error("八字 mock 缺少日干事实");
-  }
-  return { ref: "pillar:day", word };
+    return { ref: "pillar:day", word };
 }
-export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
-  kind: "destiny"): DestinySchoolOutput;
-export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
-  kind: "fortune"): FortuneSchoolOutput;
-export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
-  kind: "destiny" | "fortune"): BaziSchoolOutput;
-export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
-  kind: "destiny" | "fortune"): BaziSchoolOutput {
-  const useGod = useGodFor(key, facts);
-  let reason = "依事实判断，先核实条件";
-  if (facts.has("chart:limit")) {
-    reason = "缺时柱，判断存在限制，先核实条件";
-  }
-  const base: DestinySchoolOutput = {
-    useGod: useGod.word, headline: "审慎待时", reason,
-    sections: DESTINY_TITLES.map((title) => ({ title, text: "先核实客观条件" })),
-    advice: ["保留调整余地"], evidence: [{ ref: useGod.ref, claim: useGod.word }],
-  };
-  if (kind === "destiny") {
-    return base;
-  }
-  // 每年只取该年事实首个干支；不把锚年关系搬到其它年份。
-  const years = [...facts.values()].filter((fact) => /^year:\d{4}$/u.test(fact.id))
-    .sort((left, right) => left.id.localeCompare(right.id, "en")).map((fact) => {
-    const ganZhi = [...fact.tokens].find((token) => /^[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]$/u.test(token));
-    if (!ganZhi) {
-      throw new Error("逐年 mock 缺少流年干支");
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable, kind: "destiny"): DestinySchoolOutput;
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable, kind: "fortune"): FortuneSchoolOutput;
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable, kind: "destiny" | "fortune"): BaziSchoolOutput;
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable, kind: "destiny" | "fortune"): BaziSchoolOutput {
+    const useGod = useGodFor(key, facts);
+    let reason = "依事实判断，先核实条件";
+    if (facts.has("chart:limit")) {
+        reason = "缺时柱，判断存在限制，先核实条件";
     }
-    return { year: Number(fact.id.slice(5)), verdict: "平" as const, confidenceTenths: 5,
-      note: `${ganZhi}宜审慎` };
-  });
-  return { ...base, verdict: "平", confidenceTenths: 5, years };
+    const base: DestinySchoolOutput = {
+        useGod: useGod.word, headline: "审慎待时", reason,
+        sections: DESTINY_TITLES.map((title) => ({ title, text: "先核实客观条件" })),
+        advice: ["保留调整余地"], evidence: [{ ref: useGod.ref, claim: useGod.word }],
+    };
+    if (kind === "destiny") {
+        return base;
+    }
+    // 家与年份共同决定分数；各家偏移保证锚年总断不同。
+    const offset = { shenxiaozhan: 0, yuchuntai: 1, rentieqiao: 2 }[key];
+    const years = [...facts.values()].filter(fact => /^year:\d{4}$/u.test(fact.id))
+        .sort((a, b) => a.id.localeCompare(b.id, "en")).map(fact => {
+        const year = Number(fact.id.slice(5));
+        const hash = (Math.imul(year, 31) >>> 0) % 5;
+        const confidenceTenths = 3 + (hash + offset) % 5;
+        const verdict = confidenceTenths >= 6 ? "吉" as const : confidenceTenths <= 4 ? "凶" as const : "平" as const;
+        const word = [...fact.tokens].find(token => /(合|冲|刑|害|破|会|拱)/u.test(token)) ?? [...fact.tokens].find(token => ["比肩", "劫财", "食神", "伤官", "正财", "偏财", "正官", "七杀", "正印", "偏印"].includes(token));
+        if (!word)
+            throw new Error("逐年 mock 缺少关系或十神事实");
+        return { year, verdict, confidenceTenths, note: `${word}，${verdict === "吉" ? "宜进取" : "宜守成"}` };
+    });
+    const anchorYear = Number(facts.get("year:anchor")?.label.match(/^\d{4}/u)?.[0]);
+    const anchor = years.find(item => item.year === anchorYear);
+    if (!anchor)
+        throw new Error("逐年 mock 缺少锚年事实");
+    return { ...base, headline: `${useGod.word}宜审慎`, verdict: anchor.verdict, confidenceTenths: anchor.confidenceTenths, years };
 }
 ```
 
@@ -5643,9 +5650,9 @@ export function BirthEntry(props: {
 - [ ] **Step 3：运行两项新测试文件与 `tests/frontend-home.test.ts`，由 RED 转 GREEN。** 静态入口测试付款插槽未调用；首页原防抖、过期响应、未开放类型与问事付款回归仍通过。
 - [ ] **Step 4：在允许监听环境补走一次创建 400 → 补生辰 → 创建成功。** 钱包转账计数必须为 1，服务端复用 firstHash，不换收款或金额；真实付款操作见 B7 验收清单。
 
-## Chunk B6b：八字结果页与流年面板
+## Chunk B6b1：流年几何、样稿结构与数据回归
 
-组件只消费 B2.3、B4.7 与 B5 公开字段。样稿 ln-data 仅用于看布局，不复制其三家用神、逐年吉凶或断语。`今年` 使用创建解读时刻的立春年，与 B5 固定卦时一致；所问年用 chart.liunian.anchorYear。分享浏览器不展示原始时刻；有档案还需命盘匹配才能展示本机重算校正。
+组件只消费 B2.3、B4.7 与 B5 公开字段。样稿 ln-data 仅用于看布局，不复制其三家用神、逐年吉凶或断语。`今年` 使用创建解读时刻的立春年，与 B5 固定卦时一致；所问年用 chart.liunian.anchorYear。分享浏览器不展示原始时刻；有档案还需命盘匹配才能展示本机重算校正。本轮界面直接移植 `docs/plans/assets/2026-10-06-bazi-mockup.html` 的结构、class 与 CSS，真实字段只填数据槽，禁止拷贝样稿断语。
 
 ### Task B6.3：几何与静态组件 RED
 
@@ -5770,16 +5777,112 @@ test("流年一家失败不展示，全失败合议破折号且无折线", async
 test("起运前不高亮第一步，交运当天切换当前大运", () => {
     const chart = sampleBazi().chart;
     const before = renderToStaticMarkup(createElement(BaziLuck, { chart, currentYear: 1997, currentDate: "1997-08-03" }));
-    assert.doesNotMatch(before, /class="luck-current"/);
+    assert.doesNotMatch(before, /class="now luck-current"/);
     assert.match(before, /当前起运前/);
     const after = renderToStaticMarkup(createElement(BaziLuck, { chart, currentYear: 1997, currentDate: "1997-08-04" }));
-    assert.match(after, /class="luck-current"/);
+    assert.match(after, /class="now luck-current"/);
+});
+```
+
+```ts
+// tests/frontend-bazi-round6.test.ts
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { createElement, type FunctionComponent } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { sampleBazi } from './helpers/sample-bazi.js';
+import { analyzeBazi } from '../src/calendar/bazi-relations.js';
+import { BaziTable } from '../web/components/BaziTable.js';
+import { BaziLuck } from '../web/components/BaziLuck.js';
+import { BaziElements } from '../web/components/BaziElements.js';
+import { BaziRelations } from '../web/components/BaziRelations.js';
+import { directLabels } from '../web/lib/liunian-chart.js';
+import { mockBaziSchoolOutput } from '../src/sanyi/mock-bazi-schools.js';
+const input = sampleBazi();
+const analysis = analyzeBazi(input.chart);
+const html = <P extends object>(component: FunctionComponent<P>, props: P) => renderToStaticMarkup(createElement(component, props));
+test('四柱沿用样稿七行、日主整列、神煞按柱去重且保留依据', () => {
+    const duplicate = { ...analysis, shensha: [...analysis.shensha, ...analysis.shensha] };
+    const markup = html(BaziTable, { chart: input.chart, analysis: duplicate });
+    assert.match(markup, /class="pillars"/);
+    assert.equal(markup.split('<tbody>')[1]?.split('</tbody>')[0]?.match(/<tr>/g)?.length, 7);
+    assert.match(markup, /日柱 · 日主/);
+    assert.match(markup, /class="gz day"/);
+    assert.equal(markup.match(/>天乙贵人</g)?.length, 1);
+    assert.match(markup, /title="[^"]+"/);
+});
+test('大运八步与五行四段，关系图只画地支并按范围三行', () => {
+    const luck = html(BaziLuck, { chart: input.chart, currentYear: 2026, currentDate: '2026-10-06' });
+    assert.match(luck, /class="luck"/);
+    assert.equal(luck.match(/data-cycle=/g)?.length, 8);
+    const elements = html(BaziElements, { elements: analysis.elements });
+    assert.equal(elements.match(/class="el-bar"/g)?.length, 5);
+    assert.equal(elements.match(/data-qi=/g)?.length, 20);
+    const relations = html(BaziRelations, { analysis });
+    assert.match(relations, /class="rel-svg"/);
+    assert.equal(relations.match(/data-node=/g)?.length, 6);
+    assert.doesNotMatch(relations, /data-node="[^"]*stem/);
+    assert.equal(relations.match(/data-scope=/g)?.length, 3);
+});
+test('等值并列取最早一年，最低与最顺同年不重复标注', () => {
+    const years = [2023, 2024, 2025].map(year => ({ year, average: 5, min: 5, max: 5, count: 3 }));
+    assert.deepEqual(directLabels(years, 2024, false), [['十年最顺'], ['今年'], []]);
+});
+test('mock 三家总断与逐年有差异，锚年与总断一致且短评不超过16字', () => {
+    const outputs = ['shenxiaozhan', 'yuchuntai', 'rentieqiao'].map(key => mockBaziSchoolOutput(key as 'shenxiaozhan', input.facts, 'fortune'));
+    assert.equal(new Set(outputs.map(o => o.confidenceTenths)).size, 3);
+    assert.ok(outputs[0]!.years.some((y, i) => new Set(outputs.map(o => o.years[i]!.confidenceTenths)).size > 1));
+    for (const output of outputs) {
+        const anchor = output.years.find(y => y.year === 2026)!;
+        assert.equal(anchor.confidenceTenths, output.confidenceTenths);
+        assert.equal(anchor.verdict, output.verdict);
+        for (const year of output.years) {
+            assert.ok(year.confidenceTenths >= 3 && year.confidenceTenths <= 7);
+            assert.equal(year.verdict, year.confidenceTenths >= 6 ? '吉' : year.confidenceTenths <= 4 ? '凶' : '平');
+            assert.ok([...year.note].length <= 16);
+        }
+    }
+});
+test('流年2023列只放year关系并按标签去重，表头分组与HTML图层', async () => {
+    const { baziFixture, birth, proof } = await import('./helpers/bazi-service.js');
+    const { publicBaziReading } = await import('../src/sanyi/bazi-public.js');
+    const { LiuNianPanel } = await import('../web/components/LiuNianPanel.js');
+    const f = await baziFixture();
+    try {
+        const value = await f.bazi.create({ kind: 'fortune', question: '今年运势如何', birth, sect: 1, horizon: 'year', feeProof: proof() });
+        await f.bazi.whenSettled(value.id);
+        const reading = publicBaziReading(await f.bazi.getReading(value.id));
+        if (reading.kind !== 'fortune')
+            throw new Error('类型错误');
+        const markup = html(LiuNianPanel, { reading, currentYear: 2026 });
+        const row = markup.split('<th scope="row">合冲刑害</th>')[1]!.split('</tr>')[0]!;
+        const first = row.split('</td>')[0]!;
+        assert.deepEqual([...first.matchAll(/<span[^>]*>([^<]+)<\/span>/g)].map(m => m[1]).sort(), ['午卯破', '卯辰害', '卯未半合木'].sort());
+        assert.match(markup, /class="ln-span"/);
+        assert.match(markup, /回看 · 可对照亲历/);
+        assert.match(markup, /preserveAspectRatio="none"/);
+        assert.match(markup, /vector-effect="non-scaling-stroke"/);
+        assert.doesNotMatch(markup, /<text|<circle|class="ln-hit"[^>]*><button/);
+        assert.match(markup, /class="ln-detail-rows"/);
+    }
+    finally {
+        await f.close();
+    }
+});
+test('样稿CSS隔离在八字页，大运窄屏四列且文本不随SVG缩放', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const css = await readFile(new URL('../web/styles/bazi.css', import.meta.url), 'utf8');
+    assert.match(css, /\.bazi \.luck\s*\{[^}]*repeat\(8,/);
+    assert.match(css, /@media \(max-width: 760px\)[\s\S]*repeat\(4,/);
+    assert.match(css, /\.bazi \.ln-lab\s*\{[^}]*font-size: 12px/);
+    assert.match(css, /\.bazi \.pillars td.gz\s*\{[^}]*font-size: 34px/);
+    assert.match(css, /\.bazi \.ln-table td.v.ji\s*\{[^}]*box-shadow: inset 3px/);
 });
 ```
 
 ### Task B6.4：流年纯函数与交互面板
 
-- [ ] **Step 1：落入下列完整文件。** 对合议 null 切开路径，不连接到零；范围线以公开 min/max 为准。交运位置按公历年内日数，不把日期一律画在年首；表格仍注明流年立春口径。宽屏图的左侧 9% 与表格行名列一致，其余等分年份列；窄屏保留完整图，表格独立滚动，首列 sticky，effect 只滚容器。SVG 有文字摘要，键盘操作由原生年份按钮承担；悬停图区或聚焦按钮都显示夹在图区内的读数框。
+- [ ] **Step 1：落入下列完整文件。** 对合议 null 切开路径，不连接到零；范围线以公开 min/max 为准。交运位置按公历年内日数，不把日期一律画在年首；表格仍注明流年立春口径。宽屏图的左侧 9% 与表格行名列一致，其余等分年份列；窄屏保留完整图，表格独立滚动，首列 sticky，effect 只滚容器。图点、标注、范围线与读数框全部为 HTML；SVG 只放折线，preserveAspectRatio=none 且描边不缩放。键盘由表头年份按钮承担；悬停图区或聚焦按钮都显示夹在图区内的读数框。逐年关系先 scope=year，再按标签去重。
 
 ```ts
 // web/lib/liunian-chart.ts
@@ -5868,7 +5971,7 @@ export function directLabels(years: readonly (YearConsensus | null)[], currentYe
         if (year && year.year === best?.year) {
             labels.push("十年最顺");
         }
-        if (!narrow && year && year.year === past?.year) {
+        if (!narrow && year && year.year === past?.year && past?.year !== best?.year) {
             labels.push("回看中最低");
         }
         return labels;
@@ -5879,12 +5982,12 @@ export function tooltipLeft(x: number, width = 180): number {
 }
 export function relationClass(kind: string): string {
     if (["三合", "半合", "拱", "三会"].includes(kind)) {
-        return "relation-group";
+        return "tag group relation-group";
     }
     if (kind === "合") {
-        return "relation-join";
+        return "tag join relation-join";
     }
-    return "relation-clash";
+    return "tag clash relation-clash";
 }
 export function schoolYear(reading: FortuneReading, key: typeof BAZI_KEYS[number], year: number) {
     const state = reading.schools[key];
@@ -5898,7 +6001,7 @@ export function schoolYear(reading: FortuneReading, key: typeof BAZI_KEYS[number
 ```tsx
 // web/components/LiuNianPanel.tsx
 import { useEffect, useRef, useState } from "react";
-import { BAZI_KEYS, BAZI_NAMES, CHART, chartGeometry, directLabels, relationClass, schoolYear, tooltipLeft, xFor, yearGroups, yFor, type FortuneReading } from "../lib/liunian-chart.js";
+import { BAZI_KEYS, BAZI_NAMES, CHART, chartGeometry, directLabels, relationClass, schoolYear, yearGroups, type FortuneReading } from "../lib/liunian-chart.js";
 export function LiuNianPanel({ reading, currentYear }: {
     reading: FortuneReading;
     currentYear: number;
@@ -5908,75 +6011,68 @@ export function LiuNianPanel({ reading, currentYear }: {
     const [hover, setHover] = useState<number | null>(null);
     const scroll = useRef<HTMLDivElement>(null);
     const cells = useRef(new Map<number, HTMLTableCellElement>());
-    const geometry = chartGeometry(reading.years, years.map((year) => year.luckChange?.date ?? null));
+    const geometry = chartGeometry(reading.years, years.map(year => year.luckChange?.date ?? null));
     const labels = directLabels(reading.years, currentYear, false);
+    const xp = (x: number) => (x - CHART.left) / (CHART.width - CHART.left) * 100;
+    const yp = (y: number) => (y - CHART.top) / (CHART.bottom - CHART.top) * 100;
+    const position = (i: number) => `${(i + .5) / years.length * 100}%`;
     useEffect(() => {
-        if (window.matchMedia("(min-width: 1060px)").matches) {
+        if (window.matchMedia('(min-width: 1061px)').matches)
             return;
-        }
         const cell = cells.current.get(selected);
         const container = scroll.current;
-        if (cell && container) {
-            container.scrollLeft = Math.max(0, cell.offsetLeft - 90 - (container.clientWidth - 180) / 2);
-        }
+        if (cell && container)
+            container.scrollLeft = Math.max(0, cell.offsetLeft - 76 - (container.clientWidth - 166) / 2);
     }, [selected]);
     const rows: {
         label: string;
-        render(index: number): React.ReactNode;
+        className?: string;
+        render(i: number): React.ReactNode;
     }[] = [
-        { label: "流年", render: (i) => <>{years[i]?.ganZhi}<small>虚岁 {years[i]?.age}</small></> },
-        { label: "十神", render: (i) => `${years[i]?.stemGod}／${years[i]?.hidden[0]?.god ?? "—"}` },
-        { label: "大运", render: (i) => {
-                const year = years[i]!;
-                if (year.luckChange) {
-                    return <>{year.luckChange.from ?? "起运前"}→{year.luckChange.to}<small>{year.luckChange.date}</small></>;
-                }
-                return year.luck?.ganZhi ?? year.luckLabel ?? "—";
+        { label: '流年', className: 'gz', render: i => <>{years[i]?.ganZhi}<small>虚岁 {years[i]?.age}</small></> },
+        { label: '十神', render: i => <>{years[i]?.stemGod}<br />{years[i]?.hidden[0]?.god ?? '—'}</> },
+        { label: '大运', render: i => { const year = years[i]!; return year.luckChange ? <>{year.luckChange.from ?? '起运前'}→{year.luckChange.to}<small>{year.luckChange.date}</small></> : year.luck?.ganZhi ?? year.luckLabel ?? '—'; } },
+        { label: '合冲刑害', className: 'rels', render: i => {
+                const relations = reading.analysis.years.find(item => item.year === years[i]?.year)?.relations.filter(item => item.scope === 'year') ?? [];
+                return [...new Map(relations.map(item => [item.label, item])).values()].map(item => <span className={relationClass(item.kind)} key={item.label}>{item.label}</span>);
             } },
-        { label: "合冲刑害", render: (i) => reading.analysis.years.find((item) => item.year === years[i]?.year)?.relations.map((relation) => <span className={`relation-tag ${relationClass(relation.kind)}`} key={relation.id}>{relation.label}</span>) },
-        ...BAZI_KEYS.map((key) => ({ label: BAZI_NAMES[key], render: (i: number) => {
-                const entry = schoolYear(reading, key, years[i]!.year);
-                return entry ? <span className={`verdict verdict-${entry.verdict}`}>{entry.verdict} · {entry.confidenceTenths}成</span> : "未展示";
-            } })),
-        { label: "合议", render: (i) => reading.years[i] ? `${reading.years[i]!.average}成` : "—" },
+        ...BAZI_KEYS.map(key => ({ label: BAZI_NAMES[key], className: 'v', render: (i: number) => { const entry = schoolYear(reading, key, years[i]!.year); return entry ? <>{entry.verdict} {entry.confidenceTenths}成</> : '未展示'; } })),
+        { label: '合议', render: i => reading.years[i] ? `${reading.years[i]!.average}成` : '—' }
     ];
-    const hovered = hover === null ? null : years[hover];
-    const consensus = hover === null ? null : reading.years[hover];
-    return <section className="panel liunian-panel" aria-label="流年运势">
-    <header className="panel-head"><h2>流年运势</h2><p>以所问之年为锚，流年以立春为界；回看可与亲历对照。缺少断语的年份不连线。</p></header>
-    <div className="ln-chart">
-      <svg viewBox={`0 0 ${CHART.width} ${CHART.height}`} role="img" aria-label={`流年合议走势图，${years[0]?.year}至${years.at(-1)?.year}，纵轴一至九成；完整数值见下表。`}>
-        {[3, 5, 7].map((value) => <g key={value}><text x="48" y={yFor(value) + 4}>{value}成</text><line className={value === 5 ? "ln-five" : "ln-grid"} x1={CHART.left} x2="1000" y1={yFor(value)} y2={yFor(value)}/></g>)}
-        {years.map((year, i) => <g key={year.year}>
-          {year.year === currentYear ? <rect className="ln-now" x={CHART.left + i * 910 / years.length} y="20" width={910 / years.length} height="200"/> : null}
-          {year.year === selected ? <rect className="ln-selected" x={CHART.left + i * 910 / years.length} y="20" width={910 / years.length} height="200"/> : null}
-          {geometry.points[i] ? <><line className="ln-range" x1={xFor(i, years.length)} x2={xFor(i, years.length)} y1={geometry.points[i]!.low} y2={geometry.points[i]!.high}/><circle className="ln-dot" cx={xFor(i, years.length)} cy={geometry.points[i]!.y} r="4"/></> : null}
-          <text className="ln-tick" x={xFor(i, years.length)} y="238" textAnchor="middle">{year.ganZhi}</text><text x={xFor(i, years.length)} y="255" textAnchor="middle">{year.year}</text>
-          <rect className="ln-hover" x={CHART.left + i * 910 / years.length} y="20" width={910 / years.length} height="200" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} onClick={() => setSelected(year.year)}/>
-          {labels[i]?.map((label, j) => <text className={label === "回看中最低" ? "ln-past-low" : "ln-direct"} x={xFor(i, years.length)} y={35 + j * 17} textAnchor="middle" key={label}>{label}</text>)}
-        </g>)}
-        {geometry.paths.map((path, i) => <path className="ln-line" d={path} key={i}/>)}
-        {geometry.changes.map((change) => <g key={change.date}><line className="ln-change" x1={change.x} x2={change.x} y1="60" y2="215"/><text x={Math.max(180, Math.min(change.x, 860))} y="78" textAnchor="middle">{change.date} 交运</text></g>)}
-        {hovered ? <g className="ln-tooltip" transform={`translate(${tooltipLeft(xFor(hover!, years.length))}, 92)`}><rect width="180" height="52" rx="4"/><text x="8" y="20">{hovered.year} {hovered.ganZhi}</text><text x="8" y="40">{consensus ? `${consensus.average}成 · ${consensus.min}–${consensus.max}成` : "未展示"}</text></g> : null}
-      </svg>
-      <div className="ln-hit" style={{ gridTemplateColumns: `repeat(${years.length}, minmax(0, 1fr))` }}>
-        {years.map((year, i) => <button type="button" aria-label={`查看${year.year}年短评`} aria-pressed={selected === year.year} key={year.year} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} onClick={() => setSelected(year.year)}>{year.year}</button>)}
-      </div>
-    </div>
-    <div className="ln-scroll" ref={scroll} tabIndex={0} aria-label="流年逐年表，可横向滚动">
-      <table className="ln-table" style={{ width: `max(100%, ${90 + years.length * 90}px)` }}><colgroup><col style={{ width: 90 }}/>{years.map((year) => <col key={year.year}/>)}</colgroup><thead>
-        <tr><th scope="col">年份分组</th>{yearGroups(years.map((year) => year.year), currentYear).map((group) => <th scope="colgroup" colSpan={group.count} key={group.label}>{group.label}</th>)}</tr>
-        <tr><th scope="col">年份</th>{years.map((year) => <th scope="col" key={year.year} ref={(cell) => {
-                if (cell) {
+    const active = years.find(year => year.year === selected)!;
+    const hovered = hover === null ? undefined : years[hover];
+    const consensus = hover === null ? undefined : reading.years[hover];
+    return <section className="panel liunian-panel" aria-label="流年运势"><header className="panel-head"><h2>流年运势</h2><p>以所问之年为锚，流年以立春为界；回看可与亲历对照。缺少断语的年份不连线。</p></header><div className="ln-grid">
+ <div className="ln-chart"><div className="ln-y">{[1, 3, 5, 7, 9].map(value => <span style={{ top: `${(9 - value) / 8 * 100}%` }} key={value}>{value}成</span>)}</div>
+ <div className="ln-plot" role="img" aria-label={`流年合议走势图，${years[0]?.year}至${years.at(-1)?.year}，纵轴一至九成；完整数值见下表。`}>
+ {[3, 5, 7].map(value => <i className={value === 5 ? 'ln-ref' : 'ln-grid-y'} style={{ top: `${(9 - value) / 8 * 100}%` }} key={value}/>)}
+ {years.map((year, i) => <div key={year.year}>
+ {year.year === currentYear ? <i className="ln-now" style={{ left: `${i / years.length * 100}%`, width: `${100 / years.length}%` }}/> : null}
+ {geometry.points[i] ? <><i className="ln-range" style={{ left: position(i), top: `${yp(geometry.points[i]!.high)}%`, height: `${yp(geometry.points[i]!.low) - yp(geometry.points[i]!.high)}%` }}/><i className={`ln-dot ${year.year === currentYear ? 'now' : ''}`} style={{ left: position(i), top: `${yp(geometry.points[i]!.y)}%` }}/>
+ {labels[i]?.length ? <span className="ln-lab" style={{ left: position(i), top: `${yp(geometry.points[i]!.y)}%` }}>{labels[i]?.map(label => <span className={label === '回看中最低' ? 'wide-only' : ''} key={label}>{label} {reading.years[i]?.average}成<br /></span>)}</span> : null}</> : null}
+ <div className={`ln-hit ${selected === year.year ? 'sel' : ''}`} style={{ left: `${i / years.length * 100}%`, width: `${100 / years.length}%` }} onClick={() => setSelected(year.year)} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}/>
+ </div>)}
+ <svg viewBox={`0 0 ${CHART.width} ${CHART.height}`} preserveAspectRatio="none" aria-hidden="true">{geometry.paths.map((path, i) => <path className="ln-line" d={path} transform={`translate(${-CHART.left * CHART.width / (CHART.width - CHART.left)},${-CHART.top * CHART.height / (CHART.bottom - CHART.top)}) scale(${CHART.width / (CHART.width - CHART.left)},${CHART.height / (CHART.bottom - CHART.top)})`} vectorEffect="non-scaling-stroke" key={i}/>)}</svg>
+ {geometry.changes.map(change => <i className="ln-yun" style={{ left: `${xp(change.x)}%` }} key={change.date}><span>{change.date} 交运</span></i>)}
+ {hovered ? <div className="ln-tip" style={{ left: `${Math.max(26, Math.min(74, (hover! + .5) / years.length * 100))}%`, top: '50%' }}><b>{hovered.year} {hovered.ganZhi}</b><br />{consensus ? `${consensus.average}成 · ${consensus.min}–${consensus.max}成` : '未展示'}</div> : null}
+ </div><div className="ln-x" style={{ gridTemplateColumns: `repeat(${years.length},minmax(0,1fr))` }}>{years.map(year => <span className={year.year === currentYear ? 'now' : ''} key={year.year}>{year.ganZhi}<small>{year.year}</small></span>)}</div></div>
+ <div className="ln-key"><span><i className="k-line"/>三家合议（平均）</span><span><i className="k-range"/>三家最低至最高</span><span><i className="k-ref"/>五五之数</span></div>
+ <div className="ln-scroll" ref={scroll} tabIndex={0} aria-label="流年逐年表，可横向滚动"><table className="ln-table"><colgroup><col className="ln-axis"/>{years.map(year => <col key={year.year}/>)}</colgroup><thead><tr className="ln-span"><th></th>{yearGroups(years.map(year => year.year), currentYear).map(group => <th scope="colgroup" colSpan={group.count} key={group.label}>{group.label === '回看' ? '回看 · 可对照亲历' : group.label}</th>)}</tr><tr><th>年份</th>{years.map((year, i) => <th className={year.year === currentYear ? 'now' : ''} key={year.year} ref={cell => {
+                if (cell)
                     cells.current.set(year.year, cell);
-                }
-            }} className={year.year === currentYear ? "ln-current" : ""}><button type="button" aria-pressed={year.year === selected} onClick={() => setSelected(year.year)}>{year.year}</button></th>)}</tr>
-      </thead><tbody>{rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th>{years.map((year, i) => <td key={year.year} className={year.year === currentYear ? "ln-current" : ""}>{row.render(i)}</td>)}</tr>)}</tbody></table>
-    </div>
-    <div className="ln-notes" aria-live="polite"><h3>{selected} 年三家短评</h3>{BAZI_KEYS.map((key) => <p key={key}><b>{BAZI_NAMES[key]}：</b>{schoolYear(reading, key, selected)?.note ?? "未展示"}</p>)}</div>
-  </section>;
+            }}><button className={`ln-year ${selected === year.year ? 'sel' : ''}`} aria-pressed={selected === year.year} onClick={() => setSelected(year.year)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}>{year.year}</button></th>)}</tr></thead><tbody>{rows.map(row => <tr className={row.label === '合议' ? 'avg' : ''} key={row.label}><th scope="row">{row.label}</th>{years.map((year, i) => {
+                const key = BAZI_KEYS.find(key => BAZI_NAMES[key] === row.label);
+                const entry = key ? schoolYear(reading, key, year.year) : undefined;
+                return <td className={[year.year === currentYear ? 'now' : '', row.className ?? '', entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''].join(' ')} key={year.year}>{row.render(i)}</td>;
+            })}</tr>)}</tbody></table></div>
+ <div className="ln-detail"><div className="ln-detail-head"><b>{selected} {active.ganZhi}</b><span>虚岁 {active.age} · {active.luck?.ganZhi ?? active.luckLabel} · {active.stemGod}</span></div><div className="ln-detail-rows">{BAZI_KEYS.map(key => { const entry = schoolYear(reading, key, selected); return <div key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><strong className={entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''}>{entry ? `${entry.verdict} ${entry.confidenceTenths}成` : '未展示'}<small>{BAZI_NAMES[key]}</small></strong><p>{entry?.note ?? '未展示'}</p></div>; })}</div></div>
+ </div></section>;
 }
 ```
+
+## Chunk B6b2：客观命盘、三家、本机校正与样稿样式
+
+承接 B6b1，不另起设计；本块所有 class 对齐已确认样稿。
 
 ### Task B6.5：客观命盘、三家与本机校正
 
@@ -5988,6 +6084,7 @@ import { normalizeBirthProfile } from "../../src/sanyi/birth-profile.js";
 import { correctBirthTime, type CivilTime } from "../../src/calendar/solar-time.js";
 import { buildBaziChart } from "../../src/calendar/bazi.js";
 import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
+import type { ReactNode } from "react";
 import { birthSummary, type BirthProfileInput } from "../lib/birth-profile.js";
 export function matchesReading(birth: BirthProfileInput, reading: PublicBaziReading): boolean {
     try {
@@ -6008,18 +6105,19 @@ function civilText(value: CivilTime | null): string {
     return `${value.year}-${value.month}-${value.day} ${String(value.hour).padStart(2, "0")}:${String(value.minute).padStart(2, "0")}`;
 }
 const DST_LABELS = { applied: "已减一小时", "not-applied": "未校正", "skipped-region": "当地历史夏令时未自动校正" };
-export function BirthCorrection({ reading, birth }: {
+export function BirthCorrection({ reading, birth, boundary }: {
     reading: PublicBaziReading;
     birth: BirthProfileInput | null;
+    boundary?: ReactNode;
 }) {
     let local = null;
     if (birth && matchesReading(birth, reading)) {
         const profile = normalizeBirthProfile(birth);
         local = correctBirthTime(profile.civil, profile.timeKnown, profile.longitude, profile);
     }
-    return <div className="birth-correction">
-    {local && birth ? <><p>{birthSummary(birth)}</p><details><summary>逐步校正（本机重算）</summary>{local.steps.map((step) => <p key={step.kind}>{civilText(step.before)} → {civilText(step.after)} · {step.description}</p>)}</details></> : <p>校正摘要：夏令时 {DST_LABELS[reading.correction.dst]} · 真太阳时 {reading.correction.solar === "applied" ? "已校正" : "未校正"} · {reading.correction.timeKnown ? "已知时辰" : "时辰未知"} · {reading.chart.dayBoundary} 换日</p>}
-    {reading.chart.warnings.map((warning) => <p className="hint" key={warning}>{warning}</p>)}
+    return <div className="birth">
+    {local && birth ? <><div className="birth-main"><b>{birthSummary(birth)}</b><span>本机档案</span></div><ul className="fixes" aria-label="出生时刻校正">{["夏令时", "真太阳时"].map((label, index) => <li key={label}><b>{label}</b><span>{local.steps[index] ? `${civilText(local.steps[index]!.before)} → ${civilText(local.steps[index]!.after)} · ${local.steps[index]!.description}` : "未校正"}</span></li>)}<li><b>换日口径</b><span>{boundary}</span></li></ul></> : <><p>校正摘要：夏令时 {DST_LABELS[reading.correction.dst]} · 真太阳时 {reading.correction.solar === "applied" ? "已校正" : "未校正"} · {reading.correction.timeKnown ? "已知时辰" : "时辰未知"}</p><ul className="fixes"><li><b>换日口径</b><span>{boundary}</span></li></ul></>}
+    {reading.chart.warnings.map(warning => <p className="hint" key={warning}>{warning}</p>)}
   </div>;
 }
 ```
@@ -6033,15 +6131,16 @@ export function BaziTable({ chart, analysis }: {
     analysis: BaziAnalysis;
 }) {
     const keys = ["year", "month", "day", "time"] as const;
-    const rows = ["天干", "地支", "藏干", "十神", "长生", "纳音", "神煞"];
-    return <div className="bazi-table-scroll"><table className="bazi-table"><caption>四柱</caption><thead><tr><th scope="col">四柱</th>{["年柱", "月柱", "日柱", "时柱"].map((label) => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{rows.map((label, index) => <tr key={label}><th scope="row">{label}</th>{keys.map((key) => {
+    const rows = ["十神", "天干", "地支", "藏干", "长生", "纳音", "神煞"];
+    return <div className="pillars-scroll" tabIndex={0} aria-label="四柱表，可横向滚动"><table className="pillars"><thead><tr><th></th>{["年柱", "月柱", "日柱 · 日主", "时柱"].map((label, i) => <th className={i === 2 ? "day" : ""} key={label}>{label}</th>)}</tr></thead><tbody>{rows.map((label, i) => <tr key={label}><td className="rowlabel">{label}</td>{keys.map(key => {
                 const pillar = chart.pillars[key];
-                if (!pillar) {
+                if (!pillar)
                     return <td key={key}>缺</td>;
-                }
-                const values = [pillar.stem, pillar.branch, pillar.hidden.map((item) => `${item.stem}·${item.god}`).join("、"), pillar.stemGod, pillar.diShi, pillar.naYin,
-                    analysis.shensha.filter((item) => item.nodeId.startsWith(`natal.${key}.`)).map((item) => item.name).join("、") || "—"];
-                return <td key={key}>{values[index]}</td>;
+                const names = new Map<string, string[]>();
+                for (const item of analysis.shensha.filter(item => item.nodeId.startsWith(`natal.${key}.`)))
+                    names.set(item.name, [...new Set([...(names.get(item.name) ?? []), item.basis])]);
+                const values = [pillar.stemGod, pillar.stem, pillar.branch, pillar.hidden.map(item => <span className="hide" key={item.stem}>{item.stem}<small>{item.god}</small></span>), pillar.diShi, pillar.naYin, <div className="shensha">{names.size ? [...names].map(([name, basis]) => <span className="tag" title={basis.join("；")} key={name}>{name}</span>) : "—"}</div>];
+                return <td className={`${i === 1 || i === 2 ? "gz " : ""}${key === "day" ? "day" : ""}`.trim()} key={key}>{values[i]}</td>;
             })}</tr>)}</tbody></table></div>;
 }
 ```
@@ -6056,8 +6155,9 @@ export function BaziLuck({ chart, currentYear, currentDate }: {
 }) {
     const luck = chart.luck;
     if (!luck) {
-        return <section className="panel"><h2>大运</h2><p>需补时辰确认起运与大运。</p></section>;
+        return <section className="panel"><header className="panel-head"><h2>大运</h2></header><p>需补时辰确认起运与大运。</p></section>;
     }
+    const currentGanZhi = "甲乙丙丁戊己庚辛壬癸".charAt((currentYear - 4) % 10) + "子丑寅卯辰巳午未申酉戌亥".charAt((currentYear - 4) % 12);
     const monthDay = luck.start.solarDate.slice(4);
     const current = luck.cycles.find((cycle, index) => {
         const start = `${cycle.startYear}${monthDay}`;
@@ -6065,7 +6165,7 @@ export function BaziLuck({ chart, currentYear, currentDate }: {
         const end = `${next?.startYear ?? cycle.endYear + 1}${monthDay}`;
         return currentDate >= start && currentDate < end;
     });
-    return <section className="panel"><h2>大运</h2><p>{luck.direction === "forward" ? "顺行" : "逆行"} · {luck.start.years}年{luck.start.months}个月{luck.start.days}天起运 · {luck.start.solarDate}{luck.approximate ? "（正午估算）" : ""}</p><div className="luck-timeline">{luck.cycles.map((cycle) => <div className={current?.index === cycle.index ? "luck-current" : ""} key={cycle.index}><b>{cycle.ganZhi}</b><span>{cycle.startYear}–{cycle.endYear}</span><small>{cycle.startAge}–{cycle.endAge}岁</small>{chart.liunian.anchorYear >= cycle.startYear && chart.liunian.anchorYear <= cycle.endYear ? <span>所问之年 {chart.liunian.anchorYear}</span> : null}</div>)}</div>{currentDate < luck.start.solarDate ? <p>当前起运前</p> : null}</section>;
+    return <section className="panel"><header className="panel-head"><h2>大运</h2></header><p>{luck.direction === "forward" ? "顺行" : "逆行"} · {luck.start.years}年{luck.start.months}个月{luck.start.days}天起运 · {luck.start.solarDate}{luck.approximate ? "（正午估算）" : ""}</p><div className="luck">{luck.cycles.map((cycle) => <div data-cycle={cycle.index} className={current?.index === cycle.index ? "now luck-current" : ""} key={cycle.index}><b>{cycle.ganZhi}</b><small>{cycle.stemGod}<br />{cycle.startAge}–{cycle.endAge}岁<br />{cycle.startYear}–{cycle.endYear}</small>{current?.index === cycle.index ? <span className="flag">今年 {currentGanZhi} · {currentYear === cycle.endYear ? "本运末年" : "本运"}</span> : null}{chart.liunian.anchorYear >= cycle.startYear && chart.liunian.anchorYear <= cycle.endYear ? <span>所问之年 {chart.liunian.anchorYear}</span> : null}</div>)}</div>{currentDate < luck.start.solarDate ? <p>当前起运前</p> : null}</section>;
 }
 ```
 
@@ -6079,27 +6179,32 @@ export function BaziSchools({ reading, onRetry }: {
     reading: PublicBaziReading;
     onRetry(key: typeof BAZI_KEYS[number]): void;
 }) {
-    return <section className="panel"><h2>三家用神对照</h2><div className="bazi-use">{BAZI_KEYS.map((key) => <p key={key}><b>{BAZI_NAMES[key]}</b> · {reading.schools[key].status === "done" ? reading.schools[key].output?.useGod : "未展示"}</p>)}</div><h2>三家断语</h2>
-    {reading.kind === "fortune" ? <div className="consensus" aria-label="三家合议"><p>合议：{reading.consensusTenths === null ? "—" : `${reading.consensusTenths.toFixed(1)}成`}</p><div className="consensus-track">
-      {reading.consensusTenths !== null ? <span className="mean" style={{ left: `${reading.consensusTenths * 10}%` }}>合议</span> : null}
+    const scores = BAZI_KEYS.flatMap(key => {
+        const state = reading.schools[key];
+        return state.status === "done" && state.output && "confidenceTenths" in state.output ? [state.output.confidenceTenths] : [];
+    });
+    const maxOverlap = Math.max(1, ...scores.map(score => scores.filter(value => value === score).length));
+    return <section className="panel"><header className="panel-head"><h2>三家断语</h2><p>三派各自取用神，各自下断。</p></header><div className="usegod">{BAZI_KEYS.map(key => <div key={key}><small>{BAZI_NAMES[key]} · {META[key]}</small><b>{reading.schools[key].status === "done" ? reading.schools[key].output?.useGod : "未展示"}</b><span>{reading.schools[key].status === "done" ? reading.schools[key].output?.reason : "未展示"}</span></div>)}</div>
+    {reading.kind === "fortune" ? <div className="consensus" aria-label="三家合议"><p>合议：{reading.consensusTenths === null ? "—" : `${reading.consensusTenths.toFixed(1)}成`}</p><div className="track" style={{ height: `${44 + (maxOverlap - 1) * 22}px` }}>
+      {reading.consensusTenths !== null ? <span className="mean" style={{ left: `${reading.consensusTenths * 10}%` }}><span>合议 {reading.consensusTenths?.toFixed(1)}成</span></span> : null}
       {BAZI_KEYS.map((key) => {
                 const state = reading.schools[key];
                 const output = state.status === "done" ? state.output as FortuneSchoolOutput | undefined : undefined;
-                return output ? <span className="pin" key={key} style={{ left: `${output.confidenceTenths * 10}%` }}>{BAZI_NAMES[key].slice(0, 1)}</span> : null;
+                return output ? <span className="pin" key={key} style={{ left: `${output.confidenceTenths * 10}%`, top: `${12 + BAZI_KEYS.slice(0, BAZI_KEYS.indexOf(key)).filter(previous => { const value = reading.schools[previous]; return value.status === "done" && value.output && "confidenceTenths" in value.output && value.output.confidenceTenths === output.confidenceTenths; }).length * 22}px` }}>{BAZI_NAMES[key].slice(0, 1)}</span> : null;
             })}
-    </div><div className="consensus-scale"><span>断不成</span><span>断必成</span></div></div> : null}
+    </div><div className="scale"><span>断不成</span><span>断必成</span></div></div> : null}
     {BAZI_KEYS.map((key) => {
             const state = reading.schools[key];
             const output = state.status === "done" ? state.output : undefined;
             const fortune = output && "years" in output ? output as FortuneSchoolOutput : undefined;
-            return <article className="school-card" key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><div className="school-copy"><h3>{BAZI_NAMES[key]}<small>{META[key]}</small></h3>{output ? <>
-        {reading.kind === "fortune" && fortune ? <p>{fortune.verdict} · {fortune.confidenceTenths}成</p> : null}
-        <p className="headline">{output.headline}</p><p>{output.reason}</p>
-        {fortune?.timing ? <p>留意 {fortune.timing.window} · {fortune.timing.condition}</p> : null}
+            return <article className="diviner" key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><div className="who"><b>{BAZI_NAMES[key]}</b><span>{META[key]}</span></div>{output ? <>
+        {reading.kind === "fortune" && fortune ? <p className={`verdict dyn ${fortune.verdict.includes("吉") ? "good" : fortune.verdict.includes("凶") ? "bad" : ""}`}>{fortune.verdict} · {output.headline}<small>{fortune.confidenceTenths}成</small></p> : null}
+        {reading.kind === "destiny" ? <p className="verdict dyn">{output.headline}</p> : null}<p className="why">{output.reason}</p>
+        {fortune?.timing ? <div className="watch"><span className="tag" title={fortune.timing.condition}>{fortune.timing.window}</span></div> : null}
         <details><summary>展开详断</summary>{output.sections.map((section) => <p key={section.title}><b>{section.title}：</b>{section.text}</p>)}<ul>{output.advice.map((advice) => <li key={advice}>{advice}</li>)}</ul><p>{output.evidence.map((item) => `${item.ref}：${item.claim}`).join("；")}</p></details>
       </> : <p>{state.status === "failed" ? "未展示" : "正在落笔"}</p>}
         {state.status === "failed" ? <button type="button" disabled={state.retries >= 2 || reading.status !== "done"} onClick={() => onRetry(key)}>免费重试 · 剩余 {Math.max(0, 2 - state.retries)} 次</button> : null}
-      </div></article>;
+      </article>;
         })}
   </section>;
 }
@@ -6112,22 +6217,43 @@ import { relationClass } from "../lib/liunian-chart.js";
 export function BaziRelations({ analysis }: {
     analysis: BaziAnalysis;
 }) {
-    const nodes = analysis.nodes;
-    const x = (id: string) => 40 + nodes.findIndex((node) => node.id === id) * 50;
-    return <section className="panel"><h2>合冲刑害</h2><svg className="relation-diagram" viewBox={`0 0 ${Math.max(200, nodes.length * 50 + 30)} 150`} role="img" aria-label="原局、大运与流年关系，详细文字见下方列表">
-    {analysis.relations.map((relation, i) => <g key={relation.id}>{relation.nodeIds.slice(1).map((id) => <path className={relationClass(relation.kind)} fill="none" d={`M${x(relation.nodeIds[0]!)},100 Q${(x(id) + x(relation.nodeIds[0]!)) / 2},${20 + i % 4 * 15} ${x(id)},100`} key={id}/>)}</g>)}
-    {nodes.map((node) => <g key={node.id}><text x={x(node.id)} y="110" textAnchor="middle">{node.value}</text><text x={x(node.id)} y="135" textAnchor="middle">{node.label}</text></g>)}
-  </svg><ul>{analysis.relations.map((relation) => <li key={relation.id}><span className={`relation-tag ${relationClass(relation.kind)}`}>{relation.label}</span> · {relation.nodeIds.map((id) => nodes.find((node) => node.id === id)?.label ?? id).join("与")}</li>)}</ul></section>;
+    const nodes = analysis.nodes.filter(node => node.type === "branch");
+    const x = (id: string) => 28 + nodes.findIndex(node => node.id === id) * 60;
+    const relations = analysis.relations.filter(item => item.nodeIds.every(id => nodes.some(node => node.id === id)));
+    // 同跨度弧线再按占用层错开，文字沿弧顶排列；天干关系仅进入下方列表。
+    const lanes: {
+        left: number;
+        right: number;
+        level: number;
+    }[] = [];
+    const arcs = [...relations].sort((a, b) => Math.max(...a.nodeIds.map(x)) - Math.min(...a.nodeIds.map(x)) - (Math.max(...b.nodeIds.map(x)) - Math.min(...b.nodeIds.map(x)))).map(item => {
+        const left = Math.min(...item.nodeIds.map(x));
+        const right = Math.max(...item.nodeIds.map(x));
+        let level = 0;
+        while (lanes.some(lane => lane.level === level && left <= lane.right + 30 && right >= lane.left - 30))
+            level++;
+        lanes.push({ left, right, level });
+        return { item, left, right, height: 35 + level * 24 };
+    });
+    const height = Math.max(180, ...arcs.map(arc => arc.height + 65));
+    const base = height - 45;
+    return <section className="panel"><header className="panel-head"><h2>合冲刑害</h2><p>原局四支与当前大运、流年之间的关系。</p></header><svg className="rel-svg" viewBox={`0 0 ${Math.max(240, nodes.length * 60)} ${height}`} role="img" aria-label="地支关系图，完整关系见下方三行文字">
+ {nodes.filter(node => node.scope !== "natal").map(node => <line className="rel-divider" x1={x(node.id) - 30} x2={x(node.id) - 30} y1="8" y2={height} key={node.id}/>)}
+ {arcs.map(({ item, left, right, height: h }) => <g key={item.id}><path className={relationClass(item.kind)} strokeDasharray={item.kind.includes("刑") ? "5 4" : undefined} fill="none" d={`M${left},${base} Q${(left + right) / 2},${base - h * 2} ${right},${base}`}/><text className={relationClass(item.kind)} x={(left + right) / 2} y={base - h - 6} textAnchor="middle">{item.label}</text></g>)}
+ {nodes.map(node => <g data-node={node.id} key={node.id}><text className="rel-node" x={x(node.id)} y={base + 12} textAnchor="middle">{node.value}</text><text className="rel-caption" x={x(node.id)} y={base + 34} textAnchor="middle">{node.scope === "natal" ? node.label.replace("柱", "") : node.label.replace("支", "")}</text></g>)}
+ </svg><ul className="rel-list">{(["natal", "luck", "year"] as const).map(scope => <li data-scope={scope} key={scope}><b>{scope === "natal" ? "原局" : `${scope === "luck" ? "大运" : "流年"}${analysis.nodes.filter(node => node.scope === scope).map(node => node.value).join("")}`}</b>{[...new Set(analysis.relations.filter(item => item.scope === scope).map(item => item.label))].join("、") || "无"}</li>)}</ul></section>;
 }
 ```
 
 ```tsx
 // web/components/BaziElements.tsx
 import type { ElementCount } from "../../src/calendar/bazi-relations.js";
+const parts = [["stem", "天干"], ["main", "本气"], ["middle", "中气"], ["residual", "余气"]] as const;
 export function BaziElements({ elements }: {
     elements: readonly ElementCount[];
 }) {
-    return <section className="panel"><h2>五行分布</h2><p>只计个数，不据此下身强身弱结论。</p>{elements.map((item) => <div className="element-row" key={item.element}><b>{item.element}</b><meter min="0" max="20" value={item.total} aria-label={`${item.element}共${item.total}个`}/><span>天干 {item.stem} · 本气 {item.main} · 中气 {item.middle} · 余气 {item.residual} · 共 {item.total}</span></div>)}</section>;
+    const maximum = Math.max(1, ...elements.map(item => item.total));
+    return <section className="panel"><header className="panel-head"><h2>五行分布</h2><p>天干与藏干按个数计，不据此下身强身弱结论。</p></header><div className="elements">{elements.map(item => <div className="el-row" key={item.element}><b>{item.element}</b><div className="el-bar" style={{ "--el-unit": `${100 / maximum}%` } as import("react").CSSProperties} aria-label={`${item.element}共${item.total}个`}>{parts.map(([key, label]) => <i data-qi={key} className={`el-${key}`} style={{ width: `${item[key] / maximum * 100}%` }} title={`${label} ${item[key]}`} key={key}/>)}</div><span>{item.total}</span></div>)}</div><div className="el-legend">{parts.map(([key, label]) => <span key={key}><i className={`el-${key}`}/>{label}</span>)}<span>每格 = 1 个单位</span></div></section>;
 }
 ```
 
@@ -6166,7 +6292,7 @@ export function DayBoundaryChange({ reading, birth, onReading }: {
             setBusy(false);
         }
     };
-    return <div className="day-boundary"><p>当前 {reading.chart.dayBoundary} 换日 · 剩余 {Math.max(0, 2 - reading.changes)} 次 · 免费</p><button type="button" disabled={!available || busy || reading.changes >= 2 || reading.status !== "done"} onClick={() => void change()}>切换换日口径</button>{!available ? <p>需在填写生辰的设备上切换</p> : null}{error ? <p className="error" role="alert">{error}</p> : null}</div>;
+    return <div className="day-boundary"><span>当前 {reading.chart.dayBoundary} 换日 · 剩余 {Math.max(0, 2 - reading.changes)} 次 · 免费</span><button type="button" disabled={!available || busy || reading.changes >= 2 || reading.status !== "done"} onClick={() => void change()}>切换换日口径</button>{!available ? <small>需在填写生辰的设备上切换</small> : null}{error ? <p className="error" role="alert">{error}</p> : null}</div>;
 }
 ```
 
@@ -6177,7 +6303,6 @@ import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
 import { resolveFortuneContext } from "../../src/sanyi/fortune-context.js";
 import { api } from "../lib/api.js";
 import { loadBirthProfile, type BirthProfileInput } from "../lib/birth-profile.js";
-import { BAZI_TERM_DEFINITIONS } from "../lib/term-definitions.js";
 import { BAZI_KEYS } from "../lib/liunian-chart.js";
 import { BirthCorrection } from "../components/BirthCorrection.js";
 import { BaziTable } from "../components/BaziTable.js";
@@ -6187,7 +6312,6 @@ import { BaziRelations } from "../components/BaziRelations.js";
 import { BaziElements } from "../components/BaziElements.js";
 import { DayBoundaryChange } from "../components/DayBoundaryChange.js";
 import { LiuNianPanel } from "../components/LiuNianPanel.js";
-import { TermDisclosure } from "../components/TermDisclosure.js";
 export function BaziReading({ reading, onReading, birth: supplied }: {
     reading: PublicBaziReading;
     onReading(value: PublicBaziReading): void;
@@ -6208,20 +6332,20 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
             setError(caught instanceof Error ? caught.message : "重试暂不可用");
         }
     };
-    return <>
-    <div className="bazi-hero"><section className="panel"><h1>问题与生辰</h1><p>{reading.question}</p><BirthCorrection reading={reading} birth={birth}/><DayBoundaryChange reading={reading} birth={birth} onReading={onReading}/><BaziTable chart={reading.chart} analysis={reading.analysis}/><div className="bazi-derived">{([["胎元", reading.chart.taiYuan], ["命宫", reading.chart.mingGong], ["身宫", reading.chart.shenGong]] as const).map(([term, value]) => <TermDisclosure key={term!} term={term!} value={value ?? "缺"} definition={BAZI_TERM_DEFINITIONS[term]} actual={value ?? "缺时辰，需补充确认。"}/>)}</div><p>起运：{reading.chart.luck?.start.solarDate ?? "需补时辰确认"}</p></section><BaziSchools reading={reading} onRetry={(key) => void retry(key)}/></div>
+    return <div className="bazi" data-reading={reading.id}>
+    <div className="hero"><section className="panel"><div className="ask"><span className="label">所问之事 · {reading.kind === "fortune" ? "运势" : "命理"}</span><p>{reading.question}</p></div><BirthCorrection reading={reading} birth={birth} boundary={<DayBoundaryChange reading={reading} birth={birth} onReading={onReading}/>}/><BaziTable chart={reading.chart} analysis={reading.analysis}/><div className="minor">{([["胎元", reading.chart.taiYuan], ["命宫", reading.chart.mingGong], ["身宫", reading.chart.shenGong]] as const).map(([label, value]) => <span key={label}><b>{label}</b> {value ?? "缺"}</span>)}<span><b>起运</b> {reading.chart.luck ? `${reading.chart.luck.start.years} 年 ${reading.chart.luck.start.months} 月 ${reading.chart.luck.start.days} 天（${reading.chart.luck.start.solarDate} 交运）${reading.chart.luck.approximate ? " · 正午估算" : ""}` : "需补时辰确认"}</span></div></section><BaziSchools reading={reading} onRetry={(key) => void retry(key)}/></div>
     {error ? <p className="error" role="alert">{error}</p> : null}
     <BaziLuck chart={reading.chart} currentYear={currentYear} currentDate={currentDate}/>
     {reading.kind === "fortune" ? <LiuNianPanel reading={reading} currentYear={currentYear}/> : null}
-    <div className="bazi-secondary"><BaziRelations analysis={reading.analysis}/><BaziElements elements={reading.analysis.elements}/></div>
+    <div className="row2"><BaziRelations analysis={reading.analysis}/><BaziElements elements={reading.analysis.elements}/></div>
     <p className="provenance">数据来源：四柱、十神、藏干、长生、纳音与大运由 lunar-javascript 推算；合冲刑害与神煞按传统查表；调候据《穷通宝鉴》{reading.tiaohou.section}。原始生辰与逐步校正只在本机展示；流年以立春为界，三家各自独立落笔。</p>
-  </>;
+  </div>;
 }
 ```
 
 ### Task B6.6：kind 分流、布局与字体字表
 
-- [ ] **Step 1：应用精确 diff。** Reading 按公开 kind 分流，顶栏沿用 WalletBar、时空栏沿用此刻 almanac；问事 CoinThrow/retry 显式收窄联合。继续复用 TermDisclosure、1A school-card 与 consensus 样式，不改旧问事算法。page 使用 minmax(0, 1fr)，宽表不能撑开页面；窄屏触控按钮两行排列。
+- [ ] **Step 1：应用精确 diff。** Reading 按公开 kind 分流，顶栏沿用 WalletBar、时空栏沿用此刻 almanac；问事 CoinThrow/retry 显式收窄联合。八字结构逐段移植样稿，样式限定 .bazi，保持 1A 已有规则。page 使用 minmax(0, 1fr)，宽表不能撑开页面；年份按钮只保留在逐年表头；图上列点击仍可选中。
 
 ```diff
 --- a/web/pages/Reading.tsx
@@ -6262,7 +6386,7 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
      );
    }
 +  if (reading.kind !== "question") {
-+    return <main className="page"><header className="topbar"><span className="seal">问</span><span className="brand">三易</span><a href="#/">返回首页</a><WalletBar /></header><ShikongBar data={toView(reading.almanac)} /><BaziReading reading={reading} onReading={setReading} /></main>;
++    return <main className="page"><header className="topbar"><span className="seal">问</span><span className="brand">三易</span><nav className="nav"><a href="#/">返回首页</a></nav><WalletBar /></header><ShikongBar data={toView(reading.almanac)} /><BaziReading reading={reading} onReading={setReading} /></main>;
 +  }
    const stage = readingStage(reading);
    const view = reading.almanac ? toView(reading.almanac) : undefined;
@@ -6346,80 +6470,16 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
    --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
 --- a/web/styles/components.css
 +++ b/web/styles/components.css
-@@ -638,3 +638,73 @@
+@@ -638,3 +638,9 @@
      font-size: 12px;
    }
  }
 +
-+/* 八字页沿用水墨夜：金色合议、翠色合类、朱色冲刑害破。 */
-+.bazi-hero, .bazi-secondary { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 26px; }
-+.bazi-hero > *, .bazi-secondary > *, .liunian-panel { min-width: 0; }
-+.birth-form label { display: grid; gap: 6px; margin: 12px 0; }
-+.birth-form input, .birth-form select { color: var(--paper); background: var(--panel-2); border: 1px solid var(--line-strong); padding: 8px; min-width: 0; width: 100%; }
-+.birth-form input[type="checkbox"] { width: auto; }
-+.birth-date, .bazi-derived, .bazi-use { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-+.bazi-table-scroll { overflow-x: auto; }
-+.bazi-table { width: 100%; border-collapse: collapse; text-align: center; }
-+.bazi-table th, .bazi-table td { border-bottom: 1px solid var(--line); padding: 8px 4px; }
-+.bazi-table caption { font-family: var(--brush); font-size: 28px; margin: 18px; }
-+.luck-timeline { display: flex; overflow-x: auto; gap: 10px; }
-+.luck-timeline > div { display: grid; min-width: 100px; padding: 12px; border: 1px solid var(--line); }
-+.luck-current { background: var(--gold-soft); color: var(--gold); }
-+.bazi-consensus meter { display: block; width: 100%; }
-+.relation-diagram { width: 100%; height: auto; }
-+.relation-diagram text, .ln-chart text { fill: var(--paper); font-size: 13px; }
-+.relation-join { color: var(--jade); stroke: var(--jade); }
-+.relation-clash { color: var(--cinnabar); stroke: var(--cinnabar); }
-+.relation-group { color: var(--gold); stroke: var(--gold); }
-+.relation-tag { display: inline-block; border: 1px solid currentColor; border-radius: 3px; margin: 2px; padding: 2px 4px; }
-+.element-row { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; margin: 12px 0; }
-+.element-row span { grid-column: 2; }
-+.element-row meter { width: 100%; }
-+.ln-chart { position: relative; width: 100%; }
-+.ln-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
-+.ln-grid { stroke: var(--line); }
-+.ln-five { stroke: var(--muted); stroke-dasharray: 5 5; }
-+.ln-line { stroke: var(--gold); stroke-width: 2px; fill: none; vector-effect: non-scaling-stroke; }
-+.ln-dot { fill: var(--gold); stroke: var(--gold); stroke-width: 8px; vector-effect: non-scaling-stroke; }
-+.ln-range { stroke: var(--muted); stroke-width: 2; }
-+.ln-change { stroke: var(--gold); stroke-dasharray: 3 4; }
-+.ln-now { fill: var(--gold-soft); }
-+.ln-tooltip rect { fill: var(--panel-2); stroke: var(--line-strong); }
-+.ln-hit { display: grid; margin: 0 0 12px 9%; }
-+.ln-hit button { padding: 0; min-width: 0; min-height: 32px; background: transparent; color: var(--paper); border: 1px solid transparent; }
-+.ln-hit button[aria-pressed="true"], .ln-table button[aria-pressed="true"] { border-color: var(--gold); background: var(--gold-soft); }
-+.ln-hit button:focus-visible, .ln-table button:focus-visible { outline: 2px solid var(--gold); }
-+.ln-scroll { width: 100%; min-width: 0; overflow-x: auto; }
-+.ln-table { table-layout: fixed; border-collapse: separate; border-spacing: 0; text-align: center; font-size: 12px; }
-+.ln-table th, .ln-table td { padding: 8px 3px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
-+.ln-table th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); width: 90px; }
-+.ln-table button { min-height: 32px; width: 100%; background: transparent; color: var(--paper); border: 1px solid transparent; }
-+.ln-table small { display: block; color: var(--muted); }
-+.ln-current { background: var(--gold-soft); }
-+.ln-notes { border-top: 1px solid var(--line); margin-top: 18px; }
-+.verdict-吉, .verdict-大吉 { color: var(--jade); }
-+.verdict-凶, .verdict-大凶 { color: var(--cinnabar); }
-+@media (max-width: 1059px) {
-+  .ln-past-low { display: none; }
-+  .ln-chart text { font-size: 22px; }
-+  .ln-chart .ln-direct, .ln-chart .ln-change + text { font-size: 16px; }
-+}
-+@media (max-width: 980px) {
-+  .bazi-hero, .bazi-secondary { grid-template-columns: minmax(0, 1fr); }
-+}
-+
-+@media (min-width: 1060px) {
-+  .ln-table { width: 100% !important; }
-+  .ln-table col:first-child, .ln-table th:first-child { width: 9% !important; }
-+}
-+@media (max-width: 1059px) {
-+  .ln-hit { grid-template-columns: repeat(5, minmax(32px, 1fr)) !important; margin-left: 0; }
-+}
-+
-+.ln-selected { fill: none; stroke: var(--gold); vector-effect: non-scaling-stroke; }
-+
-+.ln-hover { fill: transparent; cursor: pointer; }
-+.ln-line, .ln-dot, .ln-range, .ln-change, .ln-tooltip { pointer-events: none; }
++/* 生辰表单使用现有 tokens。 */
++.birth-form label { display:grid;gap:6px;margin:12px 0; }
++.birth-form input,.birth-form select {color:var(--paper);background:var(--panel-2);border:1px solid var(--line-strong);padding:8px;min-width:0;width:100%;}
++.birth-form input[type="checkbox"] {width:auto;}
++.birth-date {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
 --- a/scripts/font-charset.ts
 +++ b/scripts/font-charset.ts
 @@ -14,6 +14,8 @@
@@ -6447,6 +6507,238 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
      assert.match(charset, new RegExp(value));
    }
    assert.doesNotMatch(charset, /[\u3040-\u30ff]/u);
+```
+
+**样式来源与隔离：** 以下 bazi.css 的四柱、大运、三家、流年、关系与五行规则逐段复制已确认样稿；共享选择器加 `.bazi` 前缀、字面颜色映射为 tokens。保留 1A 同名规则；仅补必要的数据定位、无障碍与 11px 下限。不是重新设计。
+
+```css
+// web/styles/bazi.css
+/* 样稿八字规则原样移植；共享类限定在 .bazi 内，保护 1A。 */
+.bazi { display:grid; gap:26px; min-width:0; --bazi-middle:rgb(201 168 102 / .55); --bazi-bar-bg:rgb(234 229 217 / .04); --bazi-grid:rgb(201 168 102 / .1); --bazi-ref:rgb(234 229 217 / .32); --bazi-range:rgb(234 229 217 / .34); --bazi-hover:rgb(234 229 217 / .05); --bazi-good-bg:rgb(69 160 126 / .22); --bazi-bad-bg:rgb(208 97 74 / .18); }
+.bazi .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.bazi .row2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+@media (max-width: 980px) {
+.bazi .hero, .bazi .row2 { grid-template-columns: minmax(0, 1fr); }
+}
+.bazi .ask { display: grid; gap: 6px; }
+.bazi .ask p { margin: 0; font-size: 21px; line-height: 1.5; }
+.bazi .consensus { display: grid; gap: 8px; }
+.bazi .track { position: relative; height: 44px; margin: 16px 12px 0; }
+.bazi .track::before { content: ""; position: absolute; left: 0; right: 0; top: 21px; height: 2px; background: linear-gradient(90deg, var(--cinnabar), var(--line-strong) 50%, var(--jade)); opacity: 0.8; }
+.bazi .track .mean { position: absolute; top: 10px; width: 1px; height: 24px; background: var(--paper); }
+.bazi .track .mean span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-family: var(--sans); font-size: 11px; color: var(--paper); white-space: nowrap; }
+.bazi .track .pin { position: absolute; top: 12px; width: 20px; height: 20px; margin-left: -10px; display: grid; place-items: center; background: var(--seal-bg); color: var(--seal-text); font-family: var(--brush); font-size: 13px; border-radius: 2px; }
+.bazi .scale { display: flex; justify-content: space-between; margin-inline: 4px; font-family: var(--sans); font-size: 11.5px; color: var(--dim); }
+.bazi .diviner { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; padding: 16px 0; border-top: 1px solid var(--line); }
+.bazi .diviner .seal { width: 40px; height: 40px; font-size: 24px; grid-row: span 3; }
+.bazi .who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.bazi .who b { font-size: 17px; font-weight: 600; }
+.bazi .who span { font-size: 13px; color: var(--muted); }
+.bazi .who em { margin-left: auto; font-style: normal; font-family: var(--sans); font-size: 12.5px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.bazi .verdict { margin: 0; font-family: var(--brush); font-size: 23px; letter-spacing: 0.06em; }
+.bazi .verdict small { font-family: var(--serif); font-size: 13px; color: var(--muted); margin-left: 8px; letter-spacing: 0; }
+.bazi .verdict.good { color: var(--jade); }
+.bazi .verdict.bad { color: var(--cinnabar); }
+.bazi .why { margin: 0; font-size: 14px; line-height: 1.85; color: var(--muted); }
+.bazi .birth { display: grid; gap: 10px; }
+.bazi .birth-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.bazi .birth-main b { font-size: 20px; font-weight: 600; }
+.bazi .birth-main span { color: var(--muted); font-size: 14px; }
+.bazi .fixes { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+.bazi .fixes li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 10px; }
+.bazi .fixes li b { color: var(--gold); font-weight: 600; font-family: var(--sans); font-size: 12.5px; }
+.bazi .fixes li.hit span { color: var(--paper); }
+.bazi .fixes li.hit em { font-style: normal; color: var(--cinnabar); }
+.bazi .pillars-scroll { overflow-x: auto; }
+.bazi table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-align: center; font-variant-numeric: tabular-nums; }
+.bazi .pillars th { padding: 0 6px 10px; font-family: var(--sans); font-size: 12px; font-weight: 400; letter-spacing: .12em; color: var(--dim); border-bottom: 1px solid var(--line-strong); }
+.bazi .pillars th.day { color: var(--gold); }
+.bazi .pillars td { padding: 9px 6px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.bazi .pillars td.rowlabel { text-align: left; font-family: var(--sans); font-size: 12px; color: var(--dim); white-space: nowrap; }
+.bazi .pillars td.gz { font-family: var(--brush); font-size: 34px; line-height: 1.15; color: var(--paper); }
+.bazi .pillars td.day { background: var(--gold-soft); }
+.bazi .pillars td.gz.day { color: var(--gold); }
+.bazi .pillars td .hide { display: block; font-size: 13px; color: var(--paper); }
+.bazi .pillars td .hide small { color: var(--dim); font-size: 11.5px; margin-left: 2px; }
+.bazi .pillars .changed { color: var(--cinnabar) !important; }
+.bazi .pillars .shensha { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.bazi .minor { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.bazi .minor b { color: var(--paper); font-weight: 600; }
+.bazi .luck { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); }
+.bazi .luck div { display: grid; gap: 4px; justify-items: center; padding: 12px 4px; border-right: 1px solid var(--line); position: relative; }
+.bazi .luck div:last-child { border-right: 0; }
+.bazi .luck b { font-family: var(--brush); font-weight: 400; font-size: 24px; color: var(--paper); }
+.bazi .luck small { font-family: var(--sans); font-size: 11px; color: var(--dim); text-align: center; line-height: 1.5; }
+.bazi .luck .now { background: var(--gold-soft); outline: 1px solid var(--line-strong); }
+.bazi .luck .now b { color: var(--gold); }
+.bazi .luck .flag { position: absolute; top: -11px; padding: 0 6px; background: var(--seal-bg); color: var(--seal-text); font-family: var(--sans); font-size: 11px; line-height: 20px; border-radius: 2px; white-space: nowrap; }
+@media (max-width: 760px) {
+.bazi .luck { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bazi .luck div:nth-child(4) { border-right: 0; }
+.bazi .luck div:nth-child(-n+4) { border-bottom: 1px solid var(--line); }
+}
+.bazi .elements { display: grid; gap: 10px; }
+.bazi .el-row { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) 2.5em; align-items: center; gap: 10px; font-size: 14px; }
+.bazi .el-row > b { font-family: var(--brush); font-weight: 400; font-size: 22px; }
+.bazi .el-bar { display: flex; height: 16px; background: var(--bazi-bar-bg); }
+.bazi .el-bar i { display: block; height: 100%; border-right: 1px solid var(--bg); }
+.bazi .el-row > span { font-family: var(--sans); font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.bazi .el-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--sans); font-size: 12px; color: var(--dim); }
+.bazi .el-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.bazi .el-legend i { width: 12px; height: 9px; display: inline-block; }
+.bazi .rel-svg { width: 100%; height: auto; display: block; }
+.bazi .rel-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+.bazi .rel-list b { color: var(--paper); font-weight: 600; margin-right: 6px; }
+.bazi .usegod { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line-strong); }
+.bazi .usegod div { display: grid; gap: 4px; padding: 12px 14px; border-right: 1px solid var(--line); }
+.bazi .usegod div:last-child { border-right: 0; }
+.bazi .usegod small { font-family: var(--sans); font-size: 12px; color: var(--dim); }
+.bazi .usegod b { font-family: var(--dynamic, "Kaiti SC", "STKaiti", serif); font-size: 19px; font-weight: 600; color: var(--gold); }
+.bazi .usegod span { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+@media (max-width: 620px) {
+.bazi .usegod { grid-template-columns: minmax(0, 1fr); }
+.bazi .usegod div { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+.bazi .watch { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.bazi .diviner .seal { grid-row: span 4; }
+.bazi .verdict.dyn { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; font-weight: 600; font-size: 21px; }
+.bazi .mock-note { color: var(--cinnabar); }
+.bazi .ln-grid { --axis: 76px; --axis-chart: 76px; display: grid; gap: 10px; }
+.bazi .ln-scroll { overflow-x: auto; }
+.bazi .ln-scroll table { min-width: 900px; }
+.bazi .ln-chart { display: grid; grid-template-columns: var(--axis-chart) minmax(0, 1fr); grid-template-rows: 194px auto; padding-top: 10px; }
+.bazi .ln-x { grid-column: 2; display: none; grid-template-columns: repeat(10, minmax(0, 1fr)); padding-top: 6px; text-align: center; font-size: 11.5px; color: var(--muted); }
+.bazi .ln-x span { display: grid; line-height: 1.35; }
+.bazi .ln-x span.now { color: var(--gold); }
+.bazi .ln-x small { font-family: var(--sans); font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.bazi .ln-y { position: relative; }
+.bazi .ln-y span { position: absolute; right: 12px; transform: translateY(-50%); font-family: var(--sans); font-size: 11.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.bazi .ln-plot { position: relative; border-bottom: 1px solid var(--line-strong); }
+.bazi .ln-plot > i { position: absolute; display: block; }
+.bazi .ln-now { top: 0; bottom: 0; width: 10%; background: var(--gold-soft); }
+.bazi .ln-grid-y { left: 0; right: 0; height: 0; border-top: 1px solid var(--bazi-grid); }
+.bazi .ln-ref { left: 0; right: 0; height: 0; border-top: 1px dashed var(--bazi-ref); }
+.bazi .ln-yun { top: 0; bottom: 0; border-left: 1px dashed var(--line-strong); }
+.bazi .ln-yun.first { border-left: 0; }
+.bazi .ln-yun span { position: absolute; top: 4px; left: 8px; font-family: var(--sans); font-size: 11.5px; font-style: normal; color: var(--muted); white-space: nowrap; }
+.bazi .ln-range { width: 2px; margin-left: -1px; background: var(--bazi-range); border-radius: 1px; }
+.bazi .ln-range::before, .bazi .ln-range::after { content: ""; position: absolute; left: -3px; width: 8px; height: 2px; background: var(--bazi-range); }
+.bazi .ln-range::before { top: -1px; }
+.bazi .ln-range::after { bottom: -1px; }
+.bazi .ln-plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.bazi .ln-dot { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px var(--panel); pointer-events: none; }
+.bazi .ln-dot.now { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: var(--paper); }
+.bazi .ln-lab { position: absolute; transform: translate(-50%, -100%); margin-top: -8px; font-family: var(--sans); font-size: 12px; color: var(--paper); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+.bazi .ln-hit { position: absolute; top: 0; bottom: 0; width: 10%; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.bazi .ln-hit:hover, .bazi .ln-hit:focus-visible { background: var(--bazi-hover); outline: none; }
+.bazi .ln-hit.sel { box-shadow: inset 0 0 0 1px var(--line-strong); }
+.bazi .ln-tip { position: absolute; z-index: 2; transform: translate(-50%, calc(-100% - 14px)); min-width: 148px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line-strong); font-family: var(--sans); font-size: 12px; line-height: 1.6; color: var(--muted); white-space: nowrap; pointer-events: none; }
+.bazi .ln-tip b { color: var(--paper); font-weight: 600; }
+.bazi .ln-key { display: flex; flex-wrap: wrap; gap: 6px 18px; padding-left: var(--axis-chart); font-family: var(--sans); font-size: 12px; color: var(--dim); }
+.bazi .ln-key span { display: inline-flex; align-items: center; gap: 6px; }
+.bazi .ln-key i { display: inline-block; }
+.bazi .ln-key .k-line { width: 18px; height: 2px; background: var(--gold); }
+.bazi .ln-key .k-range { width: 2px; height: 12px; background: var(--bazi-range); }
+.bazi .ln-key .k-ref { width: 18px; border-top: 1px dashed var(--bazi-ref); }
+.bazi table.ln-table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bazi .ln-table col.ln-axis { width: var(--axis); }
+.bazi .ln-table th, .bazi .ln-table td { padding: 7px 3px; border-bottom: 1px solid var(--line); vertical-align: middle; line-height: 1.45; }
+.bazi .ln-table thead th { font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--dim); }
+.bazi .ln-table .ln-span th { padding-bottom: 2px; border-bottom: 0; letter-spacing: 0.08em; }
+.bazi .ln-table .ln-span th[colspan] { border-top: 1px solid var(--line); }
+.bazi .ln-table tbody th { text-align: left; padding-left: 0; font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--dim); white-space: nowrap; }
+.bazi .ln-table .now { background: var(--gold-soft); }
+.bazi .ln-year { min-height: 32px; width: 100%; padding: 4px 0; border: 1px solid transparent; background: none; color: var(--paper); font-family: var(--sans); font-size: 13px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.bazi .ln-year:hover, .bazi .ln-year:focus-visible { border-color: var(--line-strong); outline: none; }
+.bazi .ln-year.sel { border-color: var(--gold); color: var(--gold); }
+.bazi .ln-table td.gz { font-family: var(--brush); font-size: 22px; line-height: 1.2; color: var(--paper); }
+.bazi .ln-table td.gz small { display: block; font-family: var(--sans); font-size: 11px; color: var(--dim); }
+.bazi .ln-table td.rels { vertical-align: top; }
+.bazi .ln-table td.rels .tag { display: block; width: fit-content; margin: 0 auto 3px; font-size: 11px; padding: 0 4px; white-space: normal; }
+.bazi .ln-table td.v { color: var(--paper); font-size: 12.5px; }
+.bazi .ln-table td.v b { font-family: var(--serif); font-weight: 600; margin-right: 3px; }
+.bazi .ln-table td.v.ji { background: var(--bazi-good-bg); box-shadow: inset 3px 0 0 var(--jade); }
+.bazi .ln-table td.v.xiong { background: var(--bazi-bad-bg); box-shadow: inset 3px 0 0 var(--cinnabar); }
+.bazi .ln-table tr.avg td { color: var(--paper); font-weight: 600; }
+.bazi .ln-detail { display: grid; gap: 10px; padding-top: 4px; }
+.bazi .ln-detail-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.bazi .ln-detail-head b { font-family: var(--brush); font-weight: 400; font-size: 26px; letter-spacing: 0.06em; }
+.bazi .ln-detail-head span { font-size: 13.5px; color: var(--muted); }
+.bazi .ln-detail-rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); }
+.bazi .ln-detail-rows div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 12px 14px; border-right: 1px solid var(--line); }
+.bazi .ln-detail-rows div:last-child { border-right: 0; }
+.bazi .ln-detail-rows .seal { width: 30px; height: 30px; font-size: 18px; grid-row: span 2; }
+.bazi .ln-detail-rows strong { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; font-size: 18px; font-weight: 600; }
+.bazi .ln-detail-rows strong.ji { color: var(--jade); }
+.bazi .ln-detail-rows strong.xiong { color: var(--cinnabar); }
+.bazi .ln-detail-rows strong small { margin-left: 6px; font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--muted); }
+.bazi .ln-detail-rows p { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+@media (max-width: 760px) {
+.bazi .ln-detail-rows { grid-template-columns: minmax(0, 1fr); }
+.bazi .ln-detail-rows div { border-right: 0; border-bottom: 1px solid var(--line); }
+.bazi .ln-detail-rows div:last-child { border-bottom: 0; }
+}
+@media (max-width: 1060px) {
+.bazi .ln-x { display: grid; }
+}
+@media (max-width: 620px) {
+.bazi .ln-grid { --axis-chart: 34px; }
+.bazi .ln-y span { right: 6px; }
+.bazi .ln-lab.wide-only { display: none; }
+.bazi .ln-yun span { font-size: 10.5px; left: 4px; }
+}
+.bazi .ln-table tbody th, .bazi .ln-table thead th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); }
+
+.bazi .hero > *, .bazi .row2 > *, .bazi .panel {min-width:0;}
+.bazi .panel {background:var(--panel);border:1px solid var(--line);padding:22px clamp(16px,2.2vw,26px);display:grid;gap:16px;align-content:start;}
+.bazi .panel-head {display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;}
+.bazi .panel-head h2 {font-family:var(--brush);font-size:26px;font-weight:400;letter-spacing:.08em;color:var(--paper);margin:0;}
+.bazi .panel-head p {font-size:13.5px;color:var(--muted);line-height:1.6;margin:0;}
+.bazi .day-boundary {display:inline-flex;gap:6px;flex-wrap:wrap;align-items:baseline;}
+.bazi .day-boundary button {font-size:12px;padding:2px 6px;}
+.bazi .day-boundary small {font-size:11px;}
+.bazi .diviner > details, .bazi .diviner > button, .bazi .diviner > p {grid-column:2;min-width:0;}
+.bazi .tag {display:inline-block;padding:1px 6px;font-family:var(--sans);font-size:11.5px;line-height:1.6;border:1px solid currentColor;border-radius:3px;white-space:nowrap;}
+.bazi .join,.bazi .relation-join {color:var(--jade);stroke:var(--jade);fill:var(--jade);}
+.bazi .clash,.bazi .relation-clash {color:var(--cinnabar);stroke:var(--cinnabar);fill:var(--cinnabar);}
+.bazi .group,.bazi .relation-group {color:var(--gold);stroke:var(--gold);fill:var(--gold);}
+.bazi path {fill:none;vector-effect:non-scaling-stroke;}
+.bazi .rel-divider {stroke:var(--line);stroke-dasharray:4 5;}
+.bazi .rel-node {font-family:var(--brush);font-size:30px;fill:var(--paper);}
+.bazi .rel-caption,.bazi .rel-svg text:not(.rel-node) {font-size:14px;}
+.bazi .rel-caption {fill:var(--muted);}
+.bazi .el-stem {background:var(--paper);}
+.bazi .el-main {background:var(--gold);}
+.bazi .el-middle {background:var(--bazi-middle);}
+.bazi .el-residual {background:var(--dim);}
+.bazi .ln-line {stroke:var(--gold);stroke-width:2;fill:none;}
+.bazi .ln-plot i {position:absolute;display:block;}
+.bazi .ln-table small {display:block;font-size:11px;}
+.bazi .ln-x small,.bazi .ln-yun span {font-size:11px;}
+.bazi .ln-yun span {max-width:140px;white-space:normal;}
+.bazi .ln-plot > div {display:contents;}
+.bazi .ln-lab {z-index:1;}
+.bazi .pillars th.day {background:var(--gold-soft);}
+@media(max-width:760px){.bazi .panel {padding:16px;} .bazi .luck .flag {font-size:11px;white-space:normal;line-height:1.3;max-width:100%;top:-22px;} .bazi .luck {margin-top:14px;} .bazi .wide-only {display:none;} }
+
+.bazi .el-bar {position:relative;}
+.bazi .el-bar::after {content:"";position:absolute;inset:0;background:repeating-linear-gradient(to right,transparent 0 calc(var(--el-unit) - 1px),var(--bg) calc(var(--el-unit) - 1px) var(--el-unit));pointer-events:none;}
+.bazi .tag.join {background:var(--jade-soft);}
+.bazi .tag.clash {background:var(--cinnabar-soft);}
+.bazi .tag.group {background:var(--gold-soft);}
+```
+
+```diff
+--- a/web/main.tsx
++++ b/web/main.tsx
+@@ -3,6 +3,7 @@
+ import "./styles/tokens.css";
+ import "./styles/layout.css";
+ import "./styles/components.css";
++import "./styles/bazi.css";
+
+ import { StrictMode } from "react";
+ import { createRoot } from "react-dom/client";
 ```
 
 - [ ] **Step 2：运行 `npm run font:charset` 与 `npm run font:subset`。** `.venv-tools` 已有 fonttools、brotli，无需安装。字表生成器与产出的 chars.txt 同步，重跑不会丢掉新增标题与三家姓氏。字体二进制与 sha256 均现场生成；不在计划猜摘要，按 B7 固定摘要并运行字形守卫。
@@ -6670,29 +6962,201 @@ WALLETCONNECT_PROJECT_ID=00000000000000000000000000000000 npm run frontend:build
 node --import tsx scripts/check-frontend-secrets.ts
 ```
 
-- [ ] **Step 2：由主管在允许监听目录启动 `npm run frontend:dev`，按 B7.3 走查桌面 1320 与手机 390。** 当前沙箱监听 EPERM，不能运行服务或声称完成端到端截图；全量测试的监听项同样由主管复跑，不跳过。截图必须包含整个流年面板、固定表头、所选短评及窄屏横向表格，不以隐藏内容来消除横向滚动。
-- [ ] **Step 3：有既有 Playwright CLI 时按下面流程留证，无需安装依赖。** 先 `command -v npx` 与 `command -v playwright-cli`；CLI 未有时用主管现成浏览器开发者工具完成同样步骤，不通过 npx 自动下载。导航到实际结果后，用最新 snapshot 的 refs 点选年份并 Tab/Enter 验证；禁止截图密钥或未遮蔽的钱包详情。
+- [ ] **Step 2：落以下完整截图服务脚本。** 只在实施隔离目录运行；复用 B5 helper 的 BaziReadingService、ReadingStore 与 mock 付款，不联网调用模型或真实付款。固定时钟为 2026-10-06 21:00 北京时间。按顺序生成运势、命理、缺时辰、余春台失败四份存档，逐份等待 settled 并断言状态，再启动 4178。分享视图保持不含原始时刻；本机逐步校正另外在同浏览器填写相同生辰后检查，不能向服务端或公开 JSON 注入出生时刻。
 
-```bash
-mkdir -p output/playwright
-playwright-cli open http://127.0.0.1:4173
-playwright-cli resize 1320 1000
-playwright-cli snapshot
-# 用最新 snapshot 的 refs 填表、付一次款，导航到实际 #/r/<id>。
-playwright-cli snapshot
-playwright-cli eval '({ width: innerWidth, page: document.documentElement.scrollWidth, table: document.querySelector(".ln-scroll")?.scrollWidth })'
-playwright-cli run-code 'await page.screenshot({ path: "output/playwright/sanyi-desktop.png", fullPage: true })'
-playwright-cli resize 390 844
-playwright-cli reload
-playwright-cli snapshot
-playwright-cli eval '({ width: innerWidth, page: document.documentElement.scrollWidth, table: document.querySelector(".ln-scroll")?.scrollWidth, left: document.querySelector(".ln-scroll")?.scrollLeft })'
-playwright-cli run-code 'await page.screenshot({ path: "output/playwright/sanyi-mobile.png", fullPage: true })'
+```ts
+// scripts/bazi-screenshot-server.ts
+import { writeFile, mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
+import type { StructuredOutputRequest } from "../src/agent/provider.js";
+import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
+import { createFrontendServer } from "../src/frontend/server.js";
+import { baziFixture, birth, proof } from "../tests/helpers/bazi-service.js";
+// helper 构造 BaziReadingService + ReadingStore + mock 付款，固定北京时间 2026-10-06 21:00。
+class ScreenshotProvider extends MockSchoolsProvider {
+    failYu = false;
+    override async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+        if (this.failYu && request.taskId === "sanyi/fortune/yuchuntai")
+            throw new Error("截图排练：余春台失败");
+        return super.generateStructured<T>(request);
+    }
+}
+const provider = new ScreenshotProvider();
+const f = await baziFixture(provider);
+const entries: {
+    name: string;
+    id: string;
+}[] = [];
+for (const [index, name] of ["fortune", "destiny", "missing-time", "failed-yu"].entries()) {
+    provider.failYu = name === "failed-yu";
+    const value = await f.bazi.create({ kind: name === "destiny" ? "destiny" : "fortune", question: name === "destiny" ? "我适合做什么" : "我今年运势如何", birth: { ...birth, time: name === "missing-time" ? null : birth.time }, sect: 1, horizon: "year", feeProof: proof(index + 1) });
+    await f.bazi.whenSettled(value.id);
+    const stored = await f.bazi.getReading(value.id);
+    if (name === "failed-yu" ? stored.schools.yuchuntai.status !== "failed" : Object.values(stored.schools).some(state => state.status !== "done"))
+        throw new Error("截图存档状态不符合预期");
+    entries.push({ name, id: value.id });
+}
+provider.failYu = false;
+await mkdir("output/playwright", { recursive: true });
+await writeFile("output/playwright/bazi-cases.json", JSON.stringify(entries, null, 2));
+await writeFile("web/bazi-cases.json", JSON.stringify(entries, null, 2));
+// iframe 隔离真实 390px 布局，避免 Chrome 窗口宽度下限；与父页同源，便于测量。
+await writeFile("web/bazi-capture.html", `<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#0f1110}iframe{display:block;width:390px;height:2400px;border:0}</style><iframe title="390px 八字页"></iframe><script>document.querySelector('iframe').src='/#/r/'+new URLSearchParams(location.search).get('id');</script>`);
+const server = createFrontendServer({ api: f.api, publicDir: resolve("web") });
+server.listen(4178, "127.0.0.1", () => console.log("截图服务已启动：http://127.0.0.1:4178；存档清单 output/playwright/bazi-cases.json"));
+const close = () => { server.close(() => { void f.close().then(() => process.exit(0)); }); };
+process.on("SIGINT", close);
+process.on("SIGTERM", close);
 ```
 
-- [ ] **Step 4：主管核对截图像素与操作结果。** 宽屏表格每列中心与对应图点中心一致；390px 页面 scrollWidth 不大于 innerWidth、表容器可滚动、行名固定、默认所问列可见；切换与单家重试付款计数不增加。截图与全量验证通过后才勾 tasks 2.2–2.9，用户完成清单后再勾 2.10。
-- [ ] **Step 5：核对任务状态与实际结果。** 本轮只编写并抽取计划，所有计划实施复选框保持未勾；主管实际实施时逐项更新，不能把纯静态渲染通过等同用户验收完成。
+```bash
+# 前台运行，另开终端截图；结束后 Ctrl-C 关闭服务并清理临时存档。
+node --import tsx scripts/bazi-screenshot-server.ts
+```
 
-## 第 5 轮计划代码验证记录
+- [ ] **Step 3：使用现有 Playwright CLI 一次生成八张完整截图并输出守卫结果。** 先检查现有 CLI；不得用 npx 下载或安装依赖。没有 CLI 时由主管用现成 Chrome 的开发者工具执行相同检查。390 宽用同源 iframe 包一层，外层窗口仍为 1320，避免 headless Chrome 最小窗口宽度。下段 `run-code` 读取公开存档清单，截图前等待字体与结果页，iframe 高度按实际内容扩展；不把整张页面压缩为 390px 图片。
+
+```bash
+command -v npx
+command -v playwright-cli
+mkdir -p output/playwright
+playwright-cli open http://127.0.0.1:4178
+playwright-cli resize 1320 1000
+playwright-cli run-code '
+const base = "http://127.0.0.1:4178";
+const cases = await (await page.request.get(base + "/bazi-cases.json")).json();
+const inspect = ({ fortune, width }) => {
+  const errors = [];
+  const root = document.querySelector(".bazi");
+  if (innerWidth !== width) errors.push("视口宽度不符");
+  if (document.documentElement.scrollWidth > innerWidth) errors.push("页面横向溢出");
+  const steps = [...root.querySelectorAll(".luck > div")];
+  if (steps.length !== 8) errors.push("大运不是八步");
+  for (const step of steps) {
+    const rect = step.getBoundingClientRect();
+    if (rect.width <= 0 || rect.left < 0 || rect.right > innerWidth) errors.push("大运步骤不可见");
+  }
+  if (fortune && (!root.querySelector(".ln-plot") || !root.querySelector(".ln-table") || !root.querySelector(".ln-detail-rows"))) errors.push("流年面板不完整");
+  for (const element of root.querySelectorAll("*")) {
+    if (![...element.childNodes].some(node => node.nodeType === 3 && node.textContent.trim())) continue;
+    const style = getComputedStyle(element);
+    if (style.display === "none" || !element.getClientRects().length) continue;
+    let size = parseFloat(style.fontSize);
+    if (element instanceof SVGGraphicsElement) {
+      const matrix = element.getScreenCTM();
+      if (matrix) size *= Math.min(Math.hypot(matrix.a, matrix.b), Math.hypot(matrix.c, matrix.d));
+    }
+    if (size < 11) errors.push("文字小于11px：" + element.textContent.slice(0, 20));
+  }
+  return { width: innerWidth, page: document.documentElement.scrollWidth, luck: steps.length, errors };
+};
+for (const item of cases) {
+  await page.goto(base + "/#/r/" + item.id);
+  await page.locator(".bazi[data-reading=\"" + item.id + "\"] .luck").waitFor();
+  await page.evaluate(async () => { await document.fonts.ready; });
+  const desktop = await page.evaluate(inspect, { fortune: item.name !== "destiny", width: 1320 });
+  if (desktop.errors.length) throw new Error(JSON.stringify({ name: item.name, desktop }));
+  await page.screenshot({ path: "output/playwright/" + item.name + "-1320.png", fullPage: true });
+  await page.goto(base + "/bazi-capture.html?id=" + encodeURIComponent(item.id));
+  const frame = page.frames().find(frame => frame.parentFrame());
+  if (!frame) throw new Error("390px iframe 未加载");
+  await frame.locator(".bazi[data-reading=\"" + item.id + "\"] .luck").waitFor();
+  await frame.evaluate(async () => { await document.fonts.ready; });
+  const height = await frame.evaluate(() => document.documentElement.scrollHeight);
+  await page.locator("iframe").evaluate((element, height) => { element.style.height = (height + 72) + "px"; }, height);
+  const mobile = await frame.evaluate(inspect, { fortune: item.name !== "destiny", width: 390 });
+  if (mobile.errors.length) throw new Error(JSON.stringify({ name: item.name, mobile }));
+  await page.locator("iframe").screenshot({ path: "output/playwright/" + item.name + "-390.png" });
+  if (item.name !== "destiny") {
+    await frame.locator(".ln-year").filter({ hasText: "2027" }).click();
+    if (!(await frame.locator(".ln-detail-head").innerText()).includes("2027")) throw new Error("表头年份选择未更新详情");
+    await frame.locator(".ln-hit").nth(3).click();
+    if (!(await frame.locator(".ln-detail-head").innerText()).includes("2026")) throw new Error("图列点击未更新详情");
+  }
+  console.log(JSON.stringify({ name: item.name, desktop, mobile }));
+}
+'
+```
+
+- [ ] **Step 4：主管对照样稿逐张走查。** 桌面 1320 与 390 页面均不横向溢出；大运完整八步（390 四列两行），流年面板、年份分组与详情完整，文字实际显示尺寸 ≥11px。宽屏图点与下表列中心对齐，窄屏仅表格独立横滚且行名固定；今年、十年最顺、回看最低标注贴点，等值同年不重复，最低标注在窄屏隐藏。吉凶有正文文字且底色/边线区分，SVG 关系只有地支、天干关系仅文字三行。命理没有吉凶/合议/流年/留意标签，缺时辰时柱全缺且起运正午估算，失败家未展示且平均只算完成家。用最新 snapshot 的 refs 与 Tab/Enter 检查表头按钮、读数框、详断和重试；同分印记不重叠，换日切换留在换日口径一行。换日与单家重试不新增付款。
+- [ ] **Step 5：核对实施任务与规范。** 本轮只改计划并隔离演练，不勾实施任务或 OpenSpec；截图与全量验证通过后主管再逐项勾 tasks 2.2–2.9，用户完成清单后再勾 2.10。沙箱拒绝监听或下载时保留原测试与日志，如实记录失败，不能用静态渲染代替截图验收。
+
+## 第 6 轮计划代码验证记录
+
+本轮只修改本计划文件，不改其它工作区文件、不提交、不安装依赖。主管提供的第 5 轮 440 全通过与字体摘要是历史外部证据，不代替本轮验收。已有 sanyi-chinese-redesign 的八字结果页、十年流年、缺时柱及三家规范覆盖本轮；已执行 openspec list --specs、openspec list，未另建提案或勾选实施任务。遥测联网失败不影响清单，严格验证禁用遥测。
+
+最终计划重新抽到 `/private/tmp/sanyi-round6-final3`，63 个完整块及 18 个 diff 逐项检查并成功应用，包含最新同分印记轨道高度与截图等待对应存档 ID。 验证记录落入后又复抽到 `/private/tmp/sanyi-round6-final4`，95 个实现/补丁目标与 final3 逐字节一致；最终 `git diff --check` 退出 0。只复制基线源码及示例配置，node_modules 与 .venv-tools 仅符号链接，未复制 .env、密钥或本机生辰。隔离演练不等于实施，所有计划实施复选框维持原状。
+
+重复验证选择新的空目录：
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import re,shutil,subprocess
+base=Path('/Users/captain/python/Claude/arc-main-first')
+root=Path('/private/tmp/sanyi-round6-reproduce')
+root.mkdir(exist_ok=False)
+for name in ['src','tests','scripts','web','tools','contracts','openspec','docs']:
+ shutil.copytree(base/name,root/name)
+for name in ['package.json','tsconfig.json','README.md','.env.example']:
+ shutil.copy2(base/name,root/name)
+for name in ['node_modules','.venv-tools']:
+ (root/name).symlink_to(base/name,target_is_directory=True)
+plan=(base/'docs/plans/2026-10-06-sanyi-milestone-1b.md').read_text()
+blocks=list(re.finditer(r'```(ts|tsx|json|python|css|markdown)\n// ([^\n]+)\n(.*?)\n```',plan,re.S))
+for m in blocks:
+ path=root/m[2]
+ path.parent.mkdir(parents=True,exist_ok=True)
+ code=m[3]+'\n'
+ if m[1] in ['ts','tsx']:
+  code='// '+m[2]+'\n'+code
+ path.write_text(code)
+patches=re.findall(r'```diff\n(.*?)```',plan,re.S)
+# 同一既有文件跨 B5/B6 逐块修改，依赖补丁按计划顺序应用。
+for index,patch in enumerate(patches):
+ path=root/f'plan-modifications-{index+1}.patch'
+ path.write_text(patch)
+ subprocess.run(['git','apply','--check',str(path)],cwd=root,check=True)
+ subprocess.run(['git','apply',str(path)],cwd=root,check=True)
+print(f'抽取 {len(blocks)} 个完整块，依次应用 {len(patches)} 个 diff：{root}')
+PY
+```
+
+| 检查 | 实跑结果与证据 |
+|---|---|
+| 旧界面与旧 mock RED | `/private/tmp/round6-red.log`：4 项失败，暴露样稿结构缺失、大运/五行/关系不符、同值标注重复、三家分值相同 |
+| 逐年关系 RED | `/private/tmp/round6-year-red.log`：2023 首列混入原局与大运关系，集合断言失败；过滤 scope=year、标签去重后通过 |
+| CSS RED/GREEN | 隔离目录临时用旧 components.css 替换 bazi.css，样稿选择器/列数/字号守卫失败；恢复后通过。`/private/tmp/round6-css-red.log`、`/private/tmp/round6-css-green.log` |
+| 新增与相关测试 | 下方四组文件：52 通过、0 失败、0 跳过，其中第 6 轮新增 6 项。`/private/tmp/round6-final3-new.log` |
+| Schema、自洽与核对 | 上述组含 B4 runner：三家 × 命理/运势 × 已知/缺时柱的全部输出通过 Schema、自洽、事实核对及真实 mock 路由；锚年与总断一致 |
+| 严格类型检查 | npm run typecheck 退出 0，0 错；strict、noUncheckedIndexedAccess、exactOptionalPropertyTypes 保留。`/private/tmp/round6-final3-types.log` |
+| 前端构建 | 全零公开 WalletConnect 标识下 npm run frontend:build 退出 0。`/private/tmp/round6-final3-build.log` |
+| 双源基准 | .venv-tools/bin/python tools/bazi/generate_fixtures.py 退出 0，55 个时刻、双 sect。`/private/tmp/round6-final3-fixtures.log` |
+| 全量回归 | npm test：446 项，435 通过、11 失败、0 跳过，退出 1；10 项 HTTP 均为 listen EPERM，1 项字体守卫缺现场 sha256（ENOENT）。`/private/tmp/round6-final3-regression.log`。未跳过或删改失败项，不能声称全量通过 |
+| 字体 | npm run font:charset 退出 0，固定字表策略与第 5 轮相同；npm run font:subset 下载遭 Operation not permitted，退出 1。`/private/tmp/round6-final-font-charset.log`、`/private/tmp/round6-final-font-subset.log`。主管上轮 sha256 07be3b99…ca7b0 / 83 872 字节只作历史记录，未编造新摘要或增加豁免 |
+| 秘密扫描 | node --import tsx scripts/check-frontend-secrets.ts 退出 0，63 文件；无 .env，未加载真实秘密值，实施环境仍须运行 npm run frontend:secrets。`/private/tmp/round6-final3-secrets.log` |
+| 排练 | npm run demo:rehearse 退出 0：庚午、辛巳、庚辰、癸未；2023–2032、三家完成、逐年合议 10 项，换日未增加付款。`/private/tmp/round6-final3-rehearse.log` |
+| OpenSpec | OPENSPEC_TELEMETRY=0 openspec validate sanyi-chinese-redesign --strict 退出 0，valid。`/private/tmp/round6-final3-openspec.log` |
+| 截图服务 | 四份 mock 存档已生成、状态断言通过，随后监听 4178 被 EPERM 拒绝，退出 1。清单 `/private/tmp/sanyi-round6-final3/output/playwright/bazi-cases.json`，日志 `/private/tmp/round6-final3-screenshot.log`；未执行八张浏览器截图 |
+| 截图语法 | 抽出 B7.4 run-code，node --check /private/tmp/round6-capture-syntax.mjs 退出 0；不等于浏览器运行或视觉验收 |
+| 只读审查 | requesting-code-review 检查最新计划、样稿与片段，无确定的重要阻断；视觉遮挡、弧线避让、完整截图脚本须主管实跑确认 |
+
+```bash
+cd /private/tmp/sanyi-round6-final3
+node --import tsx --test \
+  tests/frontend-bazi-round6.test.ts \
+  tests/frontend-bazi-components.test.ts \
+  tests/frontend-liunian-chart.test.ts \
+  tests/sanyi-bazi-*.test.ts
+npm run typecheck
+WALLETCONNECT_PROJECT_ID=00000000000000000000000000000000 npm run frontend:build
+.venv-tools/bin/python tools/bazi/generate_fixtures.py
+npm test
+```
+
+本轮改动集中在 B4.6 mock、B6.3–B6.6 样稿移植与新增回归、B7.4 四类存档及 iframe 截图守卫。2023 逐年关系锁定为「午卯破、卯辰害、卯未半合木」，神煞柱内合并依据至 title，大运八步完整保留。B6b 原合计超过 1000 行，拆为 B6b1/B6b2，见下方更新行数表。
+
+## 第 5 轮计划代码验证记录（历史）
 
 最终文档又复抽到 `/private/tmp/sanyi-round5-final4`，60 块/17 diff 全部应用成功；与下述已测试目录的所有完整块和修改目标逐字节一致，`git diff --check` 通过。
 
@@ -6851,19 +7315,20 @@ node_modules/.bin/tsc --noEmit --strict \
 | B2 | 727 | 既有双源与派生命盘实现 |
 | B3 | 701 | 既有关系与调候实现 |
 | B4a | 606 | 锚年流月事实和节气日期，audit 只列修改片段 |
-| B4b | 596 | 余家全部四柱藏干、提示词分工、mock 精确片段与 4 项回归 |
+| B4b | 598 | 余家全部四柱藏干、提示词分工、mock 精确片段与 4 项回归 |
 | B5a | 988 | B5.1 时间范围、B5.2 存储与公开投影、B5.3 编排和完整测试 |
 | B5b | 635 | B5.4 API、B5.5 HTTP、B5.6 隐私、B5.7 排练、B5.8 交叉验收 |
 | B6a | 470 | B6.1 档案/入口测试，B6.2 表单与付款前补问 |
-| B6b | 810 | B6.3 流年/组件测试，B6.4 图表，B6.5 命盘，B6.6 分流/样式/字表 |
-| B7 | 239 | B7.1 清理/规范，B7.2 字体守卫，B7.3 验收清单，B7.4 全量验证/截图 |
+| B6b1 | 420 | B6.3 几何/静态/数据回归，B6.4 HTML 图层与流年表 |
+| B6b2 | 675 | B6.5 客观命盘/三家/校正，B6.6 样稿样式/分流/字表 |
+| B7 | 127 + 138 | B7.1–B7.3 主块 127 行；B7.4 验收段另列 138 行 |
 
-所有完整 Chunk 均 ≤ 1000 行；B5、B6 各分为 a/b 两块。既有文件只有精确 diff，新建文件才有路径标记完整块；修改片段新增语句保留 1A 排版，新增 TypeScript 代码每行一条语句，if/for 均使用换行花括号，无嵌套三元。本轮只修改本计划文件，不提交、不安装依赖。
+所有完整 Chunk 均 ≤ 1000 行；B5 分为 a/b，B6 分为 a/b1/b2；B7.4 截图脚本另列在验收段。既有文件只有精确 diff，新建文件才有路径标记完整块；修改片段新增语句保留 1A 排版，新增 TypeScript/TSX 采用项目原有写法，完整块与补丁必须复抽验证。本轮只修改本计划文件，不提交、不安装依赖。
 
 ## 待主管确认的口径
 
 1. 无新增业务口径或阻塞疑点。按主管已定边界，原始生辰与校正详情只在请求期和本机使用；服务端保存派生命盘与不可逆校正摘要。起运与交运日期可能反推出生日期的局限已写明，不删除字段。
-2. 剩余验证项是允许监听环境里的 10 项 HTTP 测试、字体子集重建与摘要/字形守卫、1320/390px 截图走查；沙箱监听和字体下载被拒绝，不能据此宣称这些项通过。按 B7 复跑，无需重新确认已裁定的业务口径。
+2. 第 6 轮需主管在允许监听/联网环境复跑全量 446 项、字体守卫与 B7.4 八张截图，并确认实际像素对齐、弧线避让、文字 ≥11px；无新增业务口径待裁定。沙箱结果为 435 通过、10 项监听失败、1 项字体摘要缺失，不沿用第 5 轮 440 全通过。
 3. B6 要按公开 kind 联合接八字页和本机生辰；B5 不展示原始校正详情，旧问事组件使用 question 类型别名。免费切换需要重传生辰，服务端同时比较旧口径四柱、大运方向与起运；缺时辰交节日的大运为 null 时比较 null。
 4. 供主管复核的身份限制：交节日缺时辰时 luck=null，四柱与 null 本身无法区分性别；本轮按用户明确要求比较 null，不新增原始性别存档。已知时辰与缺时辰非交节日的相反性别均实测返回 400。
 
