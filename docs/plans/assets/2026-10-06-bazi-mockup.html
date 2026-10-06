@@ -1,0 +1,405 @@
+<title>三易八字盘</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;900&family=Ma+Shan+Zheng&display=swap">
+<style>
+/* 单一深色世界：水墨夜。不随主题切换，但所有颜色显式给出。 */
+:root {
+  color-scheme: dark;
+  --bg: #0F1110;
+  --panel: #151816;
+  --panel-2: #1B1F1C;
+  --paper: #EAE5D9;
+  --muted: #A6A195;
+  --dim: #75716A;
+  --gold: #C9A866;
+  --gold-soft: rgb(201 168 102 / 0.13);
+  --line: rgb(201 168 102 / 0.18);
+  --line-strong: rgb(201 168 102 / 0.42);
+  --cinnabar: #D0614A;
+  --cinnabar-soft: rgb(208 97 74 / 0.15);
+  --jade: #82B59E;
+  --jade-soft: rgb(130 181 158 / 0.14);
+  --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --brush: "Ma Shan Zheng", "Kaiti SC", "STKaiti", "KaiTi", serif;
+  --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 560px at 8% -8%, rgb(255 255 255 / 0.055), transparent 62%),
+    radial-gradient(900px 520px at 104% 34%, rgb(201 168 102 / 0.05), transparent 66%),
+    var(--bg);
+  color: var(--paper);
+  font-family: var(--serif);
+  padding-inline: clamp(16px, 3.5vw, 44px);
+  padding-block: 0 72px;
+}
+.page { max-width: 1280px; margin: 0 auto; display: grid; gap: 26px; }
+.label { font-family: var(--sans); font-size: 12px; letter-spacing: 0.14em; color: var(--dim); }
+.panel { background: var(--panel); border: 1px solid var(--line); padding: 22px clamp(16px, 2.2vw, 26px); display: grid; gap: 16px; align-content: start; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.panel-head h2 { margin: 0; font-family: var(--brush); font-weight: 400; font-size: 26px; letter-spacing: 0.08em; color: var(--paper); }
+.panel-head p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+.tag { display: inline-block; padding: 1px 6px; font-family: var(--sans); font-size: 11.5px; line-height: 1.6; border: 1px solid currentColor; border-radius: 3px; white-space: nowrap; }
+.tag.good { color: var(--jade); background: var(--jade-soft); }
+.tag.bad { color: var(--cinnabar); background: var(--cinnabar-soft); }
+.tag.gold { color: var(--gold); background: var(--gold-soft); }
+.tag.dim { color: var(--muted); }
+
+/* 顶栏 */
+.topbar { display: flex; align-items: center; gap: 14px; padding-block: 18px; border-bottom: 1px solid var(--line); }
+.seal { display: grid; place-items: center; width: 34px; height: 34px; background: #A63A2B; color: #F6EFE2; font-family: var(--brush); font-size: 21px; border-radius: 3px; flex: none; }
+.brand { font-family: var(--brush); font-size: 26px; letter-spacing: 0.1em; }
+.nav { display: flex; gap: 20px; margin-left: 18px; font-size: 15px; color: var(--muted); }
+.nav b { color: var(--paper); font-weight: 600; border-bottom: 1px solid var(--gold); padding-bottom: 2px; }
+.draft { margin-left: auto; font-family: var(--sans); font-size: 12px; color: var(--dim); }
+@media (max-width: 560px) { .nav { margin-left: 4px; gap: 12px; } .draft { display: none; } }
+
+/* 时空栏：问卦这一刻 */
+.shikong { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); border: 1px solid var(--line); background: rgb(21 24 22 / 0.7); }
+.shikong div { display: grid; gap: 4px; padding: 14px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; }
+.shikong b { font-weight: 600; font-size: 17px; letter-spacing: 0.06em; }
+.shikong small { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+/* 主舞台 */
+.hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+@media (max-width: 980px) { .hero, .row2 { grid-template-columns: minmax(0, 1fr); } }
+
+.ask { display: grid; gap: 6px; }
+.ask p { margin: 0; font-size: 21px; line-height: 1.5; }
+.stage { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px 28px; align-items: center; }
+@media (max-width: 620px) { .stage { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
+.luopan-wrap { position: relative; width: 300px; max-width: 100%; aspect-ratio: 1; }
+.luopan-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.luopan-wrap .gua { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.gua-title { display: grid; gap: 8px; }
+.gua-title h1 { margin: 0; font-family: var(--brush); font-weight: 400; font-size: clamp(44px, 6vw, 60px); line-height: 1; letter-spacing: 0.08em; }
+.gua-title .zhi { font-size: 15px; color: var(--muted); }
+.gua-title .zhi b { font-family: var(--brush); font-weight: 400; font-size: 22px; color: var(--gold); margin-left: 4px; }
+.gua-title .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ci { margin: 0; font-size: 15px; line-height: 1.9; color: var(--muted); }
+.ci b { color: var(--paper); font-weight: 600; }
+
+/* 卦画 */
+.yao { display: grid; gap: 8px; width: 118px; }
+.yao i { display: block; height: 10px; }
+.yao .yang { background: var(--paper); }
+.yao .yin { background: linear-gradient(90deg, var(--paper) 0 42%, transparent 42% 58%, var(--paper) 58% 100%); }
+.yao .dong { background: var(--cinnabar); }
+.yao.sm { width: 34px; gap: 3px; }
+.yao.sm i { height: 3px; }
+.yao.sm .yang, .yao.sm .dong { background: var(--muted); }
+.yao.sm .yin { background: linear-gradient(90deg, var(--muted) 0 40%, transparent 40% 60%, var(--muted) 60% 100%); }
+.yao.xs { width: 30px; gap: 4px; }
+.yao.xs i { height: 5px; }
+
+/* 铜钱六掷 */
+.throws { display: grid; gap: 6px; }
+.throw { display: grid; grid-template-columns: 3.2em auto minmax(0, 1fr); align-items: center; gap: 12px; font-size: 13.5px; color: var(--muted); }
+.throw .pos { color: var(--dim); font-family: var(--sans); font-size: 12px; }
+.coins { display: flex; gap: 5px; }
+.coin { position: relative; width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid #B8954F; }
+.coin::after { content: ""; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; transform: translate(-50%, -50%); background: var(--panel); border: 1px solid #B8954F; }
+.coin.bei { background: radial-gradient(circle at 35% 30%, #E6CD8F, #A7833E); }
+.throw.moving { color: var(--cinnabar); }
+.legend { font-family: var(--sans); font-size: 12px; color: var(--dim); line-height: 1.6; }
+
+.five { display: flex; flex-wrap: wrap; gap: 10px; }
+.five figure { margin: 0; display: grid; justify-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); min-width: 74px; }
+.five figure.on { border-color: var(--line-strong); background: var(--gold-soft); }
+.five figcaption { display: grid; justify-items: center; gap: 1px; font-size: 13px; }
+.five figcaption small { font-family: var(--sans); font-size: 11px; color: var(--dim); }
+
+/* 三家合议 */
+.consensus { display: grid; gap: 8px; }
+.track { position: relative; height: 44px; margin: 16px 12px 0; }
+.track::before { content: ""; position: absolute; left: 0; right: 0; top: 21px; height: 2px; background: linear-gradient(90deg, var(--cinnabar), var(--line-strong) 50%, var(--jade)); opacity: 0.8; }
+.track .mean { position: absolute; top: 10px; width: 1px; height: 24px; background: var(--paper); }
+.track .mean span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-family: var(--sans); font-size: 11px; color: var(--paper); white-space: nowrap; }
+.track .pin { position: absolute; top: 12px; width: 20px; height: 20px; margin-left: -10px; display: grid; place-items: center; background: #A63A2B; color: #F6EFE2; font-family: var(--brush); font-size: 13px; border-radius: 2px; }
+.scale { display: flex; justify-content: space-between; margin-inline: 4px; font-family: var(--sans); font-size: 11.5px; color: var(--dim); }
+.diviner { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; padding: 16px 0; border-top: 1px solid var(--line); }
+.diviner .seal { width: 40px; height: 40px; font-size: 24px; grid-row: span 3; }
+.who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.who b { font-size: 17px; font-weight: 600; }
+.who span { font-size: 13px; color: var(--muted); }
+.who em { margin-left: auto; font-style: normal; font-family: var(--sans); font-size: 12.5px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.verdict { margin: 0; font-family: var(--brush); font-size: 23px; letter-spacing: 0.06em; }
+.verdict small { font-family: var(--serif); font-size: 13px; color: var(--muted); margin-left: 8px; letter-spacing: 0; }
+.verdict.good { color: var(--jade); }
+.verdict.bad { color: var(--cinnabar); }
+.why { margin: 0; font-size: 14px; line-height: 1.85; color: var(--muted); }
+
+/* 六爻排盘表 */
+.chart-scroll { overflow-x: auto; }
+table.chart { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.chart th { white-space: nowrap; padding: 0 8px 10px; font-family: var(--sans); font-size: 11.5px; font-weight: 400; letter-spacing: 0.1em; color: var(--dim); text-align: left; border-bottom: 1px solid var(--line-strong); }
+.chart td { padding: 11px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.chart tr.use td { background: var(--gold-soft); }
+.chart .spirit { color: var(--muted); white-space: nowrap; }
+.chart .hidden { color: var(--dim); font-size: 13px; white-space: nowrap; }
+.chart .najia { white-space: nowrap; }
+.chart .najia b { font-weight: 600; margin-right: 6px; }
+.chart .bar { width: 76px; }
+.chart .bar i { display: block; height: 8px; }
+.chart .bar .yang { background: var(--paper); }
+.chart .bar .yin { background: linear-gradient(90deg, var(--paper) 0 42%, transparent 42% 58%, var(--paper) 58% 100%); }
+.chart .bar .dong { background: var(--cinnabar); }
+.chart .mark { font-family: var(--brush); font-size: 18px; color: var(--gold); text-align: center; width: 2em; }
+.chart .state { display: flex; flex-wrap: wrap; gap: 4px; }
+.chart .change { color: var(--cinnabar); font-size: 13px; white-space: nowrap; }
+.chart-foot { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.chart-foot b { color: var(--paper); font-weight: 600; }
+
+/* 奇门时盘：洛书九宫，南上北下 */
+.qimen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line-strong); }
+.gong { position: relative; min-height: 136px; padding: 10px 10px 8px; border: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto 1fr auto; gap: 3px 6px; overflow: hidden; }
+.gong::before { content: attr(data-gua); position: absolute; right: -4px; bottom: -14px; font-family: var(--brush); font-size: 72px; line-height: 1; color: rgb(234 229 217 / 0.045); pointer-events: none; }
+.gong .shen { font-size: 13px; color: var(--muted); }
+.gong .shen.hi { color: var(--gold); font-weight: 600; }
+.gong .tian { font-size: 16px; text-align: right; color: var(--paper); }
+.gong .xing { grid-column: 1 / -1; align-self: center; font-size: 13.5px; color: var(--muted); }
+.gong .men { font-family: var(--brush); font-size: 22px; letter-spacing: 0.04em; }
+.gong .men.good { color: var(--jade); }
+.gong .men.bad { color: var(--cinnabar); }
+.gong .men.mid { color: var(--paper); }
+.gong .di { font-size: 14px; text-align: right; color: var(--dim); align-self: end; }
+.gong .xing small { margin-left: 6px; font-family: var(--sans); font-size: 11px; color: var(--dim); }
+.gong .flags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 3px; align-self: start; }
+.gong .flags .tag { font-size: 10.5px; padding: 0 4px; }
+.gong.zhong { align-content: center; justify-items: center; text-align: center; grid-template-columns: 1fr; grid-template-rows: auto; gap: 6px; }
+.gong.zhong svg { width: 30px; height: 30px; }
+.gong.zhong small { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.qimen-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--sans); font-size: 12px; color: var(--dim); }
+.qimen-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.qimen-legend i { width: 9px; height: 9px; border-radius: 2px; }
+
+/* 黄历 */
+.almanac { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.almanac div { display: grid; gap: 4px; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); }
+.almanac b { font-weight: 600; font-size: 15px; line-height: 1.6; }
+.almanac b.yi { color: var(--jade); }
+.almanac b.ji { color: var(--cinnabar); }
+.provenance { margin: 0; max-width: 62rem; font-family: var(--sans); font-size: 12.5px; line-height: 1.8; color: var(--dim); }
+.provenance b { color: var(--muted); font-weight: 500; }
+@media (prefers-reduced-motion: no-preference) {
+  #luopan-rot { animation: turn 240s linear infinite; transform-origin: 160px 160px; }
+  @keyframes turn { to { transform: rotate(360deg); } }
+}
+
+/* ── 八字样稿追加 ── */
+.walletbar { margin-left: auto; display: flex; align-items: center; gap: 10px; padding: 6px 12px; min-height: 44px;
+  border: 1px solid var(--line-strong); font-family: var(--sans); font-size: 13px; color: var(--paper); }
+.walletbar i { width: 8px; height: 8px; border-radius: 50%; background: var(--jade); }
+.walletbar small { color: var(--muted); }
+.birth { display: grid; gap: 10px; }
+.birth-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.birth-main b { font-size: 20px; font-weight: 600; }
+.birth-main span { color: var(--muted); font-size: 14px; }
+.fixes { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+.fixes li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 10px; }
+.fixes li b { color: var(--gold); font-weight: 600; font-family: var(--sans); font-size: 12.5px; }
+.fixes li.hit span { color: var(--paper); }
+.fixes li.hit em { font-style: normal; color: var(--cinnabar); }
+.pillars-scroll { overflow-x: auto; }
+table.pillars { width: 100%; min-width: 540px; border-collapse: collapse; text-align: center; font-variant-numeric: tabular-nums; }
+.pillars th { padding: 0 6px 10px; font-family: var(--sans); font-size: 12px; font-weight: 400; letter-spacing: .12em; color: var(--dim); border-bottom: 1px solid var(--line-strong); }
+.pillars th.day { color: var(--gold); }
+.pillars td { padding: 9px 6px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.pillars td.rowlabel { text-align: left; font-family: var(--sans); font-size: 12px; color: var(--dim); white-space: nowrap; }
+.pillars td.gz { font-family: var(--brush); font-size: 34px; line-height: 1.15; color: var(--paper); }
+.pillars td.day { background: var(--gold-soft); }
+.pillars td.gz.day { color: var(--gold); }
+.pillars td .hide { display: block; font-size: 13px; color: var(--paper); }
+.pillars td .hide small { color: var(--dim); font-size: 11.5px; margin-left: 2px; }
+.pillars .changed { color: var(--cinnabar) !important; }
+.pillars .shensha { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.minor { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.minor b { color: var(--paper); font-weight: 600; }
+.luck { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); }
+.luck div { display: grid; gap: 4px; justify-items: center; padding: 12px 4px; border-right: 1px solid var(--line); position: relative; }
+.luck div:last-child { border-right: 0; }
+.luck b { font-family: var(--brush); font-weight: 400; font-size: 24px; color: var(--paper); }
+.luck small { font-family: var(--sans); font-size: 11px; color: var(--dim); text-align: center; line-height: 1.5; }
+.luck .now { background: var(--gold-soft); outline: 1px solid var(--line-strong); }
+.luck .now b { color: var(--gold); }
+.luck .flag { position: absolute; top: -11px; padding: 0 6px; background: #A63A2B; color: #F6EFE2; font-family: var(--sans); font-size: 11px; line-height: 20px; border-radius: 2px; white-space: nowrap; }
+@media (max-width: 760px) { .luck { grid-template-columns: repeat(4, minmax(0, 1fr)); } .luck div:nth-child(4) { border-right: 0; } .luck div:nth-child(-n+4) { border-bottom: 1px solid var(--line); } }
+.elements { display: grid; gap: 10px; }
+.el-row { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) 2.5em; align-items: center; gap: 10px; font-size: 14px; }
+.el-row > b { font-family: var(--brush); font-weight: 400; font-size: 22px; }
+.el-bar { display: flex; height: 16px; background: rgb(234 229 217 / .04); }
+.el-bar i { display: block; height: 100%; border-right: 1px solid var(--bg); }
+.el-row > span { font-family: var(--sans); font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.el-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--sans); font-size: 12px; color: var(--dim); }
+.el-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.el-legend i { width: 12px; height: 9px; display: inline-block; }
+.rel-svg { width: 100%; height: auto; display: block; }
+.rel-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+.rel-list b { color: var(--paper); font-weight: 600; margin-right: 6px; }
+.usegod { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line-strong); }
+.usegod div { display: grid; gap: 4px; padding: 12px 14px; border-right: 1px solid var(--line); }
+.usegod div:last-child { border-right: 0; }
+.usegod small { font-family: var(--sans); font-size: 12px; color: var(--dim); }
+.usegod b { font-family: var(--dynamic, "Kaiti SC", "STKaiti", serif); font-size: 19px; font-weight: 600; color: var(--gold); }
+.usegod span { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+@media (max-width: 620px) { .usegod { grid-template-columns: minmax(0, 1fr); } .usegod div { border-right: 0; border-bottom: 1px solid var(--line); } }
+.watch { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.diviner .seal { grid-row: span 4; }
+.verdict.dyn { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; font-weight: 600; font-size: 21px; }
+.mock-note { color: var(--cinnabar); }
+</style>
+
+<div class="page">
+  <header class="topbar">
+    <span class="seal">问</span><span class="brand">三易</span>
+    <nav class="nav" aria-label="主要页面"><b>问卦</b><span>卦历</span></nav>
+    <div class="walletbar" aria-label="钱包状态"><i aria-hidden="true"></i>0xb739…47a2<small>12.40 USDC · Arc Testnet</small></div>
+  </header>
+
+  <section class="shikong" aria-label="此刻">
+    <div><span class="label">公历</span><b>2026-10-06 21:00</b><small>北京时间</small></div>
+    <div><span class="label">农历</span><b>八月廿六</b><small>丙午年 · 亥时 · 蛾眉残</small></div>
+    <div><span class="label">四柱</span><b>丙午 丁酉 癸丑 癸亥</b><small>天河水 山下火 桑柘木 大海水</small></div>
+    <div><span class="label">节气</span><b>秋分 · 三候</b><small>水始涸 · 10月8日交寒露</small></div>
+    <div><span class="label">月建日辰</span><b>酉月 · 癸丑日</b><small>旬首甲辰 · 旬空寅卯</small></div>
+    <div><span class="label">值日</span><b>定日 · 勾陈黑道</b><small>觜火猴 · 冲羊（丁未）煞东</small></div>
+  </section>
+
+  <div class="hero">
+    <section class="panel" aria-labelledby="ask-title">
+      <div class="ask"><span class="label">所问之事 · 运势 · 今年（2026 丙午）</span><p id="ask-title">我今年运势如何？</p></div>
+      <div class="birth">
+        <div class="birth-main"><b>1990-05-15 15:30</b><span>公历 · 北京时间 · 男</span></div>
+        <ul class="fixes" aria-label="出生时刻校正">
+          <li class="hit"><b>夏令时</b><span>1990 年 4 月 15 日—9 月 16 日实行夏令时，<em>已按 14:30 排盘</em>；时辰由申时变为未时，时柱由甲申改为癸未。</span></li>
+          <li><b>真太阳时</b><span>未填出生地，未校正。补填出生地后可按经度与均时差校正。</span></li>
+          <li><b>换日口径</b><span>23:00 子时换日（可切换为零点换日，切换不重新收费，每卦至多 2 次）。</span></li>
+        </ul>
+      </div>
+      <div class="pillars-scroll" tabindex="0" aria-label="四柱表，可横向滚动">
+        <table class="pillars">
+          <thead><tr><th></th><th>年柱</th><th>月柱</th><th class="day">日柱 · 日主</th><th>时柱</th></tr></thead>
+          <tbody>
+            <tr><td class="rowlabel">十神</td><td>比肩</td><td>劫财</td><td class="day">日主</td><td class="changed">伤官</td></tr>
+            <tr><td class="rowlabel">天干</td><td class="gz">庚</td><td class="gz">辛</td><td class="gz day">庚</td><td class="gz changed">癸</td></tr>
+            <tr><td class="rowlabel">地支</td><td class="gz">午</td><td class="gz">巳</td><td class="gz day">辰</td><td class="gz changed">未</td></tr>
+            <tr><td class="rowlabel">藏干</td>
+              <td><span class="hide">丁<small>正官</small></span><span class="hide">己<small>正印</small></span></td>
+              <td><span class="hide">丙<small>七杀</small></span><span class="hide">庚<small>比肩</small></span><span class="hide">戊<small>偏印</small></span></td>
+              <td class="day"><span class="hide">戊<small>偏印</small></span><span class="hide">乙<small>正财</small></span><span class="hide">癸<small>伤官</small></span></td>
+              <td><span class="hide">己<small>正印</small></span><span class="hide">丁<small>正官</small></span><span class="hide">乙<small>正财</small></span></td></tr>
+            <tr><td class="rowlabel">长生</td><td>沐浴</td><td>长生</td><td class="day">养</td><td>冠带</td></tr>
+            <tr><td class="rowlabel">纳音</td><td>路旁土</td><td>白蜡金</td><td class="day">白蜡金</td><td>杨柳木</td></tr>
+            <tr><td class="rowlabel">神煞</td><td>—</td><td>—</td><td class="day"><div class="shensha"><span class="tag gold">华盖</span></div></td><td><div class="shensha"><span class="tag good">天乙贵人</span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="minor"><span>胎元 <b>壬申</b></span><span>命宫 <b>辛巳</b></span><span>身宫 <b>己丑</b></span><span>起运 <b>7 年 2 月 20 天</b>（1997-08-04 交运）</span></div>
+    </section>
+
+    <section class="panel" aria-labelledby="duan-title">
+      <div class="panel-head"><h2 id="duan-title">三家断语</h2><p>今年（丙午）运势，三派各自取用神、各自下断。<span class="mock-note">样稿：用神与断语为示意。</span></p></div>
+      <div class="usegod" aria-label="三家用神对照">
+        <div><small>沈孝瞻 · 格局派</small><b>取印</b><span>七杀格，杀重，以未午中己土正印化杀生身</span></div>
+        <div><small>余春台 · 调候派</small><b>取壬水</b><span>四月庚金，调候以壬水为先；原局无壬，以时干癸水暂代</span></div>
+        <div><small>任铁樵 · 扶抑派</small><b>取印比</b><span>火局克身，日主偏弱，以辰中戊土为用、比劫为辅</span></div>
+      </div>
+      <div class="consensus" aria-label="三家把握：沈孝瞻四成，余春台三成，任铁樵五成，合议约四成">
+        <div class="track">
+          <span class="mean" style="left:40%"><span>合议 约4.0成</span></span>
+          <span class="pin" style="left:40%">沈</span>
+          <span class="pin" style="left:30%">余</span>
+          <span class="pin" style="left:50%">任</span>
+        </div>
+        <div class="scale"><span>断不顺</span><span>五五之数</span><span>断顺遂</span></div>
+      </div>
+      <article class="diviner">
+        <span class="seal">沈</span>
+        <div class="who"><b>沈孝瞻</b><span>格局派 · 《子平真诠》</span></div>
+        <p class="verdict dyn bad">凶 · 杀重无制，宜守<small>四成</small></p>
+        <p class="why">月令巳中丙火七杀，原局巳午未会成火局；今年丙火七杀透干、午火入局，杀势更重而无食神制伏。</p>
+        <div class="watch"><span class="tag bad">留意 五月甲午</span><span class="tag bad">留意 六月乙未</span></div>
+      </article>
+      <article class="diviner">
+        <span class="seal">余</span>
+        <div class="who"><b>余春台</b><span>调候派 · 《穷通宝鉴》</span></div>
+        <p class="verdict dyn bad">凶 · 火炎缺水，入冬见转机<small>三成</small></p>
+        <p class="why">庚金生四月，调候以壬水为先；原局无壬，仅时干癸水可借。丙午年火炎土燥，十月亥水、冬月子水当令方得缓解。</p>
+        <div class="watch"><span class="tag bad">留意 五、六月</span><span class="tag good">转机 十月己亥起</span></div>
+      </article>
+      <article class="diviner">
+        <span class="seal">任</span>
+        <div class="who"><b>任铁樵</b><span>扶抑派 · 《滴天髓阐微》</span></div>
+        <p class="verdict dyn">平 · 运扶身弱，得失参半<small>五成</small></p>
+        <p class="why">火局克身，日主偏弱而喜印比；甲申运申金为禄、申辰拱水泄火，与流年火势相战，事有反复。</p>
+        <div class="watch"><span class="tag bad">留意 五月（午午自刑）</span><span class="tag gold">明年交乙酉运</span></div>
+      </article>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="luck-title">
+    <div class="panel-head"><h2 id="luck-title">大运流年</h2><p>阳年男命，大运顺行；7 岁 2 个月 20 天起运。</p></div>
+    <div class="luck" aria-label="大运时间轴">
+      <div><b>壬午</b><small>食神<br>8–17 岁<br>1997–2006</small></div>
+      <div><b>癸未</b><small>伤官<br>18–27 岁<br>2007–2016</small></div>
+      <div class="now"><span class="flag">今年 丙午 · 本运末年</span><b>甲申</b><small>偏财<br>28–37 岁<br>2017–2026</small></div>
+      <div><b>乙酉</b><small>正财<br>38–47 岁<br>2027–2036</small></div>
+      <div><b>丙戌</b><small>七杀<br>48–57 岁<br>2037–2046</small></div>
+      <div><b>丁亥</b><small>正官<br>58–67 岁<br>2047–2056</small></div>
+      <div><b>戊子</b><small>偏印<br>68–77 岁<br>2057–2066</small></div>
+      <div><b>己丑</b><small>正印<br>78–87 岁<br>2067–2076</small></div>
+    </div>
+  </section>
+
+  <div class="row2">
+    <section class="panel" aria-labelledby="rel-title">
+      <div class="panel-head"><h2 id="rel-title">合冲刑害</h2><p>原局四支，与当前大运、今年流年之间的关系。</p></div>
+      <svg class="rel-svg" viewBox="0 0 640 230" role="img" aria-label="地支关系图">
+        <g font-family="Ma Shan Zheng, Kaiti SC, serif" text-anchor="middle">
+          <g font-size="11" fill="#75716A" font-family="-apple-system, PingFang SC, sans-serif">
+            <text x="60" y="152">年支</text><text x="160" y="152">月支</text><text x="260" y="152">日支</text><text x="360" y="152">时支</text>
+            <text x="480" y="152">大运</text><text x="580" y="152">流年</text>
+          </g>
+          <line x1="420" y1="88" x2="420" y2="150" stroke="rgb(201 168 102 / .3)" stroke-dasharray="3 4"/>
+          <path d="M60 100 Q210 30 360 100" fill="none" stroke="#82B59E" stroke-width="1.6"/>
+          <text x="210" y="56" font-size="13" fill="#82B59E" font-family="-apple-system, PingFang SC, sans-serif">午未合</text>
+          <path d="M360 100 Q470 40 580 100" fill="none" stroke="#82B59E" stroke-width="1.6"/>
+          <text x="470" y="62" font-size="13" fill="#82B59E" font-family="-apple-system, PingFang SC, sans-serif">午未合</text>
+          <path d="M60 96 Q320 -20 580 96" fill="none" stroke="#D0614A" stroke-width="1.6" stroke-dasharray="5 4"/>
+          <text x="320" y="22" font-size="13" fill="#D0614A" font-family="-apple-system, PingFang SC, sans-serif">午午自刑</text>
+          <path d="M160 170 Q320 236 480 170" fill="none" stroke="#D0614A" stroke-width="1.6"/>
+          <text x="320" y="214" font-size="13" fill="#D0614A" font-family="-apple-system, PingFang SC, sans-serif">巳申合·刑·破</text>
+          <path d="M260 170 Q370 206 480 170" fill="none" stroke="#C9A866" stroke-width="1.6"/>
+          <text x="400" y="182" font-size="12" fill="#C9A866" font-family="-apple-system, PingFang SC, sans-serif">申辰半合水</text>
+          <g font-size="34" fill="#EAE5D9">
+            <text x="60" y="132">午</text><text x="160" y="132">巳</text><text x="260" y="132" fill="#C9A866">辰</text><text x="360" y="132">未</text>
+            <text x="480" y="132">申</text><text x="580" y="132">午</text>
+          </g>
+        </g>
+      </svg>
+      <ul class="rel-list">
+        <li><b>原局</b>巳午未三会南方火局；午未合。</li>
+        <li><b>大运甲申</b>巳申合，兼刑、兼破；申辰半合水局；申为禄神、驿马。</li>
+        <li><b>流年丙午</b>丙辛合（流年干合月干）；午午自刑；午未合并入火局。</li>
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="el-title">
+      <div class="panel-head"><h2 id="el-title">五行分布</h2><p>天干 4 个、地支藏干 11 个，共 15 个单位；只计个数，不下身强身弱的结论。</p></div>
+      <div class="elements" aria-label="五行分布">
+        <div class="el-row"><b>金</b><div class="el-bar"><i style="width:60%;background:#EAE5D9"></i><i style="width:20%;background:rgb(201 168 102 / .55)"></i></div><span>4</span></div>
+        <div class="el-row"><b>土</b><div class="el-bar"><i style="width:40%;background:#C9A866"></i><i style="width:20%;background:rgb(201 168 102 / .55)"></i><i style="width:20%;background:#75716A"></i></div><span>4</span></div>
+        <div class="el-row"><b>火</b><div class="el-bar"><i style="width:40%;background:#C9A866"></i><i style="width:20%;background:rgb(201 168 102 / .55)"></i></div><span>3</span></div>
+        <div class="el-row"><b>水</b><div class="el-bar"><i style="width:20%;background:#EAE5D9"></i><i style="width:20%;background:#75716A"></i></div><span>2</span></div>
+        <div class="el-row"><b>木</b><div class="el-bar"><i style="width:20%;background:rgb(201 168 102 / .55)"></i><i style="width:20%;background:#75716A"></i></div><span>2</span></div>
+      </div>
+      <div class="el-legend"><span><i style="background:#EAE5D9"></i>天干</span><span><i style="background:#C9A866"></i>本气</span><span><i style="background:rgb(201 168 102 / .55)"></i>中气</span><span><i style="background:#75716A"></i>余气</span><span>每格 = 1 个单位</span></div>
+    </section>
+  </div>
+
+  <p class="provenance"><b>数据来源：</b>四柱、十神、藏干、十二长生、纳音、胎元、命宫、身宫、起运与大运流年由 lunar-javascript 推算（23:00 换日）；出生时刻按 1990 年中国夏令时区间自动校正；合冲刑害与神煞按传统查表（天乙、华盖、驿马、禄神依日干、年支、日支起法）。三家用神与断语为样稿示意，调候派所据《穷通宝鉴》条目在实施时逐条核对原文。</p>
+</div>
