@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；第 6 轮按确认样稿重写 B6b，修正逐年关系、mock 区分度与神煞去重，并补 B7 截图守卫，全部代码在隔离目录演练。
+**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；第 7 轮精修 B6b 的空心关系弧、交运标注带、合议小数与大运重复文案，全部代码在隔离目录演练。
 
 **Architecture:** `src/calendar/` 提供确定性的生辰转换、校正与命盘事实，`src/sanyi/` 扩展按类型区分的断语、核对与编排，前端消费明确字段。原始生辰和逐步校正详情只用于请求与本机展示，持久化边界使用字段白名单；八字出生时刻与问事卦时保持独立。
 
@@ -5880,7 +5880,78 @@ test('样稿CSS隔离在八字页，大运窄屏四列且文本不随SVG缩放',
 });
 ```
 
+- [ ] **Step 2（第 7 轮）：先将下列新增测试抽到第 6 轮隔离基线运行，确认 RED；再落修订后的 B6.4–B6.6 代码，确认 GREEN。** 只修视觉与现有文案，不新建 OpenSpec 提案。
+
+```ts
+// tests/frontend-bazi-round7.test.ts
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFile } from 'node:fs/promises';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { sampleBazi } from './helpers/sample-bazi.js';
+import { analyzeBazi } from '../src/calendar/bazi-relations.js';
+import { BaziRelations } from '../web/components/BaziRelations.js';
+import { BaziLuck } from '../web/components/BaziLuck.js';
+import { LABEL_BAND, labelLayout, yunLabel, consensusText } from '../web/lib/liunian-chart.js';
+const chart = sampleBazi().chart;
+test('关系弧无徽章、同组唯一、640尺度与节点间距', () => {
+    const analysis = analyzeBazi(chart);
+    const markup = renderToStaticMarkup(createElement(BaziRelations, { analysis: { ...analysis, relations: [...analysis.relations, ...analysis.relations] } }));
+    assert.match(markup, /viewBox="0 0 640 /);
+    assert.match(markup, />午未合</);
+    assert.match(markup, />巳申合·刑·破</);
+    assert.doesNotMatch(markup, /未午午未|辰申申辰/);
+    const paths = [...markup.matchAll(/<path[^>]+>/g)].map(match => match[0]);
+    assert.ok(paths.length > 0);
+    for (const path of paths) { assert.match(path, /class="rel-arc /); assert.doesNotMatch(path, /\btag\b/); }
+    assert.equal(new Set(paths.map(path => path.match(/d="([^"]+)"/)![1])).size, paths.length);
+    for (const x of [60, 160, 260, 360, 480, 580]) assert.match(markup, new RegExp(`class="rel-node" x="${x}"`));
+    const partial = { ...analysis, nodes: analysis.nodes.filter(node => node.scope === 'natal') };
+    const reduced = renderToStaticMarkup(createElement(BaziRelations, { analysis: partial }));
+    const positions = [...reduced.matchAll(/class="rel-node" x="(\d+)"/g)].map(match => Number(match[1]));
+    assert.ok(positions.every((x, i) => i === 0 || x - positions[i - 1]! <= 100));
+});
+test('关系CSS强制空心且徽章fill不会作用于path', async () => {
+    const css = await readFile(new URL('../web/styles/bazi.css', import.meta.url), 'utf8');
+    assert.match(css, /\.rel-svg \.rel-arc\s*\{[^}]*fill:\s*none/);
+    for (const rule of css.matchAll(/([^{}]+)\{([^{}]+)\}/g)) {
+        if (/\.(clash|join|group|relation-clash|relation-join|relation-group)\b/.test(rule[1]!) && /\bfill\s*:/.test(rule[2]!))
+            assert.match(rule[1]!, /text|\.rel-arc-label/);
+    }
+    assert.match(css, /\.rel-arc-label\s*\{font-size:13px/);
+    assert.doesNotMatch(css, /\.ln-yun span\s*\{[^}]*white-space:normal/);
+});
+test('交运带与相邻年标注避让，优先今年且窄屏短文案', () => {
+    const years = [2026, 2027].map((year, i) => ({ year, average: 5 + i, min: 4, max: 7, count: 3 }));
+    const labels = labelLayout(years, 2026, 120);
+    assert.ok(labels.every(label => label.top >= LABEL_BAND));
+    assert.equal(labels[0]?.index, 0);
+    assert.ok(Math.abs(labels[0]!.x - labels[1]!.x) < 72);
+    assert.ok(Math.abs(labels[0]!.top - labels[1]!.top) >= 24);
+    assert.equal(yunLabel('乙酉', '2027-08-04', true), '乙酉运');
+    assert.equal(yunLabel('乙酉', '2027-08-04', false), '乙酉运 · 2027-08-04 交运');
+    assert.equal(yunLabel('甲申', null, false), '甲申运');
+});
+test('合议统一一位小数，所有消费位置使用格式函数', async () => {
+    assert.deepEqual([4, 5.3, 6].map(consensusText), ['4.0成', '5.3成', '6.0成']);
+    const panel = await readFile(new URL('../web/components/LiuNianPanel.tsx', import.meta.url), 'utf8');
+    assert.ok((panel.match(/consensusText\(/g) ?? []).length >= 4);
+    assert.doesNotMatch(panel, /\$\{[^}]*\.average\}成/);
+    const schools = await readFile(new URL('../web/components/BaziSchools.tsx', import.meta.url), 'utf8');
+    assert.match(schools, /consensusTenths\.toFixed\(1\)/);
+});
+test('今年大运不重复所问年，异年仅对应格显示一次', () => {
+    const markup = (anchorYear: number) => renderToStaticMarkup(createElement(BaziLuck, { chart: { ...chart, liunian: { ...chart.liunian, anchorYear } }, currentYear: 2026, currentDate: '2026-10-06' }));
+    assert.match(markup(2026), /今年 丙午 · 本运末年/);
+    assert.doesNotMatch(markup(2026), /所问之年/);
+    assert.equal(markup(2027).match(/所问之年 2027/g)?.length, 1);
+});
+```
+
 ### Task B6.4：流年纯函数与交互面板
+
+第 7 轮预留 LABEL_BAND=20 的交运带，坐标、范围线、纵轴与 SVG 共用其下方 174px 绘图区。首段无左边线且取真实运名；交接取真实 to 与日期，≤620px 视口改为短名并保持 nowrap。labelLayout 使用真实绘图区宽度检测 72px 冲突、优先放今年，后续标注逐行下移；标注 top 不进入交运带。所有合议消费点使用一位小数，三家自身整数字段继续原样。
 
 - [ ] **Step 1：落入下列完整文件。** 对合议 null 切开路径，不连接到零；范围线以公开 min/max 为准。交运位置按公历年内日数，不把日期一律画在年首；表格仍注明流年立春口径。宽屏图的左侧 9% 与表格行名列一致，其余等分年份列；窄屏保留完整图，表格独立滚动，首列 sticky，effect 只滚容器。图点、标注、范围线与读数框全部为 HTML；SVG 只放折线，preserveAspectRatio=none 且描边不缩放。键盘由表头年份按钮承担；悬停图区或聚焦按钮都显示夹在图区内的读数框。逐年关系先 scope=year，再按标签去重。
 
@@ -5996,12 +6067,32 @@ export function schoolYear(reading: FortuneReading, key: typeof BAZI_KEYS[number
     }
     return state.output.years.find((item) => item.year === year);
 }
+export const LABEL_BAND = 20;
+export function consensusText(value: number): string { return `${value.toFixed(1)}成`; }
+export function yunLabel(name: string, date: string | null, narrow: boolean): string {
+    return `${name}运${date && !narrow ? ` · ${date} 交运` : ''}`;
+}
+export function labelLayout(years: readonly (YearConsensus | null)[], currentYear: number, width: number, height = 194) {
+    const labels = directLabels(years, currentYear, width <= 620);
+    const placed: { index: number; labels: string[]; x: number; top: number }[] = [];
+    const order = years.map((_, i) => i).sort((a, b) => Number(years[b]?.year === currentYear) - Number(years[a]?.year === currentYear));
+    for (const index of order) {
+        const year = years[index];
+        if (!year || !labels[index]?.length) continue;
+        const x = (index + .5) / years.length * width;
+        let top = Math.max(LABEL_BAND, LABEL_BAND + (9 - year.average) / 8 * (height - LABEL_BAND) - 24);
+        while (placed.some(item => Math.abs(item.x - x) < 72 && Math.abs(item.top - top) < 24)) top += 24;
+        placed.push({ index, labels: labels[index]!, x, top });
+    }
+    return placed;
+}
+
 ```
 
 ```tsx
 // web/components/LiuNianPanel.tsx
 import { useEffect, useRef, useState } from "react";
-import { BAZI_KEYS, BAZI_NAMES, CHART, chartGeometry, directLabels, relationClass, schoolYear, yearGroups, type FortuneReading } from "../lib/liunian-chart.js";
+import { BAZI_KEYS, BAZI_NAMES, CHART, LABEL_BAND, consensusText, labelLayout, yunLabel, chartGeometry, relationClass, schoolYear, yearGroups, type FortuneReading } from "../lib/liunian-chart.js";
 export function LiuNianPanel({ reading, currentYear }: {
     reading: FortuneReading;
     currentYear: number;
@@ -6012,7 +6103,20 @@ export function LiuNianPanel({ reading, currentYear }: {
     const scroll = useRef<HTMLDivElement>(null);
     const cells = useRef(new Map<number, HTMLTableCellElement>());
     const geometry = chartGeometry(reading.years, years.map(year => year.luckChange?.date ?? null));
-    const labels = directLabels(reading.years, currentYear, false);
+    const plot = useRef<HTMLDivElement>(null);
+    const [plotWidth, setPlotWidth] = useState(910);
+    const [narrow, setNarrow] = useState(false);
+    useEffect(() => {
+        if (!plot.current) return;
+        const update = () => setNarrow(window.matchMedia('(max-width: 620px)').matches);
+        update();
+        window.addEventListener('resize', update);
+        const observer = new ResizeObserver(entries => setPlotWidth(entries[0]!.contentRect.width));
+        observer.observe(plot.current);
+        return () => { observer.disconnect(); window.removeEventListener('resize', update); };
+    }, []);
+    const labels = labelLayout(reading.years, currentYear, plotWidth);
+    const plotTop = (value: number) => LABEL_BAND + value / 100 * (194 - LABEL_BAND);
     const xp = (x: number) => (x - CHART.left) / (CHART.width - CHART.left) * 100;
     const yp = (y: number) => (y - CHART.top) / (CHART.bottom - CHART.top) * 100;
     const position = (i: number) => `${(i + .5) / years.length * 100}%`;
@@ -6037,24 +6141,25 @@ export function LiuNianPanel({ reading, currentYear }: {
                 return [...new Map(relations.map(item => [item.label, item])).values()].map(item => <span className={relationClass(item.kind)} key={item.label}>{item.label}</span>);
             } },
         ...BAZI_KEYS.map(key => ({ label: BAZI_NAMES[key], className: 'v', render: (i: number) => { const entry = schoolYear(reading, key, years[i]!.year); return entry ? <>{entry.verdict} {entry.confidenceTenths}成</> : '未展示'; } })),
-        { label: '合议', render: i => reading.years[i] ? `${reading.years[i]!.average}成` : '—' }
+        { label: '合议', render: i => reading.years[i] ? consensusText(reading.years[i]!.average) : '—' }
     ];
     const active = years.find(year => year.year === selected)!;
     const hovered = hover === null ? undefined : years[hover];
     const consensus = hover === null ? undefined : reading.years[hover];
     return <section className="panel liunian-panel" aria-label="流年运势"><header className="panel-head"><h2>流年运势</h2><p>以所问之年为锚，流年以立春为界；回看可与亲历对照。缺少断语的年份不连线。</p></header><div className="ln-grid">
- <div className="ln-chart"><div className="ln-y">{[1, 3, 5, 7, 9].map(value => <span style={{ top: `${(9 - value) / 8 * 100}%` }} key={value}>{value}成</span>)}</div>
- <div className="ln-plot" role="img" aria-label={`流年合议走势图，${years[0]?.year}至${years.at(-1)?.year}，纵轴一至九成；完整数值见下表。`}>
- {[3, 5, 7].map(value => <i className={value === 5 ? 'ln-ref' : 'ln-grid-y'} style={{ top: `${(9 - value) / 8 * 100}%` }} key={value}/>)}
+ <div className="ln-chart"><div className="ln-y">{[1, 3, 5, 7, 9].map(value => <span style={{ top: `${plotTop((9 - value) / 8 * 100)}px` }} key={value}>{value}成</span>)}</div>
+ <div className="ln-plot" ref={plot} role="img" aria-label={`流年合议走势图，${years[0]?.year}至${years.at(-1)?.year}，纵轴一至九成；完整数值见下表。`}>
+ {[3, 5, 7].map(value => <i className={value === 5 ? 'ln-ref' : 'ln-grid-y'} style={{ top: `${plotTop((9 - value) / 8 * 100)}px` }} key={value}/>)}
  {years.map((year, i) => <div key={year.year}>
  {year.year === currentYear ? <i className="ln-now" style={{ left: `${i / years.length * 100}%`, width: `${100 / years.length}%` }}/> : null}
- {geometry.points[i] ? <><i className="ln-range" style={{ left: position(i), top: `${yp(geometry.points[i]!.high)}%`, height: `${yp(geometry.points[i]!.low) - yp(geometry.points[i]!.high)}%` }}/><i className={`ln-dot ${year.year === currentYear ? 'now' : ''}`} style={{ left: position(i), top: `${yp(geometry.points[i]!.y)}%` }}/>
- {labels[i]?.length ? <span className="ln-lab" style={{ left: position(i), top: `${yp(geometry.points[i]!.y)}%` }}>{labels[i]?.map(label => <span className={label === '回看中最低' ? 'wide-only' : ''} key={label}>{label} {reading.years[i]?.average}成<br /></span>)}</span> : null}</> : null}
+ {geometry.points[i] ? <><i className="ln-range" style={{ left: position(i), top: `${plotTop(yp(geometry.points[i]!.high))}px`, height: `${(yp(geometry.points[i]!.low) - yp(geometry.points[i]!.high)) / 100 * (194 - LABEL_BAND)}px` }}/><i className={`ln-dot ${year.year === currentYear ? 'now' : ''}`} style={{ left: position(i), top: `${plotTop(yp(geometry.points[i]!.y))}px` }}/>
+ {labels.filter(label => label.index === i).map(label => <span className="ln-lab" style={{ left: position(i), top: `${label.top}px` }} key={i}>{label.labels.map(text => <span className={text === '回看中最低' ? 'wide-only' : ''} key={text}>{text} {consensusText(reading.years[i]!.average)}<br /></span>)}</span>)}</> : null}
  <div className={`ln-hit ${selected === year.year ? 'sel' : ''}`} style={{ left: `${i / years.length * 100}%`, width: `${100 / years.length}%` }} onClick={() => setSelected(year.year)} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}/>
  </div>)}
  <svg viewBox={`0 0 ${CHART.width} ${CHART.height}`} preserveAspectRatio="none" aria-hidden="true">{geometry.paths.map((path, i) => <path className="ln-line" d={path} transform={`translate(${-CHART.left * CHART.width / (CHART.width - CHART.left)},${-CHART.top * CHART.height / (CHART.bottom - CHART.top)}) scale(${CHART.width / (CHART.width - CHART.left)},${CHART.height / (CHART.bottom - CHART.top)})`} vectorEffect="non-scaling-stroke" key={i}/>)}</svg>
- {geometry.changes.map(change => <i className="ln-yun" style={{ left: `${xp(change.x)}%` }} key={change.date}><span>{change.date} 交运</span></i>)}
- {hovered ? <div className="ln-tip" style={{ left: `${Math.max(26, Math.min(74, (hover! + .5) / years.length * 100))}%`, top: '50%' }}><b>{hovered.year} {hovered.ganZhi}</b><br />{consensus ? `${consensus.average}成 · ${consensus.min}–${consensus.max}成` : '未展示'}</div> : null}
+ <i className="ln-yun first" style={{ left: 0 }}><span>{yunLabel(years[0]?.luck?.ganZhi ?? years[0]?.luckLabel ?? '起运前', null, false)}</span></i>
+ {geometry.changes.map(change => <i className="ln-yun" style={{ left: `${xp(change.x)}%` }} key={change.date}><span>{yunLabel(years.find(year => year.luckChange?.date === change.date)?.luckChange?.to ?? '—', change.date, narrow)}</span></i>)}
+ {hovered ? <div className="ln-tip" style={{ left: `${Math.max(26, Math.min(74, (hover! + .5) / years.length * 100))}%`, top: '50%' }}><b>{hovered.year} {hovered.ganZhi}</b><br />{consensus ? `${consensusText(consensus.average)} · ${consensus.min}–${consensus.max}成` : '未展示'}</div> : null}
  </div><div className="ln-x" style={{ gridTemplateColumns: `repeat(${years.length},minmax(0,1fr))` }}>{years.map(year => <span className={year.year === currentYear ? 'now' : ''} key={year.year}>{year.ganZhi}<small>{year.year}</small></span>)}</div></div>
  <div className="ln-key"><span><i className="k-line"/>三家合议（平均）</span><span><i className="k-range"/>三家最低至最高</span><span><i className="k-ref"/>五五之数</span></div>
  <div className="ln-scroll" ref={scroll} tabIndex={0} aria-label="流年逐年表，可横向滚动"><table className="ln-table"><colgroup><col className="ln-axis"/>{years.map(year => <col key={year.year}/>)}</colgroup><thead><tr className="ln-span"><th></th>{yearGroups(years.map(year => year.year), currentYear).map(group => <th scope="colgroup" colSpan={group.count} key={group.label}>{group.label === '回看' ? '回看 · 可对照亲历' : group.label}</th>)}</tr><tr><th>年份</th>{years.map((year, i) => <th className={year.year === currentYear ? 'now' : ''} key={year.year} ref={cell => {
@@ -6065,7 +6170,7 @@ export function LiuNianPanel({ reading, currentYear }: {
                 const entry = key ? schoolYear(reading, key, year.year) : undefined;
                 return <td className={[year.year === currentYear ? 'now' : '', row.className ?? '', entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''].join(' ')} key={year.year}>{row.render(i)}</td>;
             })}</tr>)}</tbody></table></div>
- <div className="ln-detail"><div className="ln-detail-head"><b>{selected} {active.ganZhi}</b><span>虚岁 {active.age} · {active.luck?.ganZhi ?? active.luckLabel} · {active.stemGod}</span></div><div className="ln-detail-rows">{BAZI_KEYS.map(key => { const entry = schoolYear(reading, key, selected); return <div key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><strong className={entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''}>{entry ? `${entry.verdict} ${entry.confidenceTenths}成` : '未展示'}<small>{BAZI_NAMES[key]}</small></strong><p>{entry?.note ?? '未展示'}</p></div>; })}</div></div>
+ <div className="ln-detail"><div className="ln-detail-head"><span>合议 {reading.years.find(item => item?.year === selected) ? consensusText(reading.years.find(item => item?.year === selected)!.average) : '—'}</span><b>{selected} {active.ganZhi}</b><span>虚岁 {active.age} · {active.luck?.ganZhi ?? active.luckLabel} · {active.stemGod}</span></div><div className="ln-detail-rows">{BAZI_KEYS.map(key => { const entry = schoolYear(reading, key, selected); return <div key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><strong className={entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''}>{entry ? `${entry.verdict} ${entry.confidenceTenths}成` : '未展示'}<small>{BAZI_NAMES[key]}</small></strong><p>{entry?.note ?? '未展示'}</p></div>; })}</div></div>
  </div></section>;
 }
 ```
@@ -6075,6 +6180,8 @@ export function LiuNianPanel({ reading, currentYear }: {
 承接 B6b1，不另起设计；本块所有 class 对齐已确认样稿。
 
 ### Task B6.5：客观命盘、三家与本机校正
+
+第 7 轮只改关系图与大运重复文案：完整六节点固定 640 宽及 60/160/260/360/480/580 坐标，缺节点以实际数居中等距且间距 ≤100；分隔线 420/530。关系仅用独立 SVG 类，徽章 relationClass 保留给流年表。同组 nodeIds 合一弧，关系后缀以「·」连接；原局与大运画下侧，其余画上侧。按跨度排序并检测同侧占用层和标签中心 60 距离，弧高封顶 70，额外标签层扩展画布防裁切；地支 34px、说明 11px、弧标签 13px。所问年等于今年时仅保留 flag，异年只在对应格显示一次。
 
 - [ ] **Step 1：落入以下完整文件，顺序按样稿。** 胎元、命宫、身宫不传对象作文本；时柱为空时各行显示缺。大运按创建日期判断当前步，交运当天切换，起运前不高亮第一步。三家只有 done 才展示输出，留意月份取 timing.window 与 condition；命理不显示吉凶、合议与流年面板。无本人档案换日按钮置灰；切换时重新读本机存储并交服务端核验，不复用原始时刻缓存。
 
@@ -6165,7 +6272,7 @@ export function BaziLuck({ chart, currentYear, currentDate }: {
         const end = `${next?.startYear ?? cycle.endYear + 1}${monthDay}`;
         return currentDate >= start && currentDate < end;
     });
-    return <section className="panel"><header className="panel-head"><h2>大运</h2></header><p>{luck.direction === "forward" ? "顺行" : "逆行"} · {luck.start.years}年{luck.start.months}个月{luck.start.days}天起运 · {luck.start.solarDate}{luck.approximate ? "（正午估算）" : ""}</p><div className="luck">{luck.cycles.map((cycle) => <div data-cycle={cycle.index} className={current?.index === cycle.index ? "now luck-current" : ""} key={cycle.index}><b>{cycle.ganZhi}</b><small>{cycle.stemGod}<br />{cycle.startAge}–{cycle.endAge}岁<br />{cycle.startYear}–{cycle.endYear}</small>{current?.index === cycle.index ? <span className="flag">今年 {currentGanZhi} · {currentYear === cycle.endYear ? "本运末年" : "本运"}</span> : null}{chart.liunian.anchorYear >= cycle.startYear && chart.liunian.anchorYear <= cycle.endYear ? <span>所问之年 {chart.liunian.anchorYear}</span> : null}</div>)}</div>{currentDate < luck.start.solarDate ? <p>当前起运前</p> : null}</section>;
+    return <section className="panel"><header className="panel-head"><h2>大运</h2></header><p>{luck.direction === "forward" ? "顺行" : "逆行"} · {luck.start.years}年{luck.start.months}个月{luck.start.days}天起运 · {luck.start.solarDate}{luck.approximate ? "（正午估算）" : ""}</p><div className="luck">{luck.cycles.map((cycle) => <div data-cycle={cycle.index} className={current?.index === cycle.index ? "now luck-current" : ""} key={cycle.index}><b>{cycle.ganZhi}</b><small>{cycle.stemGod}<br />{cycle.startAge}–{cycle.endAge}岁<br />{cycle.startYear}–{cycle.endYear}</small>{current?.index === cycle.index ? <span className="flag">今年 {currentGanZhi} · {currentYear === cycle.endYear ? "本运末年" : "本运"}</span> : null}{chart.liunian.anchorYear !== currentYear && chart.liunian.anchorYear >= cycle.startYear && chart.liunian.anchorYear <= cycle.endYear ? <span>所问之年 {chart.liunian.anchorYear}</span> : null}</div>)}</div>{currentDate < luck.start.solarDate ? <p>当前起运前</p> : null}</section>;
 }
 ```
 
@@ -6213,34 +6320,39 @@ export function BaziSchools({ reading, onRetry }: {
 ```tsx
 // web/components/BaziRelations.tsx
 import type { BaziAnalysis } from "../../src/calendar/bazi-relations.js";
-import { relationClass } from "../lib/liunian-chart.js";
-export function BaziRelations({ analysis }: {
-    analysis: BaziAnalysis;
-}) {
+export function BaziRelations({ analysis }: { analysis: BaziAnalysis }) {
     const nodes = analysis.nodes.filter(node => node.type === "branch");
-    const x = (id: string) => 28 + nodes.findIndex(node => node.id === id) * 60;
-    const relations = analysis.relations.filter(item => item.nodeIds.every(id => nodes.some(node => node.id === id)));
-    // 同跨度弧线再按占用层错开，文字沿弧顶排列；天干关系仅进入下方列表。
-    const lanes: {
-        left: number;
-        right: number;
-        level: number;
-    }[] = [];
-    const arcs = [...relations].sort((a, b) => Math.max(...a.nodeIds.map(x)) - Math.min(...a.nodeIds.map(x)) - (Math.max(...b.nodeIds.map(x)) - Math.min(...b.nodeIds.map(x)))).map(item => {
-        const left = Math.min(...item.nodeIds.map(x));
-        const right = Math.max(...item.nodeIds.map(x));
+    const full = nodes.length === 6 && nodes.filter(node => node.scope === "natal").length === 4;
+    const positions = full ? [60, 160, 260, 360, 480, 580] : nodes.map((_, i) => 320 + (i - (nodes.length - 1) / 2) * 100);
+    const x = (id: string) => positions[nodes.findIndex(node => node.id === id)]!;
+    const groups = new Map<string, typeof analysis.relations>();
+    for (const item of analysis.relations.filter(item => item.nodeIds.every(id => nodes.some(node => node.id === id)))) {
+        const key = [...item.nodeIds].sort().join('|');
+        groups.set(key, [...(groups.get(key) ?? []), item]);
+    }
+    const lanes: { left: number; right: number; level: number; side: number; center: number }[] = [];
+    const arcs = [...groups.values()].sort((a, b) => span(a[0]!.nodeIds) - span(b[0]!.nodeIds)).map(items => {
+        const item = items[0]!;
+        const left = Math.min(...item.nodeIds.map(x)), right = Math.max(...item.nodeIds.map(x));
+        const center = (left + right) / 2;
+        const side = item.nodeIds.some(id => nodes.find(node => node.id === id)?.scope === 'luck') ? 1 : -1;
         let level = 0;
-        while (lanes.some(lane => lane.level === level && left <= lane.right + 30 && right >= lane.left - 30))
-            level++;
-        lanes.push({ left, right, level });
-        return { item, left, right, height: 35 + level * 24 };
+        while (lanes.some(lane => lane.side === side && lane.level === level &&
+            (left <= lane.right && right >= lane.left || Math.abs(center - lane.center) < 60))) level++;
+        lanes.push({ left, right, level, side, center });
+        const tone = items.some(value => !['合', '三合', '半合', '拱', '三会'].includes(value.kind)) ? 'clash' : items.some(value => value.kind !== '合') ? 'group' : 'join';
+        const prefix = item.label.slice(0, item.nodeIds.length);
+        const order = ['合', '刑', '破', '冲', '害'];
+        const label = [...new Set(items.map(value => value.label.slice(value.nodeIds.length)))].sort((a, b) => (order.indexOf(a) < 0 ? 99 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 99 : order.indexOf(b))).join('·');
+        return { key: [...item.nodeIds].sort().join('|'), left, right, center, side, tone, label: prefix + label, height: Math.min(70, 28 + level * 14), labelHeight: Math.min(70, 28 + level * 14) + 8 + Math.max(0, level - 3) * 14 };
     });
-    const height = Math.max(180, ...arcs.map(arc => arc.height + 65));
-    const base = height - 45;
-    return <section className="panel"><header className="panel-head"><h2>合冲刑害</h2><p>原局四支与当前大运、流年之间的关系。</p></header><svg className="rel-svg" viewBox={`0 0 ${Math.max(240, nodes.length * 60)} ${height}`} role="img" aria-label="地支关系图，完整关系见下方三行文字">
- {nodes.filter(node => node.scope !== "natal").map(node => <line className="rel-divider" x1={x(node.id) - 30} x2={x(node.id) - 30} y1="8" y2={height} key={node.id}/>)}
- {arcs.map(({ item, left, right, height: h }) => <g key={item.id}><path className={relationClass(item.kind)} strokeDasharray={item.kind.includes("刑") ? "5 4" : undefined} fill="none" d={`M${left},${base} Q${(left + right) / 2},${base - h * 2} ${right},${base}`}/><text className={relationClass(item.kind)} x={(left + right) / 2} y={base - h - 6} textAnchor="middle">{item.label}</text></g>)}
- {nodes.map(node => <g data-node={node.id} key={node.id}><text className="rel-node" x={x(node.id)} y={base + 12} textAnchor="middle">{node.value}</text><text className="rel-caption" x={x(node.id)} y={base + 34} textAnchor="middle">{node.scope === "natal" ? node.label.replace("柱", "") : node.label.replace("支", "")}</text></g>)}
+    function span(ids: readonly string[]) { return Math.max(...ids.map(x)) - Math.min(...ids.map(x)); }
+    const upper = Math.max(95, ...arcs.filter(arc => arc.side < 0).map(arc => arc.labelHeight + 20));
+    const base = upper, height = base + Math.max(105, ...arcs.filter(arc => arc.side > 0).map(arc => arc.labelHeight + 25));
+    return <section className="panel"><header className="panel-head"><h2>合冲刑害</h2><p>原局四支与当前大运、流年之间的关系。</p></header><svg className="rel-svg" viewBox={`0 0 640 ${height}`} role="img" aria-label="地支关系图，完整关系见下方三行文字">
+ {nodes.filter(node => node.scope !== 'natal').map(node => <line className="rel-divider" x1={full ? node.scope === 'luck' ? 420 : 530 : x(node.id) - 50} x2={full ? node.scope === 'luck' ? 420 : 530 : x(node.id) - 50} y1="8" y2={height - 8} key={node.id}/>)}
+ {arcs.map(arc => <g key={arc.key}><path className={`rel-arc rel-arc--${arc.tone}`} d={`M${arc.left},${base} Q${arc.center},${base + arc.side * arc.height * 2} ${arc.right},${base}`}/><text className={`rel-arc-label rel-arc-label--${arc.tone}`} x={arc.center} y={base + arc.side * arc.labelHeight} textAnchor="middle">{arc.label}</text></g>)}
+ {nodes.map(node => <g data-node={node.id} key={node.id}><text className="rel-node" x={x(node.id)} y={base + 12} textAnchor="middle">{node.value}</text><text className="rel-caption" x={x(node.id)} y={base + 34} textAnchor="middle">{node.scope === 'natal' ? node.label.replace('柱', '') : node.label.replace('支', '')}</text></g>)}
  </svg><ul className="rel-list">{(["natal", "luck", "year"] as const).map(scope => <li data-scope={scope} key={scope}><b>{scope === "natal" ? "原局" : `${scope === "luck" ? "大运" : "流年"}${analysis.nodes.filter(node => node.scope === scope).map(node => node.value).join("")}`}</b>{[...new Set(analysis.relations.filter(item => item.scope === scope).map(item => item.label))].join("、") || "无"}</li>)}</ul></section>;
 }
 ```
@@ -6625,10 +6737,10 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
 .bazi .ln-range::before, .bazi .ln-range::after { content: ""; position: absolute; left: -3px; width: 8px; height: 2px; background: var(--bazi-range); }
 .bazi .ln-range::before { top: -1px; }
 .bazi .ln-range::after { bottom: -1px; }
-.bazi .ln-plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.bazi .ln-plot svg { position: absolute; inset: 20px 0 0; width: 100%; height: calc(100% - 20px); overflow: visible; pointer-events: none; }
 .bazi .ln-dot { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px var(--panel); pointer-events: none; }
 .bazi .ln-dot.now { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: var(--paper); }
-.bazi .ln-lab { position: absolute; transform: translate(-50%, -100%); margin-top: -8px; font-family: var(--sans); font-size: 12px; color: var(--paper); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+.bazi .ln-lab { position: absolute; transform: translateX(-50%); margin-top: 0; font-family: var(--sans); font-size: 12px; color: var(--paper); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
 .bazi .ln-hit { position: absolute; top: 0; bottom: 0; width: 10%; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .bazi .ln-hit:hover, .bazi .ln-hit:focus-visible { background: var(--bazi-hover); outline: none; }
 .bazi .ln-hit.sel { box-shadow: inset 0 0 0 1px var(--line-strong); }
@@ -6699,13 +6811,15 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
 .bazi .day-boundary small {font-size:11px;}
 .bazi .diviner > details, .bazi .diviner > button, .bazi .diviner > p {grid-column:2;min-width:0;}
 .bazi .tag {display:inline-block;padding:1px 6px;font-family:var(--sans);font-size:11.5px;line-height:1.6;border:1px solid currentColor;border-radius:3px;white-space:nowrap;}
-.bazi .join,.bazi .relation-join {color:var(--jade);stroke:var(--jade);fill:var(--jade);}
-.bazi .clash,.bazi .relation-clash {color:var(--cinnabar);stroke:var(--cinnabar);fill:var(--cinnabar);}
-.bazi .group,.bazi .relation-group {color:var(--gold);stroke:var(--gold);fill:var(--gold);}
+.bazi .join,.bazi .relation-join {color:var(--jade);}
+.bazi .clash,.bazi .relation-clash {color:var(--cinnabar);}
+.bazi .group,.bazi .relation-group {color:var(--gold);}
 .bazi path {fill:none;vector-effect:non-scaling-stroke;}
 .bazi .rel-divider {stroke:var(--line);stroke-dasharray:4 5;}
-.bazi .rel-node {font-family:var(--brush);font-size:30px;fill:var(--paper);}
-.bazi .rel-caption,.bazi .rel-svg text:not(.rel-node) {font-size:14px;}
+.bazi .rel-node {font-family:var(--brush);font-size:34px;fill:var(--paper);}
+.bazi .rel-caption {font-size:11px;}
+.bazi .rel-svg .rel-arc {fill:none;stroke-width:1.6;}
+.bazi .rel-arc-label {font-size:13px;}
 .bazi .rel-caption {fill:var(--muted);}
 .bazi .el-stem {background:var(--paper);}
 .bazi .el-main {background:var(--gold);}
@@ -6715,7 +6829,7 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
 .bazi .ln-plot i {position:absolute;display:block;}
 .bazi .ln-table small {display:block;font-size:11px;}
 .bazi .ln-x small,.bazi .ln-yun span {font-size:11px;}
-.bazi .ln-yun span {max-width:140px;white-space:normal;}
+.bazi .ln-yun span {white-space:nowrap;}
 .bazi .ln-plot > div {display:contents;}
 .bazi .ln-lab {z-index:1;}
 .bazi .pillars th.day {background:var(--gold-soft);}
@@ -6726,6 +6840,12 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
 .bazi .tag.join {background:var(--jade-soft);}
 .bazi .tag.clash {background:var(--cinnabar-soft);}
 .bazi .tag.group {background:var(--gold-soft);}
+.bazi .rel-arc--join {stroke:var(--jade);}
+.bazi .rel-arc-label--join {fill:var(--jade);}
+.bazi .rel-arc--clash {stroke:var(--cinnabar);}
+.bazi .rel-arc-label--clash {fill:var(--cinnabar);}
+.bazi .rel-arc--group {stroke:var(--gold);}
+.bazi .rel-arc-label--group {fill:var(--gold);}
 ```
 
 ```diff
@@ -7081,6 +7201,25 @@ for (const item of cases) {
 - [ ] **Step 4：主管对照样稿逐张走查。** 桌面 1320 与 390 页面均不横向溢出；大运完整八步（390 四列两行），流年面板、年份分组与详情完整，文字实际显示尺寸 ≥11px。宽屏图点与下表列中心对齐，窄屏仅表格独立横滚且行名固定；今年、十年最顺、回看最低标注贴点，等值同年不重复，最低标注在窄屏隐藏。吉凶有正文文字且底色/边线区分，SVG 关系只有地支、天干关系仅文字三行。命理没有吉凶/合议/流年/留意标签，缺时辰时柱全缺且起运正午估算，失败家未展示且平均只算完成家。用最新 snapshot 的 refs 与 Tab/Enter 检查表头按钮、读数框、详断和重试；同分印记不重叠，换日切换留在换日口径一行。换日与单家重试不新增付款。
 - [ ] **Step 5：核对实施任务与规范。** 本轮只改计划并隔离演练，不勾实施任务或 OpenSpec；截图与全量验证通过后主管再逐项勾 tasks 2.2–2.9，用户完成清单后再勾 2.10。沙箱拒绝监听或下载时保留原测试与日志，如实记录失败，不能用静态渲染代替截图验收。
 
+## 第 7 轮计划代码验证记录
+
+本轮只修改本计划文件，不改其它工作区文件、不提交、不安装依赖。主管第 6 轮在可联网、可监听环境的 446 全通过、类型检查、构建、秘密扫描、排练与字体摘要 `07be3b99…ca7b0` 是历史外部证据；附图确认本轮四处视觉修正，不代替第 7 轮实跑。已执行 `OPENSPEC_TELEMETRY=0 openspec list --specs` 与 `openspec list`；沿用现有相关 spec，本轮恢复既有预期展示，无公共 API 变更，不另建提案，不勾实施任务。
+
+从工作区基线复制至 `/private/tmp/sanyi-round7-final`，沿用下方第 6 轮抽取脚本（将目录改为本轮新的空目录）；64 个完整文件块、18 个 diff 顺序检查并应用成功。仅链接已有 node_modules 与 .venv-tools，不复制 .env、密钥或生辰。先生成 55 个时刻的双源双 sect 基准，再回归。计划任务仍未勾：隔离演练不是工作区实施。
+
+| 检查 | 实跑结果与证据 |
+|---|---|
+| RED | 第 6 轮隔离代码导入新增测试因缺 LABEL_BAND 导出失败，`/private/tmp/round7-red.log`；为单独暴露现有展示缺陷，仅在临时测试导入本轮纯函数，旧组件/CSS 保持不动，5 项中 4 项失败，`/private/tmp/round7-red-visual.log`。纯函数导入失败不冒充视觉断言失败 |
+| 新增与相关测试 | `node --import tsx --test tests/frontend-bazi-round7.test.ts tests/frontend-bazi-round6.test.ts tests/frontend-bazi-components.test.ts tests/frontend-liunian-chart.test.ts`：18 通过、0 失败、0 跳过，其中新增 5 项。`/private/tmp/round7-final-new.log` |
+| 严格类型检查 | `npm run typecheck` 退出 0；strict、noUncheckedIndexedAccess、exactOptionalPropertyTypes 保留。`/private/tmp/round7-final-types.log` |
+| 前端构建 | `WALLETCONNECT_PROJECT_ID=00000000000000000000000000000000 npm run frontend:build` 退出 0。`/private/tmp/round7-final-build.log` |
+| 双源基准 | `.venv-tools/bin/python tools/bazi/generate_fixtures.py` 退出 0，55 个时刻、两种换日口径。`/private/tmp/round7-fixtures.log` |
+| 全量回归 | `npm test`：451 项，440 通过、11 失败、0 跳过，退出 1；10 项 HTTP 监听 EPERM，1 项字体摘要文件 ENOENT。`/private/tmp/round7-final-regression.log`。首跑额外缺双源基准，生成后已消除，未跳过或删除测试，不声称全量通过 |
+| 只读审查 | 使用 requesting-code-review：发现 nodeIds 与关系标签顺序不同会重复前缀，已以规范标签取前缀并稳定排序合·刑·破，补午未合与巳申合·刑·破断言后复跑上述检查 |
+| 视觉证据边界 | 本轮未启动监听服务或取得新浏览器截图；主管需按 B7.4 重截 1320/390，核对空心弧、上/下关系、标签避让、交运带与小数。没有重建字体或伪造现场摘要，主管第 6 轮字体记录仅作历史证据 |
+
+四处精修均已纳入 B6.3–B6.6 完整代码与新增测试；合议小数覆盖表格、图标注、读数框、详情和既有总断线。B6b1/B6b2 各自不超过 1000 行，分块表按最终文件重新统计。
+
 ## 第 6 轮计划代码验证记录
 
 本轮只修改本计划文件，不改其它工作区文件、不提交、不安装依赖。主管提供的第 5 轮 440 全通过与字体摘要是历史外部证据，不代替本轮验收。已有 sanyi-chinese-redesign 的八字结果页、十年流年、缺时柱及三家规范覆盖本轮；已执行 openspec list --specs、openspec list，未另建提案或勾选实施任务。遥测联网失败不影响清单，严格验证禁用遥测。
@@ -7319,8 +7458,8 @@ node_modules/.bin/tsc --noEmit --strict \
 | B5a | 988 | B5.1 时间范围、B5.2 存储与公开投影、B5.3 编排和完整测试 |
 | B5b | 635 | B5.4 API、B5.5 HTTP、B5.6 隐私、B5.7 排练、B5.8 交叉验收 |
 | B6a | 470 | B6.1 档案/入口测试，B6.2 表单与付款前补问 |
-| B6b1 | 420 | B6.3 几何/静态/数据回归，B6.4 HTML 图层与流年表 |
-| B6b2 | 675 | B6.5 客观命盘/三家/校正，B6.6 样稿样式/分流/字表 |
+| B6b1 | 525 | B6.3 几何/静态/数据回归，B6.4 HTML 图层与流年表 |
+| B6b2 | 690 | B6.5 客观命盘/三家/校正，B6.6 样稿样式/分流/字表 |
 | B7 | 127 + 138 | B7.1–B7.3 主块 127 行；B7.4 验收段另列 138 行 |
 
 所有完整 Chunk 均 ≤ 1000 行；B5 分为 a/b，B6 分为 a/b1/b2；B7.4 截图脚本另列在验收段。既有文件只有精确 diff，新建文件才有路径标记完整块；修改片段新增语句保留 1A 排版，新增 TypeScript/TSX 采用项目原有写法，完整块与补丁必须复抽验证。本轮只修改本计划文件，不提交、不安装依赖。
@@ -7328,7 +7467,7 @@ node_modules/.bin/tsc --noEmit --strict \
 ## 待主管确认的口径
 
 1. 无新增业务口径或阻塞疑点。按主管已定边界，原始生辰与校正详情只在请求期和本机使用；服务端保存派生命盘与不可逆校正摘要。起运与交运日期可能反推出生日期的局限已写明，不删除字段。
-2. 第 6 轮需主管在允许监听/联网环境复跑全量 446 项、字体守卫与 B7.4 八张截图，并确认实际像素对齐、弧线避让、文字 ≥11px；无新增业务口径待裁定。沙箱结果为 435 通过、10 项监听失败、1 项字体摘要缺失，不沿用第 5 轮 440 全通过。
+2. 第 6 轮主管全量 446 项及截图已实跑。本轮需主管在允许监听环境复跑第 7 轮 451 项与 B7.4 截图，确认四处视觉收尾；沙箱结果为 440 通过、10 项监听失败、1 项字体摘要缺失，无新增业务口径待裁定。
 3. B6 要按公开 kind 联合接八字页和本机生辰；B5 不展示原始校正详情，旧问事组件使用 question 类型别名。免费切换需要重传生辰，服务端同时比较旧口径四柱、大运方向与起运；缺时辰交节日的大运为 null 时比较 null。
 4. 供主管复核的身份限制：交节日缺时辰时 luck=null，四柱与 null 本身无法区分性别；本轮按用户明确要求比较 null，不新增原始性别存档。已知时辰与缺时辰非交节日的相反性别均实测返回 400。
 
