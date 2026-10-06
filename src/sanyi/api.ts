@@ -17,7 +17,7 @@ import { publicBaziReading, type PublicBaziReading } from "./bazi-public.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
 type ServiceBoundary = Pick<
   ReadingService,
-  "createQuestionReading" | "throwCoin" | "getReading" | "retrySchool" | "changeSubject"
+  "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject"
 >;
 type SubjectKey = StoredReading["subject"]["finalKey"];
 export interface PublicQuestionReading extends Omit<StoredReading, "payment" | "schools"> {
@@ -36,7 +36,8 @@ export interface SanyiApi {
   now(): Promise<ReturnType<typeof almanacAt>>;
   classify(input: unknown): Promise<ReturnType<typeof classifyQuestion>>;
   createReading(input: unknown): Promise<PublicReading>;
-  throwCoin(id: string, input: unknown): Promise<StoredReading["throws"][number]>;
+  /** 起卦因 Arc 网络暂停后继续；六掷本身由服务端在付款后自动完成。 */
+  continueCasting(id: string): Promise<PublicReading>;
   getReading(id: string): Promise<PublicReading>;
   retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey): Promise<PublicReading>;
   changeSubject(id: string, input: unknown): Promise<PublicReading>;
@@ -173,12 +174,8 @@ export function createSanyiApi(
       });
       return publicReading(reading);
     },
-    async throwCoin(id, input) {
-      const index = record(input).index;
-      if (typeof index !== "number" || !Number.isInteger(index)) {
-        throw new SanyiInputError("掷序必须是整数");
-      }
-      return notFound(() => service.throwCoin(id, index));
+    async continueCasting(id) {
+      return publicReading(await notFound(() => service.continueCasting(id)));
     },
     async getReading(id) {
       const reading = await notFound(async (): Promise<AnyStoredReading> => {

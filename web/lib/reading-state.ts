@@ -25,6 +25,10 @@ export function shouldPollReading(reading: AnyPublicReading): boolean {
   if (reading.status === "charting" || reading.status === "writing") {
     return true;
   }
+  // 自动起卦期间轮询存档逐爻显示；暂停时等用户点「继续起卦」。
+  if (reading.status === "awaiting-throws") {
+    return !(reading.kind === "question" && reading.castPaused === true);
+  }
   return Object.values(reading.schools).some((school) => {
     return school.status === "pending" || school.status === "writing";
   });

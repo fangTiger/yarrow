@@ -303,16 +303,27 @@
 .coin.back {
   background: var(--gold);
 }
-.throw-button {
-  min-width: 132px;
-  min-height: 52px;
-  border: 1px solid var(--gold);
-  background: var(--gold-soft);
-  color: var(--gold);
-  cursor: pointer;
+/* 自动起卦：三枚铜钱翻转，表示正在等待下一掷的区块 */
+.cast-coins {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  min-height: 34px;
 }
-.throw-button.shaking {
-  animation: coin-shake 180ms linear infinite alternate;
+.cast-coin {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid #B8954F;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #E6CD8F, #A7833E);
+  animation: coin-flip 0.9s ease-in-out infinite;
+}
+.cast-coin:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.cast-coin:nth-child(3) {
+  animation-delay: 0.24s;
 }
 .consensus-track {
   position: relative;
@@ -549,9 +560,10 @@
   grid-template-columns: minmax(8em, auto) minmax(0, 1fr);
   gap: 12px;
 }
-@keyframes coin-shake {
-  from { transform: rotate(-2deg); }
-  to { transform: rotate(2deg); }
+@keyframes coin-flip {
+  0% { transform: rotateY(0deg) translateY(0); }
+  50% { transform: rotateY(180deg) translateY(-8px); }
+  100% { transform: rotateY(360deg) translateY(0); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .luopan-rotor {
@@ -563,7 +575,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .throw-button.shaking, .luopan-rotor {
+  .cast-coin, .luopan-rotor {
     animation: none;
   }
 }

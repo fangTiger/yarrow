@@ -18,9 +18,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { HexagramFigure } from "../web/components/HexagramFigure.js";
 import { FiveHexagrams } from "../web/components/FiveHexagrams.js";
 import { ThrowRecord } from "../web/components/ThrowRecord.js";
-import { CoinThrow } from "../web/components/CoinThrow.js";
+import { AutoCast } from "../web/components/AutoCast.js";
 import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
-import { api, ApiError, type PublicReading, type ThrowResult } from "../web/lib/api.js";
+import { type PublicReading, type ThrowResult } from "../web/lib/api.js";
 
 const result: ThrowResult = {
   index: 1, coins: [1, 0, 0], backs: 1, value: 7, name: "单", moving: false,
@@ -57,76 +57,27 @@ test("五卦和铜钱记录读取真实引擎与 RecordedThrow 字段", () => {
   assert.doesNotMatch(html + record, /\[object Object\]|undefined/u);
 });
 
-// 沿用首页测试的无 DOM 驱动方式，测试真实事件处理器与状态机。
-function coinHarness(value = reading) {
-  const internals = (React as unknown as {
-    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: { ReactCurrentDispatcher: { current: unknown } };
-  }).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-  const slots: unknown[] = [];
-  let cursor = 0;
-  const dispatcher = {
-    useReducer(reducer: (state: unknown, action: unknown) => unknown, initial: unknown, init: (value: unknown) => unknown) {
-      const index = cursor++;
-      if (!(index in slots)) slots[index] = init(initial);
-      return [slots[index], (action: unknown) => { slots[index] = reducer(slots[index], action); }];
-    },
-    useRef(initial: unknown) {
-      const index = cursor++;
-      if (!(index in slots)) slots[index] = { current: initial };
-      return slots[index];
-    },
-    useEffect() {},
-  };
-  return {
-    render() {
-      cursor = 0;
-      const previous = internals.ReactCurrentDispatcher.current;
-      internals.ReactCurrentDispatcher.current = dispatcher;
-      try { return CoinThrow({ reading: value, onReading: () => {} }); }
-      finally { internals.ReactCurrentDispatcher.current = previous; }
-    },
-  };
-}
-function button(node: ReturnType<typeof CoinThrow>): React.ReactElement<any> {
-  return (React.Children.toArray(node.props.children).filter(React.isValidElement) as React.ReactElement<any>[])
-    .find((child) => child.type === "button")!;
+function cast(value: PublicReading): string {
+  return renderToStaticMarkup(createElement(AutoCast, { reading: value, onReading: () => {} }));
 }
 
-for (const mode of ["pointer", " ", "Enter"]) {
-  test(`${mode} 按住松开只发送一次六掷请求`, async (t) => {
-    const call = t.mock.method(api, "throwCoin", async () => result);
-    t.mock.method(api, "getReading", async () => ({ ...reading, throws: [result] }));
-    const harness = coinHarness();
-    let control = button(harness.render());
-    if (mode === "pointer") control.props.onPointerDown();
-    else {
-      control.props.onKeyDown({ key: mode, repeat: false, preventDefault() {} });
-      control.props.onKeyDown({ key: mode, repeat: true, preventDefault() {} });
-    }
-    assert.equal(call.mock.callCount(), 0);
-    control = button(harness.render());
-    if (mode === "pointer") { control.props.onPointerUp(); control.props.onPointerCancel(); }
-    else { control.props.onKeyUp({ key: mode, preventDefault() {} }); control.props.onKeyUp({ key: mode, preventDefault() {} }); }
-    await Promise.resolve();
-    await Promise.resolve();
-    assert.equal(call.mock.callCount(), 1);
-    assert.deepEqual(call.mock.calls[0]!.arguments, [reading.id, 1]);
-    assert.equal(button(harness.render()).props.children, "摇 · 第2掷");
-  });
-}
+test("付款后自动起卦：没有「摇」按钮，逐爻显示进度", () => {
+  const html = cast({ ...reading, throws: [result, { ...result, index: 2 }] });
+  assert.match(html, /自动起卦/);
+  assert.match(html, /已成2爻/);
+  assert.match(html, /第 3 掷/);
+  assert.doesNotMatch(html, /摇 ·|松手落钱|按住/);
+  assert.doesNotMatch(html, /<button/);
+});
 
-test("Arc 失败后保留原记录并从原掷序恢复", async (t) => {
-  t.mock.method(api, "throwCoin", async () => { throw new ApiError("未能取得天时", 503); });
-  const harness = coinHarness({ ...reading, throws: [result] });
-  button(harness.render()).props.onPointerDown();
-  button(harness.render()).props.onPointerUp();
-  await Promise.resolve();
-  const node = harness.render();
-  assert.equal(button(node).props.children, "摇 · 第2掷");
-  const children = React.Children.toArray(node.props.children).filter(React.isValidElement) as React.ReactElement<any>[];
-  const pause = children.find((child) => child.props.className === "throw-pause")!;
-  const resume = (React.Children.toArray(pause.props.children).filter(React.isValidElement) as React.ReactElement<any>[])
-    .find((child) => child.type === "button")!;
-  resume.props.onClick();
-  assert.equal(button(harness.render()).props.children, "摇 · 第2掷");
+test("Arc 长时间无响应时提示暂停并提供「继续起卦」", () => {
+  const html = cast({ ...reading, throws: [result], castPaused: true } as PublicReading);
+  assert.match(html, /Arc 网络暂不可用，恢复后自动继续/);
+  assert.match(html, /<button[^>]*>继续起卦<\/button>/);
+});
+
+test("六掷完成后提示正在排盘", () => {
+  const throws = [1, 2, 3, 4, 5, 6].map((index) => ({ ...result, index }));
+  const html = cast({ ...reading, throws, status: "charting" });
+  assert.match(html, /六爻已成，正在排盘/);
 });

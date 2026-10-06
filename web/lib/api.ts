@@ -7,7 +7,7 @@ export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
 export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
 export type AnyPublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
 export type PublicReading = Extract<AnyPublicReading, { kind: "question" }>;
-export type ThrowResult = Awaited<ReturnType<SanyiApi["throwCoin"]>>;
+export type ThrowResult = PublicReading["throws"][number];
 export interface CreateReadingInput {
   question: string;
   kind: Classification["kind"];
@@ -44,7 +44,7 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     getNow: () => request<NowResponse>("/api/now"),
     classify: (question: string) => request<Classification>("/api/classify", { question }),
     createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
-    throwCoin: (id: string, index: number) => request<ThrowResult>(`/api/readings/${id}/throws`, { index }),
+    continueCasting: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/cast`, {}),
     getReading: (id: string) => request<AnyPublicReading>(`/api/readings/${id}`),
     retrySchool: (id: string, key: QuestionSchoolKey | import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey) => request<AnyPublicReading>(
       `/api/readings/${id}/schools/${key}/retry`,

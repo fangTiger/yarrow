@@ -61,6 +61,11 @@ test("阶段由 reading 与三家状态共同确定", () => {
 });
 
 test("排盘或任一家仍落笔时需要轮询", () => {
+  // 自动起卦期间轮询存档，逐爻显示；起卦暂停时停止轮询，等用户点「继续起卦」。
+  assert.equal(shouldPollReading(reading("awaiting-throws", ["pending", "pending", "pending"])), true);
+  assert.equal(shouldPollReading({
+    ...reading("awaiting-throws", ["pending", "pending", "pending"]), castPaused: true,
+  }), false);
   assert.equal(shouldPollReading(reading("charting", ["pending", "pending", "pending"])), true);
   assert.equal(shouldPollReading(reading("done", ["done", "writing", "done"])), true);
   assert.equal(shouldPollReading(reading("done", ["done", "done", "done"])), false);
@@ -111,7 +116,7 @@ function renderReading(value: PublicReading | undefined) {
 
 test("结果页在待六掷与排盘阶段显示对应内容", () => {
   assert.match(renderReading(undefined), /正在打开这一卦/u);
-  assert.match(renderReading(reading("awaiting-throws", ["pending", "pending", "pending"])), /亲手六掷/u);
+  assert.match(renderReading(reading("awaiting-throws", ["pending", "pending", "pending"])), /自动起卦/u);
   assert.match(renderReading(reading("charting", ["pending", "pending", "pending"])), /正在排盘/u);
   const failed = { ...reading("failed", ["failed", "failed", "failed"]), error: "排盘数据不可得" };
   assert.match(renderReading(failed), /排盘未能完成.*排盘数据不可得/su);

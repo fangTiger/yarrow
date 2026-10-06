@@ -18,7 +18,7 @@ function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
     now: async () => ({ solar: { text: "2026-09-30 20:15:00" } }) as never,
     classify: async () => ({ kind: "question" }) as never,
     createReading: async () => reading as never,
-    throwCoin: async () => ({ index: 1, value: 7 }) as never,
+    continueCasting: async () => reading as never,
     getReading: async () => reading as never,
     retrySchool: async () => reading as never,
     changeSubject: async () => reading as never,
@@ -60,7 +60,7 @@ test("七条新路由返回成功状态", async () => {
       ["GET", "/api/now"],
       ["POST", "/api/classify", { question: "这件事会怎样" }],
       ["POST", "/api/readings", { question: "这件事会怎样" }],
-      ["POST", `/api/readings/${id}/throws`, { index: 1 }],
+      ["POST", `/api/readings/${id}/cast`, {}],
       ["GET", `/api/readings/${id}`],
       ["POST", `/api/readings/${id}/schools/chengyi/retry`, {}],
       ["POST", `/api/readings/${id}/subject`, { subjectKey: "career" }],
@@ -139,11 +139,13 @@ test("已知领域错误按错误类映射", async () => {
     await close(conflict);
   }
   const unavailable = await fixture(fakeApi({
-    throwCoin: async () => { throw new ArcUnavailableError(); },
+    continueCasting: async () => { throw new ArcUnavailableError(); },
   }));
   try {
-    const response = await post(unavailable.base, `/api/readings/${id}/throws`, { index: 1 });
+    const response = await post(unavailable.base, `/api/readings/${id}/cast`, {});
     assert.equal(response.status, 503);
+    // 单掷接口已下线
+    assert.equal((await post(unavailable.base, `/api/readings/${id}/throws`, { index: 1 })).status, 404);
   } finally {
     await close(unavailable);
   }

@@ -72,9 +72,7 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
       question: "这次面试能过吗",
       feeProof: proof,
     });
-    for (let index = 1; index <= 6; index += 1) {
-      await service.throwCoin(created.id, index);
-    }
+    // 付款后服务端自动连掷六次，排练只等后台起卦、排盘与三家落笔完成。
     await service.whenSettled(created.id);
     const reading = await service.getReading(created.id);
     if (reading.status !== "done" || !reading.lines || !reading.chart) {

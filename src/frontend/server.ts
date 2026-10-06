@@ -110,7 +110,7 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         return;
       }
       const idRoute = url.pathname.match(/^\/api\/readings\/([^/]+)$/);
-      const throwRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/throws$/);
+      const castRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/cast$/);
       const retryRoute = url.pathname.match(
         /^\/api\/readings\/([^/]+)\/schools\/([^/]+)\/retry$/,
       );
@@ -142,8 +142,8 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         json(response, 200, await api.getReading(idRoute[1] as string));
         return;
       }
-      if (throwRoute && request.method === "POST" && api && isReadingId(throwRoute[1] ?? "")) {
-        json(response, 200, await api.throwCoin(throwRoute[1] as string, body));
+      if (castRoute && request.method === "POST" && api && isReadingId(castRoute[1] ?? "")) {
+        json(response, 200, await api.continueCasting(castRoute[1] as string));
         return;
       }
       const retryKey = retryRoute?.[2] as QuestionSchoolKey | BaziSchoolKey | undefined;
@@ -226,7 +226,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   createFrontendServer({ api }).listen(port, "127.0.0.1", () => {
     console.log(`三易服务已启动：http://127.0.0.1:${port}`);
     console.log(`三易收款地址：${recipient}`);
-    console.log("问事卦金：0.05 USDC；付款后亲手六掷，三家依同一卦独立落笔");
+    console.log("问事卦金：0.05 USDC；付款后自动六掷，三家依同一卦独立落笔");
     console.log("复算材料：付款首笔交易与六个 Arc 区块会随解读存档");
+    // 服务重启后续掷未完成的卦。
+    void service.resumePendingCasts().then((ids) => {
+      if (ids.length > 0) {
+        console.log(`续掷未完成的卦：${ids.length} 卦`);
+      }
+    });
   });
 }

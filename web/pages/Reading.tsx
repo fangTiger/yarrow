@@ -3,7 +3,7 @@ import { WalletBar } from "../components/WalletBar.js";
 import { useCallback, useEffect, useState } from "react";
 import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
 import { deriveFiveHexagrams } from "../../src/oracle/liuyao-chart.js";
-import { CoinThrow } from "../components/CoinThrow.js";
+import { AutoCast } from "../components/AutoCast.js";
 import { FiveHexagrams } from "../components/FiveHexagrams.js";
 import { HexagramFigure } from "../components/HexagramFigure.js";
 import { Luopan } from "../components/Luopan.js";
@@ -179,7 +179,7 @@ export function Reading({ id }: { id: string }) {
       {view ? <ShikongBar data={view} /> : null}
       {reading.chart?.month.boundaryUncertain ? <p className="boundary-tag">月建 · 近交节</p> : null}
       {stage === "awaiting-throws" ? (
-        <CoinThrow onReading={setReading} reading={reading} />
+        <AutoCast onReading={setReading} reading={reading} />
       ) : stage === "failed" && !reading.chart ? (
         <section className="panel">
           <h1>排盘未能完成</h1>

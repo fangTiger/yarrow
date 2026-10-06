@@ -23,6 +23,7 @@ import {
   type StoredQuestionReading as StoredReading,
 } from "./store.js";
 import {
+  ArcUnavailableError,
   assertNextThrow,
   deriveThrow,
   waitForBlockAfter,
@@ -45,6 +46,10 @@ export interface ReadingServiceDependencies {
   clock?: () => Date;
   waitOptions?: WaitOptions;
   calendar?: CalendarDependencies;
+  /** 付款后是否由服务端自动连掷六次；默认开启，测试底层逐掷机制时可关闭。 */
+  autoCast?: boolean;
+  /** 自动起卦取区块失败时的退避重试：累计等待超过 maxWaitMs 即暂停，等待「继续起卦」。 */
+  castRetry?: { maxWaitMs?: number; sleep?: (ms: number) => Promise<void> };
 }
 
 interface RebuiltContext {
@@ -155,9 +160,80 @@ export class ReadingService {
       throws: [],
       schools: initialSchools(),
       status: "awaiting-throws",
+      castAfterBlock: receipt.blockNumber.toString(),
     };
     await this.deps.store.write(reading);
+    if (this.deps.autoCast ?? true) {
+      this.startBackground(id, this.autoCast(id));
+    }
     return reading;
+  }
+
+  /** 起卦暂停（Arc 长时间无响应）后由用户触发继续，从断点续掷。 */
+  async continueCasting(id: string): Promise<StoredReading> {
+    return this.withReadingLock(id, async () => {
+      const reading = await this.readQuestion(id);
+      if (reading.status !== "awaiting-throws" || !reading.castPaused) {
+        throw new StateConflictError("此卦不在暂停起卦状态");
+      }
+      const updated = await this.deps.store.update(id, (current) => {
+        const next = { ...current };
+        delete next.castPaused;
+        return next;
+      });
+      this.startBackground(id, this.autoCast(id));
+      return updated;
+    });
+  }
+
+  /** 服务启动时续掷所有未完成且未暂停的问事卦，返回续掷的 id。 */
+  async resumePendingCasts(): Promise<string[]> {
+    const resumed: string[] = [];
+    for (const id of await this.deps.store.listIds()) {
+      let reading: StoredReading;
+      try {
+        reading = await this.deps.store.read(id);
+      } catch {
+        continue;
+      }
+      if (reading.kind === "question" && reading.status === "awaiting-throws" && !reading.castPaused) {
+        this.startBackground(id, this.autoCast(id));
+        resumed.push(id);
+      }
+    }
+    return resumed;
+  }
+
+  /** 自动连掷：逐掷取新区块；取区块失败按退避重试，累计超时则暂停起卦。 */
+  private async autoCast(id: string): Promise<void> {
+    const maxWaitMs = this.deps.castRetry?.maxWaitMs ?? 600_000;
+    const sleep = this.deps.castRetry?.sleep
+      ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+    let waited = 0;
+    let delay = 1_000;
+    for (;;) {
+      const reading = await this.readQuestion(id);
+      const next = reading.throws.length + 1;
+      if (next > 6 || reading.status !== "awaiting-throws") {
+        return;
+      }
+      try {
+        await this.throwCoin(id, next);
+        delay = 1_000;
+      } catch (error) {
+        if (!(error instanceof ArcUnavailableError)) {
+          throw error;
+        }
+        if (waited >= maxWaitMs) {
+          await this.deps.store.update(id, (current) => ({ ...current, castPaused: true }));
+          await this.deps.logger.write("问事起卦暂停：Arc 网络暂不可用", { readingId: id });
+          return;
+        }
+        await sleep(delay);
+        waited += delay;
+        delay = Math.min(delay * 2, 30_000);
+      }
+    }
   }
 
   async throwCoin(id: string, index: number): Promise<RecordedThrow> {
@@ -169,11 +245,9 @@ export class ReadingService {
       }
       assertNextThrow(reading.throws, index);
       const previous = reading.throws.at(-1);
-      const block = await waitForBlockAfter(
-        this.deps.blockSource,
-        previous ? BigInt(previous.blockNumber) : 0n,
-        this.waitOptions,
-      );
+      // 第一掷取付款所在区块之后的新区块，其后每掷严格大于上一掷。
+      const after = previous ? BigInt(previous.blockNumber) : BigInt(reading.castAfterBlock ?? "0");
+      const block = await waitForBlockAfter(this.deps.blockSource, after, this.waitOptions);
       const result = deriveThrow({
         paymentTxHash: reading.payment.transactionHash,
         blockHash: block.hash,
@@ -283,7 +357,18 @@ export class ReadingService {
   }
 
   async whenSettled(id: string): Promise<void> {
-    await (this.background.get(id) ?? Promise.resolve());
+    // 后台任务会接力登记（自动起卦第六掷后接排盘落笔），等到不再有新任务接上为止。
+    for (;;) {
+      const current = this.background.get(id);
+      if (!current) {
+        return;
+      }
+      await current;
+      const latest = this.background.get(id);
+      if (!latest || latest === current) {
+        return;
+      }
+    }
   }
 
   private async withReadingLock<T>(

@@ -60,9 +60,9 @@ function fixture() {
       calls.push(`create:${JSON.stringify(input)}`);
       return value;
     },
-    async throwCoin(id: string, index: number) {
-      calls.push(`throw:${id}:${index}`);
-      return value.throws[0]!;
+    async continueCasting(id: string) {
+      calls.push(`cast:${id}`);
+      return value;
     },
     async getReading(id: string) {
       calls.push(`get:${id}`);
@@ -86,14 +86,16 @@ function fixture() {
   const api = createSanyiApi(service, { now: () => new Date(milliseconds) });
   return { api, calls, advance: (value: number) => { milliseconds += value; } };
 }
-test("校验问题、事项与掷序", async () => {
-  const { api } = fixture();
+test("校验问题与事项；继续起卦走服务且不再提供单掷接口", async () => {
+  const { api, calls } = fixture();
   await assert.rejects(api.classify({ question: "" }), SanyiInputError);
   await assert.rejects(
     api.createReading({ question: "这次面试能过吗", subjectKey: "bad", feeProof: PROOF }),
     SanyiInputError,
   );
-  await assert.rejects(api.throwCoin(ID, { index: "1" }), SanyiInputError);
+  assert.equal("throwCoin" in api, false);
+  await api.continueCasting(ID);
+  assert.ok(calls.includes(`cast:${ID}`));
 });
 test("命理与运势缺生辰先给中文 400", async () => {
   const { api } = fixture();

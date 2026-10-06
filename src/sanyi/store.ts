@@ -1,6 +1,6 @@
 // src/sanyi/store.ts
 import { createHash, randomBytes } from "node:crypto";
-import { mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Address, Hex } from "viem";
 import type { LiuyaoChart } from "../oracle/liuyao-chart.js";
@@ -42,6 +42,10 @@ export interface StoredQuestionReading {
   schools: Record<QuestionSchoolKey, SchoolState>;
   status: "awaiting-throws" | "charting" | "writing" | "done" | "failed";
   error?: string;
+  /** 付款所在区块号；第一掷取其后的新区块。 */
+  castAfterBlock?: string;
+  /** Arc 长时间无响应时暂停自动起卦，等待用户「继续起卦」。 */
+  castPaused?: boolean;
   castTime?: string;
   lines?: readonly number[];
   chart?: LiuyaoChart;
@@ -123,6 +127,16 @@ export class ReadingStore {
   async read<T extends StoredReading = StoredQuestionReading>(id: string): Promise<T> {
     const text = await readFile(this.readingPath(id), "utf8");
     return JSON.parse(text) as T;
+  }
+
+  /** 列出全部存档 id，供服务重启后续掷未完成的卦。 */
+  async listIds(): Promise<string[]> {
+    try {
+      const names = await readdir(join(this.root, "readings"));
+      return names.filter((name) => name.endsWith(".json")).map((name) => name.slice(0, -5)).filter(isReadingId);
+    } catch {
+      return [];
+    }
   }
 
   async write(reading: StoredReading): Promise<void> {

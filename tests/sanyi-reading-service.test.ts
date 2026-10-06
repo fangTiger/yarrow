@@ -153,6 +153,8 @@ async function fixture(input: {
     store,
     logger,
     clock: () => new Date("2026-09-30T12:15:00.000Z"),
+    // 这些用例测逐掷取区块的底层机制，关掉自动起卦，由测试手动逐掷。
+    autoCast: false,
     waitOptions: {
       timeoutMs: 3,
       pollMs: 1,

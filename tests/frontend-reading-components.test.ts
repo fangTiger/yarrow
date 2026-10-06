@@ -165,7 +165,7 @@ test("结果页增量挂载面板并保留六掷轮询", () => {
     assert.ok(source.includes(`<${component}`), `缺少 ${component}`);
   }
   assert.match(source, /api\.retrySchool\(reading\.id, key\)/u);
-  assert.match(source, /<CoinThrow onReading=\{setReading\} reading=\{reading\}/u);
+  assert.match(source, /<AutoCast onReading=\{setReading\} reading=\{reading\}/u);
   assert.match(source, /shouldPollReading\(reading\)/u);
   assert.match(source, /setInterval\(\(\) => void refresh\(\), 1_000\)/u);
   assert.match(source, /toView\(reading\.almanac\)/u);
