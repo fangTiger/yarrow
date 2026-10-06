@@ -9,6 +9,7 @@ import type {
 } from "../agent/provider.js";
 import type { FactTable } from "./facts.js";
 import { mockSchoolOutput } from "./mock-schools.js";
+import { mockSummaryOutput } from "./mock-summary.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
 import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
@@ -50,6 +51,10 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
   readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
   readonly providerConfigHash = hashJson(this.providerConfig);
   async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    const summary = request.taskId.match(/^sanyi\/summary\/(question|fortune|destiny)$/u);
+    if (summary) {
+      return mockSummaryOutput(summary[1] as "question" | "fortune" | "destiny", request.userPrompt) as T;
+    }
     const bazi = request.taskId.match(/^sanyi\/(destiny|fortune)\/(shenxiaozhan|yuchuntai|rentieqiao)$/u);
     if (bazi) {
       return mockBaziSchoolOutput(bazi[2] as BaziSchoolKey, baziFactsFromPrompt(request.userPrompt),

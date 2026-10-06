@@ -17,7 +17,7 @@ import { publicBaziReading, type PublicBaziReading } from "./bazi-public.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
 type ServiceBoundary = Pick<
   ReadingService,
-  "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject"
+  "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject" | "retrySummary"
 >;
 type SubjectKey = StoredReading["subject"]["finalKey"];
 export interface PublicQuestionReading extends Omit<StoredReading, "payment" | "schools"> {
@@ -38,6 +38,8 @@ export interface SanyiApi {
   createReading(input: unknown): Promise<PublicReading>;
   /** 起卦因 Arc 网络暂停后继续；六掷本身由服务端在付款后自动完成。 */
   continueCasting(id: string): Promise<PublicReading>;
+  /** 白话总述暂未生成时免费重试。 */
+  retrySummary(id: string): Promise<PublicReading>;
   getReading(id: string): Promise<PublicReading>;
   retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey): Promise<PublicReading>;
   changeSubject(id: string, input: unknown): Promise<PublicReading>;
@@ -176,6 +178,16 @@ export function createSanyiApi(
     },
     async continueCasting(id) {
       return publicReading(await notFound(() => service.continueCasting(id)));
+    },
+    async retrySummary(id) {
+      const reading = await notFound(async (): Promise<AnyStoredReading> => {
+        return options.bazi ? options.bazi.readAny(id) : service.getReading(id);
+      });
+      if (reading.kind === "question" || !options.bazi) {
+        return publicReading(await notFound(() => service.retrySummary(id)));
+      }
+      const bazi = options.bazi;
+      return publicBaziReading(await notFound(() => bazi.retrySummary(id)));
     },
     async getReading(id) {
       const reading = await notFound(async (): Promise<AnyStoredReading> => {

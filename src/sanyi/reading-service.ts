@@ -11,6 +11,10 @@ import type { QuestionBlockSource } from "../oracle/question-oracle.js";
 import type { StructuredOutputProvider } from "../agent/provider.js";
 import { classifyQuestion, normalizeQuestion, overrideClassification } from "./classify.js";
 import { buildQuestionFacts, type FactTable } from "./facts.js";
+import { auditQuestionProse } from "./audit.js";
+import {
+  averageConfidence, runSummaryWithRetry, summaryState, type SummaryInput, type SummarySchool,
+} from "./summary.js";
 import type { SanyiLogger } from "./log.js";
 import { buildOriginalTexts } from "./original-texts.js";
 import { runSchool, type SchoolRunResult } from "./school-runner.js";
@@ -442,10 +446,101 @@ export class ReadingService {
     await Promise.all(QUESTION_SCHOOLS.map(async (school) => {
       await this.runAndStore(id, school, context, false);
     }));
+    // 三家落笔后写白话总述，写完才算这一卦完成，页面因此会一直轮询到总述出现。
+    await this.writeSummary(id, false);
     await this.deps.store.update(id, (current) => ({
       ...current,
       status: "done",
     }));
+  }
+
+  /** 白话总述暂未生成时免费重试，至多两次。 */
+  async retrySummary(id: string): Promise<StoredReading> {
+    return this.withReadingLock(id, async () => {
+      const reading = await this.readQuestion(id);
+      const summary = reading.summary;
+      if (!summary || summary.status !== "failed" || reading.status !== "done") {
+        throw new StateConflictError("白话总述当前不可重试");
+      }
+      if (summary.retries >= 2) {
+        throw new LimitExceededError("白话总述重试次数已用尽");
+      }
+      const updated = await this.deps.store.update(id, (current) => ({
+        ...current,
+        summary: { ...summary, status: "writing" as const, retries: summary.retries + 1 },
+      }));
+      this.startBackground(id, this.writeSummary(id, true));
+      return updated;
+    });
+  }
+
+  /** 依据已落笔各家写白话总述；没有一家落笔时记为未生成。 */
+  private async writeSummary(id: string, preserveRetries: boolean): Promise<void> {
+    const reading = await this.readQuestion(id);
+    const context = this.rebuildContext(reading);
+    const input = this.summaryInput(reading, context);
+    const previous = reading.summary;
+    if (!input) {
+      await this.deps.store.update(id, (current) => ({
+        ...current,
+        summary: {
+          status: "failed" as const, basis: 0, error: "三家均未落笔，暂无白话总述",
+          attempts: previous?.attempts ?? 0, retries: previous?.retries ?? 0,
+        },
+      }));
+      return;
+    }
+    const basis = input.schools.length;
+    await this.deps.store.update(id, (current) => ({
+      ...current,
+      summary: {
+        status: "writing" as const, basis,
+        attempts: previous?.attempts ?? 0,
+        retries: preserveRetries ? previous?.retries ?? 0 : 0,
+      },
+    }));
+    const result = await runSummaryWithRetry({ provider: this.deps.provider }, input);
+    await this.deps.store.update(id, (current) => ({
+      ...current,
+      summary: summaryState(current.summary, result, basis, true),
+    }));
+  }
+
+  private summaryInput(reading: StoredReading, context: RebuiltContext): SummaryInput | null {
+    const schools: SummarySchool[] = [];
+    const values: number[] = [];
+    for (const school of QUESTION_SCHOOLS) {
+      const state = reading.schools[school.key];
+      if (state.status !== "done" || !state.output) {
+        continue;
+      }
+      const output = state.output;
+      values.push(output.confidenceTenths);
+      schools.push({
+        name: school.name, school: school.school, verdict: output.verdict,
+        confidenceTenths: output.confidenceTenths, headline: output.headline, reason: output.reason,
+        sections: output.sections, advice: output.advice,
+        ...(output.timing ? { timing: output.timing } : {}),
+      });
+    }
+    if (schools.length === 0 || !reading.lines) {
+      return null;
+    }
+    const five = deriveFiveHexagrams(reading.lines);
+    const chart = context.chart;
+    const subject = subjectOption(reading.subject.finalKey);
+    return {
+      kind: "question",
+      question: reading.question,
+      consensus: averageConfidence(values),
+      chartPoints: [
+        `本卦${five.primary.name}，之卦${five.derived.name}`,
+        `所问事项：${subject.label}，用神为${subject.useGod}`,
+        `月建${chart.month.branch}，日辰${chart.day.ganzhi}，旬空${chart.day.voidBranches.join("")}`,
+      ],
+      schools,
+      proseErrors: (text) => auditQuestionProse(text, context.facts),
+    };
   }
 
   private rebuildContext(reading: StoredReading): RebuiltContext {
@@ -485,6 +580,7 @@ export class ReadingService {
       throw new Error("三家键无效");
     }
     await this.runAndStore(id, school, context, true);
+    await this.writeSummary(id, true);
   }
 
   private async runAndStore(

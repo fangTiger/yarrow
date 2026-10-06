@@ -45,6 +45,7 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     classify: (question: string) => request<Classification>("/api/classify", { question }),
     createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
     continueCasting: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/cast`, {}),
+    retrySummary: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/summary/retry`, {}),
     getReading: (id: string) => request<AnyPublicReading>(`/api/readings/${id}`),
     retrySchool: (id: string, key: QuestionSchoolKey | import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey) => request<AnyPublicReading>(
       `/api/readings/${id}/schools/${key}/retry`,

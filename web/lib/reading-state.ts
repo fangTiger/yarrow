@@ -25,6 +25,10 @@ export function shouldPollReading(reading: AnyPublicReading): boolean {
   if (reading.status === "charting" || reading.status === "writing") {
     return true;
   }
+  // 单家重试、改事项或换日之后，总述会重写；写作中继续轮询。
+  if (reading.summary?.status === "writing") {
+    return true;
+  }
   // 自动起卦期间轮询存档逐爻显示；暂停时等用户点「继续起卦」。
   if (reading.status === "awaiting-throws") {
     return !(reading.kind === "question" && reading.castPaused === true);
@@ -56,4 +60,37 @@ export function repairNote(state: { removed?: number; adjusted?: number }): stri
     parts.push("几成已按吉凶等级校正");
   }
   return parts.length > 0 ? parts.join("；") : null;
+}
+
+export type SummaryStatus =
+  | { kind: "progress"; text: string }
+  | { kind: "done" }
+  | { kind: "failed"; text: string; canRetry: boolean }
+  | { kind: "none" };
+
+/** 白话总述面板的状态：起卦、排盘、三家落笔进度、写总述、完成或未生成；旧存档没有总述时为 none。 */
+export function summaryStatus(reading: AnyPublicReading): SummaryStatus {
+  if (reading.status === "awaiting-throws") {
+    return { kind: "progress", text: "起卦中" };
+  }
+  if (reading.status === "charting") {
+    return { kind: "progress", text: "排盘中" };
+  }
+  const summary = reading.summary;
+  if (summary?.status === "writing") {
+    return { kind: "progress", text: "正在写白话总述" };
+  }
+  const states = Object.values(reading.schools).map((school) => school.status);
+  const finished = states.filter((status) => status !== "pending" && status !== "writing").length;
+  if (finished < states.length) {
+    return { kind: "progress", text: `三家落笔中（${finished}/${states.length}）` };
+  }
+  if (!summary) {
+    return { kind: "none" };
+  }
+  if (summary.status === "done") {
+    return { kind: "done" };
+  }
+  const canRetry = summary.basis > 0 && summary.retries < 2 && reading.status === "done";
+  return { kind: "failed", text: summary.basis > 0 ? "白话总述暂未生成" : summary.error ?? "白话总述暂未生成", canRetry };
 }

@@ -86,8 +86,8 @@ test("三家并行、一家失败隔离，免费重试最多两次", { timeout: 
   } });
   try {
     const r = await create(f);
-    // 三家并行各调一次，余春台失败后后台自动再试一次，共 4 次。
-    assert.equal(started, 4);
+    // 三家并行各调一次，余春台失败后后台自动再试一次，再加一次白话总述，共 5 次。
+    assert.equal(started, 5);
     assert.equal(r.status, "done");
     assert.equal(r.schools.yuchuntai.status, "failed");
     assert.equal(r.schools.shenxiaozhan.status, "done");

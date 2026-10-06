@@ -55,7 +55,7 @@ function common(reading: StoredBaziReading) {
       shenxiaozhan: visibleSchool(reading.schools.shenxiaozhan),
       yuchuntai: visibleSchool(reading.schools.yuchuntai),
       rentieqiao: visibleSchool(reading.schools.rentieqiao),
-    } };
+    }, summary: reading.summary };
 }
 export function publicBaziReading(reading: StoredBaziReading) {
   const value = common(reading);

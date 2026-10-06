@@ -15,6 +15,7 @@ import { saveRecentReading } from "../lib/recent-readings.js";
 import { readingStage, shouldPollReading } from "../lib/reading-state.js";
 import { AlmanacPanel } from "../components/AlmanacPanel.js";
 import { ConsensusTrack } from "../components/ConsensusTrack.js";
+import { PlainSummaryPanel } from "../components/PlainSummaryPanel.js";
 import { FiveElementsDetail } from "../components/FiveElementsDetail.js";
 import { LiuyaoTable } from "../components/LiuyaoTable.js";
 import { QimenBoard } from "../components/QimenBoard.js";
@@ -56,8 +57,31 @@ function Result(props: {
   };
   return (
     <>
-      <div className="reading-hero">
-        <section aria-labelledby="hexagram-title" className="panel hexagram-panel">
+      <PlainSummaryPanel
+        onReading={(value) => {
+          if (value.kind === "question") {
+            props.onReading(value);
+          }
+        }}
+        reading={reading}
+      />
+      <details className="panel schools-fold">
+        <summary>
+          看三家依据
+          <span>程颐 · 京房 · 邵雍，同一卦三派独立落笔</span>
+        </summary>
+        <ConsensusTrack schools={reading.schools} />
+        {retryError ? <p className="error" role="alert">{retryError}</p> : null}
+        {SCHOOL_KEYS.map((key) => (
+          <SchoolCard
+            key={key}
+            onRetry={() => void retry(key)}
+            school={reading.schools[key]}
+            schoolKey={key}
+          />
+        ))}
+      </details>
+      <section aria-labelledby="hexagram-title" className="panel hexagram-panel">
           <div className="ask">
             <span className="label">
               所问之事 · {SUBJECT_LABELS[reading.subject.finalKey] ?? "其他"}
@@ -87,24 +111,7 @@ function Result(props: {
           <p className="judgement"><b>卦辞：</b>{primary.judgement}</p>
           <ThrowRecord throws={reading.throws} />
           <FiveHexagrams figures={figures} moving={moving} />
-        </section>
-        <section aria-labelledby="schools-title" className="panel">
-          <header className="panel-head">
-            <h2 id="schools-title">三家断语</h2>
-            <p>同一卦、同一件事，三派独立落笔。</p>
-          </header>
-          <ConsensusTrack schools={reading.schools} />
-          {retryError ? <p className="error" role="alert">{retryError}</p> : null}
-          {SCHOOL_KEYS.map((key) => (
-            <SchoolCard
-              key={key}
-              onRetry={() => void retry(key)}
-              school={reading.schools[key]}
-              schoolKey={key}
-            />
-          ))}
-        </section>
-      </div>
+      </section>
       <div className="reading-secondary">
         <div className="reading-column">
           <LiuyaoTable chart={chart} />

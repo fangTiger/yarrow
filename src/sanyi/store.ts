@@ -25,6 +25,19 @@ export interface SchoolState {
   adjusted?: number;
 }
 
+/** 白话总述的存档状态。 */
+export interface SummaryState {
+  status: "writing" | "done" | "failed";
+  output?: import("./summary.js").PlainSummary;
+  /** 依据几家断语写成。 */
+  basis: number;
+  attempts: number;
+  retries: number;
+  error?: string;
+  removed?: number;
+  adjusted?: number;
+}
+
 export interface StoredQuestionReading {
   id: string;
   kind: "question";
@@ -48,6 +61,7 @@ export interface StoredQuestionReading {
   error?: string;
   /** 付款所在区块号；第一掷取其后的新区块。 */
   castAfterBlock?: string;
+  summary?: SummaryState;
   /** Arc 长时间无响应时暂停自动起卦，等待用户「继续起卦」。 */
   castPaused?: boolean;
   castTime?: string;
@@ -90,6 +104,7 @@ export interface StoredBaziReading {
   almanac: AlmanacResult;
   changes: number;
   schools: Record<import("./schools/bazi-shared.js").BaziSchoolKey, BaziSchoolState>;
+  summary?: SummaryState;
 }
 export type StoredReading = StoredQuestionReading | StoredBaziReading;
 

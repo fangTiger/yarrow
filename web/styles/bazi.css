@@ -219,3 +219,6 @@
 .bazi .rel-arc-label--clash {fill:var(--cinnabar);}
 .bazi .rel-arc--group {stroke:var(--gold);}
 .bazi .rel-arc-label--group {fill:var(--gold);}
+/* 白话总述置顶后，八字命盘单栏，三家断语收进「看三家依据」。 */
+.bazi .hero.bazi-main { grid-template-columns: minmax(0, 1fr); }
+.bazi .schools-fold > .panel { padding: 0; border: 0; background: transparent; }

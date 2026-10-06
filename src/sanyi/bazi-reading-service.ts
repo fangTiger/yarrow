@@ -7,7 +7,11 @@ import { correctBirthTime } from "../calendar/solar-time.js";
 import type { StructuredOutputProvider } from "../agent/provider.js";
 import { normalizeBirthProfile } from "./birth-profile.js";
 import { buildBaziFacts } from "./bazi-facts.js";
-import { derivedChart } from "./bazi-public.js";
+import { derivedChart, yearConsensus } from "./bazi-public.js";
+import { auditBaziSummaryProse } from "./bazi-audit.js";
+import {
+  averageConfidence, runSummaryWithRetry, summaryState, type SummaryInput, type SummarySchool,
+} from "./summary.js";
 import { runBaziSchool } from "./bazi-school-runner.js";
 import { resolveFortuneContext, periodFacts } from "./fortune-context.js";
 import type { FortuneHorizon } from "./classify.js";
@@ -168,6 +172,7 @@ export class BaziReadingService {
           [key]: { status: "writing", attempts: state.attempts, retries: state.retries + 1 } } }));
       this.start(id, async () => {
         await this.runOne(updated, school);
+        await this.writeSummary(id, true);
         await this.finish(id);
       });
       return updated;
@@ -207,7 +212,116 @@ export class BaziReadingService {
   }
   private async runAll(reading: StoredBaziReading): Promise<void> {
     await Promise.all(BAZI_SCHOOLS.map((school) => this.runOne(reading, school)));
+    // 三家落笔后写白话总述，写完才算这一卦完成。
+    await this.writeSummary(reading.id, false);
     await this.finish(reading.id);
+  }
+
+  /** 白话总述暂未生成时免费重试，至多两次。 */
+  async retrySummary(id: string): Promise<StoredBaziReading> {
+    return this.lock(id, async () => {
+      const current = await this.getReading(id);
+      const summary = current.summary;
+      if (!summary || summary.status !== "failed" || current.status !== "done") {
+        throw new StateConflictError("白话总述当前不可重试");
+      }
+      if (summary.retries >= 2) {
+        throw new LimitExceededError("白话总述重试次数已用尽");
+      }
+      const updated = await this.deps.store.update<StoredBaziReading>(id, (reading) => ({
+        ...reading,
+        summary: { ...summary, status: "writing" as const, retries: summary.retries + 1 },
+      }));
+      this.start(id, () => this.writeSummary(id, true));
+      return updated;
+    });
+  }
+
+  /** 依据已落笔各家写白话总述；没有一家落笔时记为未生成。 */
+  private async writeSummary(id: string, preserveRetries: boolean): Promise<void> {
+    const reading = await this.getReading(id);
+    const input = this.summaryInput(reading);
+    const previous = reading.summary;
+    if (!input) {
+      await this.deps.store.update<StoredBaziReading>(id, (current) => ({
+        ...current,
+        summary: {
+          status: "failed" as const, basis: 0, error: "三家均未落笔，暂无白话总述",
+          attempts: previous?.attempts ?? 0, retries: previous?.retries ?? 0,
+        },
+      }));
+      return;
+    }
+    const basis = input.schools.length;
+    await this.deps.store.update<StoredBaziReading>(id, (current) => ({
+      ...current,
+      summary: {
+        status: "writing" as const, basis,
+        attempts: previous?.attempts ?? 0,
+        retries: preserveRetries ? previous?.retries ?? 0 : 0,
+      },
+    }));
+    const result = await runSummaryWithRetry({ provider: this.deps.provider }, input);
+    await this.deps.store.update<StoredBaziReading>(id, (current) => ({
+      ...current,
+      summary: summaryState(current.summary, result, basis, true),
+    }));
+  }
+
+  private summaryInput(reading: StoredBaziReading): SummaryInput | null {
+    const schools: SummarySchool[] = [];
+    const values: number[] = [];
+    for (const school of BAZI_SCHOOLS) {
+      const state = reading.schools[school.key];
+      if (state.status !== "done" || !state.output) {
+        continue;
+      }
+      const output = state.output;
+      const item: SummarySchool = {
+        name: school.name, school: school.school, useGod: output.useGod,
+        headline: output.headline, reason: output.reason, sections: output.sections, advice: output.advice,
+      };
+      if ("verdict" in output) {
+        values.push(output.confidenceTenths);
+        item.verdict = output.verdict;
+        item.confidenceTenths = output.confidenceTenths;
+        if (output.timing) {
+          item.timing = output.timing;
+        }
+      }
+      schools.push(item);
+    }
+    if (schools.length === 0) {
+      return null;
+    }
+    const chart = reading.chart;
+    const facts = buildBaziFacts(chart, reading.analysis, reading.tiaohou);
+    const pillars = [chart.pillars.year, chart.pillars.month, chart.pillars.day, chart.pillars.time]
+      .map((pillar) => pillar?.ganZhi ?? "缺").join(" ");
+    const points = [
+      `四柱：${pillars}（日主${chart.dayMaster}）`,
+      `调候：${reading.tiaohou.section}，用神${reading.tiaohou.useStems.join("、")}`,
+    ];
+    const anchor = chart.liunian.years.find((item) => item.year === chart.liunian.anchorYear);
+    if (anchor) {
+      points.push(`所问之年：${anchor.year} ${anchor.ganZhi}，大运${anchor.luck?.ganZhi ?? "起运前"}`);
+    }
+    const input: SummaryInput = {
+      kind: reading.kind,
+      question: reading.question,
+      consensus: reading.kind === "fortune" ? averageConfidence(values) : null,
+      chartPoints: points,
+      schools,
+      proseErrors: (text) => auditBaziSummaryProse(text, facts),
+    };
+    if (reading.kind === "fortune") {
+      input.horizonLabel = reading.context.label;
+      input.yearConsensus = yearConsensus(reading)
+        .map((item) => (item ? `${item.year} ${item.average.toFixed(1)}成` : null))
+        .filter((item): item is string => item !== null)
+        .join(" · ");
+    }
+    return input;
   }
   private async finish(id: string): Promise<void> {
     await this.deps.store.update<StoredBaziReading>(id, (reading) => ({ ...reading, status: "done" }));

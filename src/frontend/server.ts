@@ -111,6 +111,7 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
       }
       const idRoute = url.pathname.match(/^\/api\/readings\/([^/]+)$/);
       const castRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/cast$/);
+      const summaryRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/summary\/retry$/);
       const retryRoute = url.pathname.match(
         /^\/api\/readings\/([^/]+)\/schools\/([^/]+)\/retry$/,
       );
@@ -144,6 +145,10 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
       }
       if (castRoute && request.method === "POST" && api && isReadingId(castRoute[1] ?? "")) {
         json(response, 200, await api.continueCasting(castRoute[1] as string));
+        return;
+      }
+      if (summaryRoute && request.method === "POST" && api && isReadingId(summaryRoute[1] ?? "")) {
+        json(response, 200, await api.retrySummary(summaryRoute[1] as string));
         return;
       }
       const retryKey = retryRoute?.[2] as QuestionSchoolKey | BaziSchoolKey | undefined;

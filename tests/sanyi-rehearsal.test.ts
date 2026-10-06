@@ -9,6 +9,8 @@ test("mock 排练完成六掷与三家落笔", async () => {
   assert.deepEqual(summary.schools.map((item) => item.status), ["done", "done", "done"]);
   assert.equal(summary.schools.map((item) => item.name).join("、"), "程颐、京房、邵雍");
   assert.equal(Number.isFinite(summary.consensusTenths), true);
+  assert.ok(summary.conclusions.question.length > 0);
+  assert.ok(summary.conclusions.fortune.length > 0);
 });
 
 test("mock 排练追加十年运势与免费换日，只有两笔付款", async () => {

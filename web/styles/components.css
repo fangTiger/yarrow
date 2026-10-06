@@ -905,3 +905,126 @@
   min-height: 0;
   accent-color: var(--gold);
 }
+
+/* 白话总述（设计文档 21.3）：结果页最上方，三家依据折叠在其后。 */
+.plain-summary {
+  gap: 14px;
+}
+.summary-progress {
+  margin: 0;
+  color: var(--gold);
+  font-family: var(--brush);
+  font-size: 22px;
+  letter-spacing: 0.1em;
+}
+.summary-conclusion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
+.summary-conclusion p {
+  margin: 0;
+  color: var(--paper);
+  font-family: var(--dynamic);
+  font-weight: 600;
+  font-size: clamp(24px, 3.4vw, 32px);
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+}
+.summary-tone {
+  font-family: var(--sans);
+}
+.summary-tone.tone-顺 {
+  border-color: var(--jade);
+  background: var(--jade-soft);
+  color: var(--jade);
+}
+.summary-tone.tone-不顺 {
+  border-color: var(--cinnabar);
+  background: var(--cinnabar-soft);
+  color: var(--cinnabar);
+}
+.summary-points {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  margin: 0;
+  border: 1px solid var(--line);
+}
+.summary-points div {
+  padding: 12px 14px;
+  border-right: 1px solid var(--line);
+}
+.summary-points div:last-child {
+  border-right: 0;
+}
+.summary-points dt {
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+.summary-points dd {
+  margin: 4px 0 0;
+  line-height: 1.8;
+}
+.summary-explain p {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.9;
+}
+.summary-advice h3 {
+  margin: 0 0 6px;
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+}
+.summary-advice ol {
+  margin: 0;
+  padding-left: 1.4em;
+  line-height: 1.9;
+}
+.summary-watch, .summary-outlook {
+  margin: 0;
+  line-height: 1.8;
+}
+.summary-watch b, .summary-outlook b {
+  margin-right: 10px;
+  color: var(--gold);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+.schools-fold > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--brush);
+  font-size: 22px;
+  letter-spacing: 0.1em;
+}
+.schools-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.schools-fold > summary::before {
+  content: "▸";
+  color: var(--gold);
+  font-family: var(--sans);
+  font-size: 14px;
+}
+.schools-fold[open] > summary::before {
+  content: "▾";
+}
+.schools-fold > summary span {
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.repair-note {
+  margin: 4px 0 0;
+}

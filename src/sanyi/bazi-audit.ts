@@ -124,6 +124,16 @@ export function auditBaziProse(text: string, facts: FactTable): string[] {
   return errors;
 }
 
+/** 核对白话总述的正文：十年走势会谈到窗口内各年，故关键词认全部事实；藏干归属与缺时柱规则照旧。 */
+export function auditBaziSummaryProse(text: string, facts: FactTable): string[] {
+  const errors = textErrors(text, union(facts), "总述");
+  if (facts.has("chart:limit") && /(?:时柱|命宫|身宫)[^。；\n]{0,8}[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/u
+    .test(text)) {
+    errors.push("缺时柱，不得引用时柱、命宫或身宫干支");
+  }
+  return errors;
+}
+
 /** 核对一年短评：只认该年流年事实与原局事实。 */
 export function auditBaziNote(item: { year: number; note: string }, facts: FactTable): string[] {
   const year = facts.get(`year:${item.year}`);

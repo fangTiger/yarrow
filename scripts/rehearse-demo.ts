@@ -25,6 +25,8 @@ export interface RehearsalSummary {
     confidenceTenths: number;
   }>;
   consensusTenths: number;
+  /** 问事与运势两卦的白话总述结论。 */
+  conclusions: { question: string; fortune: string };
   payments: number;
   bazi: {
     pillars: (string | null)[];
@@ -119,7 +121,15 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
     assert.equal(after.changes, 1);
     assert.ok(Object.values(after.schools).every((state) => state.status === "done" && state.attempts === 2));
     assert.equal(payments, paymentsBeforeSwitch);
+    // 两卦都要写出白话总述：问事依据三家，运势换日后重写。
+    assert.equal(reading.summary?.status, "done");
+    assert.equal(after.summary?.status, "done");
+    assert.equal(after.summary?.basis, 3);
     return {
+      conclusions: {
+        question: reading.summary?.output?.conclusion ?? "",
+        fortune: after.summary?.output?.conclusion ?? "",
+      },
       payments,
       bazi: { pillars, window, schools: Object.values(after.schools).map((state) => state.status),
         years: publicBefore.years.length, sectAfterSwitch: after.chart.sect, changes: after.changes },
@@ -146,8 +156,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       console.log(`${school.name}：${school.verdict}，${school.confidenceTenths}成`);
     }
     console.log(`合议平均：约${summary.consensusTenths.toFixed(1)}成`);
+    console.log(`问事白话总述：${summary.conclusions.question}`);
     console.log(`运势四柱：${summary.bazi.pillars.join(" ")}；窗口：${summary.bazi.window.join("–")}`);
     console.log(`三家已完成，逐年合议 ${summary.bazi.years} 项；免费换日后重跑完成`);
+    console.log(`运势白话总述：${summary.conclusions.fortune}`);
     console.log(`付款共 ${summary.payments} 笔，换日未新增付款`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

@@ -64,6 +64,10 @@ function fixture() {
       calls.push(`cast:${id}`);
       return value;
     },
+    async retrySummary(id: string) {
+      calls.push(`summary:${id}`);
+      return value;
+    },
     async getReading(id: string) {
       calls.push(`get:${id}`);
       if (id === "aaaaaaaaaaaaaaaaaaaaaaaaaa") {
@@ -96,6 +100,8 @@ test("校验问题与事项；继续起卦走服务且不再提供单掷接口",
   assert.equal("throwCoin" in api, false);
   await api.continueCasting(ID);
   assert.ok(calls.includes(`cast:${ID}`));
+  await api.retrySummary(ID);
+  assert.ok(calls.includes(`summary:${ID}`));
 });
 test("命理与运势缺生辰先给中文 400", async () => {
   const { api } = fixture();
