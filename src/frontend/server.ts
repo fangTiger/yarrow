@@ -5,7 +5,7 @@ import { isAbsolute, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createArcPublicClient } from "../arc.js";
 import { createDefaultProvider } from "../agent/default-provider.js";
-import { ArcQuestionFeeVerifier } from "../oracle/arc-question-fee-verifier.js";
+import { ArcFeeVerifier, feeRecipientFromEnv } from "../sanyi/fee.js";
 import { createSanyiApi, type SanyiApi } from "../sanyi/api.js";
 import {
   ForbiddenOrigin,
@@ -117,6 +117,10 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         requireSameOrigin(request);
       }
       const body = writing && isApi ? await readJsonBody(request) : undefined;
+      if (request.method === "GET" && url.pathname === "/api/payment" && api) {
+        json(response, 200, await api.payment());
+        return;
+      }
       if (request.method === "GET" && url.pathname === "/api/now" && api) {
         json(response, 200, await api.now());
         return;
@@ -185,8 +189,9 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const publicClient = createArcPublicClient();
+  const recipient = feeRecipientFromEnv(process.env);
   const service = new ReadingService({
-    feeVerifier: new ArcQuestionFeeVerifier(publicClient),
+    feeVerifier: new ArcFeeVerifier(publicClient, recipient),
     blockSource: {
       latest: async () => {
         const block = await publicClient.getBlock({ blockTag: "latest" });
@@ -201,8 +206,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     logger: createSanyiLogger(),
   });
   const port = Number(process.env.FRONTEND_PORT ?? "4173");
-  createFrontendServer({ api: createSanyiApi(service) }).listen(port, "127.0.0.1", () => {
+  createFrontendServer({ api: createSanyiApi(service, { recipient }) }).listen(port, "127.0.0.1", () => {
     console.log(`三易服务已启动：http://127.0.0.1:${port}`);
+    console.log(`三易收款地址：${recipient}`);
     console.log("问事卦金：0.05 USDC；付款后亲手六掷，三家依同一卦独立落笔");
     console.log("复算材料：付款首笔交易与六个 Arc 区块会随解读存档");
   });

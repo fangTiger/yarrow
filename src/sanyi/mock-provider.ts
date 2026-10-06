@@ -1,3 +1,6 @@
+import { encodeAbiParameters, encodeEventTopics, parseAbi, type Hex } from "viem";
+import { USDC_TOKEN_ADDRESS } from "../frontend/wallet.js";
+import { feeRecipientFromEnv, FEE_USDC6, verifySingleFeeTransfer, type SanyiFeeProof } from "./fee.js";
 // src/sanyi/mock-provider.ts
 import { hashJson } from "../agent/audit.js";
 import type {
@@ -32,4 +35,23 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
     }
     return mockSchoolOutput(key, factsFromPrompt(request.userPrompt)) as T;
   }
+}
+
+/** 排练也使用标准转账日志，走与真实付款相同的纯函数核验。 */
+export function mockSingleFeeReceipt(proof: SanyiFeeProof) {
+  const recipient = feeRecipientFromEnv({});
+  const abi = parseAbi(["event Transfer(address indexed from,address indexed to,uint256 value)"]);
+  return verifySingleFeeTransfer({
+    payer: proof.payer, recipient, amountUsdc6: FEE_USDC6,
+    receipt: {
+      status: "success", blockNumber: 1n, transactionHash: proof.transactionHash,
+      logs: [{
+        address: USDC_TOKEN_ADDRESS,
+        topics: encodeEventTopics({
+          abi, eventName: "Transfer", args: { from: proof.payer, to: recipient },
+        }) as [Hex, ...Hex[]],
+        data: encodeAbiParameters([{ type: "uint256" }], [FEE_USDC6]),
+      }],
+    },
+  });
 }

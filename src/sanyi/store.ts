@@ -3,7 +3,6 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Address, Hex } from "viem";
-import type { QuestionFeeReceipt } from "../oracle/fee-payment.js";
 import type { LiuyaoChart } from "../oracle/liuyao-chart.js";
 import type { AlmanacResult } from "../calendar/almanac.js";
 import type { OracleSelection } from "../calendar/bianzhan.js";
@@ -35,9 +34,9 @@ export interface StoredReading {
   };
   payment: {
     payer: Address;
-    transactionHashes: readonly Hex[];
-    firstHash: Hex;
-    shares: QuestionFeeReceipt["shares"];
+    recipient: Address;
+    transactionHash: Hex;
+    feeUsdc6: string;
   };
   throws: readonly RecordedThrow[];
   schools: Record<QuestionSchoolKey, SchoolState>;

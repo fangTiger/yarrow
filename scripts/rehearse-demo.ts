@@ -3,11 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { mockQuestionFeeReceipt } from "../src/oracle/fee-payment.js";
-import type { QuestionFeeProof } from "../src/oracle/fee-payment.js";
+import type { SanyiFeeProof } from "../src/sanyi/fee.js";
 import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
 import { createSanyiLogger } from "../src/sanyi/log.js";
-import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
+import { MockSchoolsProvider, mockSingleFeeReceipt } from "../src/sanyi/mock-provider.js";
 import { ReadingService } from "../src/sanyi/reading-service.js";
 import { ReadingStore } from "../src/sanyi/store.js";
 const SCHOOL_NAMES = { chengyi: "程颐", jingfang: "京房", shaoyong: "邵雍" } as const;
@@ -28,13 +27,12 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
   const root = await mkdtemp(join(tmpdir(), "sanyi-rehearsal-"));
   let height = 0n;
   try {
-    const proof: QuestionFeeProof = {
+    const proof: SanyiFeeProof = {
       payer: `0x${"11".repeat(20)}`,
-      bundleId: "rehearsal",
-      transactionHashes: [`0x${"22".repeat(32)}`],
+      transactionHash: `0x${"22".repeat(32)}`,
     };
     const service = new ReadingService({
-      feeVerifier: { verify: async (value) => mockQuestionFeeReceipt(value) },
+      feeVerifier: { verify: async (value) => mockSingleFeeReceipt(value) },
       blockSource: {
         latest: async () => {
           height += 1n;

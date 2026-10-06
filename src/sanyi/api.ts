@@ -1,7 +1,9 @@
 // src/sanyi/api.ts
 import { almanacAt } from "../calendar/almanac.js";
 import { QUESTION_SUBJECTS } from "../oracle/question-classifier.js";
-import type { QuestionFeeProof } from "../oracle/fee-payment.js";
+import { isAddress, getAddress, type Address } from "viem";
+import { ARC_CHAIN_ID, USDC_TOKEN_ADDRESS } from "../frontend/wallet.js";
+import { feeRecipientFromEnv, FEE_USDC6, type SanyiFeeProof } from "./fee.js";
 import { classifyQuestion } from "./classify.js";
 import { NotFoundError, NotOpenYetError, SanyiInputError } from "./http-errors.js";
 import type { ReadingService } from "./reading-service.js";
@@ -13,10 +15,17 @@ type ServiceBoundary = Pick<
 >;
 type SubjectKey = StoredReading["subject"]["finalKey"];
 export interface PublicReading extends Omit<StoredReading, "payment" | "schools"> {
-  payment: { firstHash: StoredReading["payment"]["firstHash"] };
+  payment: { firstHash: StoredReading["payment"]["transactionHash"] };
   schools: Record<QuestionSchoolKey, Omit<StoredReading["schools"][QuestionSchoolKey], "attempts">>;
 }
+export interface PaymentConfiguration {
+  recipient: Address;
+  amountUsdc6: string;
+  token: Address;
+  chainId: number;
+}
 export interface SanyiApi {
+  payment(): Promise<PaymentConfiguration>;
   now(): Promise<ReturnType<typeof almanacAt>>;
   classify(input: unknown): Promise<ReturnType<typeof classifyQuestion>>;
   createReading(input: unknown): Promise<PublicReading>;
@@ -52,11 +61,18 @@ function subjectFrom(value: unknown): SubjectKey | undefined {
   }
   return option.key;
 }
-function feeProofFrom(value: unknown): QuestionFeeProof {
-  if (!value || typeof value !== "object") {
+function feeProofFrom(value: unknown): SanyiFeeProof {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new SanyiInputError("缺少卦金付款凭证");
   }
-  return value as QuestionFeeProof;
+  const proof = value as Record<string, unknown>;
+  if (typeof proof.payer !== "string" || !isAddress(proof.payer)) {
+    throw new SanyiInputError("付款人地址无效");
+  }
+  if (typeof proof.transactionHash !== "string" || !/^0x[0-9a-fA-F]{64}$/u.test(proof.transactionHash)) {
+    throw new SanyiInputError("付款交易哈希无效");
+  }
+  return { payer: getAddress(proof.payer), transactionHash: proof.transactionHash as `0x${string}` };
 }
 function publicReading(reading: StoredReading): PublicReading {
   const school = (key: QuestionSchoolKey) => {
@@ -65,7 +81,7 @@ function publicReading(reading: StoredReading): PublicReading {
   };
   return {
     ...reading,
-    payment: { firstHash: reading.payment.firstHash },
+    payment: { firstHash: reading.payment.transactionHash },
     schools: {
       chengyi: school("chengyi"),
       jingfang: school("jingfang"),
@@ -85,11 +101,15 @@ async function notFound<T>(operation: () => Promise<T>): Promise<T> {
 }
 export function createSanyiApi(
   service: ServiceBoundary,
-  options: { now?: () => Date } = {},
+  options: { now?: () => Date; recipient?: Address } = {},
 ): SanyiApi {
   const clock = options.now ?? (() => new Date());
   let cache: { createdAt: number; value: ReturnType<typeof almanacAt> } | undefined;
   return {
+    async payment() {
+      return { recipient: options.recipient ?? feeRecipientFromEnv({}), amountUsdc6: FEE_USDC6.toString(),
+        token: USDC_TOKEN_ADDRESS, chainId: ARC_CHAIN_ID };
+    },
     async now() {
       const milliseconds = clock().getTime();
       if (cache && milliseconds - cache.createdAt < 30_000) {

@@ -5,12 +5,9 @@ import { deriveMeihua } from "../calendar/meihua.js";
 import { qimenAt } from "../calendar/qimen.js";
 import { QUESTION_SUBJECTS } from "../oracle/question-classifier.js";
 import type { QuestionSubjectKey } from "../oracle/question-classifier.js";
-import type { QuestionFeeProof } from "../oracle/fee-payment.js";
+import type { SanyiFeeProof, SanyiFeeVerifier } from "./fee.js";
 import { buildLiuyaoChart, deriveFiveHexagrams } from "../oracle/liuyao-chart.js";
-import type {
-  QuestionBlockSource,
-  QuestionFeeVerifier,
-} from "../oracle/question-oracle.js";
+import type { QuestionBlockSource } from "../oracle/question-oracle.js";
 import type { StructuredOutputProvider } from "../agent/provider.js";
 import { classifyQuestion, normalizeQuestion } from "./classify.js";
 import { buildQuestionFacts, type FactTable } from "./facts.js";
@@ -40,7 +37,7 @@ interface CalendarDependencies {
 }
 
 export interface ReadingServiceDependencies {
-  feeVerifier: QuestionFeeVerifier;
+  feeVerifier: SanyiFeeVerifier;
   blockSource: QuestionBlockSource;
   provider: StructuredOutputProvider;
   store: ReadingStore;
@@ -81,14 +78,6 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function paymentClaimKey(proof: QuestionFeeProof): string {
-  return JSON.stringify({
-    payer: proof.payer.toLowerCase(),
-    bundleId: proof.bundleId,
-    transactionHashes: proof.transactionHashes.map((hash) => hash.toLowerCase()),
-  });
-}
-
 function subjectOption(key: QuestionSubjectKey) {
   const option = QUESTION_SUBJECTS.find((item) => item.key === key);
   if (!option) {
@@ -121,7 +110,7 @@ export class ReadingService {
   async createQuestionReading(input: {
     question: string;
     subjectKey?: QuestionSubjectKey;
-    feeProof: QuestionFeeProof;
+    feeProof: SanyiFeeProof;
   }): Promise<StoredReading> {
     const classification = classifyQuestion(input.question);
     if (classification.kind !== "question" || !classification.subject) {
@@ -131,16 +120,12 @@ export class ReadingService {
     const suggested = classification.subject;
     const selected = subjectOption(input.subjectKey ?? suggested.key);
     const receipt = await this.deps.feeVerifier.verify(input.feeProof);
-    if (receipt.feeUsdc6 !== "50000" || receipt.shares.length !== 3) {
-      throw new Error("三座卦金账户付款凭证不完整");
-    }
-    const firstHash = receipt.transactionHashes[0];
-    if (!firstHash) {
-      throw new Error("付款交易哈希不完整");
+    if (receipt.feeUsdc6 !== "50000") {
+      throw new Error("卦金付款凭证金额不完整");
     }
     const id = newReadingId();
     const existing = await this.deps.store.claimPayment(
-      paymentClaimKey(input.feeProof),
+      receipt.transactionHash.toLowerCase(),
       id,
     );
     if (existing) {
@@ -158,10 +143,10 @@ export class ReadingService {
         changes: 0,
       },
       payment: {
-        payer: input.feeProof.payer,
-        transactionHashes: receipt.transactionHashes,
-        firstHash,
-        shares: receipt.shares,
+        payer: receipt.payer,
+        recipient: receipt.recipient,
+        transactionHash: receipt.transactionHash,
+        feeUsdc6: receipt.feeUsdc6,
       },
       throws: [],
       schools: initialSchools(),
@@ -186,7 +171,7 @@ export class ReadingService {
         this.waitOptions,
       );
       const result = deriveThrow({
-        paymentTxHash: reading.payment.firstHash,
+        paymentTxHash: reading.payment.transactionHash,
         blockHash: block.hash,
         question: reading.question,
         index,

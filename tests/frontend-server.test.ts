@@ -13,6 +13,8 @@ import { createFrontendServer } from "../src/frontend/server.js";
 function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
   const reading = { id: "abcdefghijklmnopqrstuvwxyz", status: "awaiting-throws" };
   return {
+    payment: async () => ({ recipient: `0x${"11".repeat(20)}`, amountUsdc6: "50000",
+      token: "0x3600000000000000000000000000000000000000", chainId: 5042002 }),
     now: async () => ({ solar: { text: "2026-09-30 20:15:00" } }) as never,
     classify: async () => ({ kind: "question" }) as never,
     createReading: async () => reading as never,
@@ -174,6 +176,19 @@ test("woff2 使用正确类型且原始路径穿越返回 403", async () => {
       call.end();
     });
     assert.equal(status, 403);
+  } finally {
+    await close(item);
+  }
+});
+
+test("付款配置 GET 无需同源校验", async () => {
+  const item = await fixture();
+  try {
+    const response = await fetch(`${item.base}/api/payment`, {
+      headers: { origin: "https://other.example" },
+    });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json() as { amountUsdc6: string }).amountUsdc6, "50000");
   } finally {
     await close(item);
   }

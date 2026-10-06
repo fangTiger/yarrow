@@ -8,8 +8,8 @@ import type {
   StructuredOutputProvider,
   StructuredOutputRequest,
 } from "../src/agent/provider.js";
-import { mockQuestionFeeReceipt } from "../src/oracle/fee-payment.js";
-import type { QuestionFeeProof } from "../src/oracle/fee-payment.js";
+import { mockSingleFeeReceipt } from "../src/sanyi/mock-provider.js";
+import type { SanyiFeeProof } from "../src/sanyi/fee.js";
 import type { QuestionBlockSource } from "../src/oracle/question-oracle.js";
 import { createSanyiLogger, type SanyiLogger } from "../src/sanyi/log.js";
 import { mockSchoolOutput } from "../src/sanyi/mock-schools.js";
@@ -26,10 +26,9 @@ import { ReadingStore } from "../src/sanyi/store.js";
 import { ArcUnavailableError } from "../src/sanyi/throws.js";
 
 const TX = `0x${"22".repeat(32)}` as const;
-const PROOF: QuestionFeeProof = {
+const PROOF: SanyiFeeProof = {
   payer: `0x${"11".repeat(20)}`,
-  bundleId: "bundle-1",
-  transactionHashes: [TX],
+  transactionHash: TX,
 };
 
 class FakeBlockSource implements QuestionBlockSource {
@@ -136,6 +135,7 @@ interface Fixture {
 async function fixture(input: {
   root?: string;
   calendarThrows?: boolean;
+  paymentHash?: SanyiFeeProof["transactionHash"];
 } = {}): Promise<Fixture> {
   const root = input.root ?? await mkdtemp(join(tmpdir(), "sanyi-service-"));
   const store = new ReadingStore(root);
@@ -144,7 +144,9 @@ async function fixture(input: {
   const logger = createSanyiLogger(join(root, "log"), () => new Date(0));
   const service = new ReadingService({
     feeVerifier: {
-      verify: async (proof: QuestionFeeProof) => mockQuestionFeeReceipt(proof),
+      verify: async (proof: SanyiFeeProof) => mockSingleFeeReceipt({
+        ...proof, transactionHash: input.paymentHash ?? proof.transactionHash,
+      }),
     },
     blockSource: blocks,
     provider,
@@ -174,7 +176,7 @@ async function fixture(input: {
 
 async function create(
   service: ReadingService,
-  feeProof: QuestionFeeProof = PROOF,
+  feeProof: SanyiFeeProof = PROOF,
 ) {
   return service.createQuestionReading({
     question: "这次面试能过吗",
@@ -279,7 +281,7 @@ test("一家失败被隔离、可成功重试且每卦第三次重试超限", as
     assert.equal(stored.schools.chengyi.status, "done");
     const second = await create(item.service, {
       ...PROOF,
-      bundleId: "bundle-2",
+      transactionHash: `0x${"44".repeat(32)}`,
     });
     item.provider.throwFor = "chengyi";
     await castAll(item.service, second.id);
@@ -479,6 +481,36 @@ test("日志文件存在且 birthDate 字段被过滤", async () => {
     const log = await readFile(path, "utf8");
     assert.match(log, /测试日志/);
     assert.doesNotMatch(log, /birthDate|不可记录/);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("存档保存单笔付款字段且交易哈希忽略大小写防复用", async () => {
+  const item = await fixture();
+  try {
+    const proof: SanyiFeeProof = { ...PROOF, transactionHash: `0x${"ab".repeat(32)}` };
+    const first = await create(item.service, proof);
+    assert.equal(first.payment.transactionHash, proof.transactionHash);
+    assert.equal(first.payment.feeUsdc6, "50000");
+    assert.ok(first.payment.recipient);
+    assert.equal("shares" in first.payment, false);
+    await assert.rejects(create(item.service, {
+      ...proof, transactionHash: `0x${"AB".repeat(32)}`,
+    }), (error: unknown) => error instanceof PaymentAlreadyUsedError && error.readingId === first.id);
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("原交易与加速交易对应同一确认回执时不可重复付款", async () => {
+  const confirmedHash = `0x${"cd".repeat(32)}` as const;
+  const item = await fixture({ paymentHash: confirmedHash });
+  try {
+    const first = await create(item.service);
+    assert.equal(first.payment.transactionHash, confirmedHash);
+    await assert.rejects(create(item.service, { ...PROOF, transactionHash: confirmedHash }),
+      (error: unknown) => error instanceof PaymentAlreadyUsedError && error.readingId === first.id);
   } finally {
     await rm(item.root, { recursive: true, force: true });
   }

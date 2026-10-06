@@ -21,9 +21,9 @@ function emptyReading(id = newReadingId()): StoredReading {
     },
     payment: {
       payer: `0x${"11".repeat(20)}`,
-      transactionHashes: [`0x${"22".repeat(32)}`],
-      firstHash: `0x${"22".repeat(32)}`,
-      shares: [],
+      transactionHash: `0x${"22".repeat(32)}`,
+      recipient: `0x${"33".repeat(20)}`,
+      feeUsdc6: "50000",
     },
     throws: [],
     schools: {

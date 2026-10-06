@@ -1,7 +1,7 @@
 // tests/sanyi-api.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { QuestionFeeProof } from "../src/oracle/fee-payment.js";
+import type { SanyiFeeProof } from "../src/sanyi/fee.js";
 import { createSanyiApi } from "../src/sanyi/api.js";
 import {
   NotFoundError,
@@ -10,10 +10,9 @@ import {
 } from "../src/sanyi/http-errors.js";
 import type { StoredReading } from "../src/sanyi/store.js";
 const ID = "abcdefghijklmnopqrstuvwxyz";
-const PROOF: QuestionFeeProof = {
+const PROOF: SanyiFeeProof = {
   payer: `0x${"11".repeat(20)}`,
-  bundleId: "bundle-1",
-  transactionHashes: [`0x${"22".repeat(32)}`],
+  transactionHash: `0x${"22".repeat(32)}`,
 };
 function reading(): StoredReading {
   return {
@@ -29,9 +28,9 @@ function reading(): StoredReading {
     },
     payment: {
       payer: PROOF.payer,
-      transactionHashes: PROOF.transactionHashes,
-      firstHash: PROOF.transactionHashes[0]!,
-      shares: [],
+      transactionHash: PROOF.transactionHash,
+      recipient: `0x${"33".repeat(20)}`,
+      feeUsdc6: "50000",
     },
     throws: [{
       index: 1,
@@ -119,7 +118,7 @@ test("公开 reading 保留复算材料但移除内部字段", async () => {
   const value = await api.getReading(ID);
   const text = JSON.stringify(value);
   assert.equal(value.question, "这次面试能过吗");
-  assert.equal(value.payment.firstHash, PROOF.transactionHashes[0]);
+  assert.equal(value.payment.firstHash, PROOF.transactionHash);
   assert.equal(value.throws[0]?.blockNumber, "8");
   assert.deepEqual(value.lines, [7, 8, 7, 8, 7, 8]);
   assert.equal(value.castTime, "1790770501");
@@ -139,4 +138,19 @@ test("now 在三十秒内复用对象，满三十秒刷新", async () => {
   assert.equal(await api.now(), first);
   advance(1);
   assert.notEqual(await api.now(), first);
+});
+
+test("付款配置下发服务器收款地址与链信息", async () => {
+  const { api } = fixture();
+  assert.deepEqual(await api.payment(), {
+    recipient: "0x737301a6A40ea453A877627c409EF5756a395DB9",
+    amountUsdc6: "50000", token: "0x3600000000000000000000000000000000000000", chainId: 5042002,
+  });
+});
+test("拒绝缺失或非法单笔付款凭证", async () => {
+  const { api } = fixture();
+  for (const feeProof of [{ payer: PROOF.payer }, { ...PROOF, payer: "bad" },
+    { ...PROOF, transactionHash: "0x12" }, []]) {
+    await assert.rejects(api.createReading({ question: "这次面试能过吗", feeProof }), SanyiInputError);
+  }
 });

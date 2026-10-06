@@ -1,4 +1,5 @@
 // src/sanyi/http-errors.ts
+import { FeePaymentError } from "./fee.js";
 import {
   LimitExceededError,
   PaymentAlreadyUsedError,
@@ -46,6 +47,9 @@ export function statusForError(error: unknown): number {
     || error instanceof StateConflictError
   ) {
     return 409;
+  }
+  if (error instanceof FeePaymentError) {
+    return 400;
   }
   if (error instanceof ArcUnavailableError) {
     return 503;
