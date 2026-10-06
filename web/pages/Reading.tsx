@@ -9,7 +9,8 @@ import { HexagramFigure } from "../components/HexagramFigure.js";
 import { Luopan } from "../components/Luopan.js";
 import { ShikongBar, toView } from "../components/ShikongBar.js";
 import { ThrowRecord } from "../components/ThrowRecord.js";
-import { api, type PublicReading } from "../lib/api.js";
+import { BaziReading } from "./BaziReading.js";
+import { api, type AnyPublicReading, type PublicReading } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
 import { readingStage, shouldPollReading } from "../lib/reading-state.js";
 import { AlmanacPanel } from "../components/AlmanacPanel.js";
@@ -45,7 +46,10 @@ function Result(props: {
   const retry = async (key: typeof SCHOOL_KEYS[number]) => {
     setRetryError("");
     try {
-      props.onReading(await api.retrySchool(reading.id, key));
+      const value = await api.retrySchool(reading.id, key);
+      if (value.kind === "question") {
+        props.onReading(value);
+      }
     } catch (caught) {
       setRetryError(caught instanceof Error ? caught.message : "此家暂未能重试，请稍后再试");
     }
@@ -114,7 +118,7 @@ function Result(props: {
   );
 }
 export function Reading({ id }: { id: string }) {
-  const [reading, setReading] = useState<PublicReading>();
+  const [reading, setReading] = useState<AnyPublicReading>();
   const [error, setError] = useState("");
   const refresh = useCallback(async () => {
     try {
@@ -158,6 +162,9 @@ export function Reading({ id }: { id: string }) {
         <section aria-live="polite" className="panel">正在打开这一卦</section>
       </main>
     );
+  }
+  if (reading.kind !== "question") {
+    return <main className="page"><header className="topbar"><span className="seal">问</span><span className="brand">三易</span><nav className="nav"><a href="#/">返回首页</a></nav><WalletBar /></header><ShikongBar data={toView(reading.almanac)} /><BaziReading reading={reading} onReading={setReading} /></main>;
   }
   const stage = readingStage(reading);
   const view = reading.almanac ? toView(reading.almanac) : undefined;

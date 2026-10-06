@@ -28,6 +28,7 @@ button, a, input, select {
 }
 .page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 26px;
   width: 100%;
   max-width: 1280px;

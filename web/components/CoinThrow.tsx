@@ -30,7 +30,9 @@ export function CoinThrow(props: {
       const result = await api.throwCoin(props.reading.id, state.nextIndex);
       dispatch({ type: "resolved", result });
       const reading = await api.getReading(props.reading.id);
-      props.onReading(reading);
+      if (reading.kind === "question") {
+        props.onReading(reading);
+      }
     } catch (caught) {
       const message = caught instanceof ApiError && [409, 503].includes(caught.status)
         ? caught.message || ARC_MESSAGE

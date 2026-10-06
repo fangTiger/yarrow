@@ -13,6 +13,8 @@ export interface CreateReadingInput {
   kind: Classification["kind"];
   subjectKey?: string;
   horizon?: string;
+  birth?: import("./birth-profile.js").BirthProfileInput;
+  sect?: 1 | 2;
   feeProof: SanyiFeeProof;
 }
 export class ApiError extends Error {
@@ -41,13 +43,15 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     getPayment: () => request<PaymentConfiguration>("/api/payment"),
     getNow: () => request<NowResponse>("/api/now"),
     classify: (question: string) => request<Classification>("/api/classify", { question }),
-    createReading: (input: CreateReadingInput) => request<PublicReading>("/api/readings", input),
+    createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
     throwCoin: (id: string, index: number) => request<ThrowResult>(`/api/readings/${id}/throws`, { index }),
-    getReading: (id: string) => request<PublicReading>(`/api/readings/${id}`),
-    retrySchool: (id: string, key: QuestionSchoolKey) => request<PublicReading>(
+    getReading: (id: string) => request<AnyPublicReading>(`/api/readings/${id}`),
+    retrySchool: (id: string, key: QuestionSchoolKey | import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey) => request<AnyPublicReading>(
       `/api/readings/${id}/schools/${key}/retry`,
       {},
     ),
+    changeDayBoundary: (id: string, birth: import("./birth-profile.js").BirthProfileInput, sect: 1 | 2) =>
+      request<AnyPublicReading>(`/api/readings/${id}/day-boundary`, { birth, sect }),
     changeSubject: (id: string, subjectKey: string) => request<PublicReading>(
       `/api/readings/${id}/subject`,
       { subjectKey },

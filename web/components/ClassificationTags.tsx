@@ -53,9 +53,7 @@ export function ClassificationTags(props: ClassificationTagsProps) {
           ))}
         </div>
       ) : null}
-      {["destiny", "fortune"].includes(view.kind) ? (
-        <p>即将开放，可先改为问事</p>
-      ) : null}
+
       {!view.supported && view.suggestion ? <p>{view.suggestion}</p> : null}
       {view.kind !== "question" ? (
         <button onClick={props.onQuestionFallback} type="button">

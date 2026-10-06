@@ -79,3 +79,9 @@ export function readingGuide(chart: LiuyaoChart): readonly { title: string; text
     },
   ];
 }
+
+export const BAZI_TERM_DEFINITIONS = {
+  胎元: "从出生月柱推算的传统辅助字段。",
+  命宫: "按出生月份与时辰推算的传统辅助字段，缺时辰不展示。",
+  身宫: "按出生月份与时辰推算的传统辅助字段，缺时辰不展示。",
+} as const;

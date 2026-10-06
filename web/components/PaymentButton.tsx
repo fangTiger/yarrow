@@ -1,23 +1,30 @@
 // web/components/PaymentButton.tsx
 import { truncateAddress } from "../lib/wallet-summary.js";
+import type { BirthProfileInput } from "../lib/birth-profile.js";
+import { isMissingBirth } from "../lib/birth-entry.js";
+import type { SanyiFeeProof } from "../../src/sanyi/fee.js";
 import { useState } from "react";
 import { formatUnits } from "viem";
 import { api, ApiError } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
 import { useFeePayment } from "../lib/use-fee-payment.js";
 import type { ClassificationView } from "./ClassificationTags.js";
-export function PaymentButton(props: { question: string; classification: ClassificationView }) {
+export function PaymentButton(props: { question: string; classification: ClassificationView; birth?: BirthProfileInput | null; onMissingBirth?(): void }) {
   const { pay, payment, estimatedGasWei18, connectionMessage } = useFeePayment();
+  const [paidProof, setPaidProof] = useState<SanyiFeeProof>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const submit = async () => {
     setBusy(true);
     setError("");
     try {
-      const feeProof = await pay();
+      const feeProof = paidProof ?? await pay();
+      setPaidProof(feeProof);
       const reading = await api.createReading({
         question: props.question,
-        kind: "question",
+        kind: props.classification.kind as "question" | "destiny" | "fortune",
+        ...(props.birth ? { birth: props.birth, sect: 1 as const } : {}),
+        ...(props.classification.horizon ? { horizon: props.classification.horizon } : {}),
         ...(props.classification.subjectKey
           ? { subjectKey: props.classification.subjectKey }
           : {}),
@@ -34,6 +41,9 @@ export function PaymentButton(props: { question: string; classification: Classif
       if (caught instanceof ApiError && caught.status === 409 && caught.readingId) {
         location.hash = `/r/${caught.readingId}`;
         return;
+      }
+      if (isMissingBirth(caught)) {
+        props.onMissingBirth?.();
       }
       setError(caught instanceof Error ? caught.message : "付款未完成，本次没有扣款");
     } finally { setBusy(false); }

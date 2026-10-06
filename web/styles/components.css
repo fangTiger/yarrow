@@ -638,3 +638,9 @@
     font-size: 12px;
   }
 }
+
+/* 生辰表单使用现有 tokens。 */
+.birth-form label { display:grid;gap:6px;margin:12px 0; }
+.birth-form input,.birth-form select {color:var(--paper);background:var(--panel-2);border:1px solid var(--line-strong);padding:8px;min-width:0;width:100%;}
+.birth-form input[type="checkbox"] {width:auto;}
+.birth-date {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}

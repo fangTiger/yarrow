@@ -9,7 +9,7 @@ export function RecentReadings({ readings }: { readings: readonly RecentReading[
           {readings.map((item) => (
             <li key={item.id}>
               <a href={`#/r/${item.id}`}>
-                <span>{item.question}</span>
+                <span>{item.kind === "destiny" ? "命理" : null}{item.kind === "fortune" ? "运势" : null} · {item.question}</span>
                 <time>{item.createdAt}</time>
               </a>
             </li>

@@ -16,7 +16,7 @@ async function webSources(root = "web"): Promise<string[]> {
 test("毛笔体字表确定、有关键字且没有假名", () => {
   const charset = buildFontCharset();
   assert.equal(charset, [...charset].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join(""));
-  for (const value of ["泰", "巽", "螣", "勾", "程", "世", "应"]) {
+  for (const value of ["泰", "巽", "螣", "勾", "程", "世", "应", ..."沈孝瞻余春台任铁樵流年运势胎元命宫身宫"]) {
     assert.match(charset, new RegExp(value));
   }
   assert.doesNotMatch(charset, /[\u3040-\u30ff]/u);

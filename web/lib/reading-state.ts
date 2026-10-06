@@ -1,5 +1,5 @@
 // web/lib/reading-state.ts
-import type { PublicReading } from "./api.js";
+import type { AnyPublicReading, PublicReading } from "./api.js";
 
 export type ReadingStage = "awaiting-throws" | "charting" | "writing" | "done" | "failed";
 type Schools = PublicReading["schools"];
@@ -21,7 +21,7 @@ export function readingStage(reading: PublicReading): ReadingStage {
   return reading.status === "done" ? "done" : "writing";
 }
 
-export function shouldPollReading(reading: PublicReading): boolean {
+export function shouldPollReading(reading: AnyPublicReading): boolean {
   if (reading.status === "charting" || reading.status === "writing") {
     return true;
   }

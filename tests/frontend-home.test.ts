@@ -60,7 +60,8 @@ test("问事、运势与起名标签提供正确动作", () => {
     }),
   }));
   assert.match(question, /问事.*工作官职/su);
-  assert.match(fortune, /即将开放，可先改为问事/u);
+  assert.doesNotMatch(fortune, /即将开放/u);
+  assert.match(fortune, /改为问事/u);
   assert.match(naming, /可改为问事/u);
   assert.doesNotMatch(question + fortune + naming, forbidden);
 });
