@@ -1,0 +1,54 @@
+{
+  "id": "dst-1990-after",
+  "tag": "dst:1990:after",
+  "clock": {
+    "year": 1990,
+    "month": 9,
+    "day": 16,
+    "hour": 2,
+    "minute": 0,
+    "second": 0
+  },
+  "effective": {
+    "year": 1990,
+    "month": 9,
+    "day": 16,
+    "hour": 2,
+    "minute": 0,
+    "second": 0
+  },
+  "dstMinutes": 0,
+  "lunar": null,
+  "source": {
+    "package": "sxtwl==2.0.6",
+    "yearMonthRule": "原生按交节日切换；依 sxtwl 交节时刻在交节前取前一日年/月柱",
+    "dayRule": "getDayGZ 按零点；sect 1 的 23 点取下一日，sect 2 取当日",
+    "timeRule": "getHourGZ(hour, True) 按晚子时次日干起时；lunar 两种 sect 时柱同此口径"
+  },
+  "native": {
+    "year": "庚午",
+    "month": "乙酉",
+    "day": "甲申",
+    "time": "乙丑"
+  },
+  "compareFields": [
+    "year",
+    "month",
+    "day",
+    "time"
+  ],
+  "expected": {
+    "1": {
+      "year": "庚午",
+      "month": "乙酉",
+      "day": "甲申",
+      "time": "乙丑"
+    },
+    "2": {
+      "year": "庚午",
+      "month": "乙酉",
+      "day": "甲申",
+      "time": "乙丑"
+    }
+  }
+}

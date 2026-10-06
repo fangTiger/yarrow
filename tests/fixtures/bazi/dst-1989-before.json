@@ -1,0 +1,54 @@
+{
+  "id": "dst-1989-before",
+  "tag": "dst:1989:before",
+  "clock": {
+    "year": 1989,
+    "month": 4,
+    "day": 16,
+    "hour": 1,
+    "minute": 59,
+    "second": 0
+  },
+  "effective": {
+    "year": 1989,
+    "month": 4,
+    "day": 16,
+    "hour": 1,
+    "minute": 59,
+    "second": 0
+  },
+  "dstMinutes": 0,
+  "lunar": null,
+  "source": {
+    "package": "sxtwl==2.0.6",
+    "yearMonthRule": "原生按交节日切换；依 sxtwl 交节时刻在交节前取前一日年/月柱",
+    "dayRule": "getDayGZ 按零点；sect 1 的 23 点取下一日，sect 2 取当日",
+    "timeRule": "getHourGZ(hour, True) 按晚子时次日干起时；lunar 两种 sect 时柱同此口径"
+  },
+  "native": {
+    "year": "己巳",
+    "month": "戊辰",
+    "day": "丙午",
+    "time": "己丑"
+  },
+  "compareFields": [
+    "year",
+    "month",
+    "day",
+    "time"
+  ],
+  "expected": {
+    "1": {
+      "year": "己巳",
+      "month": "戊辰",
+      "day": "丙午",
+      "time": "己丑"
+    },
+    "2": {
+      "year": "己巳",
+      "month": "戊辰",
+      "day": "丙午",
+      "time": "己丑"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "leap",
+  "tag": "leap",
+  "clock": {
+    "year": 2023,
+    "month": 3,
+    "day": 22,
+    "hour": 12,
+    "minute": 0,
+    "second": 0
+  },
+  "effective": {
+    "year": 2023,
+    "month": 3,
+    "day": 22,
+    "hour": 12,
+    "minute": 0,
+    "second": 0
+  },
+  "dstMinutes": 0,
+  "lunar": {
+    "year": 2023,
+    "month": 2,
+    "day": 1,
+    "leap": true
+  },
+  "source": {
+    "package": "sxtwl==2.0.6",
+    "yearMonthRule": "原生按交节日切换；依 sxtwl 交节时刻在交节前取前一日年/月柱",
+    "dayRule": "getDayGZ 按零点；sect 1 的 23 点取下一日，sect 2 取当日",
+    "timeRule": "getHourGZ(hour, True) 按晚子时次日干起时；lunar 两种 sect 时柱同此口径"
+  },
+  "native": {
+    "year": "癸卯",
+    "month": "乙卯",
+    "day": "己卯",
+    "time": "庚午"
+  },
+  "compareFields": [
+    "year",
+    "month",
+    "day",
+    "time"
+  ],
+  "expected": {
+    "1": {
+      "year": "癸卯",
+      "month": "乙卯",
+      "day": "己卯",
+      "time": "庚午"
+    },
+    "2": {
+      "year": "癸卯",
+      "month": "乙卯",
+      "day": "己卯",
+      "time": "庚午"
+    }
+  }
+}

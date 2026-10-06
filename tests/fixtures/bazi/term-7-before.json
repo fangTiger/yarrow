@@ -1,0 +1,54 @@
+{
+  "id": "term-7-before",
+  "tag": "term:7:before",
+  "clock": {
+    "year": 2026,
+    "month": 4,
+    "day": 5,
+    "hour": 1,
+    "minute": 39,
+    "second": 42
+  },
+  "effective": {
+    "year": 2026,
+    "month": 4,
+    "day": 5,
+    "hour": 1,
+    "minute": 39,
+    "second": 42
+  },
+  "dstMinutes": 0,
+  "lunar": null,
+  "source": {
+    "package": "sxtwl==2.0.6",
+    "yearMonthRule": "原生按交节日切换；依 sxtwl 交节时刻在交节前取前一日年/月柱",
+    "dayRule": "getDayGZ 按零点；sect 1 的 23 点取下一日，sect 2 取当日",
+    "timeRule": "getHourGZ(hour, True) 按晚子时次日干起时；lunar 两种 sect 时柱同此口径"
+  },
+  "native": {
+    "year": "丙午",
+    "month": "壬辰",
+    "day": "己酉",
+    "time": "乙丑"
+  },
+  "compareFields": [
+    "year",
+    "month",
+    "day",
+    "time"
+  ],
+  "expected": {
+    "1": {
+      "year": "丙午",
+      "month": "辛卯",
+      "day": "己酉",
+      "time": "乙丑"
+    },
+    "2": {
+      "year": "丙午",
+      "month": "辛卯",
+      "day": "己酉",
+      "time": "乙丑"
+    }
+  }
+}
