@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮写完 B1–B2，其余分块后续逐块审查。
+**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮按审查修订 B1–B2，并写完 B3；B4–B7 后续逐块审查。
 
 **Architecture:** `src/calendar/` 提供确定性的生辰转换、校正与命盘事实，`src/sanyi/` 扩展按类型区分的断语、核对与编排，前端消费明确字段。原始生辰和逐步校正详情只用于请求与本机展示，持久化边界使用字段白名单；八字出生时刻与问事卦时保持独立。
 
@@ -30,7 +30,7 @@
 | `tests/bazi.test.ts` | 核验命例、顺逆、缺时辰与换日口径 | B2 |
 | `tests/bazi-fixtures.test.ts` | 双源逐字段比对和覆盖矩阵守卫 | B2 |
 | `src/calendar/bazi-relations.ts` | 原局及运年关系、七种神煞与分层五行计数 | B3 |
-| `src/calendar/data/qiongtong.json` | 120 条调候用干、原书次序与卷次 | B3 |
+| `src/calendar/data/qiongtong.json` | 120 条调候用干、原书次序、章节与逐字摘句 | B3 |
 | `src/calendar/qiongtong.ts` | 调候表合法性与日干月令查表 | B3 |
 | `tests/bazi-relations.test.ts` | 关系、神煞、藏干分层计数 | B3 |
 | `tests/qiongtong.test.ts` | 120 条覆盖、字段与出处完整性 | B3 |
@@ -101,17 +101,17 @@
 | `web/fonts/mashanzheng-chars.txt` | 补齐三家姓氏和八字固定标题 | B6 |
 | `web/fonts/mashanzheng-subset.woff2` | 从既有字表与工具重新生成字体资产 | B6 |
 | `tests/frontend-sanyi-content.test.ts` | 八字新增文案继续满足文化守卫 | B7 |
-| `docs/plans/2026-09-30-sanyi-redesign-design.md` | 修正旧夏令时日期与未校正命例描述 | B7 |
-| `openspec/changes/sanyi-chinese-redesign/specs/bazi-chart/spec.md` | 区分原钟表时刻与夏令时校正后的命例 | B7 |
+| `docs/plans/2026-09-30-sanyi-redesign-design.md` | 最终核对已更正命例与窗口说明 | B7 |
+| `openspec/changes/sanyi-chinese-redesign/specs/bazi-chart/spec.md` | 核对命例、流年窗口与关系需求的实施结果 | B7 |
 | `openspec/changes/sanyi-chinese-redesign/tasks.md` | 按实际完成状态更新第 2 节 | B7 |
 
 无需新增依赖；不修改运行时配置、密钥或 1A 历法算法。B7 清理仅限 1B 中间占位与过期提示，不删除仍有调用的问事模块。
 
 ## 分块预告
 
-- Chunk B1：生辰与出生时刻校正（本轮写完，Task B1.1–B1.3）。
-- Chunk B2：八字排盘引擎（本轮写完，Task B2.1–B2.3）。
-- Chunk B3：合冲刑害、神煞、五行计数与《穷通宝鉴》调候表。
+- Chunk B1：生辰与出生时刻校正（本轮修订，Task B1.1–B1.3）。
+- Chunk B2：八字排盘引擎（本轮修订，Task B2.1–B2.3）。
+- Chunk B3：合冲刑害、神煞、五行计数与《穷通宝鉴》调候表（本轮写完 B3.1–B3.5）。
 - Chunk B4：命理与运势三家（提示词、输出 Schema、事实表与核对、mock）。
 - Chunk B5：编排、接口与排练（命理、运势、换日切换、生辰隐私）。
 - Chunk B6：生辰表单与八字结果页（待用户确认样稿后编写）。
@@ -127,11 +127,11 @@
 - `deriveSolarMonth` 用 NOAA/Meeus 量计算太阳视黄经。B1 使用同源的儒略世纪、平黄经、平近点角及黄赤交角计算均时差，不拿节气月函数代替均时差。
 - `openspec list --specs` 与 `openspec list` 已执行；相关规范在现有变更中。CLI 遥测联网失败不影响清单。此轮只写计划，不勾 tasks，不创建重复提案。
 - 本轮不提交、不安装、不修改其它项目文件。下列代码块是将来逐步实施的完整文件；主管可抽取到隔离目录验证。实现者每次先写测试、确认 RED，再落实现并确认 GREEN，最后整理；本轮没有实施这些勾选任务。
-- 设计旧稿及 bazi-chart 旧场景按 15:30 直接排盘得到甲申、7 年 2 月 10 天；产品校正后的事实应为癸未、7 年 2 月 20 天、1997-08-04。旧场景只适合标为“引擎直接接收未校正时刻”的对照，不作为产品入口期望。
+- 设计及 bazi-chart 已更正为癸未、7 年 2 月 20 天、1997-08-04，不再留命例修订疑点。新增窗口、逐年断语、天干相冲、半合/拱与章节摘句规范已纳入；B4 才定义 `years` Schema 与核对。
 
 ## Chunk B1：生辰与出生时刻校正
 
-> 校正顺序固定为夏令时 → 真太阳时 → B2 换日。中国大陆历史夏令时按用户核验表；当前输入统一解释为北京时间钟表读数，港澳台城市仅提供经度，不据城市自动替换历史时区。未知时辰以当日正午作三柱代表点，并明确提示交节日存在年/月柱不确定性；不假装已校正时辰。
+> 校正顺序固定为夏令时 → 真太阳时 → B2 换日。大陆夏令时按用户核验表；香港、澳门、台北不套大陆表，其当地历史夏令时由出生记录核对。未知时辰以当日正午排三柱和近似大运；仅实际交节日暂停大运并警示年/月柱不确定。
 
 ### Task B1.1：扩展真实历法类型边界
 
@@ -148,6 +148,7 @@
 // src/types/lunar-javascript.d.ts
 declare module "lunar-javascript" {
   interface SolarValue {
+    nextYear(years: number): SolarValue;
     toYmd(): string;
     toYmdHms(): string;
     getYear(): number;
@@ -233,6 +234,7 @@ declare module "lunar-javascript" {
     getEightChar(): EightCharValue;
     getDayXun(): string;
     getDayXunKong(): string;
+    getCurrentJie(): JieQiValue | null;
     getPrevJieQi(): JieQiValue;
     getNextJieQi(): JieQiValue;
     getJieQiTable(): Record<string, SolarValue>;
@@ -258,6 +260,7 @@ declare module "lunar-javascript" {
     getDayPositionFuDesc(): string;
   }
   interface SolarFactory {
+    fromYmd(year: number, month: number, day: number): SolarValue;
     fromYmdHms(
       year: number,
       month: number,
@@ -274,7 +277,10 @@ declare module "lunar-javascript" {
     LunarMonth: {
       fromYm(year: number, month: number): { getDayCount(): number } | null;
     };
-    LunarUtil: { SHI_SHEN: Record<string, string> };
+    LunarUtil: {
+      SHI_SHEN: Record<string, string>;
+      ZHI_HIDE_GAN: Record<string, string[]>;
+    };
   };
   export default lunarPkg;
 }
@@ -405,6 +411,21 @@ test("先夏令时再太阳时、跨日期运算、未填经度与缺时辰", ()
   assert.equal(missing.effective.hour, 12);
   assert.throws(() => correctBirthTime(original, true, 136), /经度/);
 });
+
+ test("港澳台不套大陆夏令时，未填地点提示补填", () => {
+  const civil = at(1988, 7, 1, 8, 30);
+  const hk = correctBirthTime(civil, true, null, { mainlandDst: false, birthplace: "香港" });
+  assert.equal(hk.effective.hour, 8);
+  assert.equal(hk.steps[0]?.applied, false);
+  assert.match(hk.steps[0]?.description ?? "", /出生地为香港，未按中国大陆夏令时校正/);
+  assert.match(hk.steps[0]?.description ?? "", /当地历史夏令时请按出生记录自行核对/);
+  const bj = correctBirthTime(civil, true, null, { mainlandDst: true, birthplace: "北京" });
+  assert.equal(bj.effective.hour, 7);
+  assert.equal(bj.steps[0]?.applied, true);
+  const empty = correctBirthTime(civil, true, null);
+  assert.equal(empty.effective.hour, 7);
+  assert.match(empty.steps[0]?.description ?? "", /若出生在港澳台或海外，请填写出生地/);
+});
 ```
 
 - [ ] **Step 2：运行 `node --import tsx --test tests/solar-time.test.ts`，确认模块缺失导致 RED。**
@@ -517,6 +538,7 @@ export function correctBirthTime(
   original: CivilTime,
   timeKnown: boolean,
   longitude: number | null,
+  options = { mainlandDst: true, birthplace: null as string | null },
 ): CorrectedBirthTime {
   assertCivilTime(original);
   if (longitude !== null) {
@@ -525,14 +547,16 @@ export function correctBirthTime(
   if (!timeKnown) {
     const steps: CorrectionStep[] = ["dst", "solar"].map((kind) => ({
       kind: kind as CorrectionStep["kind"], applied: false, before: null, after: null,
-      deltaMinutes: 0, description: "时辰未知，未校正；三柱以当日正午为代表，交节日年/月柱待确认",
+      deltaMinutes: 0, description: "时辰未知，未校正；三柱以当日正午为代表",
     }));
     return {
       effective: { ...original, hour: 12, minute: 0, second: 0 }, timeKnown,
       longitudeMinutes: 0, equationMinutes: 0, steps,
     };
   }
-  const dst = daylightSavingAt(original);
+  const dst = options.mainlandDst
+    ? daylightSavingAt(original)
+    : { active: false, repeated: false, skipped: false };
   const delta = dst.active ? -60 : 0;
   const standard = civilFromMillis(civilMillis(original) + delta * 60_000);
   const longitudeMinutes = longitude === null ? 0 : (longitude - 120) * 4;
@@ -541,6 +565,12 @@ export function correctBirthTime(
   const effective = civilFromMillis(civilMillis(standard) + Math.round(solarDelta * 60_000));
   assertCivilTime(effective);
   const descriptions = [dst.active ? "已按夏令时减 1 小时" : "不在中国夏令时区间，未校正"];
+  if (!options.mainlandDst) {
+    descriptions.splice(0, 1,
+      `出生地为${options.birthplace}，未按中国大陆夏令时校正；当地历史夏令时请按出生记录自行核对`);
+  } else if (options.birthplace === null && longitude === null) {
+    descriptions.push("若出生在港澳台或海外，请填写出生地");
+  }
   if (dst.repeated) {
     descriptions.push("重复时段，按夏令时计");
   }
@@ -580,6 +610,7 @@ export function correctBirthTime(
 import assert from "node:assert/strict";
 import test from "node:test";
 import lunarPkg from "lunar-javascript";
+import { correctBirthTime } from "../src/calendar/solar-time.js";
 import { readCities } from "../src/calendar/cities.js";
 import { normalizeBirthProfile } from "../src/sanyi/birth-profile.js";
 
@@ -655,6 +686,19 @@ test("农历有效闰月转换与不存在的闰月拒绝", () => {
     ...base, calendar: "lunar", year, month: leap,
     day: month.getDayCount() + 1, isLeapMonth: true,
   }), /农历日期/);
+});
+
+test("城市决定大陆夏令时选项并贯通校正调用", () => {
+  for (const city of ["香港", "澳门", "台北", "北京", undefined]) {
+    const birth = normalizeBirthProfile({ ...base, year: 1988, month: 7, day: 1,
+      time: { hour: 8, minute: 30 }, ...(city === undefined ? {} : { city }) });
+    assert.equal(birth.mainlandDst, city === "北京" || city === undefined);
+    const corrected = correctBirthTime(birth.civil, birth.timeKnown, birth.longitude,
+      { mainlandDst: birth.mainlandDst, birthplace: birth.birthplace });
+    assert.equal(corrected.steps[0]?.deltaMinutes, birth.mainlandDst ? -60 : 0);
+    if (!birth.mainlandDst) assert.match(corrected.steps[0]?.description ?? "", new RegExp(`出生地为${city}`));
+  }
+  assert.equal(normalizeBirthProfile({ ...base, longitude: 120 }).mainlandDst, true);
 });
 ```
 
@@ -745,6 +789,8 @@ export interface NormalizedBirthProfile {
   timeKnown: boolean;
   gender: "male" | "female";
   longitude: number | null;
+  mainlandDst: boolean;
+  birthplace: string | null;
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -822,7 +868,9 @@ export function normalizeBirthProfile(input: unknown): NormalizedBirthProfile {
     assertLongitude(body.longitude);
     longitude = body.longitude;
   }
-  return { civil, timeKnown, gender, longitude };
+  return { civil, timeKnown, gender, longitude,
+    mainlandDst: !["香港", "澳门", "台北"].includes(String(body.city)),
+    birthplace: typeof body.city === "string" ? body.city : null };
 }
 ```
 
@@ -1182,14 +1230,20 @@ test("阳男阴女顺行、阴男阳女逆行，以现场六十甲子方向断�
   }
 });
 
-test("缺时辰不计算命宫、身宫、起运与大运；独立流年流月仍可给出", () => {
+test("缺时辰正午估运，交节日暂停大运", () => {
   const chart = buildBaziChart({ ...input, timeKnown: false });
   assert.equal(chart.pillars.time, null);
   assert.equal(chart.mingGong, null);
   assert.equal(chart.shenGong, null);
-  assert.equal(chart.luck, null);
+  assert.equal(chart.luck?.approximate, true);
+  assert.equal(chart.luck?.cycles[0]?.ganZhi, "壬午");
+  assert.ok(chart.liunian.years.every((y) => y.luck));
+  assert.doesNotMatch(chart.warnings.join("；"), /交节日年\/月柱待确认/);
+  const jie = buildBaziChart({ ...input, timeKnown: false, corrected: { ...corrected, day: 6 } });
+  assert.equal(jie.luck, null);
+  assert.match(jie.warnings.join("；"), /出生当日交节（立夏）/);
   assert.equal(chart.taiYuan, "壬申");
-  assert.equal(chart.annual?.currentLuck, null);
+  assert.ok(chart.annual?.currentLuck);
   assert.equal(chart.annual?.ganZhi, "丙午");
   assert.equal(chart.annual?.months.length, 12);
   assert.match(chart.warnings.join("；"), /时辰未知/);
@@ -1210,6 +1264,45 @@ test("23:30 两种日界日柱不同，时柱遵守库的共同晚子时口径",
   assert.equal(second.pillars.day.ganZhi, e.getDay());
   assert.throws(() => buildBaziChart({ ...input, targetYear: 2100 }), /年份/);
   assert.throws(() => buildBaziChart({ ...input, sect: 3 as 1 }), /换日/);
+});
+
+ test("十年窗口锁定已核验事实与交运日期", () => {
+  const years = buildBaziChart(input).liunian.years;
+  const gz = ["癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥", "壬子"];
+  const gods = ["伤官", "偏财", "正财", "七杀", "正官", "偏印", "正印", "比肩", "劫财", "食神"];
+  years.forEach((y, i) => {
+    assert.equal(y.year, 2023 + i);
+    assert.equal(y.ganZhi, gz[i]);
+    assert.equal(y.stem, gz[i]?.slice(0, 1));
+    assert.equal(y.branch, gz[i]?.slice(1));
+    assert.equal(y.age, 34 + i);
+    assert.equal(y.stemGod, gods[i]);
+    assert.equal(y.luck?.ganZhi, i < 4 ? "甲申" : "乙酉");
+    const ranks = ["main", "middle", "residual"];
+    assert.deepEqual(y.hidden, lunarPkg.LunarUtil.ZHI_HIDE_GAN[y.branch]?.map((stem, j) => ({
+      stem, god: lunarPkg.LunarUtil.SHI_SHEN["庚" + stem], qi: ranks[j],
+    })));
+    assert.deepEqual(y.luckChange, y.year === 2027
+      ? { date: "2027-08-04", from: "甲申", to: "乙酉" } : null);
+  });
+  assert.deepEqual(buildBaziChart({ ...input, targetYear: 2027 }).liunian.years.map((y) => y.year),
+    Array.from({ length: 10 }, (_, i) => 2024 + i));
+  assert.equal(lunarPkg.Solar.fromYmd(2000, 2, 29).nextYear(10).toYmd(), "2010-02-28");
+});
+ test("出生立春年裁剪、起运前与上限", () => {
+  const recent = buildBaziChart({ ...input, corrected: { ...corrected, year: 2024, day: 1 },
+    targetYear: 2025 });
+  assert.equal(recent.liunian.years[0]?.year, 2024);
+  assert.equal(recent.liunian.years[0]?.luckLabel, "起运前");
+  const before = buildBaziChart({ ...input, corrected: { ...corrected, month: 1, day: 20 },
+    targetYear: 1990 });
+  assert.equal(before.pillars.year.ganZhi, "己巳");
+  assert.equal(before.liunian.years[0]?.year, 1989);
+  assert.ok(buildBaziChart({ ...input, corrected: { ...corrected, month: 1, day: 20 },
+    targetYear: 1989 }).annual);
+  const end = buildBaziChart({ ...input, targetYear: 2099 });
+  assert.equal(end.liunian.years.at(-1)?.year, 2099);
+  assert.equal(end.liunian.years.length, 4);
 });
 ```
 
@@ -1250,6 +1343,18 @@ export interface AnnualLuck {
   currentLuck: LuckCycle | null;
   months: readonly { index: number; monthInChinese: string; ganZhi: string; stemGod: string }[];
 }
+export interface LiuNianEntry {
+  year: number;
+  ganZhi: string;
+  stem: string;
+  branch: string;
+  age: number;
+  stemGod: string;
+  hidden: BaziPillar["hidden"];
+  luck: LuckCycle | null;
+  luckLabel: "起运前" | "时辰未知" | null;
+  luckChange: { date: string; from: string | null; to: string } | null;
+}
 export interface BaziChart {
   sect: 1 | 2;
   dayBoundary: "23:00" | "00:00";
@@ -1260,11 +1365,14 @@ export interface BaziChart {
   mingGong: string | null;
   shenGong: string | null;
   luck: {
+    approximate: boolean;
     direction: "forward" | "backward";
     start: { years: number; months: number; days: number; solarDate: string };
     cycles: readonly LuckCycle[];
   } | null;
   annual: AnnualLuck | null;
+  birthLiChunYear: number;
+  liunian: { anchorYear: number; years: LiuNianEntry[] };
   warnings: readonly string[];
 }
 export interface BaziInput {
@@ -1354,46 +1462,69 @@ export function buildBaziChart(input: BaziInput): BaziChart {
     eight.getDayHideGan(), eight.getDayShiShenZhi(), eight.getDayDiShi(), eight.getDayNaYin());
   const time = input.timeKnown ? pillar("time", "时柱", eight.getTime(), eight.getTimeShiShenGan(),
     eight.getTimeHideGan(), eight.getTimeShiShenZhi(), eight.getTimeDiShi(), eight.getTimeNaYin()) : null;
-  let luck: BaziChart["luck"] = null;
-  let annual: AnnualLuck | null = input.targetYear < birth.year
-    ? null : independentAnnual(input.targetYear, birth.year, day.stem);
-  if (input.timeKnown) {
-    const yun = eight.getYun(input.gender === "male" ? 1 : 0);
-    const all = yun.getDaYun(22);
-    const convert = (value: (typeof all)[number]): LuckCycle => ({
-      index: value.getIndex(), ganZhi: value.getGanZhi(),
-      stemGod: godFor(day.stem, value.getGanZhi().slice(0, 1)),
-      startAge: value.getStartAge(), endAge: value.getEndAge(),
-      startYear: value.getStartYear(), endYear: value.getEndYear(),
+  const midyear = lunarPkg.Solar.fromYmd(birth.year, 7, 1).getLunar().getEightChar().getYear();
+  const birthLiChunYear = eight.getYear() === midyear ? birth.year : birth.year - 1;
+  const jie = input.timeKnown ? null
+    : lunarPkg.Solar.fromYmd(birth.year, birth.month, birth.day).getLunar().getCurrentJie();
+  const warnings = input.timeKnown ? [] : jie
+    ? [`出生当日交节（${jie.getName()}），年/月柱与大运需补时辰确认`, "交节日年/月柱待确认"]
+    : ["时辰未知，起运按当日正午估算，交运日期可能前后相差约两个月"];
+  const yun = jie ? null : eight.getYun(input.gender === "male" ? 1 : 0);
+  const all = yun?.getDaYun(22) ?? [];
+  const convert = (value: (typeof all)[number]): LuckCycle => ({
+    index: value.getIndex(), ganZhi: value.getGanZhi(),
+    stemGod: godFor(day.stem, value.getGanZhi().slice(0, 1)),
+    startAge: value.getStartAge(), endAge: value.getEndAge(),
+    startYear: value.getStartYear(), endYear: value.getEndYear(),
+  });
+  const luck: BaziChart["luck"] = yun ? {
+    approximate: !input.timeKnown,
+    direction: yun.isForward() ? "forward" : "backward",
+    start: { years: yun.getStartYear(), months: yun.getStartMonth(), days: yun.getStartDay(),
+      solarDate: yun.getStartSolar().toYmd() },
+    cycles: all.filter((value) => value.getIndex() > 0).slice(0, 8).map(convert),
+  } : null;
+  function entry(target: number): LiuNianEntry {
+    const current = all.find((v) => v.getStartYear() <= target && target <= v.getEndYear());
+    const raw = current?.getLiuNian().find((v) => v.getYear() === target);
+    const independent = independentAnnual(target, birth.year, day.stem);
+    const ganZhi = raw?.getGanZhi() ?? independent.ganZhi;
+    const branch = ganZhi.slice(1);
+    const ranks = ["main", "middle", "residual"] as const;
+    const stems = lunarPkg.LunarUtil.ZHI_HIDE_GAN[branch];
+    if (!stems) throw new Error("流年藏干缺失");
+    const hidden = stems.map((stem, i) => {
+      const qi = ranks[i];
+      if (!qi) throw new Error("流年藏干气序缺失");
+      return { stem, god: godFor(day.stem, stem), qi };
     });
-    luck = {
-      direction: yun.isForward() ? "forward" : "backward",
-      start: { years: yun.getStartYear(), months: yun.getStartMonth(), days: yun.getStartDay(),
-        solarDate: yun.getStartSolar().toYmd() },
-      cycles: all.filter((value) => value.getIndex() > 0).slice(0, 8).map(convert),
+    const cycle = current && current.getIndex() > 0 ? convert(current) : null;
+    const previous = cycle ? all.find((v) => v.getIndex() === cycle.index - 1) : null;
+    return {
+      year: target, ganZhi, stem: ganZhi.slice(0, 1), branch,
+      age: raw?.getAge() ?? independent.age, stemGod: godFor(day.stem, ganZhi.slice(0, 1)),
+      hidden, luck: cycle, luckLabel: !yun ? "时辰未知" : cycle ? null : "起运前",
+      luckChange: cycle && yun && cycle.startYear === target ? {
+        date: yun.getStartSolar().nextYear((cycle.index - 1) * 10).toYmd(),
+        from: previous && previous.getIndex() > 0 ? previous.getGanZhi() : null,
+        to: cycle.ganZhi,
+      } : null,
     };
-    const current = all.find((value) => value.getStartYear() <= input.targetYear
-      && value.getEndYear() >= input.targetYear);
-    const rawYear = current?.getLiuNian().find((value) => value.getYear() === input.targetYear);
-    if (annual && rawYear && current) {
-      annual = {
-        year: rawYear.getYear(), ganZhi: rawYear.getGanZhi(), age: rawYear.getAge(),
-        stemGod: godFor(day.stem, rawYear.getGanZhi().slice(0, 1)),
-        currentLuck: current.getIndex() === 0 ? null : convert(current),
-        months: rawYear.getLiuYue().map((value, index) => ({
-          index: index + 1, monthInChinese: value.getMonthInChinese(), ganZhi: value.getGanZhi(),
-          stemGod: godFor(day.stem, value.getGanZhi().slice(0, 1)),
-        })),
-      };
-    }
+  }
+  const years = Array.from({ length: 10 }, (_, i) => input.targetYear - 3 + i)
+    .filter((y) => y >= birthLiChunYear && y <= 2099).map(entry);
+  let annual: AnnualLuck | null = input.targetYear < birthLiChunYear
+    ? null : independentAnnual(input.targetYear, birth.year, day.stem);
+  if (annual) {
+    const selected = entry(input.targetYear);
+    annual = { ...annual, age: selected.age, currentLuck: selected.luck };
   }
   return {
     sect: input.sect, dayBoundary: input.sect === 1 ? "23:00" : "00:00",
     timeKnown: input.timeKnown, dayMaster: day.stem, pillars: { year, month, day, time },
     taiYuan: eight.getTaiYuan(), mingGong: input.timeKnown ? eight.getMingGong() : null,
-    shenGong: input.timeKnown ? eight.getShenGong() : null, luck, annual,
-    warnings: input.timeKnown ? []
-      : ["时辰未知：不计算时柱、命宫、身宫、起运与大运；交节日年/月柱待确认"],
+    shenGong: input.timeKnown ? eight.getShenGong() : null, luck, annual, warnings,
+    birthLiChunYear, liunian: { anchorYear: input.targetYear, years },
   };
 }
 ```
@@ -1403,7 +1534,7 @@ export function buildBaziChart(input: BaziInput): BaziChart {
 
 ### Task B2.3：样稿字段契约与交叉验收
 
-本任务不新增界面。下表锁定 B1–B5 提供的数据，避免 B6 猜字段或把对象直接渲染成 `[object Object]`。B3/B4/B5 的字段是后续计划的约束，尚未冒充本轮代码。
+本任务不新增界面。下表锁定 B1–B5 提供的数据，避免 B6 猜字段或把对象直接渲染成 `[object Object]`。B3 字段由本轮完整代码给出；B4/B5 输出仍是后续约束。B6 只消费。B5 组装 `{ chart, ...analyzeBazi(chart), qiongtong: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch) }`，不把 B3 分析对象错误当成 `BaziChart` 原有字段。
 
 | 样稿展示 | 数据来源与精确字段 | 隐私或缺时辰约束 |
 |---|---|---|
@@ -1414,14 +1545,21 @@ export function buildBaziChart(input: BaziInput): BaziChart {
 | 四柱表 | `pillars.year/month/day/time` | `time=null` 显示缺，不引用时柱事实 |
 | 干支、十神、藏干长生纳音 | `ganZhi/stem/branch/stemGod/hidden[].stem/god/qi/diShi/naYin` | 明确单字段；不要渲染 pillar 对象 |
 | 胎元、命宫、身宫 | `taiYuan/mingGong/shenGong` | 缺时辰时后两项 null |
-| 起运与交运日期 | `luck.start.years/months/days/solarDate` | 缺时辰 luck=null；交运日期是规格允许的派生结果 |
+| 起运与交运日期 | `luck.start.years/months/days/solarDate` | 非交节缺时辰 `luck.approximate=true`；交节日 `luck=null`；交运日期为派生结果 |
 | 大运方向与八步时间轴 | `luck.direction/cycles[].ganZhi/stemGod/startAge/endAge/startYear/endYear` | 起运前 currentLuck=null，不能高亮第一步 |
-| 所问流年、虚岁与所在运 | `annual.year/ganZhi/age/currentLuck` | 年份在出生前 annual=null；未知时辰无当前运 |
+| 所问流年、虚岁与所在运 | `annual.year/ganZhi/age/currentLuck` | 按出生立春年判空；非交节缺时辰照常给近似当前运 |
 | 流月与十神 | `annual.months[].index/monthInChinese/ganZhi/stemGod` | 节气月编号不是农历月日期；B5 补当前交节区间 |
 | 神煞标签 | B3 `shensha[]`：`name/nodeId/basis` | 按日干、年支、日支等具体依据；不采信样稿为标准答案 |
-| 合冲刑害文字与关系图 | B3 `nodes[]`：`id/label/stem/branch`；`relations[]`：`id/kind/nodeIds/label` | 覆盖原局、当前运年、半合与自刑；成化结论由三家判断 |
+| 合冲刑害文字与关系图 | B3 `nodes[]`：`id/label/type/value/scope`；`relations[]`：`id/kind/nodeIds/label/scope` | 原局、当前运年；天干合冲，地支半合/拱、三合/三会、自刑；成化结论由三家判断 |
 | 五行堆叠条与总数 | B3 `elements[]`：`element/stem/main/middle/residual/total` | 从实际藏干现场计数，不把示意图宽度或总数写死 |
 | 三家用神、断语与月份提示 | B4 各家 `output.useGod/headline/reason/sections/advice/evidence`，运势额外 verdict/confidenceTenths/timing | 命理没有吉凶和合议；月份关注用 timing，别猜 watch 字段 |
+| 流年面板锚年与列年 | `chart.liunian.anchorYear/years[].year`，`chart.birthLiChunYear` | 锚前 3 至后 6，裁去出生立春年前及 2099 后；B5 用提问时刻立春年解析锚年 |
+| 每年干支、虚岁、十神 | `liunian.years[].ganZhi/stem/branch/age/stemGod/hidden[].stem/god/qi` | 虚岁与 lunar `getAge` 一致，按公历出生年计；藏干顺序取 `ZHI_HIDE_GAN` |
+| 每年大运与交接线 | `liunian.years[].luck/luckLabel/luckChange.date/from/to` | `startYear ≤ year ≤ endYear`；交运年归新运，另显示旧→新及日期；起运前 null +「起运前」；交节缺时辰 null +「时辰未知」 |
+| 逐年关系格、点选事实 | `years[].year/nodes/relations[].id/kind/label/nodeIds/scope/shensha[].name/nodeId/basis`（B3 分析对象） | 每年重算该年大运；关系按 scope 切换，不能复用锚年关系；神煞覆盖流年与运支 |
+| 三家逐年吉凶、几成、短评 | B4 `output.years[].year/verdict/confidenceTenths/note` | Schema、年份完全覆盖、总断一致及短评词核对由 B4 提供，B6 只消费 |
+| 逐年合议线、范围、回看与选中 | B4/B5 按通过核对各家 `years[]` 算平均、最低、最高；B5 提供提问立春年与所问年 | 不使用样稿 `ln-data` 的示意断语作期望；B6 据年份标回看、今年与所问年 |
+| 余春台用神对照与出处 | `qiongtong.dayStem/monthBranch/monthName/useStems/section/quote` | B3 查表供 B4 调候家；三家对照显示 B4 该家实际 `useGod`，可展开底本用干与出处；不用卷次 |
 | 问卦此刻的时空栏、黄历与奇门 | 既有 `almanacAt` 对象与 `qimenAt`；B5 固定解读时刻 | 与出生时刻完全独立；B6 按真实字段显示 |
 
 - [ ] **Step 1：运行四个新测试文件。**
@@ -1436,14 +1574,589 @@ export function buildBaziChart(input: BaziInput): BaziChart {
 ### B2 交付核对
 
 - [ ] 已核验校正命例所有字段通过；未校正甲申只是引擎对照。
-- [ ] 四种男女阴阳方向现场六十甲子断言通过；缺时辰不调用起运和依赖时柱的宫位方法。
+- [ ] 四种男女阴阳方向现场六十甲子断言通过；缺时辰非交节日正午估运并警示，交节日不排运；命宫、身宫仍不调用。
 - [ ] 两种 sect 的晚子时日柱与共同时柱规则明确；起运算法口径没有混用。
 - [ ] 独立 sxtwl 原生与适配口径均记录，所有四柱比较；≥40 时刻和全部覆盖类别有测试守卫。
 - [ ] 编排持久化不能直接 spread B1 生辰对象或逐步校正对象；B5 按白名单存派生命盘。
 
 ## Chunk B3：合冲刑害、神煞、五行计数与《穷通宝鉴》调候表
 
-后续轮次补充完整任务、代码与测试，依据 B2 字段计算事实，逐条核对神煞与调候出处。
+本块完整给出 B3.1–B3.5，未在项目实施，不勾选 OpenSpec tasks。关系是客观连线，不给身强身弱、成化或格局成败。
+
+### Task B3.1：关系节点、合冲刑害与每年重算
+
+**文件：** 新建 `tests/bazi-relations.test.ts`、`src/calendar/bazi-relations.ts`。测试同时覆盖 B3.2/B3.3，以完整文件给出，不拆同一路径的代码块。
+
+- [ ] **Step 1：写下列完整测试；运行 `node --import tsx --test tests/bazi-relations.test.ts`，预期新模块缺失 RED。**
+
+```ts
+// tests/bazi-relations.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { buildBaziChart } from "../src/calendar/bazi.js";
+import { analyzeBazi, findRelations, findShensha,
+  type RelationNode } from "../src/calendar/bazi-relations.js";
+const input = { corrected: { year: 1990, month: 5, day: 15, hour: 14, minute: 30, second: 0 },
+  gender: "male" as const, sect: 1 as const, timeKnown: true, targetYear: 2026 };
+const chart = buildBaziChart(input);
+function node(id: string, value: string, scope: RelationNode["scope"] = "natal"): RelationNode {
+  return { id, label: id, value, type: "branch", scope };
+}
+const sorted = (values: string[]) => values.sort();
+const key = (r: { label: string; nodeIds: string[] }) => `${r.label}:${r.nodeIds.join(",")}`;
+test("锚年原局与运年关系逐项锁定，原局三会不重复", () => {
+  const r = analyzeBazi(chart).relations;
+  assert.deepEqual(sorted(r.filter((v) => v.scope === "natal").map(key)), sorted([
+    "午未合:natal.year.branch,natal.time.branch",
+    "巳午未三会火:natal.month.branch,natal.year.branch,natal.time.branch",
+  ]));
+  assert.deepEqual(sorted(r.filter((v) => v.scope === "luck").map(key)), sorted([
+    "庚甲冲:natal.year.stem,luck.stem", "庚甲冲:natal.day.stem,luck.stem",
+    "巳申合:natal.month.branch,luck.branch", "巳申刑:natal.month.branch,luck.branch",
+    "巳申破:natal.month.branch,luck.branch", "辰申拱水:natal.day.branch,luck.branch",
+  ]));
+});
+const expected = [
+  ["午卯破:year", "辰卯害:day", "未卯半合木:time"],
+  ["庚甲冲:year", "庚甲冲:day", "辰辰自刑:day", "申辰拱水:luck"],
+  ["庚乙合:year", "辛乙冲:month", "庚乙合:day", "申巳合:luck", "申巳刑:luck", "申巳破:luck"],
+  ["辛丙合:month", "午午自刑:year", "未午合:time"],
+  ["癸丁冲:time", "午未合:year"],
+  ["癸戊合:time", "巳申合:month", "巳申刑:month", "巳申破:month", "辰申拱水:day"],
+  ["巳酉半合金:month", "辰酉合:day", "酉酉自刑:luck"],
+  ["乙庚合:luck", "午戌半合火:year", "辰戌冲:day", "未戌刑:time", "未戌破:time", "酉戌害:luck"],
+  ["乙辛冲:luck", "巳亥冲:month", "未亥拱木:time"],
+  ["午子冲:year", "辰子半合水:day", "未子害:time", "酉子破:luck"],
+];
+test("十年每年与原局及当年大运的关系使用集合比较", () => {
+  analyzeBazi(chart).years.forEach((y, i) => {
+    const actual = y.relations.filter((r) => r.scope === "year").map((r) => {
+      const other = r.nodeIds[0]?.split(".");
+      return `${r.label}:${other?.[0] === "luck" ? "luck" : other?.[1]}`;
+    });
+    assert.deepEqual(sorted(actual), sorted([...(expected[i] ?? [])]), String(y.year));
+  });
+});
+test("半合、拱、三合、三会、自刑与缺时柱", () => {
+  assert.equal(findRelations([node("a", "申"), node("b", "子")])[0]?.kind, "半合");
+  assert.equal(findRelations([node("a", "申"), node("b", "辰")])[0]?.kind, "拱");
+  const three = findRelations([node("a", "申"), node("b", "子"), node("c", "辰")]);
+  assert.ok(three.some((r) => r.kind === "三合"));
+  assert.ok(!three.some((r) => ["半合", "拱"].includes(r.kind)));
+  assert.ok(findRelations([node("a", "寅"), node("b", "卯"), node("c", "辰")])
+    .some((r) => r.kind === "三会"));
+  assert.equal(findRelations([node("a", "辰")]).length, 0);
+  assert.equal(findRelations([node("a", "辰"), node("b", "辰")])[0]?.kind, "自刑");
+  const absent = analyzeBazi(buildBaziChart({ ...input, timeKnown: false }));
+  assert.ok(absent.nodes.every((n) => !n.id.includes("natal.time")));
+  assert.ok(absent.relations.every((r) => r.nodeIds.every((id) => !id.includes("natal.time"))));
+});
+test("独立两两表，固定种子抽样 200 组", () => {
+  const tables = {
+    stem: { 合: "甲己 乙庚 丙辛 丁壬 戊癸", 冲: "甲庚 乙辛 丙壬 丁癸" },
+    branch: { 合: "子丑 寅亥 卯戌 辰酉 巳申 午未", 冲: "子午 丑未 寅申 卯酉 辰戌 巳亥",
+      害: "子未 丑午 寅巳 卯辰 申亥 酉戌", 破: "子酉 午卯 巳申 寅亥 辰丑 戌未",
+      刑: "寅巳 巳申 申寅 丑戌 戌未 未丑 子卯", 自刑: "辰辰 午午 酉酉 亥亥" },
+  };
+  let seed = 20261006;
+  const rand = (n: number) => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed % n; };
+  for (let i = 0; i < 200; i++) {
+    const type: RelationNode["type"] = i % 2 ? "stem" : "branch";
+    const chars = type === "stem" ? "甲乙丙丁戊己庚辛壬癸" : "子丑寅卯辰巳午未申酉戌亥";
+    const a = chars.charAt(rand(chars.length));
+    const b = chars.charAt(rand(chars.length));
+    const kinds = Object.entries(tables[type]).filter(([, pairs]) => pairs.split(" ")
+      .some((p) => p === a + b || p === b + a)).map(([kind]) => kind);
+    if (type === "branch" && a !== b) {
+      for (const [group, center] of [["申子辰", "子"], ["亥卯未", "卯"],
+        ["寅午戌", "午"], ["巳酉丑", "酉"]]) {
+        if (group?.includes(a) && group.includes(b)) kinds.push(a === center || b === center ? "半合" : "拱");
+      }
+    }
+    const nodes = [node("a", a), node("b", b)].map((n) => ({ ...n, type }));
+    assert.deepEqual(sorted(findRelations(nodes).map((r) => r.kind)), sorted(kinds));
+  }
+});
+test("七种神煞用独立表现场计算并锁定命例", () => {
+  const out = analyzeBazi(chart);
+  const byStem = {
+    天乙贵人: ["丑未", "子申", "亥酉", "亥酉", "丑未", "子申", "丑未", "寅午", "巳卯", "巳卯"],
+    文昌: ["巳", "午", "申", "酉", "申", "酉", "亥", "子", "寅", "卯"],
+    禄神: ["寅", "卯", "巳", "午", "巳", "午", "申", "酉", "亥", "子"],
+    羊刃: ["卯", "", "午", "", "午", "", "酉", "", "子", ""],
+  };
+  const groups = ["申子辰", "寅午戌", "巳酉丑", "亥卯未"];
+  const byBranch = { 桃花: "酉卯午子", 驿马: "寅申亥巳", 华盖: "辰戌丑未" };
+  for (const nodes of [out.nodes, ...out.years.map((y) => y.nodes)]) {
+    const oracle: string[] = [];
+    for (const [name, values] of Object.entries(byStem)) {
+      for (const key of name === "天乙贵人" || name === "文昌" ? ["day", "year"] : ["day"]) {
+        const stem = chart.pillars[key as "day" | "year"].stem;
+        for (const n of nodes.filter((n) => n.type === "branch")) {
+          if (values["甲乙丙丁戊己庚辛壬癸".indexOf(stem)]?.includes(n.value)) {
+            oracle.push(`${name}:${n.id}:${key === "day" ? "日" : "年"}干${stem}`);
+          }
+        }
+      }
+    }
+    for (const [name, values] of Object.entries(byBranch)) {
+      for (const key of ["day", "year"] as const) {
+        const branch = chart.pillars[key].branch;
+        const target = values[groups.findIndex((g) => g.includes(branch))];
+        for (const n of nodes.filter((n) => n.type === "branch" && n.value === target)) {
+          oracle.push(`${name}:${n.id}:${key === "day" ? "日" : "年"}支${branch}`);
+        }
+      }
+    }
+    assert.deepEqual(sorted(findShensha(chart, nodes).map((v) => `${v.name}:${v.nodeId}:${v.basis}`)),
+      sorted(oracle));
+  }
+  const has = (name: string, nodeId: string, basis: string) => out.shensha
+    .some((v) => v.name === name && v.nodeId === nodeId && v.basis === basis);
+  assert.ok(has("天乙贵人", "natal.time.branch", "日干庚"));
+  assert.ok(has("华盖", "natal.day.branch", "日支辰"));
+  assert.ok(has("禄神", "luck.branch", "日干庚"));
+  assert.ok(has("驿马", "luck.branch", "年支午"));
+  assert.ok(!out.shensha.some((v) => v.name === "羊刃" && v.nodeId.startsWith("natal")));
+  assert.ok(out.years.find((v) => v.year === 2029)?.shensha.some((v) => v.name === "羊刃"));
+  assert.ok(out.years.find((v) => v.year === 2027)?.shensha
+    .some((v) => v.name === "羊刃" && v.nodeId === "luck.branch" && v.basis === "日干庚"));
+  // 覆盖所有干支基准，包括阴干不标羊刃；期望由上述独立表计算。
+  for (const stem of "甲乙丙丁戊己庚辛壬癸") {
+    const changed = { ...chart, pillars: { ...chart.pillars,
+      day: { ...chart.pillars.day, stem }, year: { ...chart.pillars.year, stem } } };
+    const nodes = [..."子丑寅卯辰巳午未申酉戌亥"].map((b, i) => node(String(i), b));
+    const actual = findShensha(changed, nodes);
+    for (const [name, values] of Object.entries(byStem)) {
+      const wanted = values["甲乙丙丁戊己庚辛壬癸".indexOf(stem)] ?? "";
+      assert.deepEqual(sorted(actual.filter((v) => v.name === name && v.basis === `日干${stem}`)
+        .map((v) => nodes.find((n) => n.id === v.nodeId)?.value ?? "")), sorted([...wanted]));
+    }
+  }
+});
+test("五行仅数原局，天干与三气从藏干现场重算", () => {
+  for (const timeKnown of [true, false]) {
+    const c = buildBaziChart({ ...input, timeKnown });
+    const pillars = Object.values(c.pillars).filter((p) => p !== null);
+    const elements = analyzeBazi(c).elements;
+    const mapping = { 木: "甲乙", 火: "丙丁", 土: "戊己", 金: "庚辛", 水: "壬癸" };
+    for (const e of elements) {
+      const stems = mapping[e.element];
+      assert.equal(e.stem, pillars.filter((p) => stems.includes(p.stem)).length);
+      for (const qi of ["main", "middle", "residual"] as const) {
+        assert.equal(e[qi], pillars.flatMap((p) => p.hidden)
+          .filter((h) => h.qi === qi && stems.includes(h.stem)).length);
+      }
+      assert.equal(e.total, e.stem + e.main + e.middle + e.residual);
+    }
+    assert.equal(elements.reduce((n, e) => n + e.stem, 0), timeKnown ? 4 : 3);
+    assert.equal(elements.reduce((n, e) => n + e.total, 0),
+      pillars.length + pillars.reduce((n, p) => n + p.hidden.length, 0));
+    if (timeKnown) assert.equal(elements.reduce((n, e) => n + e.total, 0), 15);
+  }
+});
+```
+
+- [ ] **Step 2：落入下列完整实现；再运行同命令，预期 6 项通过。**
+
+节点 `id` 为 `natal.{year|month|day|time}.{stem|branch}`、`luck.{stem|branch}`、`year.{stem|branch}`。节点顺序先原局年月日时，再运，再年；两两 label 遵守此顺序。三合/三会使用固定局名次序，`nodeIds` 对应局名各字。同对的合、刑、破分别保留。三支齐时不再列该局的半合/拱；同字替代不重复成局，优先使用原局节点，不能因流年同字把原局局改成流年事实。
+
+```ts
+// src/calendar/bazi-relations.ts
+import type { BaziChart, LuckCycle } from "./bazi.js";
+export type Scope = "natal" | "luck" | "year";
+export interface RelationNode {
+  id: string;
+  label: string;
+  type: "stem" | "branch";
+  value: string;
+  scope: Scope;
+}
+export interface BaziRelation {
+  id: string;
+  kind: string;
+  label: string;
+  nodeIds: string[];
+  scope: Scope;
+}
+export interface Shensha { name: string; nodeId: string; basis: string }
+const stemPairs = { 合: "甲己 乙庚 丙辛 丁壬 戊癸", 冲: "甲庚 乙辛 丙壬 丁癸" };
+const branchPairs = {
+  合: "子丑 寅亥 卯戌 辰酉 巳申 午未", 冲: "子午 丑未 寅申 卯酉 辰戌 巳亥",
+  害: "子未 丑午 寅巳 卯辰 申亥 酉戌", 破: "子酉 午卯 巳申 寅亥 辰丑 戌未",
+  刑: "寅巳 巳申 申寅 丑戌 戌未 未丑 子卯", 自刑: "辰辰 午午 酉酉 亥亥",
+};
+const combinations = [["申子辰", "水"], ["亥卯未", "木"], ["寅午戌", "火"], ["巳酉丑", "金"]] as const;
+const meetings = [["寅卯辰", "木"], ["巳午未", "火"], ["申酉戌", "金"], ["亥子丑", "水"]] as const;
+function scopeOf(nodes: RelationNode[]): Scope {
+  return nodes.some((n) => n.scope === "year") ? "year"
+    : nodes.some((n) => n.scope === "luck") ? "luck" : "natal";
+}
+export function makeNodes(chart: BaziChart, luck: LuckCycle | null, ganZhi: string | null): RelationNode[] {
+  const nodes: RelationNode[] = [];
+  function add(id: string, label: string, gz: string, scope: Scope) {
+    for (const type of ["stem", "branch"] as const) {
+      nodes.push({ id: `${id}.${type}`, label: `${label}${type === "stem" ? "干" : "支"}`,
+        value: gz.charAt(type === "stem" ? 0 : 1), type, scope });
+    }
+  }
+  for (const p of Object.values(chart.pillars)) if (p) add(`natal.${p.key}`, p.label, p.ganZhi, "natal");
+  if (luck) add("luck", "大运", luck.ganZhi, "luck");
+  if (ganZhi) add("year", "流年", ganZhi, "year");
+  return nodes;
+}
+export function findRelations(nodes: RelationNode[]): BaziRelation[] {
+  if (new Set(nodes.map((n) => n.id)).size !== nodes.length) throw new Error("关系节点编号重复");
+  const result: BaziRelation[] = [];
+  const full = new Set<string>();
+  function add(kind: string, members: RelationNode[], label: string) {
+    const nodeIds = members.map((n) => n.id);
+    result.push({ id: `${kind}:${nodeIds.join(":")}`, kind, label, nodeIds, scope: scopeOf(members) });
+  }
+  for (const [kind, groups] of [["三合", combinations], ["三会", meetings]] as const) {
+    for (const [group, element] of groups) {
+      // 每字仅选一个节点：优先原局、再运、再年。原局成局不因重复字另列。
+      const members = [...group].map((b) => nodes.find((n) => n.type === "branch" && n.value === b));
+      if (members.every((n): n is RelationNode => n !== undefined)) {
+        add(kind, members, `${group}${kind}${element}`);
+        if (kind === "三合") full.add(group);
+      }
+    }
+  }
+  for (let i = 0; i < nodes.length; i++) {
+    const a = nodes[i];
+    if (!a) continue;
+    for (const b of nodes.slice(i + 1)) {
+      if (a.type !== b.type) continue;
+      const pair = a.value + b.value;
+      const reverse = b.value + a.value;
+      for (const [kind, pairs] of Object.entries(a.type === "stem" ? stemPairs : branchPairs)) {
+        if (pairs.split(" ").some((p) => p === pair || p === reverse)) add(kind, [a, b], pair + kind);
+      }
+      if (a.type !== "branch" || a.value === b.value) continue;
+      for (const [group, element] of combinations) {
+        if (full.has(group) || !group.includes(a.value) || !group.includes(b.value)) continue;
+        const kind = a.value === group.charAt(1) || b.value === group.charAt(1) ? "半合" : "拱";
+        add(kind, [a, b], `${pair}${kind}${element}`);
+      }
+    }
+  }
+  return result;
+}
+// 出处：《三命通会》论神煞诸篇。仅按指定基准查表，不推导吉凶。
+const stemRules = {
+  天乙贵人: ["丑未", "子申", "亥酉", "亥酉", "丑未", "子申", "丑未", "寅午", "巳卯", "巳卯"],
+  文昌: ["巳", "午", "申", "酉", "申", "酉", "亥", "子", "寅", "卯"],
+  禄神: ["寅", "卯", "巳", "午", "巳", "午", "申", "酉", "亥", "子"],
+  // 阴干羊刃古说有分歧，产品只取阳干，阴干留空。
+  羊刃: ["卯", "", "午", "", "午", "", "酉", "", "子", ""],
+};
+const branchRules = { 桃花: "酉卯午子", 驿马: "寅申亥巳", 华盖: "辰戌丑未" };
+export function findShensha(chart: BaziChart, nodes: RelationNode[]): Shensha[] {
+  const result: Shensha[] = [];
+  function collect(name: string, targets: string, basis: string) {
+    for (const node of nodes) {
+      if (node.type === "branch" && targets.includes(node.value)) {
+        result.push({ name, nodeId: node.id, basis });
+      }
+    }
+  }
+  for (const [name, values] of Object.entries(stemRules)) {
+    const keys = name === "天乙贵人" || name === "文昌" ? ["day", "year"] as const : ["day"] as const;
+    for (const key of keys) {
+      const stem = chart.pillars[key].stem;
+      collect(name, values["甲乙丙丁戊己庚辛壬癸".indexOf(stem)] ?? "", `${key === "day" ? "日" : "年"}干${stem}`);
+    }
+  }
+  for (const [name, values] of Object.entries(branchRules)) {
+    for (const key of ["year", "day"] as const) {
+      const branch = chart.pillars[key].branch;
+      const i = ["申子辰", "寅午戌", "巳酉丑", "亥卯未"].findIndex((g) => g.includes(branch));
+      collect(name, values.charAt(i), `${key === "day" ? "日" : "年"}支${branch}`);
+    }
+  }
+  return result;
+}
+export function countElements(chart: BaziChart) {
+  const pillars = Object.values(chart.pillars).filter((p) => p !== null);
+  const mapping = { 木: "甲乙", 火: "丙丁", 土: "戊己", 金: "庚辛", 水: "壬癸" } as const;
+  return (Object.keys(mapping) as (keyof typeof mapping)[]).map((element) => {
+    const chars = mapping[element];
+    const stem = pillars.filter((p) => chars.includes(p.stem)).length;
+    const hidden = pillars.flatMap((p) => p.hidden).filter((h) => chars.includes(h.stem));
+    const main = hidden.filter((h) => h.qi === "main").length;
+    const middle = hidden.filter((h) => h.qi === "middle").length;
+    const residual = hidden.filter((h) => h.qi === "residual").length;
+    return { element, stem, main, middle, residual, total: stem + main + middle + residual };
+  });
+}
+export function analyzeBazi(chart: BaziChart) {
+  const nodes = makeNodes(chart, chart.annual?.currentLuck ?? null, chart.annual?.ganZhi ?? null);
+  return {
+    nodes, relations: findRelations(nodes), shensha: findShensha(chart, nodes),
+    elements: countElements(chart),
+    years: chart.liunian.years.map((year) => {
+      const nodes = makeNodes(chart, year.luck, year.ganZhi);
+      return { year: year.year, nodes, relations: findRelations(nodes), shensha: findShensha(chart, nodes) };
+    }),
+  };
+}
+```
+
+### Task B3.2：七种神煞与基准说明
+
+**文件：** 已在 B3.1 的完整文件中给出 `findShensha`，不另建重复文件。
+
+- [ ] **Step 1：先运行独立查表测试，确认未有神煞实现时 RED。** 年干/日干天乙与文昌分别标 basis；禄神和羊刃只查日干；桃花、驿马、华盖分别查年支/日支，含基准柱自身。
+- [ ] **Step 2：实现 B3.1 中的查表函数，再运行 `node --import tsx --test --test-name-pattern="七种神煞" tests/bazi-relations.test.ts`。** 预期通过；四柱、运支、流年支均检查，窗口逐年重算。阴干不标羊刃，注释说明古说分歧。
+- [ ] **Step 3：核对出处注释。** 使用有把握的《三命通会》论神煞诸篇，不编造卷次；四柱表只筛 `natal.*.branch`，不能将运年神煞贴回四柱。
+
+### Task B3.3：天干和藏干三气五行计数
+
+**文件：** B3.1 中的 `countElements` 与五行测试。
+
+- [ ] **Step 1：先运行五行测试，确认计数缺失时 RED。** 木火土金水逐项按实际天干、藏干重算，不拿样稿条宽作答案。
+- [ ] **Step 2：实现并运行 `node --import tsx --test --test-name-pattern="五行" tests/bazi-relations.test.ts`，预期通过。** 只计原局；有时柱 4 天干、11 藏干，共 15；缺时柱仅三柱。`qi` 按 lunar 藏干顺序对应本/中/余气，不加权、不混入大运流年。
+
+### Task B3.4：120 条调候用干、章节与逐字底本摘句
+
+**文件：** 新建 `tests/qiongtong.test.ts`、`src/calendar/data/qiongtong.json`、`src/calendar/qiongtong.ts`。选择完整 JSON 方案，无需安装依赖或额外生成器；下列 120 个对象即逐条复核表，每条均有日干、月令、用干、章节和摘句，可直接抽取复现。
+
+- [ ] **Step 1：写完整测试；运行 `node --import tsx --test tests/qiongtong.test.ts`，预期模块缺失 RED。**
+
+```ts
+// tests/qiongtong.test.ts
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { readQiongtong, lookupQiongtong, validateQiongtong } from "../src/calendar/qiongtong.js";
+const sourceUrl = new URL("../tools/bazi/reference/qiongtong-wikisource.txt", import.meta.url);
+const source = readFileSync(sourceUrl, "utf8");
+test("120 条无缺无重，原文逐字出自对应日干季节章节", () => {
+  const rows = readQiongtong();
+  assert.equal(rows.length, 120);
+  assert.equal(new Set(rows.map((r) => r.dayStem + r.monthBranch)).size, 120);
+  for (const stem of "甲乙丙丁戊己庚辛壬癸") {
+    for (const branch of "寅卯辰巳午未申酉戌亥子丑") assert.ok(lookupQiongtong(stem, branch));
+  }
+  for (const row of rows) {
+    const start = source.indexOf(`=== ${row.section} ===`);
+    assert.ok(start >= 0);
+    const end = source.indexOf("===", start + `=== ${row.section} ===`.length);
+    const section = source.slice(start + `=== ${row.section} ===`.length, end < 0 ? undefined : end);
+    assert.ok(section.includes(row.quote), `${row.dayStem}${row.monthBranch} 摘句不在章节内`);
+    assert.equal(row.section.charAt(2), row.dayStem);
+    const seasons = { 春: "寅卯辰", 夏: "巳午未", 秋: "申酉戌", 冬: "亥子丑" };
+    assert.ok(seasons[row.section.charAt(1) as keyof typeof seasons]?.includes(row.monthBranch));
+    assert.ok(row.useStems.length > 0);
+    assert.equal(new Set(row.useStems).size, row.useStems.length);
+    assert.ok(row.useStems.every((s) => s.length === 1 && "甲乙丙丁戊己庚辛壬癸".includes(s)));
+    assert.ok(row.useStems.every((s) => row.quote.includes(s)));
+  }
+});
+test("已核验庚巳与甲寅抽样及非法条目拒绝", () => {
+  const geng = lookupQiongtong("庚", "巳");
+  assert.deepEqual(geng.useStems, ["壬", "戊", "丙"]);
+  assert.equal(geng.section, "三夏庚金");
+  assert.ok(geng.quote.includes("但先壬水") && geng.quote.includes("次取戊土，丙火佐之"));
+  const jia = lookupQiongtong("甲", "寅");
+  assert.ok(jia.useStems.includes("丙") && jia.useStems.includes("癸"));
+  assert.ok(jia.quote.includes("得丙癸逢"));
+  assert.throws(() => lookupQiongtong("甲", "错"), /调候/);
+  assert.throws(() => validateQiongtong([]), /120/);
+  assert.throws(() => validateQiongtong([...readQiongtong().slice(1), readQiongtong()[1]]), /重复/);
+  assert.throws(() => validateQiongtong(readQiongtong().map((r, i) => i ? r : { ...r, useStems: ["错"] })),
+    /调候/);
+});
+```
+
+- [ ] **Step 2：录入完整 JSON。** `quote` 保留底本繁简混用、标点与 wikitext 粗体标记，不改字、不拼接不连续句。用干取句中明确推荐项，先后词优先于句中背景字出现顺序；「忌」「病」不收。季总论有明确分月指示时按分月指示；条件性用干及非标准措辞的取舍在文末列出，交主管逐条复核。
+
+```json
+// src/calendar/data/qiongtong.json
+[
+{"dayStem":"甲","monthBranch":"寅","monthName":"正月","useStems":["丙","癸"],"section":"三春甲木","quote":"'''正月甲木'''，初春尚有余寒，得丙癸逢，富贵双全。癸藏丙透，名寒木向阳，主大富贵。倘风水不及，亦不失儒林俊秀。如无丙癸，平常人也。"},
+{"dayStem":"甲","monthBranch":"卯","monthName":"二月","useStems":["庚","丁"],"section":"三春甲木","quote":"凡三春甲木，用庚者，土为妻，金为子。用丁者，木为妻，火为子。"},
+{"dayStem":"甲","monthBranch":"辰","monthName":"三月","useStems":["庚","壬"],"section":"三春甲木","quote":"'''三月甲木'''，木气相竭。先取庚金，次用壬水。庚壬两透，一榜堪图。但要运用相生，风水阴德，方许富贵。"},
+{"dayStem":"甲","monthBranch":"巳","monthName":"四月","useStems":["癸","丁"],"section":"三夏甲木","quote":"'''四月甲木'''退气，丙火司权，先癸后丁。"},
+{"dayStem":"甲","monthBranch":"午","monthName":"五月","useStems":["癸","丁","庚"],"section":"三夏甲木","quote":"'''五六月甲木'''，木性虚焦，一理共推。五月先癸后丁庚金次之。六月三伏生寒，丁火退气。先丁后庚，无癸亦可。或五月乏癸，用丁亦可，要运行北地为隹。"},
+{"dayStem":"甲","monthBranch":"未","monthName":"六月","useStems":["丁","庚"],"section":"三夏甲木","quote":"'''五六月甲木'''，木性虚焦，一理共推。五月先癸后丁庚金次之。六月三伏生寒，丁火退气。先丁后庚，无癸亦可。或五月乏癸，用丁亦可，要运行北地为隹。"},
+{"dayStem":"甲","monthBranch":"申","monthName":"七月","useStems":["丁","庚"],"section":"三秋甲木","quote":"'''七月甲木'''，丁火为尊，庚金次之，庚金不可少。火隔水不能镕金，故丁火镕金，必赖甲木引助，方成洪炉。若有癸水阻隔，便灭丁火，壬水无碍，且能合丁，但须见戊土，方可制水存火。"},
+{"dayStem":"甲","monthBranch":"酉","monthName":"八月","useStems":["丁","丙","庚"],"section":"三秋甲木","quote":"'''八月甲木'''，木囚金旺。丁火为先，次用丙火，庚金再次。"},
+{"dayStem":"甲","monthBranch":"戌","monthName":"九月","useStems":["丁","癸"],"section":"三秋甲木","quote":"九月甲木，耑用丁癸，见戊透必贵。如戊戌、壬戌、甲子、甲申，支成水局，干有壬水，正合贵元武之说。配得中和，一榜之命，家计丰足。但庚丁未透出干，不能馆选。"},
+{"dayStem":"甲","monthBranch":"亥","monthName":"十月","useStems":["庚","丁","丙"],"section":"三冬甲木","quote":"'''十月甲木'''，庚丁为要，丙火次之。忌壬水泛身，须戊土制之。"},
+{"dayStem":"甲","monthBranch":"子","monthName":"十一月","useStems":["丁","庚","丙"],"section":"三冬甲木","quote":"'''十一月甲木'''，木性生寒，丁先庚后，丙火佐之。癸水司权，为火金之病。庚丁两透，支见巳寅，科甲有准，风水不及，选拔有之。若癸透伤丁。无戊己辅救，残疾之人。或壬水重出，丁火全无者，庸人也，得丙方妙。"},
+{"dayStem":"甲","monthBranch":"丑","monthName":"十二月","useStems":["庚","丁"],"section":"三冬甲木","quote":"'''十二月甲木'''，天寒气冻，木性极寒，无生发之象，先用庚噼甲，方引丁火始得木火有通明之象，故丁次之。"},
+{"dayStem":"乙","monthBranch":"寅","monthName":"正月","useStems":["丙","癸"],"section":"三春乙木","quote":"'''正月乙木'''，必须用丙，因天气尤有余寒，非丙不暖，虽有癸水，恐凝寒气，故以丙火为先，癸水次之。"},
+{"dayStem":"乙","monthBranch":"卯","monthName":"二月","useStems":["丙","癸"],"section":"三春乙木","quote":"二月乙木，耑用丙癸，或支成木局，有癸透乃作贵命，更得丙洩木气，上上之命，但须透癸。或水多困丙，多戊化癸，皆下格。"},
+{"dayStem":"乙","monthBranch":"辰","monthName":"三月","useStems":["癸","丙"],"section":"三春乙木","quote":"'''三月乙木'''，阳气愈炽，先癸后丙。"},
+{"dayStem":"乙","monthBranch":"巳","monthName":"四月","useStems":["癸","丙","庚","辛"],"section":"三夏乙木","quote":"'''四月乙木'''，自有丙火，耑取癸水为尊。四月乙木专用癸水，丙火酌用，虽以庚辛佐癸，须辛透为清。癸透、庚辛又透，科甲定然，独一点癸水、无金，是水无根，虽出天干，不过秀才小富，须要大运相扶。或土多困癸，贫贱之人。丙戊太多，支成火局，瞽目之流。"},
+{"dayStem":"乙","monthBranch":"午","monthName":"五月","useStems":["癸","丙"],"section":"三夏乙木","quote":"'''五月乙木'''，丁火司权，禾稼俱旱。上半月属阳，仍用癸水。下半月属阴，三伏生寒，丙癸齐用。柱多金水，丙火为先，余皆用癸水为先。"},
+{"dayStem":"乙","monthBranch":"未","monthName":"六月","useStems":["丙","癸"],"section":"三夏乙木","quote":"'''六月乙木'''，木性且寒，柱多金水，丙火为尊。支成水局，乙得无伤。癸水透干，大富大贵。无癸定作常人，运不行北，困苦一生。\n\n凡五六月乙木，气退枯焦，用癸水切忌戊己杂乱，则为下格。或甲木高透，制伏土神名为去浊留清，可许俊秀。土多乏甲秀气脱空，庸人而已。"},
+{"dayStem":"乙","monthBranch":"申","monthName":"七月","useStems":["己"],"section":"三秋乙木","quote":"'''七月乙木'''，庚金乘令，庚虽输情于乙妹，怎奈干乙难合支金。柱见庚多，乙难受载。或丙透干，又加巳出埋金，此格可云科甲。有己透、加丙，亦是上命。七月喜己土为用，或不见丙癸。己土必不可少，此则以火为妻，土为子。"},
+{"dayStem":"乙","monthBranch":"酉","monthName":"八月","useStems":["癸","丙"],"section":"三秋乙木","quote":"'''八月乙木'''，芝兰禾稼均退。以丹桂为乙木。在白露之后，桂蕊未开，耑用癸水以滋桂萼。若秋分后，桂花已开，却喜向阳，又宜用丙，癸水次之，丙癸两透，科甲名臣。"},
+{"dayStem":"乙","monthBranch":"戌","monthName":"九月","useStems":["癸"],"section":"三秋乙木","quote":"'''九月乙木'''，根枯叶落，必赖癸水滋养。如见甲申时，名为藤萝系甲，可秋可冬。若见癸水，又遇辛金发水之源，定主科甲。或有癸无辛，常人。有辛无癸，贫贱。或四柱壬多，水难生乙，亦是寻常之辈。"},
+{"dayStem":"乙","monthBranch":"亥","monthName":"十月","useStems":["丙","戊"],"section":"三冬乙木","quote":"'''十月乙木'''，木不受气，而壬水司令，取丙为用，戊土次之。丙戊两透，科甲定然。有丙无戊，虽不科甲，亦入儒林。支多丙火，运入火乡，亦主显达。"},
+{"dayStem":"乙","monthBranch":"子","monthName":"十一月","useStems":["丙"],"section":"三冬乙木","quote":"'''十一月乙木'''，花木寒冻，一阳来复，喜用丙火解冻，则花木有向阳之意，不宜用癸以冻花木，故耑用丙火。"},
+{"dayStem":"乙","monthBranch":"丑","monthName":"十二月","useStems":["丙"],"section":"三冬乙木","quote":"或四柱多己，不逢比劫，乃为从才，富比王侯，若见比劫，贫无立锥。虽或一派戊己，见甲颇有衣禄。耑以丙火为用，方妙。"},
+{"dayStem":"丙","monthBranch":"寅","monthName":"正月","useStems":["壬","庚"],"section":"三春丙火","quote":"'''正月丙火'''，三阳开泰，火气渐炎，取壬为尊，庚金佐之。壬庚两透，科甲定然。即壬透庚藏，亦有异途显达。"},
+{"dayStem":"丙","monthBranch":"卯","monthName":"二月","useStems":["壬"],"section":"三春丙火","quote":"'''二月丙火'''，阳气舒升，耑用壬水。壬透天干，不见丁化，加以庚辛己亦透，壬水有根，定主科甲。"},
+{"dayStem":"丙","monthBranch":"辰","monthName":"三月","useStems":["壬","甲"],"section":"三春丙火","quote":"'''三月丙火'''，气渐炎升，用壬水。或成土局，取甲为辅，壬不可离。壬甲两透，科甲定宜，惟忌庚出制甲，则秀才而已。无甲用庚，助壬水洩土气。"},
+{"dayStem":"丙","monthBranch":"巳","monthName":"四月","useStems":["壬"],"section":"三夏丙火","quote":"'''四月丙火'''，建禄于巳，火势炎炎，宜专用壬水，解炎威之力，成既济之功。如无壬水，孤阳失辅，难透清光。得庚发水源，方为有根之水。壬庚两透，不见戊土，号曰湖水汪洋，广映太阳，光辉显着，文明之象，人格合此，不但科甲峥嵘，必有恩谥封荣，若不验，必暗损阴德。"},
+{"dayStem":"丙","monthBranch":"午","monthName":"五月","useStems":["壬"],"section":"三夏丙火","quote":"'''五月丙火'''，得壬高透，方为上命。或一壬无庚，亦主贡监，犹防戊己出干，丁壬化合，则为平人。即不透庚壬，或有申宫长生之水，济之坐禄之金，至妙，必入词林。又怕戊己杂乱，则为异路。"},
+{"dayStem":"丙","monthBranch":"未","monthName":"六月","useStems":["壬","庚"],"section":"三夏丙火","quote":"'''六月丙火'''退气，三伏生寒，壬水为用，取庚辅佐。"},
+{"dayStem":"丙","monthBranch":"申","monthName":"七月","useStems":["壬"],"section":"三秋丙火","quote":"'''七月丙火'''，太阳转西，阳气衰矣。日近西山，见土皆晦，惟日照湖海，暮夜光天，故仍用壬水，辅映光辉。"},
+{"dayStem":"丙","monthBranch":"酉","monthName":"八月","useStems":["壬"],"section":"三秋丙火","quote":"'''八月丙火'''，日近黄昏，丙火之余光，存于光湖，仍用壬水辅映。"},
+{"dayStem":"丙","monthBranch":"戌","monthName":"九月","useStems":["甲","壬"],"section":"三秋丙火","quote":"'''九月丙火'''，火气愈退，所忌土晦光火，必须先用甲木，次取壬水。甲壬两透，富贵非凡。若无壬水，得癸透干，亦可，虽不科甲，异路功名。壬癸藏支，贡监而已。甲藏壬透，无庚破甲，可许秀才。或庚戊困了水木，定是庸才。无甲壬癸者，下格。"},
+{"dayStem":"丙","monthBranch":"亥","monthName":"十月","useStems":["庚","戊","壬"],"section":"三冬丙火","quote":"总之十月丙火，木旺宜庚，水旺宜戊，火旺用壬，随宜酌用可也。"},
+{"dayStem":"丙","monthBranch":"子","monthName":"十一月","useStems":["壬","戊"],"section":"三冬丙火","quote":"'''十一月丙火'''，冬至一阳生，弱中复强，壬水为最，戊土佐之。"},
+{"dayStem":"丙","monthBranch":"丑","monthName":"十二月","useStems":["壬","甲"],"section":"三冬丙火","quote":"'''十二月丙火'''，气进二阳，侮雪欺霜，喜壬为用。己土司令，土多又不可少甲。壬甲两透，科甲堪宜，甲藏则秀才而已。或无甲得一壬透，富中取贵。"},
+{"dayStem":"丁","monthBranch":"寅","monthName":"正月","useStems":["庚"],"section":"三春丁火","quote":"'''正月丁火'''，甲木当权，乃为母旺，非庚不能噼甲，何以引丁，姑用庚金。"},
+{"dayStem":"丁","monthBranch":"卯","monthName":"二月","useStems":["庚","甲"],"section":"三春丁火","quote":"'''二月丁火'''，溼乙伤丁，先庚后甲，非庚不能去乙，非甲不能引丁。庚甲两透，科甲定然。庚透甲藏，亦有生贡。甲透庚藏，异路功名。"},
+{"dayStem":"丁","monthBranch":"辰","monthName":"三月","useStems":["甲","庚"],"section":"三春丁火","quote":"'''三月丁火'''，戊土司令，洩弱丁气，先用甲木引丁制土，次看庚金。庚甲两透，定主科甲。或一藏一透，终非白丁。"},
+{"dayStem":"丁","monthBranch":"巳","monthName":"四月","useStems":["甲","庚"],"section":"三夏丁火","quote":"'''四月丁火'''乘旺，虽取甲引丁，必用庚噼甲。伐甲、方云木火通明。甲多、又取庚为先。但四柱忌见癸水。癸水一见，洩金、溼甲、伤丁，故以癸为病。或癸水藏支，壬水出干制丙，不夺丁光，自是雁塔题名，玉堂清贵。"},
+{"dayStem":"丁","monthBranch":"午","monthName":"五月","useStems":["甲","庚"],"section":"三夏丁火","quote":"若干支无火局，有水透干，须用甲木，又要庚噼甲方明。木火通明，主大富贵。或木少火多，焚其木性，不能光透九霄，荣华不久。"},
+{"dayStem":"丁","monthBranch":"未","monthName":"六月","useStems":["甲","壬"],"section":"三夏丁火","quote":"'''六月之丁'''，阴柔退气，但值三伏生寒，丁弱极矣，专取甲木，壬水次之。"},
+{"dayStem":"丁","monthBranch":"申","monthName":"七月","useStems":["甲","丙"],"section":"三秋丁火","quote":"三秋甲庚丙并用，仍分优劣，何也？七月甲丙，申中有庚，八月甲丙庚皆用，七八月或无甲木，乙亦可用，为枯草引灯，却不离丙晒也。九月耑用甲庚。大扺甲不离庚，乙不离丙，其理极明。或见甲庚丙皆透，必主科甲。无甲用乙者，富贵皆小，且富而不贵者多。"},
+{"dayStem":"丁","monthBranch":"酉","monthName":"八月","useStems":["甲","丙","庚"],"section":"三秋丁火","quote":"三秋甲庚丙并用，仍分优劣，何也？七月甲丙，申中有庚，八月甲丙庚皆用，七八月或无甲木，乙亦可用，为枯草引灯，却不离丙晒也。九月耑用甲庚。大扺甲不离庚，乙不离丙，其理极明。或见甲庚丙皆透，必主科甲。无甲用乙者，富贵皆小，且富而不贵者多。"},
+{"dayStem":"丁","monthBranch":"戌","monthName":"九月","useStems":["甲","庚"],"section":"三秋丁火","quote":"三秋甲庚丙并用，仍分优劣，何也？七月甲丙，申中有庚，八月甲丙庚皆用，七八月或无甲木，乙亦可用，为枯草引灯，却不离丙晒也。九月耑用甲庚。大扺甲不离庚，乙不离丙，其理极明。或见甲庚丙皆透，必主科甲。无甲用乙者，富贵皆小，且富而不贵者多。"},
+{"dayStem":"丁","monthBranch":"亥","monthName":"十月","useStems":["庚","甲"],"section":"三冬丁火","quote":"三冬丁火微寒，耑用庚甲。甲乃庚之良友。凡用甲木，庚不可少，无庚无甲，何能引丁？难云木火通明，冬丁有甲，不怕水多金多。可称上格。甲庚两透，科甲分明。见己则否。己多合甲，则为常人。"},
+{"dayStem":"丁","monthBranch":"子","monthName":"十一月","useStems":["庚","甲"],"section":"三冬丁火","quote":"三冬丁火微寒，耑用庚甲。甲乃庚之良友。凡用甲木，庚不可少，无庚无甲，何能引丁？难云木火通明，冬丁有甲，不怕水多金多。可称上格。甲庚两透，科甲分明。见己则否。己多合甲，则为常人。"},
+{"dayStem":"丁","monthBranch":"丑","monthName":"十二月","useStems":["庚","甲"],"section":"三冬丁火","quote":"三冬丁火微寒，耑用庚甲。甲乃庚之良友。凡用甲木，庚不可少，无庚无甲，何能引丁？难云木火通明，冬丁有甲，不怕水多金多。可称上格。甲庚两透，科甲分明。见己则否。己多合甲，则为常人。"},
+{"dayStem":"戊","monthBranch":"寅","monthName":"正月","useStems":["丙","甲","癸"],"section":"三春戊土","quote":"三春戊土，无丙照暖，戊土不生，无甲疏噼，戊土不灵，无癸滋润，万物不长。正二月先丙后甲，癸又次之。三月先甲后丙，癸又次之，因戊土司权故也。有甲、丙、癸，三者齐透，必主一品当朝，或二透一藏，亦登金榜，二藏一透，也可异途。"},
+{"dayStem":"戊","monthBranch":"卯","monthName":"二月","useStems":["丙","甲","癸"],"section":"三春戊土","quote":"三春戊土，无丙照暖，戊土不生，无甲疏噼，戊土不灵，无癸滋润，万物不长。正二月先丙后甲，癸又次之。三月先甲后丙，癸又次之，因戊土司权故也。有甲、丙、癸，三者齐透，必主一品当朝，或二透一藏，亦登金榜，二藏一透，也可异途。"},
+{"dayStem":"戊","monthBranch":"辰","monthName":"三月","useStems":["甲","丙","癸"],"section":"三春戊土","quote":"三春戊土，无丙照暖，戊土不生，无甲疏噼，戊土不灵，无癸滋润，万物不长。正二月先丙后甲，癸又次之。三月先甲后丙，癸又次之，因戊土司权故也。有甲、丙、癸，三者齐透，必主一品当朝，或二透一藏，亦登金榜，二藏一透，也可异途。"},
+{"dayStem":"戊","monthBranch":"巳","monthName":"四月","useStems":["甲","丙","癸"],"section":"三夏戊土","quote":"'''四月戊土'''，阳气发升，寒气内藏，外实内虚，不畏火炎，无阳气相催，万物不长，故先用甲疏噼，次取丙癸为佐。"},
+{"dayStem":"戊","monthBranch":"午","monthName":"五月","useStems":["壬","甲","丙"],"section":"三夏戊土","quote":"'''五月戊土'''，仲夏火炎，先看壬水，次取甲木，丙火酌用，用癸力微。"},
+{"dayStem":"戊","monthBranch":"未","monthName":"六月","useStems":["癸","丙","甲"],"section":"三夏戊土","quote":"'''六月戊土'''，遇夏干枯，先看癸水，次用丙火甲木。癸丙两透，科甲中人。或有癸无丙，见甲可许秀才。无甲略富。或有丙无癸，假道斯文，衣食颇足。"},
+{"dayStem":"戊","monthBranch":"申","monthName":"七月","useStems":["丙","癸","甲"],"section":"三秋戊土","quote":"七月戊土，阳气渐入，寒气渐出，先丙后癸，甲木次之。丙癸甲透者，富贵极品。癸藏丙透，不仅秀才。丙甲两透，癸水会局藏辰，亦不失富贵。无丙得癸甲透，此人清雅，家富千金。无癸甲者、常人。有丙火、妻贤子肖。若丙甲癸三者俱无，下流之命。"},
+{"dayStem":"戊","monthBranch":"酉","monthName":"八月","useStems":["丙","癸"],"section":"三秋戊土","quote":"'''八月戊土'''，金洩身寒，赖丙照暖，喜水滋润，先丙后癸，不必木疏。丙癸两透，科甲中人。丙透癸藏，可许入泮。癸透丙藏，纳资得官。若丙藏又无癸，即多不透，此皆常人。丙癸全无，奔流之客。"},
+{"dayStem":"戊","monthBranch":"戌","monthName":"九月","useStems":["甲","癸"],"section":"三秋戊土","quote":"'''九月戊土'''当权，不可专用丙，先看甲木，次取癸水，却忌化合。见金先用癸水，后取丙火，配合支干，方成有生之土，定发云程。"},
+{"dayStem":"戊","monthBranch":"亥","monthName":"十月","useStems":["甲","丙"],"section":"三冬戊土","quote":"'''十月戊土'''，时值小阳，阳气略出，先用甲木，次取丙火。非甲、土不灵。非丙、土不暖，安能生发万物。甲丙两出，富贵中人。或甲得长生，遇支藏得地之水，一丙高透，亦主身贵扬名。"},
+{"dayStem":"戊","monthBranch":"子","monthName":"十一月","useStems":["丙","甲"],"section":"三冬戊土","quote":"'''十一二月'''严寒冰冻，丙火为专，甲木为佐。丙甲两透，桃浪之人，丙出甲藏，采芹食饩。丙藏甲出，佐杂前程。有丙无甲者，豪富。有甲无丙者，清贫。丙甲全无，下流之造。"},
+{"dayStem":"戊","monthBranch":"丑","monthName":"十二月","useStems":["丙","甲"],"section":"三冬戊土","quote":"'''十一二月'''严寒冰冻，丙火为专，甲木为佐。丙甲两透，桃浪之人，丙出甲藏，采芹食饩。丙藏甲出，佐杂前程。有丙无甲者，豪富。有甲无丙者，清贫。丙甲全无，下流之造。"},
+{"dayStem":"己","monthBranch":"寅","monthName":"正月","useStems":["丙"],"section":"三春己土","quote":"'''正月己土'''，田园犹冻，盖因腊气未除，余寒未退，故丙为尊。得丙照暖，万物自生，忌见壬水，反为己病，何也？壬乃江湖之水，湖水一发，则田园洗荡，变为沙土，而根苗尽没矣。须戊作堤，以保园圃。壬多要见戊制。有戊出干者，定主玉堂金马。若乏戊制，必属平常。"},
+{"dayStem":"己","monthBranch":"卯","monthName":"二月","useStems":["甲","癸"],"section":"三春己土","quote":"'''二月己土'''，阳气渐升，虽禾稼未成，万物出土，田园未展，先取甲木疏之，忌合。次取癸水润之。甲癸出干，定主科甲，加以一丙出透，势压百僚。一见壬水，微末官职。"},
+{"dayStem":"己","monthBranch":"辰","monthName":"三月","useStems":["丙","癸","甲"],"section":"三春己土","quote":"'''三月己土'''，正栽培禾稼之时，先丙后癸，土暖而润，随用甲疏，三者俱透天干，必官居黄阁。或三者透一，科甲定然，但要得地。却以庚金为病。"},
+{"dayStem":"己","monthBranch":"巳","monthName":"四月","useStems":["癸","丙"],"section":"三夏己土","quote":"三夏己土，杂气才官，禾稼在田，最喜甘沛，取癸为要，次用丙火。夏无太阳，禾稼不长，故无癸曰旱田，无丙曰孤阴。"},
+{"dayStem":"己","monthBranch":"午","monthName":"五月","useStems":["癸","丙"],"section":"三夏己土","quote":"三夏己土，杂气才官，禾稼在田，最喜甘沛，取癸为要，次用丙火。夏无太阳，禾稼不长，故无癸曰旱田，无丙曰孤阴。"},
+{"dayStem":"己","monthBranch":"未","monthName":"六月","useStems":["癸","丙"],"section":"三夏己土","quote":"三夏己土，杂气才官，禾稼在田，最喜甘沛，取癸为要，次用丙火。夏无太阳，禾稼不长，故无癸曰旱田，无丙曰孤阴。"},
+{"dayStem":"己","monthBranch":"申","monthName":"七月","useStems":["癸","丙","辛"],"section":"三秋己土","quote":"总之，三秋己土，先癸后丙，取辛辅癸。九月土盛，宜甲木疏之，余皆酌用。"},
+{"dayStem":"己","monthBranch":"酉","monthName":"八月","useStems":["癸","丙","辛"],"section":"三秋己土","quote":"总之，三秋己土，先癸后丙，取辛辅癸。九月土盛，宜甲木疏之，余皆酌用。"},
+{"dayStem":"己","monthBranch":"戌","monthName":"九月","useStems":["癸","丙","辛","甲"],"section":"三秋己土","quote":"总之，三秋己土，先癸后丙，取辛辅癸。九月土盛，宜甲木疏之，余皆酌用。"},
+{"dayStem":"己","monthBranch":"亥","monthName":"十月","useStems":["丙","戊","丁"],"section":"三冬己土","quote":"三冬己土，溼泥寒冻，非丙暖不生，取丙为尊，甲木参酌。戊土癸水不用。惟初冬壬旺，取戊制之。余皆用丙丁，但丁不能解冻除寒，不能大济。"},
+{"dayStem":"己","monthBranch":"子","monthName":"十一月","useStems":["丙","丁"],"section":"三冬己土","quote":"三冬己土，溼泥寒冻，非丙暖不生，取丙为尊，甲木参酌。戊土癸水不用。惟初冬壬旺，取戊制之。余皆用丙丁，但丁不能解冻除寒，不能大济。"},
+{"dayStem":"己","monthBranch":"丑","monthName":"十二月","useStems":["丙","丁"],"section":"三冬己土","quote":"三冬己土，溼泥寒冻，非丙暖不生，取丙为尊，甲木参酌。戊土癸水不用。惟初冬壬旺，取戊制之。余皆用丙丁，但丁不能解冻除寒，不能大济。"},
+{"dayStem":"庚","monthBranch":"寅","monthName":"正月","useStems":["丙","甲"],"section":"三春庚金","quote":"'''正月庚金'''，木旺之际，有土皆死，不能生金，且金之寒气未除，先用丙暖庚性，又虑土厚埋金，须甲疏洩。丙甲两透，科甲显荣。二者透一，亦有生监。丙藏甲透，异路功名。"},
+{"dayStem":"庚","monthBranch":"卯","monthName":"二月","useStems":["丁","甲"],"section":"三春庚金","quote":"'''二月庚金'''，柱中自然有乙，当令之乙，见庚必输情于乙，此金有暗强之势，如秋金一理，故二月庚金，专用丁火，借甲引丁，借庚噼甲。无丁用丙者，富贵多出于勉强。"},
+{"dayStem":"庚","monthBranch":"辰","monthName":"三月","useStems":["甲","丁"],"section":"三春庚金","quote":"'''三月庚金'''，戊土司令，无生金之理，有埋金之忧，故先甲后丁，不用庚噼甲。三月之庚，土旺金顽，顽金宜丁，旺土须甲，乏甲不能立业，乏丁焉能成名。二者少一，富贵不真。"},
+{"dayStem":"庚","monthBranch":"巳","monthName":"四月","useStems":["壬","戊","丙"],"section":"三夏庚金","quote":"'''四月庚金'''，长生于巳，巳内有戊。丙不镕金，故不畏火炎，丙亦可作用，但先壬水，方得中和，故曰群金生夏，喜用勾陈。次取戊土，丙火佐之。三者皆全，登科及第，即透一二，亦非白丁。"},
+{"dayStem":"庚","monthBranch":"午","monthName":"五月","useStems":["壬","癸"],"section":"三夏庚金","quote":"'''五月庚金'''，丁火旺烈，庚金败地，专用壬水，癸又次之。壬透癸藏，支见庚辛，必然科甲，切忌戊己透干制水、则否。戊藏支内，不失儒林。或壬在支，有金生助，又得金神出干，明经之贵。或癸出带辛，异路之荣。"},
+{"dayStem":"庚","monthBranch":"未","monthName":"六月","useStems":["丁","甲"],"section":"三夏庚金","quote":"'''六月庚金'''，三伏生寒，顽钝极矣，先用丁火，次取甲木。丁甲两透名显身荣，忌癸伤丁。有甲无丁、庸俗。有丁无甲、生员。丁甲全无，下贱之人。木虽有，丁不透，支又见水，执鞭之士。丁火无伤，贸易之流。"},
+{"dayStem":"庚","monthBranch":"申","monthName":"七月","useStems":["丁","甲"],"section":"三秋庚金","quote":"'''七月庚金'''，刚锐极矣。专用丁火煅炼，次取甲木引丁，故曰：秋金锐锐最为奇，壬癸相逢总不宜，如逢木火来成局，试看福寿与天齐。"},
+{"dayStem":"庚","monthBranch":"酉","monthName":"八月","useStems":["丁","甲","丙"],"section":"三秋庚金","quote":"'''八月庚金'''，刚锐未退，用丁用甲，丙不可少。若丁甲透，又见一丙，功名显赫，且见羊刃，无刑剋，丙杀藏支，名为羊刃驾杀，主出将入相，直介忠臣。"},
+{"dayStem":"庚","monthBranch":"戌","monthName":"九月","useStems":["甲","壬"],"section":"三秋庚金","quote":"'''九月庚金'''，戊土司令，最怕土厚埋金，宜先用甲疏，后用壬洗，则金自出矣。忌见己土浊壬。"},
+{"dayStem":"庚","monthBranch":"亥","monthName":"十月","useStems":["丁","丙"],"section":"三冬庚金","quote":"'''十月庚金'''，水冷性寒，非丁莫造，非丙不暖。丁甲两透，支无水局，一榜有之。支藏丙火，桃浪之仙。支见亥子，得己出制，亦有功名。"},
+{"dayStem":"庚","monthBranch":"子","monthName":"十一月","useStems":["丁","甲","丙"],"section":"三冬庚金","quote":"'''十一月庚金'''，天气严寒，仍取丁甲，次取丙火照暖。或丁甲两透，丙在支中，必主科甲。即无丙火，亦有衣衿。有丁无甲，亦可富中取贵。有甲无丁，只作常人。或丙透丁藏，异途名望。丁藏有甲，武学可许。"},
+{"dayStem":"庚","monthBranch":"丑","monthName":"十二月","useStems":["丙","丁","甲"],"section":"三冬庚金","quote":"'''十二月庚金'''，寒气太重，且多湿泥，愈寒愈冻，先取丙火解冻，次取丁火炼金，甲亦不可少。"},
+{"dayStem":"辛","monthBranch":"寅","monthName":"正月","useStems":["己","壬"],"section":"三春辛金","quote":"'''正月辛金'''，阳气舒而寒气未除，不知正月建寅，中有长生之丙，解去寒气，忌甲木司权，辛金失令，取己土为生身之本，欲得辛金发现，全赖壬水之功，己壬两透，支见庚制甲，科甲定然。或己土透干，支中有甲，异路恩荣。或己土不全，号曰君臣失势，富贵难全。或有丙火出干，亦主武学。或见壬、无己庚者，贫贱之徒。"},
+{"dayStem":"辛","monthBranch":"卯","monthName":"二月","useStems":["壬","甲"],"section":"三春辛金","quote":"'''二月辛金'''，阳和之际，壬水为尊，见戊己为病。得甲制伏，则辛金不致埋没，壬水不致混浊，合此者必身入玉堂。故二月辛金，有壬甲透者贵显。否则，乡绅。或壬坐亥支，不见土出，可能入芥，家亦小康。得申中之壬者，异途名望。无壬者常人。其生剋之理，与正月辛金皆同。"},
+{"dayStem":"辛","monthBranch":"辰","monthName":"三月","useStems":["壬","甲"],"section":"三春辛金","quote":"'''三月辛金'''，戊土司令，辛承正气，母旺子相，先壬后甲。壬甲两透，富贵必然。壬透甲藏，廪贡不失。甲透壬藏，富则可云。壬甲皆无，平常之格。"},
+{"dayStem":"辛","monthBranch":"巳","monthName":"四月","useStems":["壬"],"section":"三夏辛金","quote":"'''四月辛金'''，时逢首夏，忌丙火之燥烈，喜壬水之洗淘。支成金局，水透出干，有木制戊，名一清澈底，科甲功名。癸透壬藏，富真贵假。若壬癸皆藏，戊己亦藏，略富。若壬癸俱无，反见火出，必主鳏独。"},
+{"dayStem":"辛","monthBranch":"午","monthName":"五月","useStems":["己","壬"],"section":"三夏辛金","quote":"'''五月辛金'''，丁火司权，辛金失令，阴柔之极，不宜煅炼，须己壬兼用，何也？己为泥沙，壬为湖海，己无壬不湿，辛无己不生，故壬己并用。无壬、癸亦可用。但癸力小。或支成火局，即重见癸出亦不济，得壬透破火方可，必主生员。若无壬，癸见戊，虽有午宫己土，燥泥成灰，金必毁镕，反遭埋没，必为僧道。有一二重比肩，不致孤独。"},
+{"dayStem":"辛","monthBranch":"未","monthName":"六月","useStems":["壬","庚"],"section":"三夏辛金","quote":"'''六月辛金'''，己土当权，辅助太多，恐掩金光，先用壬水，取庚佐之。壬庚两透，科甲功名，即不出干，藏支得所，亦有荣华。但忌戊出，得甲制之，方吉。甲须隔位，恐贪己合，反掩金光，又塞壬水之流，下贱之格。又忌庚出制甲。或只有未中一己，见了壬水，又为湿泥。不可见甲，甲出，反作平人。总以一壬一己，见庚无甲，方妙﹐与五月用己壬同。"},
+{"dayStem":"辛","monthBranch":"申","monthName":"七月","useStems":["壬"],"section":"三秋辛金","quote":"七月辛金，壬不在多，故书云：水浅金多，号曰体全之象，壬水为尊，甲戊酌用可也，癸水不可为用。"},
+{"dayStem":"辛","monthBranch":"酉","monthName":"八月","useStems":["壬"],"section":"三秋辛金","quote":"'''八月辛金'''，当权得令，旺之极矣，专用壬水淘洗火，故云：金见水以流通。如见戊己，则生扶太过，故以土为病，见甲制土、方妙。无戊、不宜用甲。"},
+{"dayStem":"辛","monthBranch":"戌","monthName":"九月","useStems":["壬","甲"],"section":"三秋辛金","quote":"'''九月辛金'''，戊土司令，母旺子相，须甲疏土，壬洩旺金，先壬后甲。壬甲两透，桃洞之仙。或壬透甲藏，又见戊者，平人。甲透、壬藏，戊在支内，异途之仕。"},
+{"dayStem":"辛","monthBranch":"亥","monthName":"十月","useStems":["壬","丙"],"section":"三冬辛金","quote":"'''十月辛金'''，时值小阳，阳气渐升，寒气将降，先用壬水，次取丙火，壬丙两透，金榜题名，何也？盖辛金有壬水丙火，名金白水清，又在亥月故发。丙透壬藏，采芹之造。丙藏壬透，富有千金。壬丙在支，聪明之士。"},
+{"dayStem":"辛","monthBranch":"子","monthName":"十一月","useStems":["壬","丙"],"section":"三冬辛金","quote":"'''十一月辛金'''，癸水司令，为寒冬雨露，切忌癸出冻金，而困丙火，壬丙两透，不见戊癸，衣锦腰金。即壬藏丙透，一榜堪图。"},
+{"dayStem":"辛","monthBranch":"丑","monthName":"十二月","useStems":["丙","壬"],"section":"三冬辛金","quote":"'''十二月辛金'''，寒冻之极，先丙后壬，无丙不能解冻，无壬不能洗淘。丙壬两透，金马玉堂之客。壬丙俱藏，游庠食饩之人。有丙无壬富真贵假。有壬乏丙，贱而且贫。或丙多、无壬、有癸，市中贸易之流。"},
+{"dayStem":"壬","monthBranch":"寅","monthName":"正月","useStems":["庚"],"section":"三春壬水","quote":"'''正月壬水'''，汪洋之象，能并百川之流，然水性柔弱，宜用庚金之源，庶不致汪洋无度。有庚丙戊三者齐透，科甲功名。或庚戊藏支，丙坐寅支者，亦有恩诰，即一庚透，贡监有之。"},
+{"dayStem":"壬","monthBranch":"卯","monthName":"二月","useStems":["戊","辛","庚"],"section":"三春壬水","quote":"'''二月壬水'''，寒气初除，有并流之象，不用丙暖，专取戊土辛金。二月壬水，先戊后辛，庚金次之。"},
+{"dayStem":"壬","monthBranch":"辰","monthName":"三月","useStems":["甲","庚"],"section":"三春壬水","quote":"'''三月壬水'''，戊土司权，恐有推山填海之患，先用甲疏季土，次取庚金。甲庚俱透，科甲定然。甲透庚藏，修齐品格。甲藏有根，可云俊秀。有癸滋甲，必主干城。独甲藏支，必富。独庚在柱，常人。无甲、刚暴之徒。乏庚、愚顽之辈。"},
+{"dayStem":"壬","monthBranch":"巳","monthName":"四月","useStems":["壬","辛","庚"],"section":"三夏壬水","quote":"'''四月壬水'''，丙火司权，水弱极矣，专取壬水比肩为助，次取辛金发源，且暗合丙火，庚金为佐。壬辛两透，金榜有名，或癸辛两出，加以甲透，亦主异路之荣。无甲者、富贵门下之客。"},
+{"dayStem":"壬","monthBranch":"午","monthName":"五月","useStems":["癸","庚","辛"],"section":"三夏壬水","quote":"'''五月壬水'''，丁旺壬弱，取癸为用，取庚为佐。无庚不能发水，无癸不能伤丁。五月壬水，辛癸亦可参用，其理与四月皆同。"},
+{"dayStem":"壬","monthBranch":"未","monthName":"六月","useStems":["辛","甲","癸"],"section":"三夏壬水","quote":"'''六月壬水'''，己土当权，丁火退气，先用辛金癸水，次用甲木噼土。六月壬水，先辛后甲，次取癸水。辛甲两透，富贵清高。甲藏辛透，贡监生员。辛藏甲透，异途武职。甲壬两透，无伤，有治国之贵。即甲藏壬出无破，是拾芥之才。或支多土火，又只清贫。"},
+{"dayStem":"壬","monthBranch":"申","monthName":"七月","useStems":["戊","丁"],"section":"三秋壬水","quote":"'''七月壬水'''，庚金司令，壬得申之长生，源流自远，转弱为强，专用戊土，次取丁火佐戊制庚。但用辰戌之戊，不用申中受病之戊。戊丁俱透，科甲生员。戊透天干，丁藏午戌，恩封可待，特忌戊癸化合。即支见寅戌，年出丁火，可许衣衿。或丁戊两藏，富中取贵。"},
+{"dayStem":"壬","monthBranch":"酉","monthName":"八月","useStems":["甲","庚"],"section":"三秋壬水","quote":"八月壬水，专用甲木，庚金次之。用甲者，水妻、木子。"},
+{"dayStem":"壬","monthBranch":"戌","monthName":"九月","useStems":["甲","丙"],"section":"三秋壬水","quote":"九月壬水，专用甲木，次用丙火。用土者，火妻土子。"},
+{"dayStem":"壬","monthBranch":"亥","monthName":"十月","useStems":["戊","庚"],"section":"三冬壬水","quote":"'''十月壬水'''司权，至旺之极，取戊为用，若生辰日干，又见辰时，必须戊透，又须庚制甲，不伤戊土，戊庚两全，定主豋科乃第，位显权高。或甲出制戊，不见庚救者，断之贫穷。戊藏无制，可许生员。或戊庚两透无甲者，亦主荣显。"},
+{"dayStem":"壬","monthBranch":"子","monthName":"十一月","useStems":["戊","丙"],"section":"三冬壬水","quote":"'''十一月壬水'''，阳刃帮身，较前更旺，先取戊土，次用丙火，丙戊两透，富贵荣华。有戊无丙，略可言富。有丙无戊，好谋无成。"},
+{"dayStem":"壬","monthBranch":"丑","monthName":"十二月","useStems":["丙","甲"],"section":"三冬壬水","quote":"'''十二月壬水'''，旺极复衰，何也？上半月癸辛主事，故旺，专用丙火。下半月己土主事，故衰。亦用丙火，甲木佐之。"},
+{"dayStem":"癸","monthBranch":"寅","monthName":"正月","useStems":["辛","丙"],"section":"三春癸水","quote":"'''正月癸水'''，值三阳之候，雨露之精，其性至柔，先用辛金，生癸水之源，次用丙火照暖，名阴阳和合，万物发生。辛丙两透，金榜有名。"},
+{"dayStem":"癸","monthBranch":"卯","monthName":"二月","useStems":["庚","辛"],"section":"三春癸水","quote":"'''二月癸水'''，不刚不柔，乙木司令，洩弱元神，专以庚金为用，辛金次之。庚辛俱透，无丁出干者，贵由科甲。无庚辛者常人。或庚透辛藏，荣封有准。庚藏辛透，亦有衣衿。庚辛两藏，富中取贵，或刀笔扬名。或庚辛重见，有己丁出干者亦贵。"},
+{"dayStem":"癸","monthBranch":"辰","monthName":"三月","useStems":["丙","辛","甲"],"section":"三春癸水","quote":"'''三月癸水'''，要分清明谷雨。清明后、火气未炽，专用丙火，为阴阳合谐。谷雨后，虽用丙火，尚宜辛甲佐之。如辛卯、壬辰、癸未、丙辰，生上半月，用丙火、显达。生下半月，必无伤辛金癸水、方妙。然丙亦不可少。用丙、木妻、火子。"},
+{"dayStem":"癸","monthBranch":"巳","monthName":"四月","useStems":["辛","庚"],"section":"三夏癸水","quote":"'''四月癸水'''，喜辛金为用，无辛用庚。若辛高透，不见丁火，加以壬透，主科名荣贵，声播四夷。若有丁破格，贫无立锥，有壬可免。辛藏无丁，贡监衣衿。"},
+{"dayStem":"癸","monthBranch":"午","monthName":"五月","useStems":["庚","辛","壬"],"section":"三夏癸水","quote":"'''五月癸水'''，至弱无根，必须庚辛为生身之本，但丁火司权，金难敌火，安能滋养癸水，宜见比劫，方得辛金之用。五月癸水，庚辛壬参酌并用可也。"},
+{"dayStem":"癸","monthBranch":"未","monthName":"六月","useStems":["庚","辛"],"section":"三夏癸水","quote":"'''六月癸水'''，有上下月之分。下半月庚辛有气，上半月庚辛休囚。凡六癸日、多不验者，何也？俗士不知此理。因未中有乙己同宫，破而不破，故癸水不能从杀，所以专用庚辛。如上半月金神衰弱，火气炎烈，宜比劫助身，可云富贵。与五月一理。下半月庚辛有气，即无比劫亦可，又忌丁透，即丁在支亦不吉。其生剋制化，与五月略同。"},
+{"dayStem":"癸","monthBranch":"申","monthName":"七月","useStems":["丁"],"section":"三秋癸水","quote":"'''七月癸水'''，正母旺子相之时，癸虽死申，殊不知申中有庚生之，名死处逢生，弱中复强，即运行西北，亦不死也。但庚司令刚锐极矣，必取丁火为用。或丁透有甲，名有燄之火，必主科甲。或丁透无甲，又无壬癸，即有一二庚金，亦有生监。有二丁更妙。或金多乏丁制者，贫困之人。"},
+{"dayStem":"癸","monthBranch":"酉","monthName":"八月","useStems":["辛","丙"],"section":"三秋癸水","quote":"'''八月癸水'''，辛金虚灵，非顽金可比，正金白水清，故取辛金为用，丙火佐之。名水暖金温。如丙与辛隔位同透，主科甲功名。或丙透辛藏，一榜之士。或土多{{PUA|}}水，生意中人。"},
+{"dayStem":"癸","monthBranch":"戌","monthName":"九月","useStems":["辛","甲"],"section":"三秋癸水","quote":"'''九月癸水'''，失令无根，戊土司权，剋制太过，专用辛金发水之源，要比肩滋甲制戊方妙。或辛甲两透，支见子癸，定主平步青云，或癸甲两透，富贵成名。或有甲辛无癸者，亦有恩封。或有甲癸无辛者，富大贵小。有甲无癸辛者，常人。二者俱无，贫贱之格。或有甲见壬者，颇许衣衿。"},
+{"dayStem":"癸","monthBranch":"亥","monthName":"十月","useStems":["庚","辛"],"section":"三冬癸水","quote":"'''十月癸水'''，旺中有弱，何也？因亥摇木，洩散元神，宜用庚辛为妙。得庚辛两透，不见丁伤者，功名有准。"},
+{"dayStem":"癸","monthBranch":"子","monthName":"十一月","useStems":["丙","辛"],"section":"三冬癸水","quote":"'''十一月癸水'''，值冰冻之时，金水无交欢之象，专用丙火解冻，庶不致成冰，又要辛金滋扶，无丙有辛，不妙。凡冬季癸水，有丙透解冻，则金温水暖，两两相生，要不见壬癸，自然豋科及第，紫诰金章。"},
+{"dayStem":"癸","monthBranch":"丑","monthName":"十二月","useStems":["丙"],"section":"三冬癸水","quote":"'''十二月癸水'''，寒极成冰，万物不能舒泰，宜丙火解冻。或丙透年时，加以壬透，支中多戊，名水辅阳光，主显达名臣，无戊者，异途之职。若有丙无壬，黉门之客。有壬无丙，戊又出干者，皂隶之流。"}
+]
+```
+
+- [ ] **Step 3：实现运行时形状、覆盖与查表校验；底本位置核验留在测试，生产请求不读取底本。**
+
+```ts
+// src/calendar/qiongtong.ts
+import { readFileSync } from "node:fs";
+export interface QiongtongEntry {
+  dayStem: string;
+  monthBranch: string;
+  monthName: string;
+  useStems: string[];
+  section: string;
+  quote: string;
+}
+export function validateQiongtong(value: unknown): QiongtongEntry[] {
+  if (!Array.isArray(value) || value.length !== 120) throw new Error("调候表必须有 120 条");
+  const seen = new Set<string>();
+  const stems = "甲乙丙丁戊己庚辛壬癸";
+  const branches = "寅卯辰巳午未申酉戌亥子丑";
+  const names = ["正月", "二月", "三月", "四月", "五月", "六月",
+    "七月", "八月", "九月", "十月", "十一月", "十二月"];
+  for (const row of value) {
+    if (!row || typeof row !== "object") throw new Error("调候条目不合法");
+    const { dayStem, monthBranch, monthName, useStems, section, quote } = row;
+    const index = typeof monthBranch === "string" ? branches.indexOf(monthBranch) : -1;
+    if (typeof dayStem !== "string" || dayStem.length !== 1 || !stems.includes(dayStem)
+      || typeof monthBranch !== "string" || monthBranch.length !== 1 || index < 0
+      || monthName !== names[index] || typeof section !== "string" || typeof quote !== "string"
+      || !quote || !Array.isArray(useStems) || !useStems.length
+      || new Set(useStems).size !== useStems.length
+      || !useStems.every((s: unknown) => typeof s === "string" && s.length === 1
+        && stems.includes(s) && quote.includes(s))) throw new Error("调候字段或用干不合法");
+    const season = "春夏秋冬".charAt(Math.floor(index / 3));
+    const element = "木木火火土土金金水水".charAt(stems.indexOf(dayStem));
+    if (section !== `三${season}${dayStem}${element}`) throw new Error("调候章节不合法");
+    const key = dayStem + monthBranch;
+    if (seen.has(key)) throw new Error("调候条目重复");
+    seen.add(key);
+  }
+  return value as QiongtongEntry[];
+}
+export function readQiongtong(): QiongtongEntry[] {
+  const text = readFileSync(new URL("./data/qiongtong.json", import.meta.url), "utf8");
+  return validateQiongtong(JSON.parse(text));
+}
+export function lookupQiongtong(dayStem: string, monthBranch: string): QiongtongEntry {
+  const row = readQiongtong().find((r) => r.dayStem === dayStem && r.monthBranch === monthBranch);
+  if (!row) throw new Error("调候日干或月令不合法");
+  return row;
+}
+```
+
+- [ ] **Step 4：运行 `node --import tsx --test tests/qiongtong.test.ts`，预期 2 项通过。** 120 条完全覆盖，无重复；quote 位于对应三级标题区间，章节的日干、季节一致；每个用干在原文中，抽样庚巳和甲寅符合已核验事实。
+- [ ] **Step 5：主管随机抽 20 条，人工核对用干取舍与先后。** 自动原文定位只能证明出处与字面存在，不能代替语义审查；修改条目后须重跑全部 120 条检查。
+
+### Task B3.5：交付核对与字段契约
+
+- [ ] **Step 1：按 B2.3 契约表核对样稿的关系图与文字、四柱神煞行、五行分布、余春台用神对照、十年面板逐年关系。** B3 分析与 B2 窗口以 year 关联，B4 事实编号同时覆盖原局与该年的流年/运节点；不得引用其它年份关系。
+- [ ] **Step 2：运行六个新增测试文件、项目类型检查与全量回归。** 同 B2.3 验证命令，再追加 `tests/bazi-relations.test.ts tests/qiongtong.test.ts`；严格验证需覆盖新声明、B1–B3 及全部新增测试。
+- [ ] **Step 3：逐条核对 bazi-chart spec 与 tasks。** 本块只提供基础事实；逐年断语 Schema、短评词核对归 B4，逐年合议归 B4/B5；B6 只消费。基础排盘与前端展示共用的 2.3 未整体完成，不能提前勾选。
 
 ## Chunk B4：命理与运势三家（提示词、输出 Schema、事实表与核对、mock）
 
@@ -1455,7 +2168,7 @@ export function buildBaziChart(input: BaziInput): BaziChart {
 
 ## Chunk B6：生辰表单与八字结果页
 
-待用户确认八字结果页样稿后编写本 Chunk 的完整任务、界面代码与测试。
+设计第 11 节已记录样稿确认；后续按含流年面板的最新样稿编写完整任务、界面代码与测试。
 
 ## Chunk B7：清理与 1B 验收
 
@@ -1463,17 +2176,58 @@ export function buildBaziChart(input: BaziInput): BaziChart {
 
 ## 本轮计划代码验证记录
 
-已把全部 TS、声明、JSON 和 Python 代码块按首行路径抽取至项目外的临时隔离目录；Python/JSON 移除路径标记。隔离目录复用项目已有 node_modules，不安装依赖、不改项目源码。
+全部代码块按首行路径抽到 `/private/tmp/sanyi-round2`，JSON/Python 去路径标记；隔离目录复制既有代码并复用现有 node_modules。Python 使用项目现有 `.venv-tools/bin/python`，不安装依赖。下列记录为计划代码验证，不代表项目实现，也不勾选任何任务。
 
-- 基准生成：使用现有 Python 环境执行 `tools/bazi/generate_fixtures.py`，生成 55 个时刻，每个记录原生口径和两种 sect 的四柱期望。
-- 行为验证：`node --import tsx --test tests/solar-time.test.ts tests/birth-profile.test.ts tests/bazi.test.ts tests/bazi-fixtures.test.ts`，14 个测试通过、0 失败；双源测试覆盖 55 × 2 × 4 项四柱比较。
-- 严格类型：隔离目录执行 `tsc --noEmit`，strict、noUncheckedIndexedAccess、exactOptionalPropertyTypes 均开启，另外关闭 skipLibCheck，退出码 0。
-- 此记录证明本轮计划块可抽取运行，不代表 1B 功能已在项目实现，也不提前勾选任何任务；全量回归仍是实施 B2.3 的必做步骤。
+- RED：修订 B2 测试在旧 B2 实现上失败；B3 关系与调候测试在模块缺失时失败，日志分别为 `sanyi-red.log`、`b3-red.log`、`q-red.log`（隔离日志）。
+- Python 语法：隔离目录运行项目现有 Python 的 `-m py_compile tools/bazi/generate_fixtures.py`，退出码 0。
+- 基准：隔离目录运行项目现有 Python 的 `tools/bazi/generate_fixtures.py`，生成 55 个双源时刻；55 × 2 × 4 四柱比较通过。
+- 新增测试：隔离目录 `node --import tsx --test tests/solar-time.test.ts tests/birth-profile.test.ts tests/bazi.test.ts tests/bazi-fixtures.test.ts tests/bazi-relations.test.ts tests/qiongtong.test.ts`，26 项通过，0 失败。
+- 项目类型：隔离目录 `npm run typecheck`，原有三项严格开关开启，退出码 0。
+- 代码块严格类型：隔离目录 `node_modules/.bin/tsc --noEmit --strict --noUncheckedIndexedAccess --exactOptionalPropertyTypes --skipLibCheck false --module NodeNext --moduleResolution NodeNext --target ES2022 src/types/lunar-javascript.d.ts tests/solar-time.test.ts tests/birth-profile.test.ts tests/bazi.test.ts tests/bazi-fixtures.test.ts tests/bazi-relations.test.ts tests/qiongtong.test.ts`，退出码 0。
+- 全量回归：最终重新抽取后隔离目录执行 `npm test`，378 项中 370 项通过；8 项现有 frontend-server 测试均因沙箱拒绝监听 `127.0.0.1`（`listen EPERM`）失败。未跳过、篡改或模拟这些测试，不能宣称全量通过；主管可在允许本机监听的隔离环境复跑。
+- 限制：额外把整个旧项目的 `skipLibCheck` 关闭，会出现既有 `@wagmi/core` 等第三方声明错误；本轮未修改依赖。以上代码块严格检查关闭 skipLibCheck 且无错，项目检查沿用其原配置。
+
+### 分块行数与交付清单
+
+从对应 `## Chunk` 标题计至下一同级标题之前，含文字与代码围栏。
+
+| Chunk | 行数 | 交付 |
+|---|---:|---|
+| B1 | 755 | 按审查修订，完整测试与实现已替换 |
+| B2 | 695 | 按审查修订，完整测试与实现已替换 |
+| B3 | 579 | B3.1 关系；B3.2 神煞；B3.3 五行；B3.4 调候；B3.5 契约与验收 |
+
+三个完整 Chunk 均 ≤ 1000 行，B3 无需拆分。全部代码块非 JSON 行均 ≤ 110 字符（连字符串行也满足），首行均为 `// 路径`。
 
 ## 待主管确认的口径
 
-1. 规范旧命例的描述需在后续实施中修订：入口自动扣夏令时后应为癸未、7 年 2 月 20 天；1988 年开始日应为 4 月 17 日。本轮只记录，不改原文件。
-2. 未知时辰的年/月柱在交节日不唯一；本计划用正午代表并警示，起运、大运、命宫、身宫均不计算。若希望给候选年/月柱集合，需先扩充相关规范，不静默假定。
-3. 输入统一为北京时间；港澳台城市只取经度，1986–1991 年夏令时仍按该北京时间输入规则。若产品要解释当地历史钟表时区，需要额外时区字段与校正规范。
-4. 原始生辰和校正前后时刻不得服务端落盘，与分享页仍展示原生日的样稿有冲突。本计划将原生日、校正时刻限制为本机或本次请求展示；分享只看派生命盘及不含原时刻的校正状态。免费换日需浏览器重新提交生辰，服务端不留可逆缓存。
-5. 样稿的半合、自刑关系与三家月份提示需要 B3/B4 数据支撑；不把示意神煞、条形宽度和三家用神当成核验期望。B6 保持待用户确认。
+1. 原始生辰、校正前后时刻只在本机或请求期展示，服务端持久化只留派生盘与非可逆校正状态。分享者不能重排；免费换日需重传本机生辰。沿用上一轮隐私边界。
+2. 调候自动检查不等于用干语义核验。以下清单逐项说明暂定取舍，主管抽查时重点复核；完整 JSON 已提供，不因待审查而省略条目。
+
+### 取材有歧义的条目
+
+| 日干、月令 | 本轮取舍及原文依据 |
+|---|---|
+| 甲卯 | 月条只讲庚「阳刃驾杀」，无明确顺序；取本节「凡三春甲木，用庚者…用丁者…」为庚、丁，不把庚戊上命当作明确用干 |
+| 甲午、未 | 共用「五六月甲木」原段，但该段明分五月先癸后丁庚次、六月先丁后庚且无癸亦可；午取癸丁庚，未取丁庚 |
+| 甲戌 | 月条「独爱丁火，壬癸滋扶」与后文「耑用丁癸」有差别；采用明确总结丁、癸，未把壬并入 |
+| 乙巳 | 主取癸，丙酌用，庚辛佐癸；收癸丙庚辛，保留条件性辅助项，不把「须辛透为清」改写为删庚 |
+| 乙午、未 | 午原段上下半月取法不同，暂收癸、丙；未段丙为尊、癸透贵，暂收丙、癸；月份内差异交三家结合命局判断 |
+| 乙申、酉 | 申月条明确己土为用，暂只收己，未把季总论丙癸追加；酉按月条白露专癸、秋分后丙癸，收癸丙 |
+| 乙丑 | 底本没有十二月月条；取同冬章「耑以丙火为用，方妙」，只收丙，不移植其它版本的十二月用干 |
+| 丙午 | 月条只写得壬高透、无庚也可；暂只收壬，不把庚作为必选；「为上命」是推荐措辞而非「用」字 |
+| 丙亥 | 总结「木旺宜庚，水旺宜戊，火旺用壬」是条件性并列；收庚戊壬，不收开篇甲戊庚仅成贵格的甲 |
+| 丁巳、午 | 巳「取甲…必用庚」，取甲庚；午不宜乱用甲，但非火局有水透干时须用甲庚，暂取该条件句，不将条件隐藏为必用 |
+| 丁申、酉、戌 | 季总论明确七月甲丙、八月甲丙庚、九月甲庚；按分月指明，不以随后七月月条甲庚丙覆盖总论 |
+| 丁亥、子、丑 | 共取三冬「耑用庚甲」；子月另写从杀用戊为特殊格，未作为通用调候并入 |
+| 戊寅、卯、辰 | 同春总论明确正二月先丙后甲癸又次，三月先甲后丙癸又次；同摘句不同排序 |
+| 戊午、未、戌 | 午壬甲主用、丙酌用收壬甲丙，不收「用癸力微」的癸；未取癸丙甲；戌取通常甲癸，「见金」癸丙为条件变化，不并入丙 |
+| 己寅 | 月首「丙为尊」是推荐，暂收丙；壬多才须戊作堤，不将条件救应戊列为通用调候 |
+| 己申、酉、戌 | 取季总结癸丙辛；戌明确土盛宜甲疏，再加甲，不以其它条件甲透者富改动申酉 |
+| 己亥、子、丑 | 季段丙为尊、余用丙丁；亥另取戊制壬，收丙戊丁；子丑收丙丁。甲仅「参酌」未收；戊癸「不用」中的癸未收，戊仅在亥按后句例外收 |
+| 庚卯、酉、亥、丑 | 卯专丁、借甲引丁暂收丁甲，不收无丁才用丙；酉丁甲丙皆为明确助成；亥「非丁莫造、非丙不暖」暂收丁丙，甲只写成贵组合未收；丑先丙次丁且甲不可少，暂收丙丁甲。亥措辞需主管确认是否满足严格取材词规则 |
+| 辛寅、卯、巳、申、子 | 寅取己壬，庚制甲是条件救应未并入；卯壬为尊、甲制土暂收壬甲；巳喜壬洗淘暂收壬；申取本月「壬水为尊」只收壬，甲戊参酌不收；子壬丙两透荐取壬丙，癸为病不收；这些推荐句未必逐字含「用/取」 |
+| 壬寅、午、未、酉、亥 | 寅明确宜用庚，只收庚，不把丙戊成贵组合当通用用干；午癸用庚佐且辛癸参用，收癸庚辛；未优先同段更明确「先辛后甲，次取癸」；酉明确总结甲庚；亥戊用、庚制甲辅助，暂收戊庚 |
+| 癸辰、巳、戌、丑 | 辰丙主、谷雨后辛甲佐，收丙辛甲；巳辛用、无辛用庚，收辛庚；戌辛用、甲制戊暂收辛甲；比肩没有明确指定天干，不将癸并入；丑宜丙解冻只收丙，不将壬透与戊条件成贵组合并入 |
+
+这些条目中「为尊、宜、喜、不可少」暂按明确推荐处理；若主管要求取材词只能逐字限定为「用、取、先、次、佐」，需确认无对应措辞的月条能否改采同季其他明确用句。测试只能证明本轮摘句与用干存在，不能证明此解释已获批准。
