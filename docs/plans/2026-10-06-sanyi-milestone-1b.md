@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮按审查修订 B1–B2，并写完 B3；B4–B7 后续逐块审查。
+**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮按审查修订 B2/B3，并写完 B4a/B4b；B5–B7 后续逐块审查。
 
 **Architecture:** `src/calendar/` 提供确定性的生辰转换、校正与命盘事实，`src/sanyi/` 扩展按类型区分的断语、核对与编排，前端消费明确字段。原始生辰和逐步校正详情只用于请求与本机展示，持久化边界使用字段白名单；八字出生时刻与问事卦时保持独立。
 
@@ -34,21 +34,22 @@
 | `src/calendar/qiongtong.ts` | 调候表合法性与日干月令查表 | B3 |
 | `tests/bazi-relations.test.ts` | 关系、神煞、藏干分层计数 | B3 |
 | `tests/qiongtong.test.ts` | 120 条覆盖、字段与出处完整性 | B3 |
-| `src/sanyi/bazi-schema.ts` | 命理和运势独立输出 Schema 与类型 | B4 |
-| `src/sanyi/bazi-facts.ts` | 命盘、关系、神煞、运年和调候编号事实 | B4 |
-| `src/sanyi/bazi-audit.ts` | 十神与命盘组合的证据及正文核对 | B4 |
-| `src/sanyi/schools/bazi-shared.ts` | 命理三家共用安全边界和输入契约 | B4 |
-| `src/sanyi/schools/shenxiaozhan.ts` | 格局派提示词与输入组装 | B4 |
-| `src/sanyi/schools/yuchuntai.ts` | 调候派提示词与对应调候条目组装 | B4 |
-| `src/sanyi/schools/rentieqiao.ts` | 扶抑派提示词与输入组装 | B4 |
-| `src/sanyi/schools/bazi-index.ts` | 命理三家稳定键与定义集合 | B4 |
-| `src/sanyi/bazi-school-runner.ts` | 单家命理或运势调用、核对和一次重写 | B4 |
-| `src/sanyi/mock-bazi-schools.ts` | 从事实表生成确定性的命理与运势断语 | B4 |
-| `tests/sanyi-bazi-schema.test.ts` | 五个命理分项与运势吉凶把握约束 | B4 |
-| `tests/sanyi-bazi-facts.test.ts` | 事实编号完整性与缺时柱隔离 | B4 |
-| `tests/sanyi-bazi-audit.test.ts` | 未知引用、虚构十神及正文组合拒绝 | B4 |
-| `tests/sanyi-bazi-schools.test.ts` | 三家输入隔离与调候原文约束 | B4 |
-| `tests/sanyi-bazi-school-runner.test.ts` | 核对重写、拒绝和调用失败 | B4 |
+| `src/sanyi/bazi-schema.ts` | 命理和运势独立输出 Schema 与类型 | B4a |
+| `src/sanyi/bazi-facts.ts` | 命盘、关系、神煞、运年和调候编号事实 | B4a |
+| `src/sanyi/bazi-audit.ts` | 十神与命盘组合的证据及正文核对 | B4a |
+| `src/sanyi/schools/bazi-shared.ts` | 命理三家共用安全边界和输入契约 | B4b |
+| `src/sanyi/schools/shenxiaozhan.ts` | 格局派提示词与输入组装 | B4b |
+| `src/sanyi/schools/yuchuntai.ts` | 调候派提示词与对应调候条目组装 | B4b |
+| `src/sanyi/schools/rentieqiao.ts` | 扶抑派提示词与输入组装 | B4b |
+| `src/sanyi/schools/bazi-index.ts` | 命理三家稳定键与定义集合 | B4b |
+| `src/sanyi/bazi-school-runner.ts` | 单家命理或运势调用、核对和一次重写 | B4b |
+| `src/sanyi/mock-bazi-schools.ts` | 从事实表生成确定性的命理与运势断语 | B4b |
+| `tests/helpers/sample-bazi.ts` | B4 测试共用已核验命例及事实输入 | B4a |
+| `tests/sanyi-bazi-schema.test.ts` | 五个命理分项与运势吉凶把握约束 | B4a |
+| `tests/sanyi-bazi-facts.test.ts` | 事实编号完整性与缺时柱隔离 | B4a |
+| `tests/sanyi-bazi-audit.test.ts` | 未知引用、虚构十神及正文组合拒绝 | B4a |
+| `tests/sanyi-bazi-schools.test.ts` | 三家输入隔离与调候原文约束 | B4b |
+| `tests/sanyi-bazi-school-runner.test.ts` | 核对重写、拒绝和调用失败 | B4b |
 | `src/sanyi/fortune-context.ts` | 按注入时钟解析 horizon 的立春年、节气月与流日 | B5 |
 | `src/sanyi/bazi-reading-service.ts` | 命盘创建、三家并行与免费换日重排 | B5 |
 | `src/sanyi/bazi-public.ts` | 命盘存档及公开响应的隐私白名单映射 | B5 |
@@ -77,7 +78,8 @@
 | `src/sanyi/store.ts` | 将 `StoredReading` 扩为判别联合并保留原子写与付款索引 | B5 |
 | `src/sanyi/reading-service.ts` | 既有问事编排显式收窄类型并接入跨类型重试入口 | B5 |
 | `src/sanyi/api.ts` | 开放命理运势创建、换日与按类型公开响应 | B5 |
-| `src/sanyi/mock-provider.ts` | 根据任务类型路由至对应确定性 mock | B4 |
+| `src/sanyi/audit.ts` | 最长匹配分词函数增加可选扩展词表，问事默认不变 | B4a |
+| `src/sanyi/mock-provider.ts` | 根据任务类型路由至对应确定性 mock | B4b |
 | `src/sanyi/http-errors.ts` | 新输入错误与状态冲突继续映射中文 HTTP 错误 | B5 |
 | `src/sanyi/log.ts` | 限定安全字段，剔除原始生辰及模型错误中的输入回显 | B5 |
 | `src/frontend/server.ts` | 接入换日路由并保留 Origin、JSON、体积安全边界 | B5 |
@@ -111,8 +113,9 @@
 
 - Chunk B1：生辰与出生时刻校正（本轮修订，Task B1.1–B1.3）。
 - Chunk B2：八字排盘引擎（本轮修订，Task B2.1–B2.3）。
-- Chunk B3：合冲刑害、神煞、五行计数与《穷通宝鉴》调候表（本轮写完 B3.1–B3.5）。
-- Chunk B4：命理与运势三家（提示词、输出 Schema、事实表与核对、mock）。
+- Chunk B3：合冲刑害、神煞、五行计数与《穷通宝鉴》调候表（本轮修订 B3.1–B3.5）。
+- Chunk B4a：命理与运势输出 Schema、事实表、最长匹配核对（Task B4.1–B4.3）。
+- Chunk B4b：三家输入与提示词、单家运行器、确定性 mock 与路由（Task B4.4–B4.7）。
 - Chunk B5：编排、接口与排练（命理、运势、换日切换、生辰隐私）。
 - Chunk B6：生辰表单与八字结果页（待用户确认样稿后编写）。
 - Chunk B7：清理与 1B 验收。
@@ -1241,6 +1244,8 @@ test("缺时辰正午估运，交节日暂停大运", () => {
   assert.doesNotMatch(chart.warnings.join("；"), /交节日年\/月柱待确认/);
   const jie = buildBaziChart({ ...input, timeKnown: false, corrected: { ...corrected, day: 6 } });
   assert.equal(jie.luck, null);
+  assert.equal(jie.warnings.length, 1);
+  assert.doesNotMatch(jie.warnings.join("；"), /交节日年\/月柱待确认/);
   assert.match(jie.warnings.join("；"), /出生当日交节（立夏）/);
   assert.equal(chart.taiYuan, "壬申");
   assert.ok(chart.annual?.currentLuck);
@@ -1313,7 +1318,6 @@ test("23:30 两种日界日柱不同，时柱遵守库的共同晚子时口径",
 // src/calendar/bazi.ts
 import lunarPkg from "lunar-javascript";
 import { assertCivilTime, type CivilTime } from "./solar-time.js";
-
 export type PillarKey = "year" | "month" | "day" | "time";
 export interface BaziPillar {
   key: PillarKey;
@@ -1322,7 +1326,11 @@ export interface BaziPillar {
   stem: string;
   branch: string;
   stemGod: string;
-  hidden: readonly { stem: string; god: string; qi: "main" | "middle" | "residual" }[];
+  hidden: readonly {
+    stem: string;
+    god: string;
+    qi: "main" | "middle" | "residual";
+  }[];
   diShi: string;
   naYin: string;
 }
@@ -1341,7 +1349,12 @@ export interface AnnualLuck {
   age: number;
   stemGod: string;
   currentLuck: LuckCycle | null;
-  months: readonly { index: number; monthInChinese: string; ganZhi: string; stemGod: string }[];
+  months: readonly {
+    index: number;
+    monthInChinese: string;
+    ganZhi: string;
+    stemGod: string;
+  }[];
 }
 export interface LiuNianEntry {
   year: number;
@@ -1353,26 +1366,43 @@ export interface LiuNianEntry {
   hidden: BaziPillar["hidden"];
   luck: LuckCycle | null;
   luckLabel: "起运前" | "时辰未知" | null;
-  luckChange: { date: string; from: string | null; to: string } | null;
+  luckChange: {
+    date: string;
+    from: string | null;
+    to: string;
+  } | null;
 }
 export interface BaziChart {
   sect: 1 | 2;
   dayBoundary: "23:00" | "00:00";
   timeKnown: boolean;
   dayMaster: string;
-  pillars: { year: BaziPillar; month: BaziPillar; day: BaziPillar; time: BaziPillar | null };
+  pillars: {
+    year: BaziPillar;
+    month: BaziPillar;
+    day: BaziPillar;
+    time: BaziPillar | null;
+  };
   taiYuan: string;
   mingGong: string | null;
   shenGong: string | null;
   luck: {
     approximate: boolean;
     direction: "forward" | "backward";
-    start: { years: number; months: number; days: number; solarDate: string };
+    start: {
+      years: number;
+      months: number;
+      days: number;
+      solarDate: string;
+    };
     cycles: readonly LuckCycle[];
   } | null;
   annual: AnnualLuck | null;
   birthLiChunYear: number;
-  liunian: { anchorYear: number; years: LiuNianEntry[] };
+  liunian: {
+    anchorYear: number;
+    years: LiuNianEntry[];
+  };
   warnings: readonly string[];
 }
 export interface BaziInput {
@@ -1382,7 +1412,6 @@ export interface BaziInput {
   timeKnown: boolean;
   targetYear: number;
 }
-
 function godFor(dayStem: string, stem: string): string {
   const god = lunarPkg.LunarUtil.SHI_SHEN[dayStem + stem];
   if (!god) {
@@ -1390,17 +1419,8 @@ function godFor(dayStem: string, stem: string): string {
   }
   return god;
 }
-
-function pillar(
-  key: PillarKey,
-  label: string,
-  ganZhi: string,
-  stemGod: string,
-  stems: readonly string[],
-  gods: readonly string[],
-  diShi: string,
-  naYin: string,
-): BaziPillar {
+function pillar(key: PillarKey, label: string, ganZhi: string, stemGod: string,
+  stems: readonly string[], gods: readonly string[], diShi: string, naYin: string): BaziPillar {
   if (ganZhi.length !== 2 || stems.length !== gods.length) {
     throw new Error("四柱或藏干十神不一致，拒绝输出命盘");
   }
@@ -1416,7 +1436,6 @@ function pillar(
   return { key, label, ganZhi, stem: ganZhi.slice(0, 1), branch: ganZhi.slice(1),
     stemGod, hidden, diShi, naYin };
 }
-
 function independentAnnual(year: number, birthYear: number, dayStem: string): AnnualLuck {
   const stems = "甲乙丙丁戊己庚辛壬癸";
   const branches = "寅卯辰巳午未申酉戌亥子丑";
@@ -1437,7 +1456,6 @@ function independentAnnual(year: number, birthYear: number, dayStem: string): An
   return { year, ganZhi, age: year - birthYear + 1, stemGod: godFor(dayStem, ganZhi.slice(0, 1)),
     currentLuck: null, months };
 }
-
 export function buildBaziChart(input: BaziInput): BaziChart {
   assertCivilTime(input.corrected);
   if (input.sect !== 1 && input.sect !== 2) {
@@ -1450,25 +1468,29 @@ export function buildBaziChart(input: BaziInput): BaziChart {
     throw new Error("所问年份仅支持 1900–2099 年");
   }
   const birth = input.timeKnown ? input.corrected : { ...input.corrected, hour: 12, minute: 0, second: 0 };
-  const eight = lunarPkg.Solar.fromYmdHms(
-    birth.year, birth.month, birth.day, birth.hour, birth.minute, birth.second,
-  ).getLunar().getEightChar();
+  const eight = lunarPkg.Solar.fromYmdHms(birth.year, birth.month, birth.day, birth.hour,
+    birth.minute, birth.second).getLunar().getEightChar();
   eight.setSect(input.sect);
   const year = pillar("year", "年柱", eight.getYear(), eight.getYearShiShenGan(),
     eight.getYearHideGan(), eight.getYearShiShenZhi(), eight.getYearDiShi(), eight.getYearNaYin());
   const month = pillar("month", "月柱", eight.getMonth(), eight.getMonthShiShenGan(),
     eight.getMonthHideGan(), eight.getMonthShiShenZhi(), eight.getMonthDiShi(), eight.getMonthNaYin());
-  const day = pillar("day", "日柱", eight.getDay(), "日主",
-    eight.getDayHideGan(), eight.getDayShiShenZhi(), eight.getDayDiShi(), eight.getDayNaYin());
+  const day = pillar("day", "日柱", eight.getDay(), "日主", eight.getDayHideGan(),
+    eight.getDayShiShenZhi(), eight.getDayDiShi(), eight.getDayNaYin());
   const time = input.timeKnown ? pillar("time", "时柱", eight.getTime(), eight.getTimeShiShenGan(),
     eight.getTimeHideGan(), eight.getTimeShiShenZhi(), eight.getTimeDiShi(), eight.getTimeNaYin()) : null;
   const midyear = lunarPkg.Solar.fromYmd(birth.year, 7, 1).getLunar().getEightChar().getYear();
   const birthLiChunYear = eight.getYear() === midyear ? birth.year : birth.year - 1;
   const jie = input.timeKnown ? null
     : lunarPkg.Solar.fromYmd(birth.year, birth.month, birth.day).getLunar().getCurrentJie();
-  const warnings = input.timeKnown ? [] : jie
-    ? [`出生当日交节（${jie.getName()}），年/月柱与大运需补时辰确认`, "交节日年/月柱待确认"]
-    : ["时辰未知，起运按当日正午估算，交运日期可能前后相差约两个月"];
+  const warnings: string[] = [];
+  if (!input.timeKnown) {
+    if (jie) {
+      warnings.push(`出生当日交节（${jie.getName()}），年/月柱与大运需补时辰确认`);
+    } else {
+      warnings.push("时辰未知，起运按当日正午估算，交运日期可能前后相差约两个月");
+    }
+  }
   const yun = jie ? null : eight.getYun(input.gender === "male" ? 1 : 0);
   const all = yun?.getDaYun(22) ?? [];
   const convert = (value: (typeof all)[number]): LuckCycle => ({
@@ -1492,18 +1514,28 @@ export function buildBaziChart(input: BaziInput): BaziChart {
     const branch = ganZhi.slice(1);
     const ranks = ["main", "middle", "residual"] as const;
     const stems = lunarPkg.LunarUtil.ZHI_HIDE_GAN[branch];
-    if (!stems) throw new Error("流年藏干缺失");
+    if (!stems) {
+      throw new Error("流年藏干缺失");
+    }
     const hidden = stems.map((stem, i) => {
       const qi = ranks[i];
-      if (!qi) throw new Error("流年藏干气序缺失");
+      if (!qi) {
+        throw new Error("流年藏干气序缺失");
+      }
       return { stem, god: godFor(day.stem, stem), qi };
     });
     const cycle = current && current.getIndex() > 0 ? convert(current) : null;
     const previous = cycle ? all.find((v) => v.getIndex() === cycle.index - 1) : null;
+    let luckLabel: LiuNianEntry["luckLabel"] = null;
+    if (!yun) {
+      luckLabel = "时辰未知";
+    } else if (!cycle) {
+      luckLabel = "起运前";
+    }
     return {
       year: target, ganZhi, stem: ganZhi.slice(0, 1), branch,
       age: raw?.getAge() ?? independent.age, stemGod: godFor(day.stem, ganZhi.slice(0, 1)),
-      hidden, luck: cycle, luckLabel: !yun ? "时辰未知" : cycle ? null : "起运前",
+      hidden, luck: cycle, luckLabel,
       luckChange: cycle && yun && cycle.startYear === target ? {
         date: yun.getStartSolar().nextYear((cycle.index - 1) * 10).toYmd(),
         from: previous && previous.getIndex() > 0 ? previous.getGanZhi() : null,
@@ -1534,7 +1566,7 @@ export function buildBaziChart(input: BaziInput): BaziChart {
 
 ### Task B2.3：样稿字段契约与交叉验收
 
-本任务不新增界面。下表锁定 B1–B5 提供的数据，避免 B6 猜字段或把对象直接渲染成 `[object Object]`。B3 字段由本轮完整代码给出；B4/B5 输出仍是后续约束。B6 只消费。B5 组装 `{ chart, ...analyzeBazi(chart), qiongtong: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch) }`，不把 B3 分析对象错误当成 `BaziChart` 原有字段。
+本任务不新增界面。下表锁定 B1–B5 提供的数据，避免 B6 猜字段或把对象直接渲染成 `[object Object]`。B3/B4 字段由本轮完整代码给出；B5 编排仍是后续约束。B6 只消费。B5 组装 `{ chart, ...analyzeBazi(chart), qiongtong: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch) }`，不把 B3 分析对象错误当成 `BaziChart` 原有字段。
 
 | 样稿展示 | 数据来源与精确字段 | 隐私或缺时辰约束 |
 |---|---|---|
@@ -1552,12 +1584,15 @@ export function buildBaziChart(input: BaziInput): BaziChart {
 | 神煞标签 | B3 `shensha[]`：`name/nodeId/basis` | 按日干、年支、日支等具体依据；不采信样稿为标准答案 |
 | 合冲刑害文字与关系图 | B3 `nodes[]`：`id/label/type/value/scope`；`relations[]`：`id/kind/nodeIds/label/scope` | 原局、当前运年；天干合冲，地支半合/拱、三合/三会、自刑；成化结论由三家判断 |
 | 五行堆叠条与总数 | B3 `elements[]`：`element/stem/main/middle/residual/total` | 从实际藏干现场计数，不把示意图宽度或总数写死 |
-| 三家用神、断语与月份提示 | B4 各家 `output.useGod/headline/reason/sections/advice/evidence`，运势额外 verdict/confidenceTenths/timing | 命理没有吉凶和合议；月份关注用 timing，别猜 watch 字段 |
+| 三家用神对照 | B4 `output.useGod` | 显示每家实际取用，不用调候表替代其它两家判断 |
+| 三家断语卡片 | B4 `output.headline/reason/sections[].title/text/advice[]/evidence[].ref/claim` | 直断、理由、折叠分项、建议、展开证据；命理五分项固定顺序 |
+| 运势卡片吉凶与几成 | B4 `output.verdict/confidenceTenths` | 命理不得含这两项，也无合议线 |
+| 「留意 某月」标签 | 运势 `output.timing.window`；展开条件为 `output.timing.condition` | `timing` 可选，无值不显示标签；不用 sections 猜月份，不新增 watch 字段 |
 | 流年面板锚年与列年 | `chart.liunian.anchorYear/years[].year`，`chart.birthLiChunYear` | 锚前 3 至后 6，裁去出生立春年前及 2099 后；B5 用提问时刻立春年解析锚年 |
 | 每年干支、虚岁、十神 | `liunian.years[].ganZhi/stem/branch/age/stemGod/hidden[].stem/god/qi` | 虚岁与 lunar `getAge` 一致，按公历出生年计；藏干顺序取 `ZHI_HIDE_GAN` |
 | 每年大运与交接线 | `liunian.years[].luck/luckLabel/luckChange.date/from/to` | `startYear ≤ year ≤ endYear`；交运年归新运，另显示旧→新及日期；起运前 null +「起运前」；交节缺时辰 null +「时辰未知」 |
 | 逐年关系格、点选事实 | `years[].year/nodes/relations[].id/kind/label/nodeIds/scope/shensha[].name/nodeId/basis`（B3 分析对象） | 每年重算该年大运；关系按 scope 切换，不能复用锚年关系；神煞覆盖流年与运支 |
-| 三家逐年吉凶、几成、短评 | B4 `output.years[].year/verdict/confidenceTenths/note` | Schema、年份完全覆盖、总断一致及短评词核对由 B4 提供，B6 只消费 |
+| 三家逐年格子与点选短评 | B4 `output.years[].year/verdict/confidenceTenths/note` | 以 year 对齐逐年格子显示吉凶与几成，点选后显示 note；B4 校验窗口、整年锚项与短评词，B6 只消费 |
 | 逐年合议线、范围、回看与选中 | B4/B5 按通过核对各家 `years[]` 算平均、最低、最高；B5 提供提问立春年与所问年 | 不使用样稿 `ln-data` 的示意断语作期望；B6 据年份标回看、今年与所问年 |
 | 余春台用神对照与出处 | `qiongtong.dayStem/monthBranch/monthName/useStems/section/quote` | B3 查表供 B4 调候家；三家对照显示 B4 该家实际 `useGod`，可展开底本用干与出处；不用卷次 |
 | 问卦此刻的时空栏、黄历与奇门 | 既有 `almanacAt` 对象与 `qimenAt`；B5 固定解读时刻 | 与出生时刻完全独立；B6 按真实字段显示 |
@@ -1603,7 +1638,10 @@ function node(id: string, value: string, scope: RelationNode["scope"] = "natal")
   return { id, label: id, value, type: "branch", scope };
 }
 const sorted = (values: string[]) => values.sort();
-const key = (r: { label: string; nodeIds: string[] }) => `${r.label}:${r.nodeIds.join(",")}`;
+const key = (r: {
+  label: string;
+  nodeIds: string[];
+}) => `${r.label}:${r.nodeIds.join(",")}`;
 test("锚年原局与运年关系逐项锁定，原局三会不重复", () => {
   const r = analyzeBazi(chart).relations;
   assert.deepEqual(sorted(r.filter((v) => v.scope === "natal").map(key)), sorted([
@@ -1611,22 +1649,22 @@ test("锚年原局与运年关系逐项锁定，原局三会不重复", () => {
     "巳午未三会火:natal.month.branch,natal.year.branch,natal.time.branch",
   ]));
   assert.deepEqual(sorted(r.filter((v) => v.scope === "luck").map(key)), sorted([
-    "庚甲冲:natal.year.stem,luck.stem", "庚甲冲:natal.day.stem,luck.stem",
+    "甲庚冲:natal.year.stem,luck.stem", "甲庚冲:natal.day.stem,luck.stem",
     "巳申合:natal.month.branch,luck.branch", "巳申刑:natal.month.branch,luck.branch",
-    "巳申破:natal.month.branch,luck.branch", "辰申拱水:natal.day.branch,luck.branch",
+    "巳申破:natal.month.branch,luck.branch", "申辰拱水:natal.day.branch,luck.branch",
   ]));
 });
 const expected = [
-  ["午卯破:year", "辰卯害:day", "未卯半合木:time"],
-  ["庚甲冲:year", "庚甲冲:day", "辰辰自刑:day", "申辰拱水:luck"],
-  ["庚乙合:year", "辛乙冲:month", "庚乙合:day", "申巳合:luck", "申巳刑:luck", "申巳破:luck"],
-  ["辛丙合:month", "午午自刑:year", "未午合:time"],
-  ["癸丁冲:time", "午未合:year"],
-  ["癸戊合:time", "巳申合:month", "巳申刑:month", "巳申破:month", "辰申拱水:day"],
+  ["午卯破:year", "卯辰害:day", "卯未半合木:time"],
+  ["甲庚冲:year", "甲庚冲:day", "辰辰自刑:day", "申辰拱水:luck"],
+  ["乙庚合:year", "乙辛冲:month", "乙庚合:day", "巳申合:luck", "巳申刑:luck", "巳申破:luck"],
+  ["丙辛合:month", "午午自刑:year", "午未合:time"],
+  ["丁癸冲:time", "午未合:year"],
+  ["戊癸合:time", "巳申合:month", "巳申刑:month", "巳申破:month", "申辰拱水:day"],
   ["巳酉半合金:month", "辰酉合:day", "酉酉自刑:luck"],
-  ["乙庚合:luck", "午戌半合火:year", "辰戌冲:day", "未戌刑:time", "未戌破:time", "酉戌害:luck"],
-  ["乙辛冲:luck", "巳亥冲:month", "未亥拱木:time"],
-  ["午子冲:year", "辰子半合水:day", "未子害:time", "酉子破:luck"],
+  ["乙庚合:luck", "午戌半合火:year", "辰戌冲:day", "戌未刑:time", "戌未破:time", "酉戌害:luck"],
+  ["乙辛冲:luck", "巳亥冲:month", "亥未拱木:time"],
+  ["子午冲:year", "子辰半合水:day", "子未害:time", "子酉破:luck"],
 ];
 test("十年每年与原局及当年大运的关系使用集合比较", () => {
   analyzeBazi(chart).years.forEach((y, i) => {
@@ -1659,7 +1697,10 @@ test("独立两两表，固定种子抽样 200 组", () => {
       刑: "寅巳 巳申 申寅 丑戌 戌未 未丑 子卯", 自刑: "辰辰 午午 酉酉 亥亥" },
   };
   let seed = 20261006;
-  const rand = (n: number) => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed % n; };
+  const rand = (n: number) => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed % n;
+  };
   for (let i = 0; i < 200; i++) {
     const type: RelationNode["type"] = i % 2 ? "stem" : "branch";
     const chars = type === "stem" ? "甲乙丙丁戊己庚辛壬癸" : "子丑寅卯辰巳午未申酉戌亥";
@@ -1670,7 +1711,9 @@ test("独立两两表，固定种子抽样 200 组", () => {
     if (type === "branch" && a !== b) {
       for (const [group, center] of [["申子辰", "子"], ["亥卯未", "卯"],
         ["寅午戌", "午"], ["巳酉丑", "酉"]]) {
-        if (group?.includes(a) && group.includes(b)) kinds.push(a === center || b === center ? "半合" : "拱");
+        if (group?.includes(a) && group.includes(b)) {
+          kinds.push(a === center || b === center ? "半合" : "拱");
+        }
       }
     }
     const nodes = [node("a", a), node("b", b)].map((n) => ({ ...n, type }));
@@ -1708,8 +1751,8 @@ test("七种神煞用独立表现场计算并锁定命例", () => {
         }
       }
     }
-    assert.deepEqual(sorted(findShensha(chart, nodes).map((v) => `${v.name}:${v.nodeId}:${v.basis}`)),
-      sorted(oracle));
+    assert.deepEqual(sorted(findShensha(chart,
+      nodes).map((v) => `${v.name}:${v.nodeId}:${v.basis}`)), sorted(oracle));
   }
   const has = (name: string, nodeId: string, basis: string) => out.shensha
     .some((v) => v.name === name && v.nodeId === nodeId && v.basis === basis);
@@ -1724,7 +1767,7 @@ test("七种神煞用独立表现场计算并锁定命例", () => {
   // 覆盖所有干支基准，包括阴干不标羊刃；期望由上述独立表计算。
   for (const stem of "甲乙丙丁戊己庚辛壬癸") {
     const changed = { ...chart, pillars: { ...chart.pillars,
-      day: { ...chart.pillars.day, stem }, year: { ...chart.pillars.year, stem } } };
+        day: { ...chart.pillars.day, stem }, year: { ...chart.pillars.year, stem } } };
     const nodes = [..."子丑寅卯辰巳午未申酉戌亥"].map((b, i) => node(String(i), b));
     const actual = findShensha(changed, nodes);
     for (const [name, values] of Object.entries(byStem)) {
@@ -1750,16 +1793,28 @@ test("五行仅数原局，天干与三气从藏干现场重算", () => {
       assert.equal(e.total, e.stem + e.main + e.middle + e.residual);
     }
     assert.equal(elements.reduce((n, e) => n + e.stem, 0), timeKnown ? 4 : 3);
-    assert.equal(elements.reduce((n, e) => n + e.total, 0),
-      pillars.length + pillars.reduce((n, p) => n + p.hidden.length, 0));
-    if (timeKnown) assert.equal(elements.reduce((n, e) => n + e.total, 0), 15);
+    assert.equal(elements.reduce((n, e) => n + e.total, 0), pillars.length + pillars.reduce((n,
+      p) => n + p.hidden.length, 0));
+    if (timeKnown) {
+      assert.equal(elements.reduce((n, e) => n + e.total, 0), 15);
+    }
   }
+});
+test("原局半合不被跨范围三合吞掉，字序取表和局序", () => {
+  const relations = findRelations([
+    node("natal.month.branch", "子"), node("natal.day.branch", "辰"),
+    node("year.branch", "申", "year"),
+  ]);
+  assert.ok(relations.some((r) => r.label === "申子辰三合水" && r.scope === "year"));
+  assert.ok(relations.some((r) => r.label === "子辰半合水" && r.scope === "natal"));
+  assert.equal(findRelations([node("a", "未"), node("b", "卯")])[0]?.label, "卯未半合木");
+  assert.equal(findRelations([node("a", "午"), node("b", "午")])[0]?.label, "午午自刑");
 });
 ```
 
-- [ ] **Step 2：落入下列完整实现；再运行同命令，预期 6 项通过。**
+- [ ] **Step 2：落入下列完整实现；再运行同命令，预期 7 项通过。**
 
-节点 `id` 为 `natal.{year|month|day|time}.{stem|branch}`、`luck.{stem|branch}`、`year.{stem|branch}`。节点顺序先原局年月日时，再运，再年；两两 label 遵守此顺序。三合/三会使用固定局名次序，`nodeIds` 对应局名各字。同对的合、刑、破分别保留。三支齐时不再列该局的半合/拱；同字替代不重复成局，优先使用原局节点，不能因流年同字把原局局改成流年事实。
+节点 `id` 为 `natal.{year|month|day|time}.{stem|branch}`、`luck.{stem|branch}`、`year.{stem|branch}`。节点顺序先原局年月日时，再运，再年；两两 label 取关系表原对顺序，与节点遍历顺序无关；半合、拱取局序。三合/三会使用固定局名次序，`nodeIds` 对应局名各字。同对的合、刑、破分别保留。三支齐时，仅省略同一已列三合中的同范围成员对，保留原局自身半合/拱；同字替代不重复成局，优先使用原局节点，不能因流年同字把原局局改成流年事实。
 
 ```ts
 // src/calendar/bazi-relations.ts
@@ -1779,7 +1834,11 @@ export interface BaziRelation {
   nodeIds: string[];
   scope: Scope;
 }
-export interface Shensha { name: string; nodeId: string; basis: string }
+export interface Shensha {
+  name: string;
+  nodeId: string;
+  basis: string;
+}
 const stemPairs = { 合: "甲己 乙庚 丙辛 丁壬 戊癸", 冲: "甲庚 乙辛 丙壬 丁癸" };
 const branchPairs = {
   合: "子丑 寅亥 卯戌 辰酉 巳申 午未", 冲: "子午 丑未 寅申 卯酉 辰戌 巳亥",
@@ -1789,27 +1848,42 @@ const branchPairs = {
 const combinations = [["申子辰", "水"], ["亥卯未", "木"], ["寅午戌", "火"], ["巳酉丑", "金"]] as const;
 const meetings = [["寅卯辰", "木"], ["巳午未", "火"], ["申酉戌", "金"], ["亥子丑", "水"]] as const;
 function scopeOf(nodes: RelationNode[]): Scope {
-  return nodes.some((n) => n.scope === "year") ? "year"
-    : nodes.some((n) => n.scope === "luck") ? "luck" : "natal";
+  if (nodes.some((n) => n.scope === "year")) {
+    return "year";
+  }
+  if (nodes.some((n) => n.scope === "luck")) {
+    return "luck";
+  }
+  return "natal";
 }
 export function makeNodes(chart: BaziChart, luck: LuckCycle | null, ganZhi: string | null): RelationNode[] {
   const nodes: RelationNode[] = [];
-  function add(id: string, label: string, gz: string, scope: Scope) {
+  function add(id: string, label: string, gz: string, scope: Scope): void {
     for (const type of ["stem", "branch"] as const) {
       nodes.push({ id: `${id}.${type}`, label: `${label}${type === "stem" ? "干" : "支"}`,
         value: gz.charAt(type === "stem" ? 0 : 1), type, scope });
     }
   }
-  for (const p of Object.values(chart.pillars)) if (p) add(`natal.${p.key}`, p.label, p.ganZhi, "natal");
-  if (luck) add("luck", "大运", luck.ganZhi, "luck");
-  if (ganZhi) add("year", "流年", ganZhi, "year");
+  for (const p of Object.values(chart.pillars)) {
+    if (p) {
+      add(`natal.${p.key}`, p.label, p.ganZhi, "natal");
+    }
+  }
+  if (luck) {
+    add("luck", "大运", luck.ganZhi, "luck");
+  }
+  if (ganZhi) {
+    add("year", "流年", ganZhi, "year");
+  }
   return nodes;
 }
 export function findRelations(nodes: RelationNode[]): BaziRelation[] {
-  if (new Set(nodes.map((n) => n.id)).size !== nodes.length) throw new Error("关系节点编号重复");
+  if (new Set(nodes.map((n) => n.id)).size !== nodes.length) {
+    throw new Error("关系节点编号重复");
+  }
   const result: BaziRelation[] = [];
-  const full = new Set<string>();
-  function add(kind: string, members: RelationNode[], label: string) {
+  const full: BaziRelation[] = [];
+  function add(kind: string, members: RelationNode[], label: string): void {
     const nodeIds = members.map((n) => n.id);
     result.push({ id: `${kind}:${nodeIds.join(":")}`, kind, label, nodeIds, scope: scopeOf(members) });
   }
@@ -1819,25 +1893,49 @@ export function findRelations(nodes: RelationNode[]): BaziRelation[] {
       const members = [...group].map((b) => nodes.find((n) => n.type === "branch" && n.value === b));
       if (members.every((n): n is RelationNode => n !== undefined)) {
         add(kind, members, `${group}${kind}${element}`);
-        if (kind === "三合") full.add(group);
+        if (kind === "三合") {
+          full.push(result[result.length - 1]!);
+        }
       }
     }
   }
   for (let i = 0; i < nodes.length; i++) {
     const a = nodes[i];
-    if (!a) continue;
+    if (!a) {
+      continue;
+    }
     for (const b of nodes.slice(i + 1)) {
-      if (a.type !== b.type) continue;
+      if (a.type !== b.type) {
+        continue;
+      }
       const pair = a.value + b.value;
       const reverse = b.value + a.value;
       for (const [kind, pairs] of Object.entries(a.type === "stem" ? stemPairs : branchPairs)) {
-        if (pairs.split(" ").some((p) => p === pair || p === reverse)) add(kind, [a, b], pair + kind);
+        // 标签采用关系表的原对顺序，与节点遍历顺序无关。
+        const canonical = pairs.split(" ").find((p) => p === pair || p === reverse);
+        if (canonical) {
+          add(kind, [a, b], canonical + kind);
+        }
       }
-      if (a.type !== "branch" || a.value === b.value) continue;
+      if (a.type !== "branch" || a.value === b.value) {
+        continue;
+      }
       for (const [group, element] of combinations) {
-        if (full.has(group) || !group.includes(a.value) || !group.includes(b.value)) continue;
+        if (!group.includes(a.value) || !group.includes(b.value)) {
+          continue;
+        }
+        // 只省略已列三合中同范围的成员对；原局半合不能被运年成局吞掉。
+        const covered = full.some((relation) => {
+          return relation.label === `${group}三合${element}`
+            && relation.scope === scopeOf([a, b])
+            && relation.nodeIds.includes(a.id) && relation.nodeIds.includes(b.id);
+        });
+        if (covered) {
+          continue;
+        }
         const kind = a.value === group.charAt(1) || b.value === group.charAt(1) ? "半合" : "拱";
-        add(kind, [a, b], `${pair}${kind}${element}`);
+        const orderedPair = [...group].filter((value) => value === a.value || value === b.value).join("");
+        add(kind, [a, b], `${orderedPair}${kind}${element}`);
       }
     }
   }
@@ -1854,7 +1952,7 @@ const stemRules = {
 const branchRules = { 桃花: "酉卯午子", 驿马: "寅申亥巳", 华盖: "辰戌丑未" };
 export function findShensha(chart: BaziChart, nodes: RelationNode[]): Shensha[] {
   const result: Shensha[] = [];
-  function collect(name: string, targets: string, basis: string) {
+  function collect(name: string, targets: string, basis: string): void {
     for (const node of nodes) {
       if (node.type === "branch" && targets.includes(node.value)) {
         result.push({ name, nodeId: node.id, basis });
@@ -1877,7 +1975,15 @@ export function findShensha(chart: BaziChart, nodes: RelationNode[]): Shensha[] 
   }
   return result;
 }
-export function countElements(chart: BaziChart) {
+export interface ElementCount {
+  element: "木" | "火" | "土" | "金" | "水";
+  stem: number;
+  main: number;
+  middle: number;
+  residual: number;
+  total: number;
+}
+export function countElements(chart: BaziChart): ElementCount[] {
   const pillars = Object.values(chart.pillars).filter((p) => p !== null);
   const mapping = { 木: "甲乙", 火: "丙丁", 土: "戊己", 金: "庚辛", 水: "壬癸" } as const;
   return (Object.keys(mapping) as (keyof typeof mapping)[]).map((element) => {
@@ -1890,7 +1996,19 @@ export function countElements(chart: BaziChart) {
     return { element, stem, main, middle, residual, total: stem + main + middle + residual };
   });
 }
-export function analyzeBazi(chart: BaziChart) {
+export interface BaziAnalysis {
+  nodes: RelationNode[];
+  relations: BaziRelation[];
+  shensha: Shensha[];
+  elements: ElementCount[];
+  years: {
+    year: number;
+    nodes: RelationNode[];
+    relations: BaziRelation[];
+    shensha: Shensha[];
+  }[];
+}
+export function analyzeBazi(chart: BaziChart): BaziAnalysis {
   const nodes = makeNodes(chart, chart.annual?.currentLuck ?? null, chart.annual?.ganZhi ?? null);
   return {
     nodes, relations: findRelations(nodes), shensha: findShensha(chart, nodes),
@@ -1900,6 +2018,26 @@ export function analyzeBazi(chart: BaziChart) {
       return { year: year.year, nodes, relations: findRelations(nodes), shensha: findShensha(chart, nodes) };
     }),
   };
+}
+// 供 B4 复用关系表的通行标签词表，不另写关系推导规则。
+export function baziRelationWords(): string[] {
+  const words: string[] = [];
+  for (const table of [stemPairs, branchPairs]) {
+    for (const [kind, pairs] of Object.entries(table)) {
+      words.push(...pairs.split(" ").map((pair) => pair + kind));
+    }
+  }
+  for (const [group, element] of combinations) {
+    words.push(`${group}三合${element}`);
+    for (const [left, right] of [[0, 1], [0, 2], [1, 2]] as const) {
+      const kind = left === 1 || right === 1 ? "半合" : "拱";
+      words.push(`${group.charAt(left)}${group.charAt(right)}${kind}${element}`);
+    }
+  }
+  for (const [group, element] of meetings) {
+    words.push(`${group}三会${element}`);
+  }
+  return words;
 }
 ```
 
@@ -1937,7 +2075,9 @@ test("120 条无缺无重，原文逐字出自对应日干季节章节", () => {
   assert.equal(rows.length, 120);
   assert.equal(new Set(rows.map((r) => r.dayStem + r.monthBranch)).size, 120);
   for (const stem of "甲乙丙丁戊己庚辛壬癸") {
-    for (const branch of "寅卯辰巳午未申酉戌亥子丑") assert.ok(lookupQiongtong(stem, branch));
+    for (const branch of "寅卯辰巳午未申酉戌亥子丑") {
+      assert.ok(lookupQiongtong(stem, branch));
+    }
   }
   for (const row of rows) {
     const start = source.indexOf(`=== ${row.section} ===`);
@@ -1965,12 +2105,17 @@ test("已核验庚巳与甲寅抽样及非法条目拒绝", () => {
   assert.throws(() => lookupQiongtong("甲", "错"), /调候/);
   assert.throws(() => validateQiongtong([]), /120/);
   assert.throws(() => validateQiongtong([...readQiongtong().slice(1), readQiongtong()[1]]), /重复/);
-  assert.throws(() => validateQiongtong(readQiongtong().map((r, i) => i ? r : { ...r, useStems: ["错"] })),
-    /调候/);
+  assert.throws(() => validateQiongtong(readQiongtong().map((r, i) => i ? r : { ...r,
+    useStems: ["错"] })), /调候/);
+});
+test("酌用参酌不收，并用照收", () => {
+  assert.deepEqual(lookupQiongtong("乙", "巳").useStems, ["癸", "庚", "辛"]);
+  assert.deepEqual(lookupQiongtong("戊", "午").useStems, ["壬", "甲"]);
+  assert.deepEqual(lookupQiongtong("癸", "午").useStems, ["庚", "辛", "壬"]);
 });
 ```
 
-- [ ] **Step 2：录入完整 JSON。** `quote` 保留底本繁简混用、标点与 wikitext 粗体标记，不改字、不拼接不连续句。用干取句中明确推荐项，先后词优先于句中背景字出现顺序；「忌」「病」不收。季总论有明确分月指示时按分月指示；条件性用干及非标准措辞的取舍在文末列出，交主管逐条复核。
+- [ ] **Step 2：录入完整 JSON。** `quote` 保留底本繁简混用、标点与 wikitext 粗体标记，不改字、不拼接不连续句。**取材规则（主管本轮裁定）：** 用干按明确推荐项收入，先后词优先于背景字出现顺序。「为尊、为要、为先、宜、喜、不可少、必须、非某不可」均视为明确用神；「并用」「佐」照收。「酌用」「参酌」不收，因此乙巳为癸、庚、辛，戊午为壬、甲；癸午虽有「参酌」，因明确「并用」仍收庚、辛、壬。「忌」「病」「两透科甲」等成贵组合不作为用干。季总论有分月指示时按分月指示；丁午只有条件句且无可用季总论，按裁定收甲、庚并保留条件说明。其余 19 组取舍照准，文末留作已裁定取材记录。
 
 ```json
 // src/calendar/data/qiongtong.json
@@ -1990,7 +2135,7 @@ test("已核验庚巳与甲寅抽样及非法条目拒绝", () => {
 {"dayStem":"乙","monthBranch":"寅","monthName":"正月","useStems":["丙","癸"],"section":"三春乙木","quote":"'''正月乙木'''，必须用丙，因天气尤有余寒，非丙不暖，虽有癸水，恐凝寒气，故以丙火为先，癸水次之。"},
 {"dayStem":"乙","monthBranch":"卯","monthName":"二月","useStems":["丙","癸"],"section":"三春乙木","quote":"二月乙木，耑用丙癸，或支成木局，有癸透乃作贵命，更得丙洩木气，上上之命，但须透癸。或水多困丙，多戊化癸，皆下格。"},
 {"dayStem":"乙","monthBranch":"辰","monthName":"三月","useStems":["癸","丙"],"section":"三春乙木","quote":"'''三月乙木'''，阳气愈炽，先癸后丙。"},
-{"dayStem":"乙","monthBranch":"巳","monthName":"四月","useStems":["癸","丙","庚","辛"],"section":"三夏乙木","quote":"'''四月乙木'''，自有丙火，耑取癸水为尊。四月乙木专用癸水，丙火酌用，虽以庚辛佐癸，须辛透为清。癸透、庚辛又透，科甲定然，独一点癸水、无金，是水无根，虽出天干，不过秀才小富，须要大运相扶。或土多困癸，贫贱之人。丙戊太多，支成火局，瞽目之流。"},
+{"dayStem":"乙","monthBranch":"巳","monthName":"四月","useStems":["癸","庚","辛"],"section":"三夏乙木","quote":"'''四月乙木'''，自有丙火，耑取癸水为尊。四月乙木专用癸水，丙火酌用，虽以庚辛佐癸，须辛透为清。癸透、庚辛又透，科甲定然，独一点癸水、无金，是水无根，虽出天干，不过秀才小富，须要大运相扶。或土多困癸，贫贱之人。丙戊太多，支成火局，瞽目之流。"},
 {"dayStem":"乙","monthBranch":"午","monthName":"五月","useStems":["癸","丙"],"section":"三夏乙木","quote":"'''五月乙木'''，丁火司权，禾稼俱旱。上半月属阳，仍用癸水。下半月属阴，三伏生寒，丙癸齐用。柱多金水，丙火为先，余皆用癸水为先。"},
 {"dayStem":"乙","monthBranch":"未","monthName":"六月","useStems":["丙","癸"],"section":"三夏乙木","quote":"'''六月乙木'''，木性且寒，柱多金水，丙火为尊。支成水局，乙得无伤。癸水透干，大富大贵。无癸定作常人，运不行北，困苦一生。\n\n凡五六月乙木，气退枯焦，用癸水切忌戊己杂乱，则为下格。或甲木高透，制伏土神名为去浊留清，可许俊秀。土多乏甲秀气脱空，庸人而已。"},
 {"dayStem":"乙","monthBranch":"申","monthName":"七月","useStems":["己"],"section":"三秋乙木","quote":"'''七月乙木'''，庚金乘令，庚虽输情于乙妹，怎奈干乙难合支金。柱见庚多，乙难受载。或丙透干，又加巳出埋金，此格可云科甲。有己透、加丙，亦是上命。七月喜己土为用，或不见丙癸。己土必不可少，此则以火为妻，土为子。"},
@@ -2027,7 +2172,7 @@ test("已核验庚巳与甲寅抽样及非法条目拒绝", () => {
 {"dayStem":"戊","monthBranch":"卯","monthName":"二月","useStems":["丙","甲","癸"],"section":"三春戊土","quote":"三春戊土，无丙照暖，戊土不生，无甲疏噼，戊土不灵，无癸滋润，万物不长。正二月先丙后甲，癸又次之。三月先甲后丙，癸又次之，因戊土司权故也。有甲、丙、癸，三者齐透，必主一品当朝，或二透一藏，亦登金榜，二藏一透，也可异途。"},
 {"dayStem":"戊","monthBranch":"辰","monthName":"三月","useStems":["甲","丙","癸"],"section":"三春戊土","quote":"三春戊土，无丙照暖，戊土不生，无甲疏噼，戊土不灵，无癸滋润，万物不长。正二月先丙后甲，癸又次之。三月先甲后丙，癸又次之，因戊土司权故也。有甲、丙、癸，三者齐透，必主一品当朝，或二透一藏，亦登金榜，二藏一透，也可异途。"},
 {"dayStem":"戊","monthBranch":"巳","monthName":"四月","useStems":["甲","丙","癸"],"section":"三夏戊土","quote":"'''四月戊土'''，阳气发升，寒气内藏，外实内虚，不畏火炎，无阳气相催，万物不长，故先用甲疏噼，次取丙癸为佐。"},
-{"dayStem":"戊","monthBranch":"午","monthName":"五月","useStems":["壬","甲","丙"],"section":"三夏戊土","quote":"'''五月戊土'''，仲夏火炎，先看壬水，次取甲木，丙火酌用，用癸力微。"},
+{"dayStem":"戊","monthBranch":"午","monthName":"五月","useStems":["壬","甲"],"section":"三夏戊土","quote":"'''五月戊土'''，仲夏火炎，先看壬水，次取甲木，丙火酌用，用癸力微。"},
 {"dayStem":"戊","monthBranch":"未","monthName":"六月","useStems":["癸","丙","甲"],"section":"三夏戊土","quote":"'''六月戊土'''，遇夏干枯，先看癸水，次用丙火甲木。癸丙两透，科甲中人。或有癸无丙，见甲可许秀才。无甲略富。或有丙无癸，假道斯文，衣食颇足。"},
 {"dayStem":"戊","monthBranch":"申","monthName":"七月","useStems":["丙","癸","甲"],"section":"三秋戊土","quote":"七月戊土，阳气渐入，寒气渐出，先丙后癸，甲木次之。丙癸甲透者，富贵极品。癸藏丙透，不仅秀才。丙甲两透，癸水会局藏辰，亦不失富贵。无丙得癸甲透，此人清雅，家富千金。无癸甲者、常人。有丙火、妻贤子肖。若丙甲癸三者俱无，下流之命。"},
 {"dayStem":"戊","monthBranch":"酉","monthName":"八月","useStems":["丙","癸"],"section":"三秋戊土","quote":"'''八月戊土'''，金洩身寒，赖丙照暖，喜水滋润，先丙后癸，不必木疏。丙癸两透，科甲中人。丙透癸藏，可许入泮。癸透丙藏，纳资得官。若丙藏又无癸，即多不透，此皆常人。丙癸全无，奔流之客。"},
@@ -2112,14 +2257,18 @@ export interface QiongtongEntry {
   quote: string;
 }
 export function validateQiongtong(value: unknown): QiongtongEntry[] {
-  if (!Array.isArray(value) || value.length !== 120) throw new Error("调候表必须有 120 条");
+  if (!Array.isArray(value) || value.length !== 120) {
+    throw new Error("调候表必须有 120 条");
+  }
   const seen = new Set<string>();
   const stems = "甲乙丙丁戊己庚辛壬癸";
   const branches = "寅卯辰巳午未申酉戌亥子丑";
   const names = ["正月", "二月", "三月", "四月", "五月", "六月",
     "七月", "八月", "九月", "十月", "十一月", "十二月"];
   for (const row of value) {
-    if (!row || typeof row !== "object") throw new Error("调候条目不合法");
+    if (!row || typeof row !== "object") {
+      throw new Error("调候条目不合法");
+    }
     const { dayStem, monthBranch, monthName, useStems, section, quote } = row;
     const index = typeof monthBranch === "string" ? branches.indexOf(monthBranch) : -1;
     if (typeof dayStem !== "string" || dayStem.length !== 1 || !stems.includes(dayStem)
@@ -2128,12 +2277,18 @@ export function validateQiongtong(value: unknown): QiongtongEntry[] {
       || !quote || !Array.isArray(useStems) || !useStems.length
       || new Set(useStems).size !== useStems.length
       || !useStems.every((s: unknown) => typeof s === "string" && s.length === 1
-        && stems.includes(s) && quote.includes(s))) throw new Error("调候字段或用干不合法");
+        && stems.includes(s) && quote.includes(s))) {
+      throw new Error("调候字段或用干不合法");
+    }
     const season = "春夏秋冬".charAt(Math.floor(index / 3));
     const element = "木木火火土土金金水水".charAt(stems.indexOf(dayStem));
-    if (section !== `三${season}${dayStem}${element}`) throw new Error("调候章节不合法");
+    if (section !== `三${season}${dayStem}${element}`) {
+      throw new Error("调候章节不合法");
+    }
     const key = dayStem + monthBranch;
-    if (seen.has(key)) throw new Error("调候条目重复");
+    if (seen.has(key)) {
+      throw new Error("调候条目重复");
+    }
     seen.add(key);
   }
   return value as QiongtongEntry[];
@@ -2144,13 +2299,15 @@ export function readQiongtong(): QiongtongEntry[] {
 }
 export function lookupQiongtong(dayStem: string, monthBranch: string): QiongtongEntry {
   const row = readQiongtong().find((r) => r.dayStem === dayStem && r.monthBranch === monthBranch);
-  if (!row) throw new Error("调候日干或月令不合法");
+  if (!row) {
+    throw new Error("调候日干或月令不合法");
+  }
   return row;
 }
 ```
 
-- [ ] **Step 4：运行 `node --import tsx --test tests/qiongtong.test.ts`，预期 2 项通过。** 120 条完全覆盖，无重复；quote 位于对应三级标题区间，章节的日干、季节一致；每个用干在原文中，抽样庚巳和甲寅符合已核验事实。
-- [ ] **Step 5：主管随机抽 20 条，人工核对用干取舍与先后。** 自动原文定位只能证明出处与字面存在，不能代替语义审查；修改条目后须重跑全部 120 条检查。
+- [ ] **Step 4：运行 `node --import tsx --test tests/qiongtong.test.ts`，预期 3 项通过。** 120 条完全覆盖，无重复；quote 位于对应三级标题区间，章节的日干、季节一致；每个用干在原文中，抽样庚巳和甲寅符合已核验事实。
+- [ ] **Step 5：保留主管抽查记录，修改条目后重跑全部 120 条检查。** 主管第 2 轮抽查的 20 条均与底本相符；本轮语义裁定已同步，自动原文定位仍不能代替语义审查。
 
 ### Task B3.5：交付核对与字段契约
 
@@ -2158,9 +2315,1204 @@ export function lookupQiongtong(dayStem: string, monthBranch: string): Qiongtong
 - [ ] **Step 2：运行六个新增测试文件、项目类型检查与全量回归。** 同 B2.3 验证命令，再追加 `tests/bazi-relations.test.ts tests/qiongtong.test.ts`；严格验证需覆盖新声明、B1–B3 及全部新增测试。
 - [ ] **Step 3：逐条核对 bazi-chart spec 与 tasks。** 本块只提供基础事实；逐年断语 Schema、短评词核对归 B4，逐年合议归 B4/B5；B6 只消费。基础排盘与前端展示共用的 2.3 未整体完成，不能提前勾选。
 
-## Chunk B4：命理与运势三家（提示词、输出 Schema、事实表与核对、mock）
+## Chunk B4a：命理与运势的 Schema、事实表与核对
 
-后续轮次补充完整任务、代码与测试，明确沈孝瞻、余春台、任铁樵的独立输入与输出约束。
+本块给出 B4.1–B4.3 的完整文件；代码只在隔离目录验证，工作区未实施、不勾选任务。B4b 接着提供这些测试引用的 mock 与三家；执行者先落测试确认 RED，再按任务顺序落实现。Ajv 复用 `validateStructuredOutput`，自洽复用 `checkVerdictConsistency`，分词复用 `tokenizeClaim`，不改变 1A 问事默认行为。
+
+### B4 事实编号契约
+
+`FactTable` 保持 Map 契约。关系和神煞按稳定键排序后从 1 编号，同一派生命盘重复构建编号不变；不同锚年不可沿用旧编号。label 的范围前缀供输入筛选与逐年隔离，tokens 是核对依据，不把 label 或 quote 任意分词扩充为“事实”。
+
+| 编号 | label 与 tokens 契约 | 可用范围 |
+|---|---|---|
+| `pillar:year/month/day/time` | 柱名、干支、天干十神；tokens 为干支、干、支、十神 | 原局；缺时柱无 time |
+| `hidden:<柱>` | 按本中余气次序列干及十神；tokens 为藏干、十神 | 原局；缺时柱无 time |
+| `relation:<n>` | label 为 `natal/luck/year 节点列表 通行关系词`，tokens 为完整关系词 | 原局、当前运、锚年；逐年只允许 natal 前缀 |
+| `shensha:<n>` | 神煞名、节点、基准；tokens 为神煞名 | 锚年总事实，三家按路径不额外输入神煞 |
+| `luck:<index>`、`luck:current` | 大运干支、期间；tokens 为干支、干、支、十神 | 八步与当前大运；当前无运不造 current |
+| `year:anchor` | 锚年流年、藏干、所在运、当年关系及神煞 | 运势正文；不会借其它年关系过关 |
+| `year:<YYYY>` | tokens 含该年干支、干、支、十神、藏干与十神、所在运和十神、该年完整关系及神煞词 | 逐年只用该项加原局事实；不可借 luck:current 或其它年 |
+| `tiaohou` | 用干与章节；tokens 严格只有按顺序用干及章节 | 余春台；quote 只放请求输入，不当盘面词放行 |
+| `elements` | 分层五行个数；tokens 为木火土金水 | 余、任两家 |
+| `structure:month`、`structure:roots` | 月令本气十神与透干、藏干透出、日主同五行通根；tokens 为实际干及十神 | 沈、任按路径选用；只陈述位置，不判强弱成败 |
+| `chart:limit` | 缺时柱限制提示，tokens 为空 | 缺时柱三家均收，用于核对限制说明 |
+| `period:<名称>` | B5 根据注入时钟提供所问节气月或流日，沿用 FactTable | 只给运势；禁止系统时钟猜盘或从问题自行造事实 |
+
+本块不输出命宫、身宫事实；缺时柱不会生成时柱、时藏干或含时柱节点的关系。已知时柱时，命宫身宫仍属 B2 客观展示，设计第 11 节未要求将其输入三家。
+
+### Task B4.1：输出 Schema 与业务一致性
+
+**文件：** 新建 `tests/helpers/sample-bazi.ts`、`tests/sanyi-bazi-schema.test.ts`、`src/sanyi/bazi-schema.ts`。
+
+- [ ] **Step 1：写下列共用输入与 Schema 测试，运行 `node --import tsx --test tests/sanyi-bazi-schema.test.ts`，确认新模块缺失 RED。**
+
+```ts
+// tests/helpers/sample-bazi.ts
+import { buildBaziChart } from "../../src/calendar/bazi.js";
+import { analyzeBazi } from "../../src/calendar/bazi-relations.js";
+import { lookupQiongtong } from "../../src/calendar/qiongtong.js";
+import { buildBaziFacts } from "../../src/sanyi/bazi-facts.js";
+import type { BaziSchoolInput } from "../../src/sanyi/schools/bazi-shared.js";
+import type { FortuneHorizon } from "../../src/sanyi/classify.js";
+export function sampleBazi(kind: "destiny" | "fortune" = "fortune", timeKnown = true,
+  horizon: FortuneHorizon = "year"): BaziSchoolInput {
+  const chart = buildBaziChart({
+    corrected: { year: 1990, month: 5, day: 15, hour: 14, minute: 30, second: 0 },
+    gender: "male", sect: 1, timeKnown, targetYear: 2026,
+  });
+  const analysis = analyzeBazi(chart);
+  const tiaohou = lookupQiongtong(chart.dayMaster, chart.pillars.month.branch);
+  return {
+    kind, horizon, chart, tiaohou,
+    question: kind === "fortune" ? "今年运势如何" : "我适合做什么",
+    facts: buildBaziFacts(chart, analysis, tiaohou),
+    period: { label: "2026 年", facts: new Map() },
+  };
+}
+```
+
+```ts
+// tests/sanyi-bazi-schema.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { validateStructuredOutput } from "../src/agent/provider.js";
+import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA, checkBaziConsistency,
+  type DestinySchoolOutput, type FortuneSchoolOutput, } from "../src/sanyi/bazi-schema.js";
+import { mockBaziSchoolOutput } from "../src/sanyi/mock-bazi-schools.js";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+function fortune(): FortuneSchoolOutput {
+  return mockBaziSchoolOutput("shenxiaozhan", sampleBazi().facts, "fortune");
+}
+test("命理拒绝吉凶、把握、逐年字段，五分项标题顺序固定", () => {
+  const output = mockBaziSchoolOutput("shenxiaozhan", sampleBazi("destiny").facts, "destiny");
+  assert.doesNotThrow(() => validateStructuredOutput<DestinySchoolOutput>(DESTINY_SCHOOL_SCHEMA, output));
+  for (const patch of [{ verdict: "吉" }, { confidenceTenths: 6 }, { years: [] }]) {
+    assert.throws(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, { ...output, ...patch }));
+  }
+  const sections = [...output.sections].reverse();
+  assert.throws(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, { ...output, sections }));
+});
+test("运势必填逐年列表，短评不得超过十六字", () => {
+  const output = fortune();
+  assert.doesNotThrow(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, output));
+  const { years, ...missing } = output;
+  assert.throws(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, missing));
+  assert.throws(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, {
+    ...output, years: years.map((item) => ({ ...item, note: "甲".repeat(17) })),
+  }));
+});
+test("年份缺漏、多出、乱序都失败", () => {
+  const input = sampleBazi();
+  const output = fortune();
+  const variants = [
+    output.years.filter((item) => item.year !== 2029),
+    [...output.years, { ...output.years[0]!, year: 2033 }],
+    [...output.years].reverse(),
+  ];
+  for (const years of variants) {
+    assert.match(checkBaziConsistency({ ...output, years }, input.chart, "year").join("；"), /年份序列/);
+  }
+});
+test("整年锚项与总断一致，今天本月不要求一致", () => {
+  const input = sampleBazi();
+  const output = { ...fortune(), verdict: "凶" as const, confidenceTenths: 4 };
+  output.years = output.years.map((item) => ({ ...item, verdict: "平", confidenceTenths: 5 }));
+  for (const horizon of ["year", "next-year", "year:2026"] as const) {
+    assert.match(checkBaziConsistency(output, input.chart, horizon).join("；"), /锚年/);
+  }
+  for (const horizon of ["today", "month"] as const) {
+    assert.deepEqual(checkBaziConsistency(output, input.chart, horizon), []);
+  }
+});
+test("总断和每一项复用问事自洽规则，裁剪窗口仍精确覆盖", () => {
+  const input = sampleBazi();
+  const output = fortune();
+  assert.match(checkBaziConsistency({ ...output, verdict: "吉", confidenceTenths: 4 }, input.chart,
+    "month").join("；"), /六成/);
+  const years = output.years.map((item) => ({ ...item, verdict: "凶" as const, confidenceTenths: 7 }));
+  assert.match(checkBaziConsistency({ ...output, years }, input.chart, "month").join("；"), /2029.*四成/);
+  const chart = { ...input.chart, liunian: { ...input.chart.liunian,
+    years: input.chart.liunian.years.slice(3) } };
+  assert.deepEqual(checkBaziConsistency({ ...output, years: output.years.slice(3) }, chart, "year"), []);
+});
+```
+
+- [ ] **Step 2：实现两套 Schema 与一致性函数。** 命理用 draft-07 元组限定五标题，拒绝多余字段；运势按实际窗口允许 1–10 项，完整覆盖由业务函数检查。出生年与 2099 上限裁剪后不强造十项。
+
+```ts
+// src/sanyi/bazi-schema.ts
+import type { JsonSchema } from "../agent/schemas.js";
+import type { BaziChart } from "../calendar/bazi.js";
+import type { FortuneHorizon } from "./classify.js";
+import { QUESTION_SCHOOL_SCHEMA, checkVerdictConsistency, type QuestionSchoolOutput,
+  type Verdict } from "./schema.js";
+export interface DestinySchoolOutput {
+  useGod: string;
+  headline: string;
+  reason: string;
+  sections: QuestionSchoolOutput["sections"];
+  advice: readonly string[];
+  evidence: QuestionSchoolOutput["evidence"];
+}
+export interface FortuneYearOutput {
+  year: number;
+  verdict: Verdict;
+  confidenceTenths: number;
+  note: string;
+}
+export interface FortuneSchoolOutput extends QuestionSchoolOutput {
+  useGod: string;
+  years: FortuneYearOutput[];
+}
+export type BaziSchoolOutput = DestinySchoolOutput | FortuneSchoolOutput;
+export const DESTINY_TITLES = ["性格", "事业", "财运", "感情", "健康"] as const;
+const properties = QUESTION_SCHOOL_SCHEMA.properties;
+const useGod = { type: "string", minLength: 1 } as const;
+const section = properties.sections.items;
+// Ajv 默认使用 draft-07：元组 items 按位置限定五个标题，避免仅凭数量通过。
+export const DESTINY_SCHOOL_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["useGod", "headline", "reason", "sections", "advice", "evidence"],
+  properties: {
+    useGod, headline: properties.headline, reason: properties.reason,
+    advice: properties.advice, evidence: properties.evidence,
+    sections: {
+      type: "array", minItems: 5, maxItems: 5, additionalItems: false,
+      items: DESTINY_TITLES.map((title) => ({
+        ...section, properties: { ...section.properties, title: { type: "string", const: title } },
+      })),
+    },
+  },
+} as const satisfies JsonSchema;
+export const FORTUNE_SCHOOL_SCHEMA = {
+  ...QUESTION_SCHOOL_SCHEMA,
+  required: [...QUESTION_SCHOOL_SCHEMA.required, "useGod", "years"],
+  properties: {
+    ...properties, useGod,
+    years: {
+      type: "array", minItems: 1, maxItems: 10,
+      items: {
+        type: "object", additionalProperties: false,
+        required: ["year", "verdict", "confidenceTenths", "note"],
+        properties: {
+          year: { type: "integer", minimum: 1900, maximum: 2099 },
+          verdict: properties.verdict, confidenceTenths: properties.confidenceTenths,
+          note: { type: "string", minLength: 1, maxLength: 16 },
+        },
+      },
+    },
+  },
+} as const satisfies JsonSchema;
+export function checkBaziConsistency(output: BaziSchoolOutput, chart: BaziChart,
+  horizon: FortuneHorizon): string[] {
+  if (!("years" in output)) {
+    return [];
+  }
+  const errors = checkVerdictConsistency(output);
+  for (const item of output.years) {
+    errors.push(...checkVerdictConsistency(item).map((error) => `${item.year} 年：${error}`));
+  }
+  const expected = chart.liunian.years.map((item) => item.year);
+  const actual = output.years.map((item) => item.year);
+  if (expected.length !== actual.length || expected.some((year, index) => actual[index] !== year)
+    || actual.some((year, index) => index > 0 && year <= actual[index - 1]!)) {
+    errors.push("逐年年份序列必须与命盘窗口完全一致，升序且不多不少");
+  }
+  // 锚年已由 B5 按立春年和 horizon 解析；本月、今天的总断可与全年不同。
+  if (horizon === "year" || horizon === "next-year" || horizon.startsWith("year:")) {
+    const anchor = output.years.find((item) => item.year === chart.liunian.anchorYear);
+    if (!anchor || anchor.verdict !== output.verdict || anchor.confidenceTenths !== output.confidenceTenths) {
+      errors.push("锚年逐年断语的吉凶与把握必须和整年总断相同");
+    }
+  }
+  return errors;
+}
+```
+
+- [ ] **Step 3：B4b mock 落入后重跑测试，预期 5 项通过；strict 类型检查不得报错。** 总断、每年自洽及整年锚项分开核验。
+
+### Task B4.2：事实表与缺时柱隔离
+
+**文件：** 新建 `tests/sanyi-bazi-facts.test.ts`、`src/sanyi/bazi-facts.ts`。
+
+- [ ] **Step 1：写测试，运行 `node --import tsx --test tests/sanyi-bazi-facts.test.ts`，确认模块缺失 RED。**
+
+```ts
+// tests/sanyi-bazi-facts.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+import { analyzeBazi } from "../src/calendar/bazi-relations.js";
+test("四柱、藏干、神煞、大运、锚年、调候与五行编号完整", () => {
+  const input = sampleBazi();
+  for (const id of ["pillar:year", "pillar:month", "pillar:day", "pillar:time",
+    "hidden:year", "hidden:month", "hidden:day", "hidden:time", "luck:current",
+    "luck:3", "year:anchor", "tiaohou", "elements"]) {
+    assert.ok(input.facts.has(id), id);
+  }
+  assert.ok([...input.facts.keys()].some((id) => id.startsWith("relation:")));
+  assert.ok([...input.facts.keys()].some((id) => id.startsWith("shensha:")));
+  assert.deepEqual([...input.facts.get("tiaohou")!.tokens], ["壬", "戊", "丙", "三夏庚金"]);
+  assert.ok(!input.facts.get("tiaohou")!.label.includes(input.tiaohou.quote));
+});
+test("2023 至 2032 每年事实含该年干支、十神、藏干、大运及已核验关系", () => {
+  const input = sampleBazi();
+  const expected = ["午卯破", "甲庚冲", "乙庚合", "丙辛合", "丁癸冲",
+    "申辰拱水", "巳酉半合金", "辰戌冲", "巳亥冲", "子午冲"];
+  const analysis = analyzeBazi(input.chart);
+  for (const [index, year] of input.chart.liunian.years.entries()) {
+    const fact = input.facts.get(`year:${year.year}`);
+    assert.ok(fact);
+    for (const token of [year.ganZhi, year.stemGod, year.luck!.ganZhi, expected[index]!]) {
+      assert.ok(fact.tokens.has(token), `${fact.id}：${token}`);
+    }
+    for (const hidden of year.hidden) {
+      assert.ok(fact.tokens.has(hidden.stem) && fact.tokens.has(hidden.god));
+    }
+    for (const shensha of analysis.years[index]!.shensha) {
+      assert.ok(fact.tokens.has(shensha.name));
+    }
+  }
+});
+test("缺时柱无时柱、时藏干、命宫身宫事实及含时柱节点的关系", () => {
+  const input = sampleBazi("fortune", false);
+  for (const id of ["pillar:time", "hidden:time", "palace:ming", "palace:shen"]) {
+    assert.ok(!input.facts.has(id));
+  }
+  assert.ok([...input.facts.values()].every((fact) => !fact.label.includes("natal.time")));
+  assert.ok([...input.facts.values()].filter((fact) => fact.id.startsWith("pillar:")
+    || fact.id.startsWith("hidden:")).every((fact) => !fact.tokens.has("癸未")));
+  assert.ok(input.facts.get("luck:2")?.tokens.has("癸未"));
+});
+```
+
+- [ ] **Step 2：实现确定性事实表。** 窗口各年使用 B3 各自重新分析的关系和神煞，禁止重用锚年列表。
+
+```ts
+// src/sanyi/bazi-facts.ts
+import type { BaziChart, BaziPillar, LiuNianEntry, LuckCycle } from "../calendar/bazi.js";
+import type { BaziAnalysis } from "../calendar/bazi-relations.js";
+import type { QiongtongEntry } from "../calendar/qiongtong.js";
+import type { FactTable } from "./facts.js";
+function hiddenTokens(hidden: BaziPillar["hidden"]): string[] {
+  return hidden.flatMap((item) => [item.stem, item.god]);
+}
+function luckTokens(luck: LuckCycle): string[] {
+  return [luck.ganZhi, luck.ganZhi.charAt(0), luck.ganZhi.charAt(1), luck.stemGod];
+}
+function yearTokens(year: LiuNianEntry): string[] {
+  const tokens = [year.ganZhi, year.stem, year.branch, year.stemGod, ...hiddenTokens(year.hidden)];
+  if (year.luck) {
+    tokens.push(...luckTokens(year.luck));
+  }
+  return tokens;
+}
+function scopedTokens(analysis: Pick<BaziAnalysis, "relations" | "shensha" | "nodes">): string[] {
+  return [...analysis.relations.map((relation) => relation.label),
+    ...analysis.shensha.map((item) => item.name)];
+}
+export function buildBaziFacts(chart: BaziChart, analysis: BaziAnalysis, tiaohou: QiongtongEntry): FactTable {
+  const facts: FactTable = new Map();
+  function add(id: string, label: string, tokens: readonly string[]): void {
+    facts.set(id, { id, label, tokens: new Set(tokens) });
+  }
+  const pillars = Object.values(chart.pillars).filter((pillar) => pillar !== null);
+  for (const pillar of pillars) {
+    add(`pillar:${pillar.key}`, `${pillar.label} ${pillar.ganZhi} ${pillar.stemGod}`, [
+      pillar.ganZhi, pillar.stem, pillar.branch, pillar.stemGod,
+    ]);
+    const tokens = hiddenTokens(pillar.hidden);
+    add(`hidden:${pillar.key}`, `${pillar.label}藏干 ${tokens.join(" ")}`, tokens);
+  }
+  // 固定排序编号，保证同一派生命盘多次构建时 ref 可复算；label 保留范围和节点供隔离审查。
+  const relations = [...analysis.relations].sort((left, right) => left.id.localeCompare(right.id, "en"));
+  for (const [index, relation] of relations.entries()) {
+    add(`relation:${index + 1}`,
+      `${relation.scope} ${relation.nodeIds.join(",")} ${relation.label}`, [relation.label]);
+  }
+  const shensha = [...analysis.shensha].sort((left, right) => {
+    const leftKey = `${left.nodeId}:${left.name}:${left.basis}`;
+    const rightKey = `${right.nodeId}:${right.name}:${right.basis}`;
+    return leftKey.localeCompare(rightKey, "en");
+  });
+  for (const [index, item] of shensha.entries()) {
+    add(`shensha:${index + 1}`, `${item.nodeId} ${item.name} 依据${item.basis}`, [item.name]);
+  }
+  for (const luck of chart.luck?.cycles ?? []) {
+    add(`luck:${luck.index}`, `大运 ${luck.ganZhi} ${luck.startYear}–${luck.endYear}`, luckTokens(luck));
+  }
+  const current = chart.annual?.currentLuck;
+  if (current) {
+    add("luck:current", `当前大运 ${current.ganZhi}`, luckTokens(current));
+  }
+  for (const year of chart.liunian.years) {
+    const detail = analysis.years.find((item) => item.year === year.year);
+    if (!detail) {
+      throw new Error(`缺少 ${year.year} 年的关系分析`);
+    }
+    const tokens = [...yearTokens(year), ...scopedTokens(detail)];
+    const label = `${year.year} 年 ${tokens.join(" ")}`;
+    add(`year:${year.year}`, label, tokens);
+    if (year.year === chart.liunian.anchorYear) {
+      add("year:anchor", label, tokens);
+    }
+  }
+  add("tiaohou", `${tiaohou.section} 用干${tiaohou.useStems.join("、")}`, [...tiaohou.useStems,
+    tiaohou.section]);
+  add("elements", analysis.elements.map((item) => {
+    return `${item.element} 天干${item.stem} 本气${item.main} 中气${item.middle} 余气${item.residual}`;
+  }).join("；"), analysis.elements.map((item) => item.element));
+  const stems = pillars.map((pillar) => pillar.stem);
+  const monthMain = chart.pillars.month.hidden[0];
+  if (monthMain) {
+    const exposed = stems.includes(monthMain.stem) ? "已透干" : "未透干";
+    add("structure:month", `月令本气 ${monthMain.stem} ${monthMain.god} ${exposed}`, [monthMain.stem,
+      monthMain.god]);
+  }
+  const roots = pillars.map((pillar) => {
+    const exposed = pillar.hidden.filter((item) => stems.includes(item.stem)).map((item) => item.stem);
+    return `${pillar.label}藏干透出 ${exposed.join("、") || "无"}`;
+  });
+  const sameElement = "甲乙 丙丁 戊己 庚辛 壬癸".split(" ").find((pair) => pair.includes(chart.dayMaster));
+  const rootPillars = pillars.filter((pillar) => {
+    return pillar.hidden.some((item) => sameElement?.includes(item.stem));
+  });
+  add("structure:roots", [...roots, `日主同五行通根 ${rootPillars.map((pillar) => pillar.label).join("、") || "无"}`]
+    .join("；"), [...stems, ...pillars.flatMap((pillar) => hiddenTokens(pillar.hidden))]);
+  // 限制也使用事实编号，方便请求级 mock 和核对器共同识别缺时柱。
+  if (!chart.pillars.time) {
+    add("chart:limit", "时辰未知，缺时柱，判断存在限制", []);
+  }
+  return facts;
+}
+export function isNatalFact(id: string, label: string): boolean {
+  return id.startsWith("pillar:") || id.startsWith("hidden:") || id === "tiaohou"
+    || (id.startsWith("relation:") && label.startsWith("natal "));
+}
+```
+
+- [ ] **Step 3：运行同命令，预期 3 项通过。** 缺时柱不能删掉恰好同干支的合法大运，如命例第二步癸未；事实按角色隔离。
+
+### Task B4.3：复用最长匹配的八字核对器
+
+**文件：** 修改 `src/sanyi/audit.ts`；新建 `tests/sanyi-bazi-audit.test.ts`、`src/sanyi/bazi-audit.ts`；关系词表使用 B3 的 `baziRelationWords`。
+
+- [ ] **Step 1：写核对测试，运行 `node --import tsx --test tests/sanyi-bazi-audit.test.ts`，确认新模块缺失 RED。**
+
+```ts
+// tests/sanyi-bazi-audit.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { auditBaziOutput } from "../src/sanyi/bazi-audit.js";
+import { mockBaziSchoolOutput } from "../src/sanyi/mock-bazi-schools.js";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+test("2031 子午冲失败，2032 同词通过，包括倒序", () => {
+  const input = sampleBazi();
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  for (const note of ["子午冲", "午子冲"]) {
+    const wrong = { ...output, years: output.years.map((item) => {
+        return item.year === 2031 ? { ...item, note } : item;
+      }) };
+    assert.match(auditBaziOutput(wrong, input.facts).errors.join("；"), /2031.*子午冲/);
+    const right = { ...output, years: output.years.map((item) => {
+        return item.year === 2032 ? { ...item, note } : item;
+      }) };
+    assert.equal(auditBaziOutput(right, input.facts).ok, true);
+  }
+});
+test("庚甲冲在锚年正文通过，2031 短评失败", () => {
+  const input = sampleBazi();
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  assert.equal(auditBaziOutput({ ...output, reason: "庚甲冲宜审慎" }, input.facts).ok, true);
+  const years = output.years.map((item) => {
+    return item.year === 2031 ? { ...item, note: "庚甲冲" } : item;
+  });
+  assert.match(auditBaziOutput({ ...output, years }, input.facts).errors.join("；"), /2031.*甲庚冲/);
+});
+test("未知引用、所引事实不含的词、虚构关系都失败", () => {
+  const input = sampleBazi();
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  assert.equal(auditBaziOutput({ ...output, evidence: [{ ref: "missing", claim: "庚午" }] },
+    input.facts).ok, false);
+  assert.equal(auditBaziOutput({ ...output, evidence: [{ ref: "pillar:day", claim: "甲申" }] },
+    input.facts).ok, false);
+  // 两个字各自存在不代表该关系存在；必须整体匹配关系词。
+  assert.equal(auditBaziOutput({ ...output, advice: ["子午冲"] }, input.facts).ok, false);
+  assert.equal(auditBaziOutput({ ...output, evidence: [{ ref: "year:anchor", claim: "庚甲冲" }] },
+    input.facts).ok, true);
+});
+test("缺时柱正文引用时柱干支失败，未说明限制也失败", () => {
+  const input = sampleBazi("fortune", false);
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  assert.equal(auditBaziOutput(output, input.facts).ok, true);
+  assert.equal(auditBaziOutput({ ...output, headline: "时柱癸未" }, input.facts).ok, false);
+  assert.equal(auditBaziOutput({ ...output, reason: "依事实判断" }, input.facts).ok, false);
+});
+test("正文各字段及每年短评扫描十神与关系完整词", () => {
+  const input = sampleBazi();
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  const patches = [
+    { headline: "寅申冲" }, { reason: "寅申冲" }, { useGod: "寅申冲" },
+    { sections: output.sections.map((item) => ({ ...item, text: "寅申冲" })) },
+    { timing: { window: "寅申冲", condition: "条件齐备" } },
+  ];
+  for (const patch of patches) {
+    assert.equal(auditBaziOutput({ ...output, ...patch }, input.facts).ok, false);
+  }
+});
+
+test("不存在的关系不能拆成两个合法单字蒙混通过", () => {
+  const input = sampleBazi();
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  for (const reason of ["庚辛合", "巳午半合火", "午辰冲"]) {
+    assert.equal(auditBaziOutput({ ...output, reason }, input.facts).ok, false);
+  }
+});
+
+test("普通判断用语不被问事单字词表误判成盘面事实", () => {
+  const input = sampleBazi();
+  const output = mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune");
+  assert.equal(auditBaziOutput({ ...output, reason: "用神取正印，相神须看救应" }, input.facts).ok, true);
+});
+```
+
+- [ ] **Step 2：原样保留问事核对逻辑，仅为其分词器增加默认空的扩展词表参数；落入八字核对器。** 两字关系倒序归一化后仍须事实中存在完整关系。语法上像关系的未知词也整体匹配，不能靠两个合法单字蒙混过关。
+
+```ts
+// src/sanyi/audit.ts
+import type { FactTable } from "./facts.js";
+import type { QuestionSchoolOutput } from "./schema.js";
+
+const STEMS = "甲乙丙丁戊己庚辛壬癸";
+const BRANCHES = "子丑寅卯辰巳午未申酉戌亥";
+const CYCLE = Array.from({ length: 60 }, (_, index) => {
+  return `${STEMS[index % 10]}${BRANCHES[index % 12]}`;
+});
+const WORDS = [
+  "回头生", "回头克",
+  "父母", "子孙", "官鬼", "妻财", "兄弟",
+  "青龙", "朱雀", "勾陈", "螣蛇", "白虎", "玄武",
+  "旬空", "月破", "日破", "暗动", "进神", "退神",
+  "用神", "原神", "忌神", "仇神",
+  ...CYCLE,
+  ...STEMS,
+  ...BRANCHES,
+  ..."金木水火土旺相休囚死世应伏动体用",
+].sort((left, right) => right.length - left.length);
+const COMBINATION = new RegExp(
+  "([子丑寅卯辰巳午未申酉戌亥])"+
+  "([金木水火土])"+
+  "(父母|子孙|官鬼|妻财|兄弟)",
+  "g",
+);
+
+export function tokenizeClaim(text: string, extraWords: readonly string[] = []): string[] {
+  const words = [...new Set([...WORDS, ...extraWords])].sort((left, right) => right.length - left.length);
+  const tokens: string[] = [];
+  for (let index = 0; index < text.length;) {
+    const token = words.find((candidate) => text.startsWith(candidate, index));
+    if (token) {
+      tokens.push(token);
+      index += token.length;
+    } else {
+      index += 1;
+    }
+  }
+  return tokens;
+}
+
+export function auditOutput(
+  output: QuestionSchoolOutput,
+  facts: FactTable,
+): { ok: boolean; errors: string[] } {
+  const errors: string[] = [];
+  for (const evidence of output.evidence) {
+    const fact = facts.get(evidence.ref);
+    if (!fact) {
+      errors.push(`事实编号不存在：${evidence.ref}`);
+      continue;
+    }
+    for (const token of tokenizeClaim(evidence.claim)) {
+      if (!fact.tokens.has(token)) {
+        errors.push(`${evidence.ref} 不支持关键词：${token}`);
+      }
+    }
+  }
+  const lineTokens = [...facts]
+    .filter(([id]) => id.startsWith("line:"))
+    .map(([, fact]) => fact.tokens);
+  const prose = [
+    output.headline,
+    output.reason,
+    ...output.sections.map((section) => section.text),
+  ].join("\n");
+  for (const match of prose.matchAll(COMBINATION)) {
+    const tokens = match.slice(1);
+    if (!lineTokens.some((set) => tokens.every((token) => set.has(token)))) {
+      errors.push(`正文出现不存在的盘面组合：${match[0]}`);
+    }
+  }
+  return { ok: errors.length === 0, errors };
+}
+```
+
+```ts
+// src/sanyi/bazi-audit.ts
+import { baziRelationWords } from "../calendar/bazi-relations.js";
+import { tokenizeClaim } from "./audit.js";
+import { isNatalFact } from "./bazi-facts.js";
+import type { BaziSchoolOutput } from "./bazi-schema.js";
+import type { FactTable } from "./facts.js";
+const aliases = new Map<string, string>();
+for (const word of baziRelationWords()) {
+  aliases.set(word, word);
+  if (!word.includes("三合") && !word.includes("三会")) {
+    aliases.set(word.charAt(1) + word.charAt(0) + word.slice(2), word);
+  }
+}
+const EXTRA_WORDS = [
+  ...aliases.keys(), "比肩", "劫财", "食神", "伤官", "偏财", "正财", "七杀", "正官", "偏印", "正印", "日主",
+  "天乙贵人", "文昌", "桃花", "驿马", "华盖", "羊刃", "禄神",
+  ...[..."甲乙丙丁戊己庚辛壬癸"].flatMap((stem, index) => {
+    return [..."春夏秋冬"].map((season) => `三${season}${stem}${"木木火火土土金金水水".charAt(index)}`);
+  }),
+];
+const RELATION_PHRASE = new RegExp(
+  "[子丑寅卯辰巳午未申酉戌亥]{3}(?:三合|三会)[金木水火土]"
+  + "|[子丑寅卯辰巳午未申酉戌亥]{2}(?:半合|拱)[金木水火土]"
+  + "|[甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥]{2}(?:自刑|合|冲|害|破|刑)",
+  "gu",
+);
+function words(text: string): string[] {
+  // 语法上像关系的词也作为整体候选，避免不存在的关系拆成合法单字后过关。
+  // 分词仍由 1A 的最长匹配循环完成；有效关系再按通行标签归一化。
+  const candidates = [...text.matchAll(RELATION_PHRASE)].map((match) => match[0]);
+  const vocabulary = new Set([...EXTRA_WORDS, ...candidates]);
+  return tokenizeClaim(text, [...vocabulary]).filter((word) => {
+    // 八字核对干支、十神、关系等完整词，不把问事的“体、用、相”等单字当成事实。
+    return vocabulary.has(word) || /^[甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥]$/u.test(word)
+      || /^[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]$/u.test(word);
+  }).map((word) => aliases.get(word) ?? word);
+}
+function union(facts: FactTable): Set<string> {
+  return new Set([...facts.values()].flatMap((fact) => [...fact.tokens]));
+}
+export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
+  ok: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+  function check(text: string, allowed: ReadonlySet<string>, label: string): void {
+    for (const word of words(text)) {
+      if (!allowed.has(word)) {
+        errors.push(`${label} 不支持关键词：${word}`);
+      }
+    }
+  }
+  for (const evidence of output.evidence) {
+    const fact = facts.get(evidence.ref);
+    if (!fact) {
+      errors.push("事实编号不存在，请使用所供事实表中的 ref");
+      continue;
+    }
+    check(evidence.claim, fact.tokens, evidence.ref);
+  }
+  // 正文只能用原局、运和锚年；窗口其它年份不会为总断虚构关系背书。
+  const currentFacts = new Map([...facts].filter(([id]) => !/^year:\d{4}$/u.test(id)));
+  const prose = [output.useGod, output.headline, output.reason,
+    ...output.sections.flatMap((section) => [section.title, section.text]), ...output.advice];
+  if ("timing" in output && output.timing) {
+    prose.push(output.timing.window, output.timing.condition);
+  }
+  check(prose.join("\n"), union(currentFacts), "正文");
+  // 同名干支可能属于合法大运，缺时柱时仍拒绝将其归给时柱、命宫或身宫。
+  if (facts.has("chart:limit") && /(?:时柱|命宫|身宫)[^。；\n]{0,8}[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/u
+    .test(prose.join("\n"))) {
+    errors.push("缺时柱，不得引用时柱、命宫或身宫干支");
+  }
+  if (facts.has("chart:limit") && !/缺时柱|时辰未知/u.test(prose.join("\n"))) {
+    errors.push("缺时柱时须说明判断限制");
+  }
+  if ("years" in output) {
+    const natal = new Map([...facts].filter(([id, fact]) => isNatalFact(id, fact.label)));
+    for (const item of output.years) {
+      const year = facts.get(`year:${item.year}`);
+      if (!year) {
+        errors.push(`${item.year} 年事实不存在`);
+        continue;
+      }
+      const allowed = new Set([...union(natal), ...year.tokens]);
+      check(item.note, allowed, `${item.year} 年短评`);
+    }
+  }
+  return { ok: errors.length === 0, errors };
+}
+```
+
+- [ ] **Step 3：B4b mock 落入后重跑核对与 1A `tests/sanyi-audit.test.ts`，新增 7 项及原有问事测试通过。** 正文额外核对 useGod、标题、timing；普通判断用语不套用问事单字词表；缺时柱说明与明显的时柱干支归属同时检查。逐年可用集合严格限定为该年加原局四柱、藏干、原局关系、调候。
+
+## Chunk B4b：三家输入、单家落笔与确定性 mock
+
+本块给出 B4.4–B4.7。沈、任不收调候摘句，余必须收匹配日干月令的完整条目及 quote。命理按设计第 11 节分派输入，运势为落实新增逐年规范，三家共同补收窗口与锚年事实；余家只取运年干支、十神、藏干、大运，不追加关系与神煞。沈、任的窗口事实保留每年关系。三家断语互不可见。
+
+### Task B4.4：三家输入与提示词
+
+**文件：** 新建 `tests/sanyi-bazi-schools.test.ts`、`src/sanyi/schools/bazi-shared.ts`、`shenxiaozhan.ts`、`yuchuntai.ts`、`rentieqiao.ts`、`bazi-index.ts`（后五项同目录）。
+
+- [ ] **Step 1：写输入隔离与文化守卫测试，运行 `node --import tsx --test tests/sanyi-bazi-schools.test.ts`，确认模块缺失 RED。** 守卫正则原样取自 1A 测试，不另造较宽松列表。
+
+```ts
+// tests/sanyi-bazi-schools.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { BAZI_SCHOOLS } from "../src/sanyi/schools/bazi-index.js";
+import { selectBaziFacts } from "../src/sanyi/schools/bazi-shared.js";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+// 原样复用 1A frontend-sanyi-content.test.ts 的文化守卫表达式。
+const CULTURE_FORBIDDEN = /[\u3040-\u30ff]|・|易者|身銭|筮竹|神社|高島|断易|問|賭/u;
+test("余春台输入有庚金巳月及原文，沈任输入无调候摘句", () => {
+  const input = sampleBazi();
+  for (const school of BAZI_SCHOOLS) {
+    const prompt = school.buildUserPrompt(input);
+    if (school.key === "yuchuntai") {
+      assert.match(prompt, /三夏庚金/);
+      assert.match(prompt, /但先壬水/);
+      assert.ok(prompt.includes(input.tiaohou.quote));
+      assert.ok(!selectBaziFacts(school.key, input).has("relation:1"));
+    } else {
+      assert.ok(!prompt.includes(input.tiaohou.quote));
+      assert.doesNotMatch(prompt, /但先壬水/);
+      assert.ok(!selectBaziFacts(school.key, input).has("tiaohou"));
+    }
+    assert.doesNotMatch(school.systemPrompt, CULTURE_FORBIDDEN);
+    assert.match(school.systemPrompt, new RegExp(`自称只用本名“${school.name}”`));
+    assert.match(prompt, /2023/);
+    assert.match(school.systemPrompt, /十六字/);
+    assert.match(school.systemPrompt, /整年/);
+  }
+});
+test("命理无流年窗口输入，透干通根按原局确定性组装", () => {
+  const input = sampleBazi("destiny");
+  for (const school of BAZI_SCHOOLS) {
+    const facts = selectBaziFacts(school.key, input);
+    assert.ok(![...facts.keys()].some((id) => id.startsWith("year:")));
+    assert.ok(!school.buildUserPrompt(input).includes("逐年窗口："));
+    if (school.key === "shenxiaozhan") {
+      assert.ok(facts.has("structure:month"));
+      assert.ok(!facts.has("elements"));
+    }
+    if (school.key === "rentieqiao") {
+      assert.ok(facts.has("structure:roots"));
+    }
+  }
+});
+```
+
+- [ ] **Step 2：实现共同边界、事实筛选与三家定义。** `period` 由 B5 提供 today/month 的真实事实，B4 只传递；示例整年无须额外 period 事实。提示词保留缺时柱、引文、应期条件、医疗法律投资边界；用本名自称。
+
+```ts
+// src/sanyi/schools/bazi-shared.ts
+import type { BaziChart } from "../../calendar/bazi.js";
+import type { QiongtongEntry } from "../../calendar/qiongtong.js";
+import type { FortuneHorizon } from "../classify.js";
+import type { FactTable } from "../facts.js";
+export type BaziSchoolKey = "shenxiaozhan" | "yuchuntai" | "rentieqiao";
+export interface BaziSchoolInput {
+  kind: "destiny" | "fortune";
+  question: string;
+  horizon: FortuneHorizon;
+  chart: BaziChart;
+  facts: FactTable;
+  tiaohou: QiongtongEntry;
+  // B5 按注入时钟生成今天/本月事实，B4 不从系统时钟或问题文本猜流日。
+  period: {
+    label: string;
+    facts: FactTable;
+  };
+}
+export interface BaziSchool {
+  key: BaziSchoolKey;
+  name: string;
+  school: string;
+  systemPrompt: string;
+  buildUserPrompt(input: BaziSchoolInput): string;
+}
+const ALLOWED: Record<BaziSchoolKey, readonly string[]> = {
+  shenxiaozhan: ["pillar:", "hidden:", "structure:month", "structure:roots", "relation:", "luck:"],
+  yuchuntai: ["pillar:day", "pillar:month", "tiaohou", "elements", "luck:"],
+  rentieqiao: ["pillar:", "hidden:", "structure:roots", "relation:", "elements", "luck:"],
+};
+export const BAZI_BOUNDARIES = `只能引用随请求提供的原文，不得补写或编造引文。
+不得编造排盘数据，不得虚构外应；应期必须写明成立条件。
+不做医疗、法律、投资结论，健康问题建议就医。
+缺时柱时须说明判断限制，不得引用时柱、命宫或身宫事实。
+evidence.ref 只能使用可用事实编号，claim 只陈述该事实支持的关键词。
+命理不得输出吉凶、把握、逐年列表或 timing，五分项依次为性格、事业、财运、感情、健康。
+运势须回应所问时间范围，years 按逐年窗口升序每年一项，通常十年；出生年与上限裁剪后以实际窗口为准。
+每项包含 year、verdict、confidenceTenths、note，短评不超过十六字，只用该年与原局事实。
+问整年时锚年那项的 verdict 和 confidenceTenths 与总断相同，今天、本月不要求一致。
+吉与大吉为六至九成，平为四至六成，凶与大凶为一至四成，总断和逐年均遵守。
+需要留意的月份或日子写入 timing.window，成立条件写入 timing.condition。
+输出必须严格符合给定 JSON Schema。`;
+export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): FactTable {
+  const facts: FactTable = new Map();
+  for (const [id, fact] of input.facts) {
+    const allowed = ALLOWED[key].some((prefix) => id === prefix || id.startsWith(prefix));
+    const yearFact = input.kind === "fortune" && id.startsWith("year:");
+    if (id === "chart:limit" || allowed || yearFact) {
+      if (input.kind === "destiny" && id.startsWith("relation:") && fact.label.startsWith("year ")) {
+        continue;
+      }
+      // 余家逐年只收运年干支、十神与藏干，不追加格局派使用的关系和神煞。
+      if (key === "yuchuntai" && yearFact) {
+        const match = fact.label.match(/^(\d{4}) 年/u);
+        const entry = input.chart.liunian.years.find((year) => String(year.year) === match?.[1]);
+        if (!entry) {
+          throw new Error("调候派缺少对应流年事实");
+        }
+        const tokens = [entry.ganZhi, entry.stem, entry.branch, entry.stemGod,
+          ...entry.hidden.flatMap((hidden) => [hidden.stem, hidden.god])];
+        if (entry.luck) {
+          tokens.push(entry.luck.ganZhi, entry.luck.stemGod);
+        }
+        facts.set(id, { id, label: `${entry.year} 年 ${tokens.join(" ")}`, tokens: new Set(tokens) });
+      } else {
+        facts.set(id, fact);
+      }
+    }
+  }
+  if (input.kind === "fortune") {
+    for (const [id, fact] of input.period.facts) {
+      if (!id.startsWith("period:")) {
+        throw new Error("时间范围事实编号须以 period: 开头");
+      }
+      facts.set(id, fact);
+    }
+  }
+  return facts;
+}
+export function buildBaziPrompt(key: BaziSchoolKey, input: BaziSchoolInput): string {
+  const facts = selectBaziFacts(key, input);
+  const prompt = [
+    `问题：${input.question}`, `任务类型：${input.kind}`,
+    `时柱限制：${input.chart.pillars.time ? "时柱已知" : "缺时柱，判断存在限制"}`,
+    "可用事实编号：", ...[...facts.values()].map((fact) => `${fact.id}：${fact.label}`),
+    // JSON 保留 tokens，使 mock 与真实家使用同一筛选后的事实，而不从 prose 反推数据。
+    `事实表 JSON：${JSON.stringify([...facts.values()].map((fact) => ({ ...fact, tokens: [...fact.tokens] })))}`,
+  ];
+  if (input.kind === "fortune") {
+    prompt.push(`所问范围：${input.horizon} ${input.period.label}`,
+      `锚年：${input.chart.liunian.anchorYear}`,
+      `逐年窗口：${input.chart.liunian.years.map((year) => year.year).join("、")}`);
+  }
+  if (key === "yuchuntai") {
+    prompt.push(`调候条目：${JSON.stringify(input.tiaohou)}`, `可直接引用的原文：${input.tiaohou.quote}`);
+  } else {
+    prompt.push("本次未提供可直接引用的原文，不得编造本派典籍的原句。");
+  }
+  return prompt.join("\n");
+}
+```
+
+```ts
+// src/sanyi/schools/shenxiaozhan.ts
+import { BAZI_BOUNDARIES, buildBaziPrompt, type BaziSchool, type BaziSchoolInput } from "./bazi-shared.js";
+export const shenxiaozhan = {
+  key: "shenxiaozhan", name: "沈孝瞻", school: "格局派",
+  systemPrompt: `你是沈孝瞻，以格局派路径解读命理与运势。
+按月令取格、成败救应、相神依次判断；不得把客观关系自动当作成化。
+本次没有《子平真诠》原文，只能据所供事实推论，不得编造原句。
+自称只用本名“沈孝瞻”。\n${BAZI_BOUNDARIES}`,
+  buildUserPrompt(input: BaziSchoolInput): string {
+    return buildBaziPrompt("shenxiaozhan", input);
+  },
+} satisfies BaziSchool;
+```
+
+```ts
+// src/sanyi/schools/yuchuntai.ts
+import { BAZI_BOUNDARIES, buildBaziPrompt, type BaziSchool, type BaziSchoolInput } from "./bazi-shared.js";
+export const yuchuntai = {
+  key: "yuchuntai", name: "余春台", school: "调候派",
+  systemPrompt: `你是余春台，以调候派路径解读命理与运势。
+按日干配月令、寒暖燥湿、调候用神依次判断，结合所供对应调候条目的 useStems 与 quote。
+只有随请求提供的《穷通宝鉴》摘句可以直接引用，不得另引其它段落。
+自称只用本名“余春台”。\n${BAZI_BOUNDARIES}`,
+  buildUserPrompt(input: BaziSchoolInput): string {
+    return buildBaziPrompt("yuchuntai", input);
+  },
+} satisfies BaziSchool;
+```
+
+```ts
+// src/sanyi/schools/rentieqiao.ts
+import { BAZI_BOUNDARIES, buildBaziPrompt, type BaziSchool, type BaziSchoolInput } from "./bazi-shared.js";
+export const rentieqiao = {
+  key: "rentieqiao", name: "任铁樵", school: "扶抑派",
+  systemPrompt: `你是任铁樵，以扶抑派路径解读命理与运势。
+按日主强弱、扶抑取用、气势流通依次判断，结合原局通根与透干。
+本次没有《滴天髓阐微》原文，只能据所供事实推论，不得编造原句。
+自称只用本名“任铁樵”。\n${BAZI_BOUNDARIES}`,
+  buildUserPrompt(input: BaziSchoolInput): string {
+    return buildBaziPrompt("rentieqiao", input);
+  },
+} satisfies BaziSchool;
+```
+
+```ts
+// src/sanyi/schools/bazi-index.ts
+import { shenxiaozhan } from "./shenxiaozhan.js";
+import { yuchuntai } from "./yuchuntai.js";
+import { rentieqiao } from "./rentieqiao.js";
+export const BAZI_SCHOOLS = [shenxiaozhan, yuchuntai, rentieqiao] as const;
+export type { BaziSchoolKey } from "./bazi-shared.js";
+```
+
+- [ ] **Step 3：运行同命令，预期 2 项通过；检查余家 quote 逐字包含「但先壬水」，沈任没有 quote。** B6 以 timing.window 展示关注月标签，以 timing.condition 展示成立条件。
+
+### Task B4.5：单家调用、校验与一次重写
+
+**文件：** 新建 `tests/sanyi-bazi-school-runner.test.ts`、`src/sanyi/bazi-school-runner.ts`。测试文件同时覆盖 B4.6 mock，完整一次给出。
+
+- [ ] **Step 1：写运行器及 mock 测试，运行 `node --import tsx --test tests/sanyi-bazi-school-runner.test.ts`，确认模块缺失 RED。**
+
+```ts
+// tests/sanyi-bazi-school-runner.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { DeterministicMockProvider, type StructuredOutputRequest } from "../src/agent/provider.js";
+import { runBaziSchool } from "../src/sanyi/bazi-school-runner.js";
+import { mockBaziSchoolOutput } from "../src/sanyi/mock-bazi-schools.js";
+import { BAZI_SCHOOLS } from "../src/sanyi/schools/bazi-index.js";
+import { selectBaziFacts } from "../src/sanyi/schools/bazi-shared.js";
+import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA,
+  checkBaziConsistency } from "../src/sanyi/bazi-schema.js";
+import { validateStructuredOutput } from "../src/agent/provider.js";
+import { auditBaziOutput } from "../src/sanyi/bazi-audit.js";
+test("首次核对失败，带中文错误完整重写一次后成功", async () => {
+  const input = sampleBazi();
+  const school = BAZI_SCHOOLS[0];
+  const valid = mockBaziSchoolOutput(school.key, selectBaziFacts(school.key, input), "fortune");
+  const provider = new DeterministicMockProvider("rewrite", {
+    "sanyi/fortune/shenxiaozhan": (request: StructuredOutputRequest, index: number) => {
+      if (index === 0) {
+        return { ...valid, reason: "子午冲" };
+      }
+      assert.match(request.userPrompt, /不支持关键词.*子午冲/);
+      return valid;
+    },
+  });
+  const result = await runBaziSchool({ provider }, { ...input, school });
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 2);
+});
+test("两次失败无模型原文回显，另两家独立成功", async () => {
+  const input = sampleBazi();
+  const provider = new DeterministicMockProvider("bad", {
+    "sanyi/fortune/shenxiaozhan": { ...mockBaziSchoolOutput("shenxiaozhan", input.facts, "fortune"),
+      reason: "私人原文子午冲" },
+  });
+  const result = await runBaziSchool({ provider }, { ...input, school: BAZI_SCHOOLS[0] });
+  assert.equal(result.status, "failed");
+  assert.equal(result.calls, 2);
+  if (result.status === "failed") {
+    assert.doesNotMatch(result.error, /私人原文/);
+    assert.match(result.error, /核对/);
+  }
+  for (const school of BAZI_SCHOOLS.slice(1)) {
+    assert.equal((await runBaziSchool({ provider: new MockSchoolsProvider() }, { ...input,
+      school })).status, "done");
+  }
+});
+test("provider 抛错返回 failed，错误消息不回显", async () => {
+  const provider = new DeterministicMockProvider("transport", {
+    "sanyi/fortune/shenxiaozhan": () => {
+      throw new Error("私人输入回显");
+    },
+  });
+  const result = await runBaziSchool({ provider }, { ...sampleBazi(), school: BAZI_SCHOOLS[0] });
+  assert.deepEqual(result, { status: "failed", calls: 1, error: "模型调用失败，请稍后重试" });
+});
+test("运行器自行校验 Schema，结构失败也只重写一次", async () => {
+  const provider = new MockSchoolsProvider();
+  let calls = 0;
+  provider.generateStructured = async <T>(): Promise<T> => {
+    calls += 1;
+    return {} as T;
+  };
+  const result = await runBaziSchool({ provider }, { ...sampleBazi(), school: BAZI_SCHOOLS[0] });
+  assert.equal(result.status, "failed");
+  assert.equal(calls, 2);
+});
+test("三家命理运势 mock 全通过，窗口年份与锚项吻合", async () => {
+  for (const kind of ["destiny", "fortune"] as const) {
+    for (const timeKnown of [true, false]) {
+      const input = sampleBazi(kind, timeKnown);
+      for (const school of BAZI_SCHOOLS) {
+        const facts = selectBaziFacts(school.key, input);
+        const output = mockBaziSchoolOutput(school.key, facts, kind);
+        const schema = kind === "destiny" ? DESTINY_SCHOOL_SCHEMA : FORTUNE_SCHOOL_SCHEMA;
+        assert.doesNotThrow(() => validateStructuredOutput(schema, output));
+        assert.deepEqual(checkBaziConsistency(output, input.chart, input.horizon), []);
+        assert.equal(auditBaziOutput(output, facts).ok, true);
+        if ("years" in output) {
+          assert.equal(output.years.length, 10);
+          assert.deepEqual(output.years.map((year) => year.year),
+            input.chart.liunian.years.map((year) => year.year));
+        }
+        const result = await runBaziSchool({ provider: new MockSchoolsProvider() }, { ...input, school });
+        assert.equal(result.status, "done");
+        assert.equal(result.calls, 1);
+      }
+    }
+  }
+  const facts = sampleBazi("destiny").facts;
+  assert.match(mockBaziSchoolOutput("shenxiaozhan", facts, "destiny").useGod, /正印/);
+  assert.equal(mockBaziSchoolOutput("yuchuntai", facts, "destiny").useGod, "壬");
+  assert.match(mockBaziSchoolOutput("rentieqiao", facts, "destiny").useGod, /比肩/);
+});
+```
+
+- [ ] **Step 2：按 1A 的两轮结构实现单家运行器。** 顺序为一次调用 → Ajv → 一致性 → 核对；带中文问题重写一次，最终只返回 failed 和原因，无模型原文或 provider 异常消息回显。传输错误立即 failed。不抽改 1A 运行器，以免其 rejected 行为发生变化。
+
+```ts
+// src/sanyi/bazi-school-runner.ts
+import { StructuredOutputError, validateStructuredOutput,
+  type StructuredOutputProvider } from "../agent/provider.js";
+import { auditBaziOutput } from "./bazi-audit.js";
+import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA, checkBaziConsistency, type BaziSchoolOutput,
+  } from "./bazi-schema.js";
+import { selectBaziFacts, type BaziSchool, type BaziSchoolInput } from "./schools/bazi-shared.js";
+export type BaziSchoolRunResult = {
+  status: "done";
+  output: BaziSchoolOutput;
+  calls: number;
+} | {
+  status: "failed";
+  error: string;
+  calls: number;
+};
+export async function runBaziSchool(deps: {
+  provider: StructuredOutputProvider;
+}, input: BaziSchoolInput & {
+  school: BaziSchool;
+}): Promise<BaziSchoolRunResult> {
+  const schema = input.kind === "destiny" ? DESTINY_SCHOOL_SCHEMA : FORTUNE_SCHOOL_SCHEMA;
+  let calls = 0;
+  try {
+    const facts = selectBaziFacts(input.school.key, input);
+    const basePrompt = input.school.buildUserPrompt(input);
+    let userPrompt = basePrompt;
+    let errors: string[] = [];
+    for (let pass = 0; pass < 2; pass += 1) {
+      calls += 1;
+      try {
+        const raw = await deps.provider.generateStructured<unknown>({
+          taskId: `sanyi/${input.kind}/${input.school.key}`,
+          systemPrompt: input.school.systemPrompt, cacheSystemPrompt: true,
+          userPrompt, schema, effort: "medium",
+        });
+        // 不假设 provider 一定做过校验；Schema 失败也进入一次重写。
+        const output = validateStructuredOutput<BaziSchoolOutput>(schema, raw);
+        errors = [...checkBaziConsistency(output, input.chart, input.horizon),
+          ...auditBaziOutput(output, facts).errors];
+        if (errors.length === 0) {
+          return { status: "done", output, calls };
+        }
+      }
+      catch (error) {
+        if (!(error instanceof StructuredOutputError)) {
+          return { status: "failed", error: "模型调用失败，请稍后重试", calls };
+        }
+        errors = ["输出字段、类型、分项顺序或字数不符合 JSON Schema，请按规定完整重写"];
+      }
+      userPrompt = [basePrompt, "", "上一次输出未通过核对，请修正后完整重写：",
+        ...errors.map((error) => `- ${error}`)].join("\n");
+    }
+    return { status: "failed", error: `断语未通过盘面核对：${errors.join("；")}`, calls };
+  }
+  catch {
+    return { status: "failed", error: "三家输入组装失败，请检查事实表", calls };
+  }
+}
+```
+
+- [ ] **Step 3：B4.6 mock 落入后重跑同命令，预期 5 项通过。** 先测单家及另外两家独立调用；并行合议、存档状态和换日由 B5 验证。
+
+### Task B4.6：确定性八字 mock 与任务路由
+
+**文件：** 新建 `src/sanyi/mock-bazi-schools.ts`，修改 `src/sanyi/mock-provider.ts`；使用 B4.5 最后一项测试。
+
+- [ ] **Step 1：先运行 B4.5 mock 测试，确认八字任务尚无路由时 RED。**
+
+- [ ] **Step 2：实现事实驱动输出及 mock 路由。** 命例格局派取正印、调候派取第一用干壬、扶抑派取比肩，属于排练示例取法；正式判断仍由模型根据各派路径生成。运势每年都取该年干支写短评，全部平五成，锚项自然与总断一致。
+
+```ts
+// src/sanyi/mock-bazi-schools.ts
+import type { FactTable } from "./facts.js";
+import { DESTINY_TITLES, type BaziSchoolOutput, type DestinySchoolOutput,
+  type FortuneSchoolOutput } from "./bazi-schema.js";
+import type { BaziSchoolKey } from "./schools/bazi-shared.js";
+function useGodFor(key: BaziSchoolKey, facts: FactTable): {
+  ref: string;
+  word: string;
+} {
+  if (key === "yuchuntai") {
+    const tiaohou = facts.get("tiaohou");
+    const word = [...tiaohou?.tokens ?? []].find((token) => /^[甲乙丙丁戊己庚辛壬癸]$/u.test(token));
+    if (!word) {
+      throw new Error("调候 mock 缺少用神干");
+    }
+    return { ref: "tiaohou", word };
+  }
+  // 排练展示两派的典型取法，不把示例选择充当正式格局或强弱算法。
+  const wanted = key === "shenxiaozhan" ? ["正印", "偏印", "正官", "七杀"] : ["比肩", "劫财", "正印", "偏印"];
+  for (const word of wanted) {
+    const fact = [...facts.values()].find((item) => {
+      return (item.id.startsWith("pillar:") || item.id.startsWith("hidden:")) && item.tokens.has(word);
+    });
+    if (fact) {
+      return { ref: fact.id, word };
+    }
+  }
+  const day = facts.get("pillar:day");
+  const word = [...day?.tokens ?? []].find((token) => /^[甲乙丙丁戊己庚辛壬癸]$/u.test(token));
+  if (!word) {
+    throw new Error("八字 mock 缺少日干事实");
+  }
+  return { ref: "pillar:day", word };
+}
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
+  kind: "destiny"): DestinySchoolOutput;
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
+  kind: "fortune"): FortuneSchoolOutput;
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
+  kind: "destiny" | "fortune"): BaziSchoolOutput;
+export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable,
+  kind: "destiny" | "fortune"): BaziSchoolOutput {
+  const useGod = useGodFor(key, facts);
+  let reason = "依事实判断，先核实条件";
+  if (facts.has("chart:limit")) {
+    reason = "缺时柱，判断存在限制，先核实条件";
+  }
+  const base: DestinySchoolOutput = {
+    useGod: useGod.word, headline: "审慎待时", reason,
+    sections: DESTINY_TITLES.map((title) => ({ title, text: "先核实客观条件" })),
+    advice: ["保留调整余地"], evidence: [{ ref: useGod.ref, claim: useGod.word }],
+  };
+  if (kind === "destiny") {
+    return base;
+  }
+  // 每年只取该年事实首个干支；不把锚年关系搬到其它年份。
+  const years = [...facts.values()].filter((fact) => /^year:\d{4}$/u.test(fact.id))
+    .sort((left, right) => left.id.localeCompare(right.id, "en")).map((fact) => {
+    const ganZhi = [...fact.tokens].find((token) => /^[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]$/u.test(token));
+    if (!ganZhi) {
+      throw new Error("逐年 mock 缺少流年干支");
+    }
+    return { year: Number(fact.id.slice(5)), verdict: "平" as const, confidenceTenths: 5,
+      note: `${ganZhi}宜审慎` };
+  });
+  return { ...base, verdict: "平", confidenceTenths: 5, years };
+}
+```
+
+```ts
+// src/sanyi/mock-provider.ts
+import { encodeAbiParameters, encodeEventTopics, parseAbi, type Hex } from "viem";
+import { USDC_TOKEN_ADDRESS } from "../frontend/wallet.js";
+import { feeRecipientFromEnv, FEE_USDC6, verifySingleFeeTransfer, type SanyiFeeProof } from "./fee.js";
+import { hashJson } from "../agent/audit.js";
+import type { StructuredOutputProvider, StructuredOutputRequest, } from "../agent/provider.js";
+import type { FactTable } from "./facts.js";
+import { mockSchoolOutput } from "./mock-schools.js";
+import type { QuestionSchoolKey } from "./schools/index.js";
+import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
+import type { BaziSchoolKey } from "./schools/bazi-shared.js";
+function baziFactsFromPrompt(prompt: string): FactTable {
+  const line = prompt.split("\n").find((row) => row.startsWith("事实表 JSON："));
+  if (!line) {
+    throw new Error("八字 mock 请求缺少事实表");
+  }
+  const rows: unknown = JSON.parse(line.slice("事实表 JSON：".length));
+  if (!Array.isArray(rows)) {
+    throw new Error("八字 mock 事实表格式错误");
+  }
+  const facts: FactTable = new Map();
+  for (const row of rows) {
+    if (!row || typeof row.id !== "string" || typeof row.label !== "string"
+      || !Array.isArray(row.tokens) || !row.tokens.every((token: unknown) => typeof token === "string")) {
+      throw new Error("八字 mock 事实条目格式错误");
+    }
+    facts.set(row.id, { id: row.id, label: row.label, tokens: new Set<string>(row.tokens) });
+  }
+  return facts;
+}
+function factsFromPrompt(prompt: string): FactTable {
+  const facts: FactTable = new Map();
+  for (const line of prompt.split("\n")) {
+    const match = line.match(/^([a-z-]+(?::\w+)?)[：](.+)$/u);
+    if (match?.[1] && match[2]) {
+      facts.set(match[1], {
+        id: match[1],
+        label: match[2],
+        tokens: new Set<string>(),
+      });
+    }
+  }
+  return facts;
+}
+export class MockSchoolsProvider implements StructuredOutputProvider {
+  readonly modelId = "sanyi-mock-schools";
+  readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
+  readonly providerConfigHash = hashJson(this.providerConfig);
+  async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    const bazi = request.taskId.match(/^sanyi\/(destiny|fortune)\/(shenxiaozhan|yuchuntai|rentieqiao)$/u);
+    if (bazi) {
+      return mockBaziSchoolOutput(bazi[2] as BaziSchoolKey, baziFactsFromPrompt(request.userPrompt),
+        bazi[1] as "destiny" | "fortune") as T;
+    }
+    const key = request.taskId.split("/").at(-1) as QuestionSchoolKey;
+    if (!["chengyi", "jingfang", "shaoyong"].includes(key)) {
+      throw new Error(`mock provider 不支持任务：${request.taskId}`);
+    }
+    return mockSchoolOutput(key, factsFromPrompt(request.userPrompt)) as T;
+  }
+}
+/** 排练也使用标准转账日志，走与真实付款相同的纯函数核验。 */
+export function mockSingleFeeReceipt(proof: SanyiFeeProof): ReturnType<typeof verifySingleFeeTransfer> {
+  const recipient = feeRecipientFromEnv({});
+  const abi = parseAbi(["event Transfer(address indexed from,address indexed to,uint256 value)"]);
+  return verifySingleFeeTransfer({
+    payer: proof.payer, recipient, amountUsdc6: FEE_USDC6,
+    receipt: {
+      status: "success", blockNumber: 1n, transactionHash: proof.transactionHash,
+      logs: [{
+          address: USDC_TOKEN_ADDRESS,
+          topics: encodeEventTopics({
+            abi, eventName: "Transfer", args: { from: proof.payer, to: recipient },
+          }) as [
+            Hex,
+            ...Hex[]
+          ],
+          data: encodeAbiParameters([{ type: "uint256" }], [FEE_USDC6]),
+        }],
+    },
+  });
+}
+```
+
+- [ ] **Step 3：运行 B4 的全部测试，预期 22 项通过。** 三家 × 命理/运势 × 已知/缺时柱均通过 Schema、一致性、核对与真实 mock provider 路由；原有问事 mock 路径、事实解析与付款 mock 行为保持回归。
+
+### Task B4.7：字段契约与交叉验收
+
+- [ ] **Step 1：核对 B2.3 样稿字段契约。** 命理不含吉凶把握；运势逐年格子按 year 取 verdict/confidenceTenths，点选短评取 note；「留意 某月」取 timing.window，并显示 condition，无值不造标签。
+- [ ] **Step 2：运行 11 个新增测试文件及两种类型检查。** 使用下方验证记录中的完整命令，禁止仅凭 mock 返回 done 就宣称所有要求通过。
+- [ ] **Step 3：运行 `npm test`，保留所有监听端口测试与 1A 回归。** 沙箱拒绝本机监听时如实记录 EPERM，不跳过或改动测试；主管在允许监听的隔离环境复跑。
+- [ ] **Step 4：核对 bazi-three-schools 的逐年输出、核对、缺时柱及失败隔离场景。** B4 只准备完整代码，项目尚未实施，不勾 OpenSpec 2.5；逐年合议算术平均与失败家排除由 B5 完成。
 
 ## Chunk B5：编排、接口与排练（命理、运势、换日切换、生辰隐私）
 
@@ -2176,16 +3528,41 @@ export function lookupQiongtong(dayStem: string, monthBranch: string): Qiongtong
 
 ## 本轮计划代码验证记录
 
-全部代码块按首行路径抽到 `/private/tmp/sanyi-round2`，JSON/Python 去路径标记；隔离目录复制既有代码并复用现有 node_modules。Python 使用项目现有 `.venv-tools/bin/python`，不安装依赖。下列记录为计划代码验证，不代表项目实现，也不勾选任何任务。
+全部代码块按首行路径抽到 `/private/tmp/sanyi-round3`；JSON/Python 去路径标记，TypeScript 保留路径注释。隔离目录复制既有 src/tests/scripts/web/tools、README、示例配置与 contracts，复用现有 node_modules。Python 使用项目现有 `.venv-tools/bin/python`，不安装依赖。最终从计划重新抽取后执行下列命令，记录仅证明计划代码可复现，不代表工作区实现，不勾选任务或 OpenSpec tasks。
 
-- RED：修订 B2 测试在旧 B2 实现上失败；B3 关系与调候测试在模块缺失时失败，日志分别为 `sanyi-red.log`、`b3-red.log`、`q-red.log`（隔离日志）。
-- Python 语法：隔离目录运行项目现有 Python 的 `-m py_compile tools/bazi/generate_fixtures.py`，退出码 0。
-- 基准：隔离目录运行项目现有 Python 的 `tools/bazi/generate_fixtures.py`，生成 55 个双源时刻；55 × 2 × 4 四柱比较通过。
-- 新增测试：隔离目录 `node --import tsx --test tests/solar-time.test.ts tests/birth-profile.test.ts tests/bazi.test.ts tests/bazi-fixtures.test.ts tests/bazi-relations.test.ts tests/qiongtong.test.ts`，26 项通过，0 失败。
-- 项目类型：隔离目录 `npm run typecheck`，原有三项严格开关开启，退出码 0。
-- 代码块严格类型：隔离目录 `node_modules/.bin/tsc --noEmit --strict --noUncheckedIndexedAccess --exactOptionalPropertyTypes --skipLibCheck false --module NodeNext --moduleResolution NodeNext --target ES2022 src/types/lunar-javascript.d.ts tests/solar-time.test.ts tests/birth-profile.test.ts tests/bazi.test.ts tests/bazi-fixtures.test.ts tests/bazi-relations.test.ts tests/qiongtong.test.ts`，退出码 0。
-- 全量回归：最终重新抽取后隔离目录执行 `npm test`，378 项中 370 项通过；8 项现有 frontend-server 测试均因沙箱拒绝监听 `127.0.0.1`（`listen EPERM`）失败。未跳过、篡改或模拟这些测试，不能宣称全量通过；主管可在允许本机监听的隔离环境复跑。
-- 限制：额外把整个旧项目的 `skipLibCheck` 关闭，会出现既有 `@wagmi/core` 等第三方声明错误；本轮未修改依赖。以上代码块严格检查关闭 skipLibCheck 且无错，项目检查沿用其原配置。
+- RED：B2/B3 修订测试先对旧代码失败，见 `/private/tmp/sanyi-round3-revision-red.log`；B4 全部测试在新模块缺失时失败，见 `/private/tmp/sanyi-round3-b4-red.log`。不存在关系词、普通判断用语各有独立 RED→GREEN 日志，前缀分别为 `sanyi-round3-invalid-relation`、`sanyi-round3-prose`。
+- Python 语法：`/Users/captain/python/Claude/arc-main-first/.venv-tools/bin/python -m py_compile tools/bazi/generate_fixtures.py`，退出码 0。
+- 双源基准：同一 Python 运行 `tools/bazi/generate_fixtures.py`，生成 55 个时刻；测试逐字段核验 55 × 2 × 4 四柱，全部通过。
+- 新增测试：下列 11 文件共 50 项（B1–B3 28 项，B4 22 项），50 通过、0 失败，日志 `/private/tmp/sanyi-round3-all-new.log`。
+
+```bash
+node --import tsx --test \
+  tests/solar-time.test.ts tests/birth-profile.test.ts \
+  tests/bazi.test.ts tests/bazi-fixtures.test.ts \
+  tests/bazi-relations.test.ts tests/qiongtong.test.ts \
+  tests/sanyi-bazi-schema.test.ts tests/sanyi-bazi-facts.test.ts \
+  tests/sanyi-bazi-audit.test.ts tests/sanyi-bazi-schools.test.ts \
+  tests/sanyi-bazi-school-runner.test.ts
+```
+
+- 项目类型：隔离目录 `npm run typecheck`，原有 strict、noUncheckedIndexedAccess、exactOptionalPropertyTypes 均开启，退出码 0，日志 `/private/tmp/sanyi-round3-typecheck.log`。
+- 代码块严格类型：下列命令覆盖全部新增模块、测试及新增声明，关闭 skipLibCheck，退出码 0、0 错，日志 `/private/tmp/sanyi-round3-strict.log`。
+
+```bash
+node_modules/.bin/tsc --noEmit --strict \
+  --noUncheckedIndexedAccess --exactOptionalPropertyTypes \
+  --skipLibCheck false --module NodeNext --moduleResolution NodeNext \
+  --target ES2022 src/types/lunar-javascript.d.ts \
+  tests/solar-time.test.ts tests/birth-profile.test.ts \
+  tests/bazi.test.ts tests/bazi-fixtures.test.ts \
+  tests/bazi-relations.test.ts tests/qiongtong.test.ts \
+  tests/sanyi-bazi-schema.test.ts tests/sanyi-bazi-facts.test.ts \
+  tests/sanyi-bazi-audit.test.ts tests/sanyi-bazi-schools.test.ts \
+  tests/sanyi-bazi-school-runner.test.ts
+```
+
+- 全量回归：最终抽取后执行 `npm test`，402 项中 394 项通过，8 项既有 frontend-server 测试均因沙箱拒绝监听 `127.0.0.1`（`listen EPERM`）失败；未跳过或改动这些测试，不能宣称全量通过。日志 `/private/tmp/sanyi-round3-regression.log`，主管可在允许本机监听的隔离环境复跑。其余 1A 问事、mock、核对、黄历、奇门、付款与 API 回归通过。
+- 限制：全项目类型检查沿用原 tsconfig 的 skipLibCheck；上述新代码依赖范围额外关闭 skipLibCheck 验证，不改第三方声明或依赖。
 
 ### 分块行数与交付清单
 
@@ -2193,41 +3570,43 @@ export function lookupQiongtong(dayStem: string, monthBranch: string): Qiongtong
 
 | Chunk | 行数 | 交付 |
 |---|---:|---|
-| B1 | 755 | 按审查修订，完整测试与实现已替换 |
-| B2 | 695 | 按审查修订，完整测试与实现已替换 |
-| B3 | 579 | B3.1 关系；B3.2 神煞；B3.3 五行；B3.4 调候；B3.5 契约与验收 |
+| B1 | 755 | 保持前轮已核验内容 |
+| B2 | 727 | 展开代码风格，警示去重，补输出与样稿字段契约 |
+| B3 | 701 | 通行关系标签、原局半合保留、风格展开、调候裁定与回归 |
+| B4a | 637 | B4.1 Schema；B4.2 事实表；B4.3 最长匹配核对，完整测试与实现 |
+| B4b | 562 | B4.4 三家输入；B4.5 单家运行器；B4.6 mock 路由；B4.7 交叉验收 |
 
-三个完整 Chunk 均 ≤ 1000 行，B3 无需拆分。全部代码块非 JSON 行均 ≤ 110 字符（连字符串行也满足），首行均为 `// 路径`。
+五个完整 Chunk 均 ≤ 1000 行；B3 无需拆分，B4 拆为两块。全部 TypeScript 非 JSON 代码行 ≤ 110 字符，文件代码块首行为路径注释。修订清单：B2/B3 风格、关系通行字序、跨范围三合保留原局半合/拱、交节警示合并、乙巳与戊午删酌用丙、取材规则与已裁定歧义记录；B4 全部范围及测试已给出。
 
 ## 待主管确认的口径
 
-1. 原始生辰、校正前后时刻只在本机或请求期展示，服务端持久化只留派生盘与非可逆校正状态。分享者不能重排；免费换日需重传本机生辰。沿用上一轮隐私边界。
-2. 调候自动检查不等于用干语义核验。以下清单逐项说明暂定取舍，主管抽查时重点复核；完整 JSON 已提供，不因待审查而省略条目。
+1. 本轮无新增字段或阻塞疑点需主管确认。沿用已授权隐私边界：原始生辰及校正前后时刻只在本机或请求期展示，服务端只存派生盘与非可逆校正状态；分享者不能重排，免费换日重传本机生辰。
+2. B4 没有新增输出字段；「留意 某月」沿用 timing。取材裁定全部落实，无需重复确认。下表保留已裁定理由供后续实施和复核。
 
-### 取材有歧义的条目
+### 已裁定的取材歧义记录
 
 | 日干、月令 | 本轮取舍及原文依据 |
 |---|---|
 | 甲卯 | 月条只讲庚「阳刃驾杀」，无明确顺序；取本节「凡三春甲木，用庚者…用丁者…」为庚、丁，不把庚戊上命当作明确用干 |
 | 甲午、未 | 共用「五六月甲木」原段，但该段明分五月先癸后丁庚次、六月先丁后庚且无癸亦可；午取癸丁庚，未取丁庚 |
 | 甲戌 | 月条「独爱丁火，壬癸滋扶」与后文「耑用丁癸」有差别；采用明确总结丁、癸，未把壬并入 |
-| 乙巳 | 主取癸，丙酌用，庚辛佐癸；收癸丙庚辛，保留条件性辅助项，不把「须辛透为清」改写为删庚 |
-| 乙午、未 | 午原段上下半月取法不同，暂收癸、丙；未段丙为尊、癸透贵，暂收丙、癸；月份内差异交三家结合命局判断 |
-| 乙申、酉 | 申月条明确己土为用，暂只收己，未把季总论丙癸追加；酉按月条白露专癸、秋分后丙癸，收癸丙 |
+| 乙巳 | 主取癸，丙仅「酌用」不收，庚辛佐癸照收；已裁定为癸、庚、辛，不把「须辛透为清」改写为删庚 |
+| 乙午、未 | 午原段上下半月取法不同，收癸、丙；未段丙为尊、癸透贵，收丙、癸；月份内差异交三家结合命局判断 |
+| 乙申、酉 | 申月条明确己土为用，只收己，未把季总论丙癸追加；酉按月条白露专癸、秋分后丙癸，收癸丙 |
 | 乙丑 | 底本没有十二月月条；取同冬章「耑以丙火为用，方妙」，只收丙，不移植其它版本的十二月用干 |
-| 丙午 | 月条只写得壬高透、无庚也可；暂只收壬，不把庚作为必选；「为上命」是推荐措辞而非「用」字 |
+| 丙午 | 月条只写得壬高透、无庚也可；只收壬，不把庚作为必选；「为上命」是推荐措辞而非「用」字 |
 | 丙亥 | 总结「木旺宜庚，水旺宜戊，火旺用壬」是条件性并列；收庚戊壬，不收开篇甲戊庚仅成贵格的甲 |
-| 丁巳、午 | 巳「取甲…必用庚」，取甲庚；午不宜乱用甲，但非火局有水透干时须用甲庚，暂取该条件句，不将条件隐藏为必用 |
+| 丁巳、午 | 巳「取甲…必用庚」，取甲庚；午不宜乱用甲，但非火局有水透干时须用甲庚；因只有条件句、无可用季总论，已裁定收甲庚，保留该条件说明，不将条件隐藏为必用 |
 | 丁申、酉、戌 | 季总论明确七月甲丙、八月甲丙庚、九月甲庚；按分月指明，不以随后七月月条甲庚丙覆盖总论 |
 | 丁亥、子、丑 | 共取三冬「耑用庚甲」；子月另写从杀用戊为特殊格，未作为通用调候并入 |
 | 戊寅、卯、辰 | 同春总论明确正二月先丙后甲癸又次，三月先甲后丙癸又次；同摘句不同排序 |
-| 戊午、未、戌 | 午壬甲主用、丙酌用收壬甲丙，不收「用癸力微」的癸；未取癸丙甲；戌取通常甲癸，「见金」癸丙为条件变化，不并入丙 |
-| 己寅 | 月首「丙为尊」是推荐，暂收丙；壬多才须戊作堤，不将条件救应戊列为通用调候 |
+| 戊午、未、戌 | 午壬甲主用、丙仅「酌用」不收，已裁定壬甲，不收「用癸力微」的癸；未取癸丙甲；戌取通常甲癸，「见金」癸丙为条件变化，不并入丙 |
+| 己寅 | 月首「丙为尊」是推荐，收丙；壬多才须戊作堤，不将条件救应戊列为通用调候 |
 | 己申、酉、戌 | 取季总结癸丙辛；戌明确土盛宜甲疏，再加甲，不以其它条件甲透者富改动申酉 |
 | 己亥、子、丑 | 季段丙为尊、余用丙丁；亥另取戊制壬，收丙戊丁；子丑收丙丁。甲仅「参酌」未收；戊癸「不用」中的癸未收，戊仅在亥按后句例外收 |
-| 庚卯、酉、亥、丑 | 卯专丁、借甲引丁暂收丁甲，不收无丁才用丙；酉丁甲丙皆为明确助成；亥「非丁莫造、非丙不暖」暂收丁丙，甲只写成贵组合未收；丑先丙次丁且甲不可少，暂收丙丁甲。亥措辞需主管确认是否满足严格取材词规则 |
-| 辛寅、卯、巳、申、子 | 寅取己壬，庚制甲是条件救应未并入；卯壬为尊、甲制土暂收壬甲；巳喜壬洗淘暂收壬；申取本月「壬水为尊」只收壬，甲戊参酌不收；子壬丙两透荐取壬丙，癸为病不收；这些推荐句未必逐字含「用/取」 |
-| 壬寅、午、未、酉、亥 | 寅明确宜用庚，只收庚，不把丙戊成贵组合当通用用干；午癸用庚佐且辛癸参用，收癸庚辛；未优先同段更明确「先辛后甲，次取癸」；酉明确总结甲庚；亥戊用、庚制甲辅助，暂收戊庚 |
-| 癸辰、巳、戌、丑 | 辰丙主、谷雨后辛甲佐，收丙辛甲；巳辛用、无辛用庚，收辛庚；戌辛用、甲制戊暂收辛甲；比肩没有明确指定天干，不将癸并入；丑宜丙解冻只收丙，不将壬透与戊条件成贵组合并入 |
+| 庚卯、酉、亥、丑 | 卯专丁、借甲引丁收丁甲，不收无丁才用丙；酉丁甲丙皆为明确助成；亥「非丁莫造、非丙不暖」收丁丙，甲只写成贵组合未收；丑先丙次丁且甲不可少，收丙丁甲。亥措辞已裁定满足明确用神规则 |
+| 辛寅、卯、巳、申、子 | 寅取己壬，庚制甲是条件救应未并入；卯壬为尊、甲制土收壬甲；巳喜壬洗淘收壬；申取本月「壬水为尊」只收壬，甲戊参酌不收；子壬丙两透荐取壬丙，癸为病不收；这些推荐句已按裁定视为明确用神 |
+| 壬寅、午、未、酉、亥 | 寅明确宜用庚，只收庚，不把丙戊成贵组合当通用用干；午癸用庚佐且辛癸参用，收癸庚辛；未优先同段更明确「先辛后甲，次取癸」；酉明确总结甲庚；亥戊用、庚制甲辅助，收戊庚 |
+| 癸辰、巳、戌、丑 | 辰丙主、谷雨后辛甲佐，收丙辛甲；巳辛用、无辛用庚，收辛庚；戌辛用、甲制戊收辛甲；比肩没有明确指定天干，不将癸并入；丑宜丙解冻只收丙，不将壬透与戊条件成贵组合并入 |
 
-这些条目中「为尊、宜、喜、不可少」暂按明确推荐处理；若主管要求取材词只能逐字限定为「用、取、先、次、佐」，需确认无对应措辞的月条能否改采同季其他明确用句。测试只能证明本轮摘句与用干存在，不能证明此解释已获批准。
+上述 21 组已按主管本轮裁定同步 JSON：乙巳、戊午删除酌用丙，丁午保留条件性取甲庚，其余 19 组照准。癸午「庚辛壬参酌并用」因有并用照收，不与单独参酌混同。本轮不再请求主管重复确认已裁定的取材口径。
