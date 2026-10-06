@@ -1,3 +1,4 @@
+import { WalletBar } from "../components/WalletBar.js";
 // web/pages/Reading.tsx
 import { useCallback, useEffect, useState } from "react";
 import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
@@ -166,6 +167,7 @@ export function Reading({ id }: { id: string }) {
         <span className="seal">问</span>
         <span className="brand">三易</span>
         <a href="#/">返回首页</a>
+        <WalletBar />
       </header>
       {view ? <ShikongBar data={view} /> : null}
       {reading.chart?.month.boundaryUncertain ? <p className="boundary-tag">月建 · 近交节</p> : null}

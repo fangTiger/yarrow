@@ -1,3 +1,4 @@
+import { WalletBar } from "../components/WalletBar.js";
 // web/pages/Home.tsx
 import { useState } from "react";
 import { QuestionForm } from "../components/QuestionForm.js";
@@ -11,6 +12,7 @@ export function Home() {
       <header className="topbar">
         <span className="seal">问</span>
         <span className="brand">三易</span>
+        <WalletBar />
       </header>
       <ShikongBar />
       <div className="home-grid">

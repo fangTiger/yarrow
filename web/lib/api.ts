@@ -1,7 +1,8 @@
 // web/lib/api.ts
-import type { QuestionFeeProof } from "../../src/oracle/fee-payment.js";
+import type { SanyiFeeProof } from "../../src/sanyi/fee.js";
 import type { SanyiApi } from "../../src/sanyi/api.js";
 import type { QuestionSchoolKey } from "../../src/sanyi/schools/index.js";
+export type PaymentConfiguration = Awaited<ReturnType<SanyiApi["payment"]>>;
 export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
 export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
 export type PublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
@@ -11,7 +12,7 @@ export interface CreateReadingInput {
   kind: Classification["kind"];
   subjectKey?: string;
   horizon?: string;
-  feeProof: QuestionFeeProof;
+  feeProof: SanyiFeeProof;
 }
 export class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly readingId?: string) {
@@ -36,6 +37,7 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     }),
   }));
   return {
+    getPayment: () => request<PaymentConfiguration>("/api/payment"),
     getNow: () => request<NowResponse>("/api/now"),
     classify: (question: string) => request<Classification>("/api/classify", { question }),
     createReading: (input: CreateReadingInput) => request<PublicReading>("/api/readings", input),

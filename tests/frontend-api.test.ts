@@ -21,3 +21,13 @@ test("非 JSON 错误仍给中文消息", async () => {
     return error instanceof ApiError && error.status === 503 && error.message === "请求未能完成";
   });
 });
+
+test("getPayment 只读请求服务器付款配置", async () => {
+  const payment = { recipient: "0x1234", amountUsdc6: "50000", token: "0x3600", chainId: 5042002 };
+  const api = createApiClient(async (path, options) => {
+    assert.equal(path, "/api/payment");
+    assert.equal(options?.method, undefined);
+    return new Response(JSON.stringify(payment));
+  });
+  assert.deepEqual(await api.getPayment(), payment);
+});

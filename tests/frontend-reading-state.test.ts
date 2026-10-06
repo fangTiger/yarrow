@@ -76,7 +76,18 @@ test("合议只平均已完成且有输出的家", () => {
 
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Reading } from "../web/pages/Reading.js";
+import { registerHooks } from "node:module";
+// 组合测试隔离外部钱包上下文；钱包状态由纯函数测试覆盖，不加载构建期配置。
+const walletHook = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.endsWith("/WalletBar.js")) {
+      return { url: "data:text/javascript,export function WalletBar() { return null; }", shortCircuit: true };
+    }
+    return nextResolve(specifier, context);
+  },
+});
+const { Reading } = await import("../web/pages/Reading.js");
+walletHook.deregister();
 import { buildLiuyaoChart, deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
 import { almanacAt } from "../src/calendar/almanac.js";
 

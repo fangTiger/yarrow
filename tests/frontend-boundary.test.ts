@@ -58,5 +58,5 @@ test("浏览器可以签钱包交易，但不能接触任何私钥、助记词�
   // 钱包签名能力随付款钩子迁至 web/lib/use-fee-payment.ts；该文件同样纳入秘密扫描。
   const feePayment = await source("web/lib/use-fee-payment.ts");
   assert.doesNotMatch(feePayment, /PRIVATE_KEY|privateKey|mnemonic|viem\/accounts|privateKeyToAccount|mnemonicToAccount/);
-  assert.match(feePayment, /useWalletClient/);
+  assert.match(feePayment, /getWalletClient/);
 });

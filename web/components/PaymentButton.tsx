@@ -1,4 +1,5 @@
 // web/components/PaymentButton.tsx
+import { truncateAddress } from "../lib/wallet-summary.js";
 import { useState } from "react";
 import { formatUnits } from "viem";
 import { api, ApiError } from "../lib/api.js";
@@ -6,7 +7,7 @@ import { saveRecentReading } from "../lib/recent-readings.js";
 import { useFeePayment } from "../lib/use-fee-payment.js";
 import type { ClassificationView } from "./ClassificationTags.js";
 export function PaymentButton(props: { question: string; classification: ClassificationView }) {
-  const { pay, estimatedGasWei18 } = useFeePayment();
+  const { pay, payment, estimatedGasWei18, connectionMessage } = useFeePayment();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const submit = async () => {
@@ -43,7 +44,7 @@ export function PaymentButton(props: { question: string; classification: Classif
   return (
     <div>
       <p className="hint">
-        金额：0.05 USDC；去向：三易卦金账户；预估 gas：{gas}。
+        0.05 USDC → 三易收款地址 {payment ? truncateAddress(payment.recipient) : "正在读取"} · 预估 gas {gas}
       </p>
       <button
         className="button button-primary"
@@ -53,6 +54,7 @@ export function PaymentButton(props: { question: string; classification: Classif
       >
         {busy ? "正在确认" : "问卦 · 0.05 USDC"}
       </button>
+      {connectionMessage ? <p aria-live="polite" className="hint">{connectionMessage}</p> : null}
       {error ? <p className="error">{error}</p> : null}
     </div>
   );
