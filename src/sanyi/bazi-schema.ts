@@ -56,7 +56,7 @@ export const FORTUNE_SCHOOL_SCHEMA = {
         properties: {
           year: { type: "integer", minimum: 1900, maximum: 2099 },
           verdict: properties.verdict, confidenceTenths: properties.confidenceTenths,
-          note: { type: "string", minLength: 1, maxLength: 16 },
+          note: { type: "string", minLength: 1, maxLength: 24 },
         },
       },
     },

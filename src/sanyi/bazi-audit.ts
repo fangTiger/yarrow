@@ -1,5 +1,6 @@
 // src/sanyi/bazi-audit.ts
 import { baziRelationWords } from "../calendar/bazi-relations.js";
+import lunarPkg from "lunar-javascript";
 import { tokenizeClaim } from "./audit.js";
 import { isNatalFact } from "./bazi-facts.js";
 import type { BaziSchoolOutput } from "./bazi-schema.js";
@@ -9,6 +10,13 @@ for (const word of baziRelationWords()) {
   aliases.set(word, word);
   if (!word.includes("三合") && !word.includes("三会")) {
     aliases.set(word.charAt(1) + word.charAt(0) + word.slice(2), word);
+  }
+  // 行文常把半合、拱合简称「巳酉合金」「申辰合水」，按同局同五行归一，五行不符的不放行。
+  const partial = word.match(/^(.)(.)(?:半合|拱)(.)$/u);
+  if (partial) {
+    const [, left, right, element] = partial;
+    aliases.set(`${left}${right}合${element}`, word);
+    aliases.set(`${right}${left}合${element}`, word);
   }
 }
 const EXTRA_WORDS = [
@@ -53,6 +61,33 @@ function words(text: string): string[] {
 function union(facts: FactTable): Set<string> {
   return new Set([...facts.values()].flatMap((fact) => [...fact.tokens]));
 }
+function hiddenStemErrors(text: string): string[] {
+  const stems = "[甲乙丙丁戊己庚辛壬癸]";
+  const branches = "[子丑寅卯辰巳午未申酉戌亥]";
+  const stemItem = `${stems}[金木水火土]?(?:比肩|劫财|食神|伤官|偏财|正财|七杀|正官|偏印|正印)?`;
+  // 只解析紧邻连接词的干支与明确列举，不跨越自由正文或逗号寻找天干。
+  const branchFirst = new RegExp(`(${branches}+)(?:[中内]藏?|藏)(${stemItem}(?:[、与和及]?${stemItem})*)`, "gu");
+  // 复用普通词表，避免将“藏辰未透”里的“未透”算作第二个地支。
+  const branchItem = `(?!(?:${[...NON_GANZHI_WORDS].join("|")}))${branches}`;
+  const stemFirst = new RegExp(`(${stems})[金木水火土]?藏(?:于)?((?:${branchItem})+)(?:[中内])?`, "gu");
+  const errors = new Set<string>();
+  function check(branchList: string, stemList: string): void {
+    for (const branch of branchList) {
+      for (const stem of stemList.match(new RegExp(stems, "gu")) ?? []) {
+        if (!lunarPkg.LunarUtil.ZHI_HIDE_GAN[branch]?.includes(stem)) {
+          errors.add(`${branch}中不藏${stem}`);
+        }
+      }
+    }
+  }
+  for (const match of text.matchAll(branchFirst)) {
+    check(match[1]!, match[2]!);
+  }
+  for (const match of text.matchAll(stemFirst)) {
+    check(match[2]!, match[1]!);
+  }
+  return [...errors];
+}
 export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
   ok: boolean;
   errors: string[];
@@ -62,6 +97,9 @@ export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
   const currentFacts = new Map([...facts].filter(([id]) => !/^year:\d{4}$/u.test(id)));
   const currentTokens = union(currentFacts);
   function check(text: string, allowed: ReadonlySet<string>, label: string): void {
+    for (const error of hiddenStemErrors(text)) {
+      errors.push(`${label} ${error}`);
+    }
     for (const word of words(text)) {
       if (!allowed.has(word)) {
         errors.push(`${label} 不支持关键词：${word}`);

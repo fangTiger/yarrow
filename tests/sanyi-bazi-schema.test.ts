@@ -18,13 +18,16 @@ test("命理拒绝吉凶、把握、逐年字段，五分项标题顺序固定",
   const sections = [...output.sections].reverse();
   assert.throws(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, { ...output, sections }));
 });
-test("运势必填逐年列表，短评不得超过十六字", () => {
+test("运势必填逐年列表，短评不得超过二十四字", () => {
   const output = fortune();
   assert.doesNotThrow(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, output));
   const { years, ...missing } = output;
   assert.throws(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, missing));
+  assert.doesNotThrow(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, {
+    ...output, years: years.map((item) => ({ ...item, note: "甲".repeat(24) })),
+  }));
   assert.throws(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, {
-    ...output, years: years.map((item) => ({ ...item, note: "甲".repeat(17) })),
+    ...output, years: years.map((item) => ({ ...item, note: "甲".repeat(25) })),
   }));
 });
 test("年份缺漏、多出、乱序都失败", () => {

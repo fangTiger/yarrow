@@ -67,6 +67,29 @@ test("运行器自行校验 Schema，结构失败也只重写一次", async () =
   assert.equal(result.status, "failed");
   assert.equal(calls, 2);
 });
+test("结构失败时重写提示写明具体字段与限制", async () => {
+  const input = sampleBazi("fortune");
+  const school = BAZI_SCHOOLS[0];
+  assert.ok(school);
+  const good = mockBaziSchoolOutput(school.key, selectBaziFacts(school.key, input), "fortune");
+  const tooLong = {
+    ...good,
+    years: good.years.map((year, index) => {
+      return index === 3 ? { ...year, note: "丙午七杀攻身，午午自刑，火炎土燥，宜守成而不宜进取冒进" } : year;
+    }),
+  };
+  const prompts: string[] = [];
+  const provider = new MockSchoolsProvider();
+  provider.generateStructured = async <T>(request: StructuredOutputRequest): Promise<T> => {
+    prompts.push(request.userPrompt);
+    return (prompts.length === 1 ? tooLong : good) as T;
+  };
+  const result = await runBaziSchool({ provider }, { ...input, school });
+  assert.equal(result.status, "done");
+  assert.equal(prompts.length, 2);
+  assert.match(prompts[1] ?? "", /years\/3\/note/);
+  assert.match(prompts[1] ?? "", /不超过 24 字/);
+});
 test("三家命理运势 mock 全通过，窗口年份与锚项吻合", async () => {
   for (const kind of ["destiny", "fortune"] as const) {
     for (const timeKnown of [true, false]) {

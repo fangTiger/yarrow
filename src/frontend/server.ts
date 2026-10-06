@@ -203,7 +203,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const logger = createSanyiLogger();
   const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
   const bazi = new BaziReadingService({ store, logger, feeVerifier,
-    provider: createDefaultProvider({ maxTokens: 4_096 }), clock: () => new Date() });
+    // 八字运势含十年逐年断语，输出较长，放宽输出上限与单次超时。
+    provider: createDefaultProvider({ maxTokens: 8_192, timeoutMilliseconds: 90_000 }),
+    clock: () => new Date() });
   const service = new ReadingService({
     feeVerifier,
     blockSource: {

@@ -78,6 +78,23 @@ test("有锚定的跨柱关键词通过，无锚定仍拒绝", () => {
   assert.equal(auditBaziOutput({ ...output, evidence: [{ ref: "pillar:year", claim: "宜审慎" }] }, facts).ok, true);
 });
 
+test("「巳酉合金」等简称按半合或拱合核对，年份不符仍拒绝", () => {
+  const input = sampleBazi();
+  const facts = selectBaziFacts("shenxiaozhan", input);
+  const output = mockBaziSchoolOutput("shenxiaozhan", facts, "fortune");
+  function withNote(year: number, note: string) {
+    return { ...output, years: output.years.map((item) => item.year === year ? { ...item, note } : item) };
+  }
+  // 2029 己酉：巳酉半合金；2028 戊申：申辰拱水；2032 壬子：子辰半合水
+  assert.deepEqual(auditBaziOutput(withNote(2029, "己土生身，巳酉合金助身"), facts).errors, []);
+  assert.deepEqual(auditBaziOutput(withNote(2028, "申辰合水，印比帮身"), facts).errors, []);
+  assert.deepEqual(auditBaziOutput(withNote(2032, "子辰合水泄身"), facts).errors, []);
+  // 2024 甲辰仍在甲申运，原局、运、年都没有酉，不存在巳酉半合金（2031 在乙酉运，运支酉与月支巳可成）
+  assert.equal(auditBaziOutput(withNote(2024, "巳酉合金助身"), facts).ok, false);
+  // 五行与局不符的简称不放行
+  assert.equal(auditBaziOutput(withNote(2029, "巳酉合水"), facts).ok, false);
+});
+
 test("跨事实引证不能借用其它年份或其它家事实", () => {
   const input = sampleBazi();
   for (const key of ["shenxiaozhan", "yuchuntai"] as const) {

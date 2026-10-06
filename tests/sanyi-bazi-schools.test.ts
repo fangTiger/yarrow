@@ -23,7 +23,7 @@ test("余春台输入有庚金巳月及原文，沈任输入无调候摘句", ()
     assert.doesNotMatch(school.systemPrompt, CULTURE_FORBIDDEN);
     assert.match(school.systemPrompt, new RegExp(`自称只用本名“${school.name}”`));
     assert.match(prompt, /2023/);
-    assert.match(school.systemPrompt, /十六字/);
+    assert.match(school.systemPrompt, /二十四字/);
     assert.match(school.systemPrompt, /整年/);
   }
 });
@@ -42,3 +42,17 @@ test("命理无流年窗口输入，透干通根按原局确定性组装", () =>
     }
   }
 });
+
+for (const school of BAZI_SCHOOLS) {
+  test(`${school.name} 运势提示词按用神喜忌区分逐年吉凶`, () => {
+    const prompt = school.systemPrompt + school.buildUserPrompt(sampleBazi());
+    assert.match(prompt, /本派.*用神.*喜忌/u);
+    assert.match(prompt, /不要一律写平/u);
+    assert.match(prompt, /生扶用神或制伏忌神/u);
+    assert.match(prompt, /克泄用神或助起忌神/u);
+    assert.match(prompt, /冲合刑害/u);
+    assert.match(prompt, /喜忌相抵/u);
+    assert.match(prompt, /戊土生身，印旺得扶/u);
+    assert.match(prompt, /不得为了凑出起伏而编造事实/u);
+  });
+}
