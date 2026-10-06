@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮修订 B4 并写完 B5a/B5b，B6–B7 后续逐块审查。
+**Goal:** 在已验收的 1A 上完成生辰校正、八字客观排盘、命理与运势三家及隐私安全的结果存档；本轮补四柱身份与公开警示小修，写完 B6a/B6b 表单、结果页及 B7 清理验收，全部代码在隔离目录演练。
 
 **Architecture:** `src/calendar/` 提供确定性的生辰转换、校正与命盘事实，`src/sanyi/` 扩展按类型区分的断语、核对与编排，前端消费明确字段。原始生辰和逐步校正详情只用于请求与本机展示，持久化边界使用字段白名单；八字出生时刻与问事卦时保持独立。
 
@@ -57,6 +57,15 @@
 | `tests/sanyi-bazi-reading-service.test.ts` | 付款幂等、并行失败隔离、重试和换日限额 | B5 |
 | `tests/sanyi-bazi-privacy.test.ts` | 存档、日志、公开响应不含原始生辰及可还原校正详情 | B5 |
 | `web/lib/birth-profile.ts` | 本机本人档案容错存取 | B6 |
+| `web/lib/birth-entry.ts` | 付款前与 400 补问的纯函数 | B6a |
+| `web/lib/liunian-chart.ts` | 流年几何、分组与数据对齐 | B6b |
+| `web/components/BirthEntry.tsx` | 表单与付款插槽隔离 | B6a |
+| `web/components/LiuNianPanel.tsx` | 流年图表及逐年短评 | B6b |
+| `tests/frontend-birth-entry.test.ts` | 缺档案不挂载付款 | B6a |
+| `tests/frontend-liunian-chart.test.ts` | 坐标、交运与空值断线 | B6b |
+| `tests/frontend-bazi-font.test.ts` | 现场摘要与子集字形守卫 | B7 |
+| `tests/sanyi-bazi-public-warnings.test.ts` | 交节日公开警示回归 | B5a |
+| `web/fonts/mashanzheng-subset.sha256` | 执行时生成的字体摘要 | B7 |
 | `web/components/BirthForm.tsx` | 生辰编辑、合法性提示与使用告知 | B6 |
 | `web/components/BirthCorrection.tsx` | 本机生辰摘要与逐步校正展示 | B6 |
 | `web/components/BaziTable.tsx` | 四柱及缺时柱的客观字段展示 | B6 |
@@ -91,20 +100,22 @@
 | `tests/sanyi-rehearsal.test.ts` | 问事与八字排练结果完整性 | B5 |
 | `web/lib/api.ts` | 三种结果的类型化客户端及换日请求 | B6 |
 | `web/lib/reading-state.ts` | 按 reading 类型派生页面状态 | B6 |
-| `web/lib/recent-readings.ts` | 最近记录支持命理和运势类型 | B6 |
 | `web/lib/term-definitions.ts` | 八字字段的就地术语解释 | B6 |
 | `web/components/ClassificationTags.tsx` | 命理和运势标签、时间范围选择 | B6 |
 | `web/components/QuestionForm.tsx` | 付款前生辰补问与改问事退路 | B6 |
 | `web/components/RecentReadings.tsx` | 命理、运势记录标签 | B6 |
-| `web/pages/Home.tsx` | 组合问题入口与本机生辰入口 | B6 |
 | `web/pages/Reading.tsx` | 根据联合类型路由至问事或八字结果 | B6 |
 | `web/styles/components.css` | 八字组件样式 | B6 |
 | `web/styles/layout.css` | 经确认的八字响应式布局 | B6 |
 | `web/fonts/mashanzheng-chars.txt` | 补齐三家姓氏和八字固定标题 | B6 |
+| `web/styles/tokens.css` | 翠色及透明 token 同步 | B6b |
+| `web/components/CoinThrow.tsx` | 问事响应显式收窄 | B6b |
+| `scripts/font-charset.ts` | 重跑仍保留八字固定字 | B6b |
+| `tests/frontend-home.test.ts` | 去除八字未开放的旧期望 | B6a |
+| `tests/frontend-font.test.ts` | 新增固定字守卫 | B6b |
+| `openspec/changes/sanyi-chinese-redesign/specs/birth-profile/spec.md` | 明确校正本机展示边界 | B7 |
 | `web/fonts/mashanzheng-subset.woff2` | 从既有字表与工具重新生成字体资产 | B6 |
 | `tests/frontend-sanyi-content.test.ts` | 八字新增文案继续满足文化守卫 | B7 |
-| `docs/plans/2026-09-30-sanyi-redesign-design.md` | 最终核对已更正命例与窗口说明 | B7 |
-| `openspec/changes/sanyi-chinese-redesign/specs/bazi-chart/spec.md` | 核对命例、流年窗口与关系需求的实施结果 | B7 |
 | `openspec/changes/sanyi-chinese-redesign/tasks.md` | 按实际完成状态更新第 2 节 | B7 |
 
 无需新增依赖；不修改运行时配置、密钥或 1A 历法算法。B7 清理仅限 1B 中间占位与过期提示，不删除仍有调用的问事模块。
@@ -117,7 +128,8 @@
 - Chunk B4a：命理与运势输出 Schema、事实表、最长匹配核对（Task B4.1–B4.3）。
 - Chunk B4b：三家输入与提示词、单家运行器、确定性 mock 与路由（Task B4.4–B4.7）。
 - Chunk B5：编排、接口与排练（命理、运势、换日切换、生辰隐私）。
-- Chunk B6：生辰表单与八字结果页（待用户确认样稿后编写）。
+- Chunk B6a：生辰表单、本机档案与付款前补问。
+- Chunk B6b：八字结果页、流年面板、样式与字体字表。
 - Chunk B7：清理与 1B 验收。
 
 ## 已核对的接口与执行约束
@@ -3904,7 +3916,9 @@ export function derivedChart(chart: BaziChart): BaziChart {
     mingGong: chart.mingGong, shenGong: chart.shenGong, luck: chart.luck, annual: chart.annual,
     birthLiChunYear: chart.birthLiChunYear, liunian: chart.liunian,
     // 请求期警示可能包含节气时刻；公开只给固定、不可逆的缺时柱说明。
-    warnings: chart.timeKnown ? [] : ["时辰未知，缺时柱，起运仅供参考"] };
+    warnings: chart.timeKnown ? [] : [chart.luck === null
+      ? "时辰未知且出生当日交节，年/月柱与大运需补时辰确认"
+      : "时辰未知，缺时柱，起运按正午估算仅供参考"] };
 }
 function doneOutputs(reading: StoredBaziReading): FortuneSchoolOutput[] {
   return Object.values(reading.schools).flatMap((state) => {
@@ -3957,6 +3971,30 @@ export function publicBaziReading(reading: StoredBaziReading) {
 }
 export type PublicBaziReading = ReturnType<typeof publicBaziReading>;
 ```
+
+### Task B5.2R：第 5 轮公开警示回归
+
+- [ ] **Step 1：先落下列测试，在旧公开文案上运行确认断言失败。** 再应用 B5.2 的两种固定警示；不复制请求期节气时刻。
+
+```ts
+// tests/sanyi-bazi-public-warnings.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { buildBaziChart } from "../src/calendar/bazi.js";
+import { derivedChart } from "../src/sanyi/bazi-public.js";
+test("公开警示区分近似大运与出生当日交节，不泄露节气时刻", () => {
+    const input = { corrected: { year: 1990, month: 5, day: 15, hour: 12, minute: 0, second: 0 }, gender: "male" as const, sect: 1 as const, timeKnown: false, targetYear: 2026 };
+    const ordinary = derivedChart(buildBaziChart(input));
+    assert.notEqual(ordinary.luck, null);
+    assert.deepEqual(ordinary.warnings, ["时辰未知，缺时柱，起运按正午估算仅供参考"]);
+    const jie = derivedChart(buildBaziChart({ ...input, corrected: { ...input.corrected, day: 6 } }));
+    assert.equal(jie.luck, null);
+    assert.deepEqual(jie.warnings, ["时辰未知且出生当日交节，年/月柱与大运需补时辰确认"]);
+    assert.doesNotMatch([...ordinary.warnings, ...jie.warnings].join(""), /\d{1,2}:\d{2}|立夏/);
+});
+```
+
+- [ ] **Step 2：运行 `node --import tsx --test tests/sanyi-bazi-public-warnings.test.ts tests/sanyi-bazi-reading-service.test.ts`。** 已知时辰及缺时辰非交节日，都必须拒绝相反性别换日；交节日缺时辰的 luck 为 null 时比较 null，本身没有可区分性别的方向与起运，这是本轮明确要求的边界。
 
 ### Task B5.3：八字编排与免费重跑
 
@@ -4161,6 +4199,9 @@ test("换日重传核验四柱，两次免费重跑；并发请求不越限", as
     await assert.rejects(f.bazi.changeDayBoundary(r.id, { ...birth, day: 16 }, 2), (error: unknown) => {
       return error instanceof Error && error.message === "生辰与本卦命盘不符" && statusForError(error) === 400;
     });
+    await assert.rejects(f.bazi.changeDayBoundary(r.id, { ...birth, gender: "female" }, 2),
+      (error: unknown) => error instanceof Error && statusForError(error) === 400
+        && error.message === "生辰与本卦命盘不符");
     const changed = await f.bazi.changeDayBoundary(r.id, birth, 2);
     assert.equal(changed.changes, 1);
     await f.bazi.whenSettled(r.id);
@@ -4250,6 +4291,19 @@ test("付款前可覆盖分类和范围，问事覆盖不要求生辰，非法�
     await assert.rejects(f.question.throwCoin(r.id, 1), /此接口只适用于问事/);
     await assert.rejects(f.api.retrySchool(r.id, "chengyi"), /此接口只适用于问事/);
     await assert.rejects(f.api.retrySchool(q.id, "yuchuntai"), /此接口只适用于命理或运势/);
+  } finally {
+    await f.close();
+  }
+});
+
+test("缺时辰近似大运也拒绝相反性别换日", async () => {
+  const f = await baziFixture();
+  try {
+    const input = { ...birth, time: null };
+    const r = await f.bazi.create({ kind: "fortune", question: "今年运势如何", birth: input, sect: 1, horizon: "year", feeProof: proof() });
+    await f.bazi.whenSettled(r.id);
+    await assert.rejects(f.bazi.changeDayBoundary(r.id, { ...input, gender: "female" }, 2),
+      (error: unknown) => error instanceof Error && statusForError(error) === 400 && error.message === "生辰与本卦命盘不符");
   } finally {
     await f.close();
   }
@@ -4393,7 +4447,8 @@ export class BaziReadingService {
       }
       const original = chartFrom(birth, current.chart.sect, current.context.anchorYear).chart;
       const signature = (chart: typeof original) => {
-        return Object.values(chart.pillars).map((pillar) => pillar?.ganZhi ?? null);
+        return { pillars: Object.values(chart.pillars).map((pillar) => pillar?.ganZhi ?? null),
+          luck: chart.luck === null ? null : { direction: chart.luck.direction, start: chart.luck.start } };
       };
       if (JSON.stringify(signature(original)) !== JSON.stringify(signature(current.chart))) {
         throw new SanyiInputError("生辰与本卦命盘不符");
@@ -5118,15 +5173,1594 @@ test("模型错误回显生辰不会进入存档、日志或公开响应，重�
 - [ ] **Step 3：运行 `npm test`，回归 1A 全部测试，保留监听端口测试；记录实际失败原因。**
 - [ ] **Step 4：逐项核对六份相关 spec delta 与计划任务状态。** 本轮隔离演练不是工作区实施，所有实施步骤保持未勾，OpenSpec 仍不勾；生辰本机保存、表单告知、八字结果页属于 B6，B5 不宣称整份 1B 已实现。
 
-## Chunk B6：生辰表单与八字结果页
+## Chunk B6a：生辰表单与付款前补问
 
-设计第 11 节已记录样稿确认；后续按含流年面板的最新样稿编写完整任务、界面代码与测试。
+以已确认样稿与 birth-profile、unified-question-entry 为准。继续使用 1A 的 PaymentButton 与 useFeePayment；只扩大请求数据和补问入口，不改转账、钱包确认或付款核验。`Home` 继续组合 QuestionForm，无需重写；最近记录已能存 kind 字符串，无需另造存储版本。
+
+### Task B6.1：本人档案、临时生辰与入口 RED
+
+**文件：** 新建 `web/lib/birth-profile.ts`、`web/lib/birth-entry.ts`、`web/components/BirthForm.tsx`、`web/components/BirthEntry.tsx` 与下列测试；修改 `web/components/QuestionForm.tsx`、`web/components/ClassificationTags.tsx`、`web/components/PaymentButton.tsx`、`web/lib/api.ts`、`tests/frontend-home.test.ts`。
+
+- [ ] **Step 1：只抽出下列两个测试文件，运行 `node --import tsx --test tests/frontend-birth-profile.test.ts tests/frontend-birth-entry.test.ts`。** 模块尚不存在时 RED；测试使用 createElement，不写 JSX，不导入钱包模块。
+
+```ts
+// tests/frontend-birth-profile.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { EMPTY_BIRTH, fromBirthInput, loadBirthProfile, toBirthInput, useBirthProfile } from "../web/lib/birth-profile.js";
+import { needsBirth, isMissingBirth, entryHorizon } from "../web/lib/birth-entry.js";
+import { ApiError } from "../web/lib/api.js";
+test("表单与输入互转，非法日期与不存在闰月就地拒绝", () => {
+    const birth = toBirthInput(EMPTY_BIRTH);
+    assert.deepEqual(toBirthInput(fromBirthInput(birth)), birth);
+    assert.throws(() => toBirthInput({ ...EMPTY_BIRTH, month: "2", day: "30" }), /日期/);
+    assert.throws(() => toBirthInput({ ...EMPTY_BIRTH, calendar: "lunar", year: "2023", month: "3", isLeapMonth: true }), /闰月不存在/);
+    const leap = toBirthInput({ ...EMPTY_BIRTH, calendar: "lunar", year: "2023", month: "2", day: "1", isLeapMonth: true, unknownTime: true });
+    assert.equal(leap.time, null);
+    assert.deepEqual(toBirthInput(fromBirthInput(leap)), leap);
+});
+test("存储读写抛错仍返回本次生辰；临时输入不改本人", () => {
+    const birth = toBirthInput(EMPTY_BIRTH);
+    const broken = { getItem: () => { throw new Error("不可用"); }, setItem: () => { throw new Error("不可用"); } };
+    assert.equal(loadBirthProfile(broken), null);
+    assert.deepEqual(useBirthProfile(birth, true, broken), birth);
+    let saved = "";
+    const storage = { getItem: () => saved || null, setItem: (_key: string, value: string) => { saved = value; } };
+    useBirthProfile(birth, true, storage);
+    assert.deepEqual(loadBirthProfile(storage), birth);
+    const temporary = { ...birth, gender: "female" as const };
+    assert.deepEqual(useBirthProfile(temporary, false, storage), temporary);
+    assert.deepEqual(loadBirthProfile(storage), birth);
+});
+test("付款前命理运势缺档案走表单；400 补问同一路径", () => {
+    assert.equal(needsBirth("destiny", null), true);
+    assert.equal(needsBirth("fortune", null), true);
+    assert.equal(needsBirth("question", null), false);
+    assert.equal(needsBirth("fortune", toBirthInput(EMPTY_BIRTH)), false);
+    assert.equal(isMissingBirth(new ApiError("请先填写生辰", 400)), true);
+    assert.equal(isMissingBirth(new ApiError("请先填写生辰", 503)), false);
+});
+test("自动识别明年与指定年份不会被今年覆盖", () => {
+    assert.equal(entryHorizon("next-year"), "next-year");
+    assert.equal(entryHorizon("year:2027"), "custom");
+    assert.equal(entryHorizon(undefined), "year");
+});
+```
+
+```ts
+// tests/frontend-birth-entry.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { BirthEntry } from "../web/components/BirthEntry.js";
+import { isMissingBirth } from "../web/lib/birth-entry.js";
+import { ApiError } from "../web/lib/api.js";
+const noop = () => { };
+test("命理运势缺档案入口展示表单且不挂载付款；400 同样补问", () => {
+    let payments = 0;
+    for (const kind of ["destiny", "fortune"]) {
+        const html = renderToStaticMarkup(createElement(BirthEntry, { kind, birth: null, open: true, temporary: false, onOpen: noop, onBirth: noop, onFallback: noop, onCancel: noop, payment: () => { payments += 1; return "付款"; } }));
+        assert.match(html, /填写生辰/);
+        assert.match(html, /改为起一卦问事/);
+    }
+    assert.equal(payments, 0);
+    const open = isMissingBirth(new ApiError("请先填写生辰", 400));
+    const html = renderToStaticMarkup(createElement(BirthEntry, { kind: "fortune", birth: null, open, temporary: false, onOpen: noop, onBirth: noop, onFallback: noop, onCancel: noop, payment: () => "付款" }));
+    assert.match(html, /role="dialog"/);
+});
+```
+
+### Task B6.2：表单完整实现与接口适配
+
+- [ ] **Step 1：落入下列四个新文件。** 日期、闰月与时间校验复用 B1；城市与经度互斥，34 城来自同一表。本人档案只用一个存储键；临时输入只保留当前状态。localStorage 属性访问也在 try/catch 内，读取失败不阻止本次提交。
+
+```ts
+// web/lib/birth-profile.ts
+import { normalizeBirthProfile, type BirthProfileInput } from "../../src/sanyi/birth-profile.js";
+export type { BirthProfileInput };
+export interface BirthFormValues {
+    calendar: "solar" | "lunar";
+    year: string;
+    month: string;
+    day: string;
+    isLeapMonth: boolean;
+    time: string;
+    unknownTime: boolean;
+    gender: "male" | "female";
+    placeMode: "city" | "longitude";
+    city: string;
+    longitude: string;
+}
+export const EMPTY_BIRTH: BirthFormValues = {
+    calendar: "solar", year: "1990", month: "5", day: "15", isLeapMonth: false,
+    time: "15:30", unknownTime: false, gender: "male", placeMode: "city", city: "", longitude: "",
+};
+export function toBirthInput(values: BirthFormValues): BirthProfileInput {
+    const parts = values.time.split(":");
+    const input: BirthProfileInput = {
+        calendar: values.calendar, year: Number(values.year), month: Number(values.month), day: Number(values.day),
+        isLeapMonth: values.calendar === "lunar" && values.isLeapMonth,
+        time: values.unknownTime ? null : { hour: Number(parts[0]), minute: Number(parts[1]) }, gender: values.gender,
+    };
+    if (values.placeMode === "city" && values.city) {
+        input.city = values.city;
+    }
+    if (values.placeMode === "longitude" && values.longitude.trim()) {
+        input.longitude = Number(values.longitude);
+    }
+    normalizeBirthProfile(input);
+    return input;
+}
+export function fromBirthInput(input: BirthProfileInput): BirthFormValues {
+    return {
+        calendar: input.calendar, year: String(input.year), month: String(input.month), day: String(input.day),
+        isLeapMonth: input.isLeapMonth, time: input.time ? `${pad(input.time.hour)}:${pad(input.time.minute)}` : "",
+        unknownTime: input.time === null, gender: input.gender,
+        placeMode: input.longitude === undefined ? "city" : "longitude", city: input.city ?? "",
+        longitude: input.longitude === undefined ? "" : String(input.longitude),
+    };
+}
+function pad(value: number): string {
+    return String(value).padStart(2, "0");
+}
+const KEY = "sanyi.birth.self.v1";
+export type BirthStorage = Pick<Storage, "getItem" | "setItem">;
+export function loadBirthProfile(storage?: BirthStorage): BirthProfileInput | null {
+    try {
+        const target = storage ?? globalThis.localStorage;
+        const value = JSON.parse(target.getItem(KEY) ?? "null") as BirthProfileInput | null;
+        if (!value) {
+            return null;
+        }
+        normalizeBirthProfile(value);
+        return toBirthInput(fromBirthInput(value));
+    }
+    catch {
+        return null;
+    }
+}
+export function useBirthProfile(input: BirthProfileInput, remember: boolean, storage?: BirthStorage): BirthProfileInput {
+    normalizeBirthProfile(input);
+    if (remember) {
+        try {
+            const target = storage ?? globalThis.localStorage;
+            target.setItem(KEY, JSON.stringify(input));
+        }
+        catch {
+            // 记住失败不影响本次排盘。
+        }
+    }
+    return input;
+}
+export function birthSummary(input: BirthProfileInput): string {
+    const time = input.time ? `${pad(input.time.hour)}:${pad(input.time.minute)}` : "不知道时辰";
+    let place = input.city ?? "未填出生地";
+    if (input.longitude !== undefined) {
+        place = `经度 ${input.longitude}°`;
+    }
+    const leap = input.isLeapMonth ? "闰" : "";
+    return `${input.calendar === "solar" ? "公历" : "农历"} ${input.year}-${leap}${pad(input.month)}-${pad(input.day)} ${time} · ${input.gender === "male" ? "男" : "女"} · ${place}`;
+}
+```
+
+```ts
+// web/lib/birth-entry.ts
+import { ApiError } from "./api.js";
+import type { BirthProfileInput } from "./birth-profile.js";
+export function needsBirth(kind: string, birth: BirthProfileInput | null): boolean {
+    return (kind === "destiny" || kind === "fortune") && birth === null;
+}
+export function isMissingBirth(error: unknown): boolean {
+    return error instanceof ApiError && error.status === 400 && error.message === "请先填写生辰";
+}
+export function entryHorizon(horizon?: string): string {
+    const value = horizon ?? "year";
+    return value.startsWith("year:") ? "custom" : value;
+}
+```
+
+```tsx
+// web/components/BirthForm.tsx
+import { useState } from "react";
+import { readCities } from "../../src/calendar/cities.js";
+import { EMPTY_BIRTH, fromBirthInput, toBirthInput, useBirthProfile, type BirthProfileInput, type BirthFormValues } from "../lib/birth-profile.js";
+export function BirthForm(props: {
+    initial?: BirthProfileInput | null;
+    temporary?: boolean;
+    onBirth(input: BirthProfileInput): void;
+    onFallback(): void;
+    onCancel(): void;
+}) {
+    const [values, setValues] = useState(() => props.initial ? fromBirthInput(props.initial) : EMPTY_BIRTH);
+    const [remember, setRemember] = useState(!props.temporary);
+    const [error, setError] = useState("");
+    function update<K extends keyof BirthFormValues>(key: K, value: BirthFormValues[K]): void {
+        setValues((previous) => ({ ...previous, [key]: value }));
+    }
+    const submit = () => {
+        try {
+            const input = toBirthInput(values);
+            props.onBirth(useBirthProfile(input, remember && !props.temporary));
+        }
+        catch (caught) {
+            setError(caught instanceof Error ? caught.message : "请核对生辰");
+        }
+    };
+    return <section className="panel birth-form" role="dialog" aria-label="填写生辰" aria-modal="false">
+    <h2>{props.temporary ? "本次临时换一个生辰" : "本人生辰"}</h2>
+    <label>历法<select value={values.calendar} onChange={(event) => update("calendar", event.target.value as BirthFormValues["calendar"])}>
+      <option value="solar">公历</option><option value="lunar">农历</option>
+    </select></label>
+    {values.calendar === "lunar" ? <label><input type="checkbox" checked={values.isLeapMonth} onChange={(event) => update("isLeapMonth", event.target.checked)}/>闰月</label> : null}
+    <div className="birth-date">{(["year", "month", "day"] as const).map((key, index) => <label key={key}>{["年", "月", "日"][index]}<input type="number" value={values[key]} onChange={(event) => update(key, event.target.value)}/></label>)}</div>
+    <label>时间<input type="time" disabled={values.unknownTime} value={values.time} onChange={(event) => update("time", event.target.value)}/></label>
+    <label><input type="checkbox" checked={values.unknownTime} onChange={(event) => update("unknownTime", event.target.checked)}/>不知道时辰</label>
+    <label>性别<select value={values.gender} onChange={(event) => update("gender", event.target.value as BirthFormValues["gender"])}><option value="male">男</option><option value="female">女</option></select></label>
+    <label>出生地方式<select value={values.placeMode} onChange={(event) => update("placeMode", event.target.value as BirthFormValues["placeMode"])}><option value="city">城市</option><option value="longitude">手填经度</option></select></label>
+    {values.placeMode === "city" ? <label>出生城市<select value={values.city} onChange={(event) => update("city", event.target.value)}><option value="">未填出生地</option>{readCities().map((city) => <option key={city.name} value={city.name}>{city.name}</option>)}</select></label> : <label>经度<input type="number" step="0.01" value={values.longitude} onChange={(event) => update("longitude", event.target.value)}/></label>}
+    {["香港", "澳门", "台北"].includes(values.city) && values.placeMode === "city" ? <p className="hint">当地历史夏令时不自动校正，请核对出生记录。</p> : null}
+    {!props.temporary ? <label><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)}/>记住本人档案（仅本机）</label> : <p>临时生辰不写入本机档案。</p>}
+    <p>生辰会发送给解读模型提供方。</p>
+    <p>分享结果链接会公开显示命盘（命盘可反推出生日期）。</p>
+    <p className="hint">此处校验只为提示，以服务端为准。</p>
+    {error ? <p role="alert" className="error">{error}</p> : null}
+    <button type="button" onClick={submit}>使用本次生辰</button>
+    <button type="button" onClick={props.onFallback}>改为起一卦问事</button>
+    <button type="button" onClick={props.onCancel}>取消</button>
+  </section>;
+}
+```
+
+```tsx
+// web/components/BirthEntry.tsx
+import type { ReactNode } from "react";
+import { BirthForm } from "./BirthForm.js";
+import { needsBirth } from "../lib/birth-entry.js";
+import type { BirthProfileInput } from "../lib/birth-profile.js";
+export function BirthEntry(props: {
+    kind: string;
+    birth: BirthProfileInput | null;
+    open: boolean;
+    temporary: boolean;
+    onOpen(): void;
+    onBirth(input: BirthProfileInput): void;
+    onFallback(): void;
+    onCancel(): void;
+    payment(): ReactNode;
+}) {
+    const missing = needsBirth(props.kind, props.birth);
+    return <>
+    {props.open ? <BirthForm initial={props.birth} temporary={props.temporary} onBirth={props.onBirth} onFallback={props.onFallback} onCancel={props.onCancel}/> : null}
+    {missing ? <button type="button" className="button button-primary" onClick={props.onOpen}>填写生辰后问卦</button> : <div hidden={props.open}>{props.payment()}</div>}
+  </>;
+}
+```
+
+- [ ] **Step 2：按顺序应用下面的精确修改片段。** 此 diff 基于已实施 B5 的隔离目录；B5 的 PublicReading 问事别名保留，get/create/retry 改为公开联合，问事组件稍后显式收窄。BirthEntry 只包八字入口，1A 问事仍直接挂 PaymentButton。收到缺生辰 400 时表单展开，付款组件隐藏但保持挂载，paidProof 在补填前后保留；创建不成功不再调用 pay。改为其它问题或离页则是新的用户动作，不把付款凭证写入生辰档案。
+
+```diff
+--- a/web/lib/api.ts
++++ b/web/lib/api.ts
+@@ -13,6 +13,8 @@
+   kind: Classification["kind"];
+   subjectKey?: string;
+   horizon?: string;
++  birth?: import("./birth-profile.js").BirthProfileInput;
++  sect?: 1 | 2;
+   feeProof: SanyiFeeProof;
+ }
+ export class ApiError extends Error {
+@@ -41,13 +43,15 @@
+     getPayment: () => request<PaymentConfiguration>("/api/payment"),
+     getNow: () => request<NowResponse>("/api/now"),
+     classify: (question: string) => request<Classification>("/api/classify", { question }),
+-    createReading: (input: CreateReadingInput) => request<PublicReading>("/api/readings", input),
++    createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
+     throwCoin: (id: string, index: number) => request<ThrowResult>(`/api/readings/${id}/throws`, { index }),
+-    getReading: (id: string) => request<PublicReading>(`/api/readings/${id}`),
+-    retrySchool: (id: string, key: QuestionSchoolKey) => request<PublicReading>(
++    getReading: (id: string) => request<AnyPublicReading>(`/api/readings/${id}`),
++    retrySchool: (id: string, key: QuestionSchoolKey | import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey) => request<AnyPublicReading>(
+       `/api/readings/${id}/schools/${key}/retry`,
+       {},
+     ),
++    changeDayBoundary: (id: string, birth: import("./birth-profile.js").BirthProfileInput, sect: 1 | 2) =>
++      request<AnyPublicReading>(`/api/readings/${id}/day-boundary`, { birth, sect }),
+     changeSubject: (id: string, subjectKey: string) => request<PublicReading>(
+       `/api/readings/${id}/subject`,
+       { subjectKey },
+--- a/web/components/ClassificationTags.tsx
++++ b/web/components/ClassificationTags.tsx
+@@ -53,9 +53,7 @@
+           ))}
+         </div>
+       ) : null}
+-      {["destiny", "fortune"].includes(view.kind) ? (
+-        <p>即将开放，可先改为问事</p>
+-      ) : null}
++
+       {!view.supported && view.suggestion ? <p>{view.suggestion}</p> : null}
+       {view.kind !== "question" ? (
+         <button onClick={props.onQuestionFallback} type="button">
+--- a/web/components/PaymentButton.tsx
++++ b/web/components/PaymentButton.tsx
+@@ -1,23 +1,30 @@
+ // web/components/PaymentButton.tsx
+ import { truncateAddress } from "../lib/wallet-summary.js";
++import type { BirthProfileInput } from "../lib/birth-profile.js";
++import { isMissingBirth } from "../lib/birth-entry.js";
++import type { SanyiFeeProof } from "../../src/sanyi/fee.js";
+ import { useState } from "react";
+ import { formatUnits } from "viem";
+ import { api, ApiError } from "../lib/api.js";
+ import { saveRecentReading } from "../lib/recent-readings.js";
+ import { useFeePayment } from "../lib/use-fee-payment.js";
+ import type { ClassificationView } from "./ClassificationTags.js";
+-export function PaymentButton(props: { question: string; classification: ClassificationView }) {
++export function PaymentButton(props: { question: string; classification: ClassificationView; birth?: BirthProfileInput | null; onMissingBirth?(): void }) {
+   const { pay, payment, estimatedGasWei18, connectionMessage } = useFeePayment();
++  const [paidProof, setPaidProof] = useState<SanyiFeeProof>();
+   const [busy, setBusy] = useState(false);
+   const [error, setError] = useState("");
+   const submit = async () => {
+     setBusy(true);
+     setError("");
+     try {
+-      const feeProof = await pay();
++      const feeProof = paidProof ?? await pay();
++      setPaidProof(feeProof);
+       const reading = await api.createReading({
+         question: props.question,
+-        kind: "question",
++        kind: props.classification.kind as "question" | "destiny" | "fortune",
++        ...(props.birth ? { birth: props.birth, sect: 1 as const } : {}),
++        ...(props.classification.horizon ? { horizon: props.classification.horizon } : {}),
+         ...(props.classification.subjectKey
+           ? { subjectKey: props.classification.subjectKey }
+           : {}),
+@@ -34,6 +41,9 @@
+       if (caught instanceof ApiError && caught.status === 409 && caught.readingId) {
+         location.hash = `/r/${caught.readingId}`;
+         return;
++      }
++      if (isMissingBirth(caught)) {
++        props.onMissingBirth?.();
+       }
+       setError(caught instanceof Error ? caught.message : "付款未完成，本次没有扣款");
+     } finally { setBusy(false); }
+--- a/web/components/QuestionForm.tsx
++++ b/web/components/QuestionForm.tsx
+@@ -5,6 +5,9 @@
+   ClassificationTags,
+   type ClassificationView,
+ } from "./ClassificationTags.js";
++import { entryHorizon } from "../lib/birth-entry.js";
++import { BirthEntry } from "./BirthEntry.js";
++import { birthSummary, loadBirthProfile, type BirthProfileInput } from "../lib/birth-profile.js";
+ import { PaymentButton } from "./PaymentButton.js";
+ function fromClassification(value: Classification): ClassificationView {
+   const item = value as Classification & { subject?: { label?: string }; horizon?: string };
+@@ -19,6 +22,10 @@
+   };
+ }
+ export function QuestionForm() {
++  const [birth, setBirth] = useState<BirthProfileInput | null>(loadBirthProfile);
++  const [birthOpen, setBirthOpen] = useState(false);
++  const [temporary, setTemporary] = useState(false);
++  const [horizon, setHorizon] = useState("year");
+   const [question, setQuestion] = useState("");
+   const [view, setView] = useState<ClassificationView>();
+   const [error, setError] = useState("");
+@@ -31,16 +38,24 @@
+     const timer = setTimeout(() => {
+       setClassifying(true);
+       void api.classify(question).then((value) => {
+-        if (active) { setView(fromClassification(value)); setError(""); }
++        if (active) {
++          const nextView = fromClassification(value);
++          setView(nextView);
++          setHorizon(entryHorizon(nextView.horizon));
++          setError("");
++        }
+       }).catch((caught: unknown) => {
+         if (active) setError(caught instanceof Error ? caught.message : "分类暂不可用");
+       }).finally(() => { if (active) setClassifying(false); });
+     }, 400);
+     return () => { active = false; clearTimeout(timer); };
+   }, [question, valid]);
+-  const changeToQuestion = () => setView({
++  const changeToQuestion = () => {
++    setBirthOpen(false);
++    setView({
+     question, kind: "question", supported: true, subjectKey: "peers", subject: "人际／同辈",
+-  });
++    });
++  };
+   const changeSubject = (subjectKey: string, subject: string) => setView({
+     question,
+     kind: "question",
+@@ -60,6 +75,20 @@
+       ...(kind === "fortune" ? { horizon: "year" } : {}),
+     });
+   };
++  const available = valid && view && ["question", "destiny", "fortune"].includes(view.kind) && view.supported;
++  let payment = <button className="button button-primary" disabled type="button">问卦 · 0.05 USDC</button>;
++  if (available && view) {
++    payment = <BirthEntry kind={view.kind} birth={birth} open={birthOpen} temporary={temporary} onOpen={() => {
++          setTemporary(false);
++          setBirthOpen(true);
++        }} onBirth={(input) => {
++          setBirth(input);
++          setBirthOpen(false);
++        }} onFallback={changeToQuestion} onCancel={() => setBirthOpen(false)} payment={() => <PaymentButton question={question} classification={{ ...view, horizon: horizon === "custom" ? (view.horizon ?? "year:2026") : horizon }} birth={birth} onMissingBirth={() => setBirthOpen(true)} />} />;
++    if (view.kind === "question") {
++      payment = <PaymentButton question={question} classification={view} />;
++    }
++  }
+   return (
+     <form className="panel" onSubmit={(event) => event.preventDefault()}>
+       <h1>所问之事</h1>
+@@ -86,12 +115,19 @@
+           view={view}
+         />
+       ) : null}
++      {view?.kind === "fortune" ? <label>时间范围<select aria-label="时间范围" value={horizon} onChange={(event) => setHorizon(event.target.value)}>
++        <option value="today">今天</option><option value="month">本月</option><option value="year">今年</option><option value="next-year">明年</option><option value="custom">指定年份</option>
++      </select></label> : null}
++      {horizon === "custom" ? <label>指定年份<input type="number" min="1900" max="2099" value={view?.horizon?.replace("year:", "") ?? "2026"} onChange={(event) => setView((previous) => previous ? { ...previous, horizon: `year:${event.target.value}` } : previous)} /></label> : null}
++      {view && ["destiny", "fortune"].includes(view.kind) && birth ? <p>{birthSummary(birth)} · <button type="button" onClick={() => {
++          setTemporary(false);
++          setBirthOpen(true);
++        }}>修改</button><button type="button" onClick={() => {
++          setTemporary(true);
++          setBirthOpen(true);
++        }}>本次临时换一个生辰</button></p> : null}
+       {error ? <p className="error">{error}</p> : null}
+-      {valid && view?.kind === "question" && view.supported ? (
+-        <PaymentButton question={question} classification={view} />
+-      ) : (
+-        <button className="button button-primary" disabled type="button">问卦 · 0.05 USDC</button>
+-      )}
++      {payment}
+     </form>
+   );
+ }
+--- a/tests/frontend-home.test.ts
++++ b/tests/frontend-home.test.ts
+@@ -60,7 +60,8 @@
+     }),
+   }));
+   assert.match(question, /问事.*工作官职/su);
+-  assert.match(fortune, /即将开放，可先改为问事/u);
++  assert.doesNotMatch(fortune, /即将开放/u);
++  assert.match(fortune, /改为问事/u);
+   assert.match(naming, /可改为问事/u);
+   assert.doesNotMatch(question + fortune + naming, forbidden);
+ });
+```
+
+- [ ] **Step 3：运行两项新测试文件与 `tests/frontend-home.test.ts`，由 RED 转 GREEN。** 静态入口测试付款插槽未调用；首页原防抖、过期响应、未开放类型与问事付款回归仍通过。
+- [ ] **Step 4：在允许监听环境补走一次创建 400 → 补生辰 → 创建成功。** 钱包转账计数必须为 1，服务端复用 firstHash，不换收款或金额；真实付款操作见 B7 验收清单。
+
+## Chunk B6b：八字结果页与流年面板
+
+组件只消费 B2.3、B4.7 与 B5 公开字段。样稿 ln-data 仅用于看布局，不复制其三家用神、逐年吉凶或断语。`今年` 使用创建解读时刻的立春年，与 B5 固定卦时一致；所问年用 chart.liunian.anchorYear。分享浏览器不展示原始时刻；有档案还需命盘匹配才能展示本机重算校正。
+
+### Task B6.3：几何与静态组件 RED
+
+- [ ] **Step 1：先落下列两个完整测试文件，运行 `node --import tsx --test tests/frontend-liunian-chart.test.ts tests/frontend-bazi-components.test.ts`。** 新模块缺失时 RED；组件测试不导入 Reading、WalletBar、PaymentButton 或 web/lib/wagmi.ts。
+
+```ts
+// tests/frontend-liunian-chart.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { CHART, chartGeometry, directLabels, tooltipLeft, xFor, yFor, yearGroups } from "../web/lib/liunian-chart.js";
+const value = (year: number, average: number) => ({ year, average, min: average - 1, max: average + 1, count: 3 });
+test("一至九成全域、范围线与年内交运位置", () => {
+    assert.equal(yFor(1), CHART.bottom);
+    assert.equal(yFor(9), CHART.top);
+    assert.equal(yFor(5), (CHART.top + CHART.bottom) / 2);
+    const geometry = chartGeometry([value(2024, 5)], ["2024-07-02"]);
+    assert.equal(geometry.points[0]?.low, yFor(4));
+    assert.equal(geometry.points[0]?.high, yFor(6));
+    assert.equal(geometry.changes[0]?.x, xFor(0, 1));
+    assert.equal(tooltipLeft(-100), CHART.left);
+    assert.equal(tooltipLeft(2000), CHART.width - CHART.right - 180);
+});
+test("空合议断线，无人完成不画零点", () => {
+    const geometry = chartGeometry([value(2023, 5), null, value(2025, 6)], [null, null, null]);
+    assert.equal(geometry.points[1], null);
+    assert.equal(geometry.paths.length, 2);
+    assert.ok(geometry.paths.every((path) => !path.includes(" L")));
+    assert.deepEqual(chartGeometry([null, null], [null, null]).paths, []);
+});
+test("少数标注与窄屏规则、回看今年展望分组", () => {
+    const years = [value(2023, 4), value(2024, 6), value(2025, 5)];
+    assert.deepEqual(directLabels(years, 2024, false), [["回看中最低"], ["今年", "十年最顺"], []]);
+    assert.deepEqual(directLabels(years, 2024, true), [[], ["今年", "十年最顺"], []]);
+    assert.deepEqual(yearGroups([2023, 2024, 2025, 2026], 2025), [{ label: "回看", count: 2 }, { label: "今年", count: 1 }, { label: "展望", count: 1 }]);
+});
+```
+
+```ts
+// tests/frontend-bazi-components.test.ts
+import assert from "node:assert/strict";
+import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { sampleBazi } from "./helpers/sample-bazi.js";
+import { baziFixture, birth as rawBirth, proof } from "./helpers/bazi-service.js";
+import { publicBaziReading } from "../src/sanyi/bazi-public.js";
+import { BaziLuck } from "../web/components/BaziLuck.js";
+import { BaziTable } from "../web/components/BaziTable.js";
+import { BirthForm } from "../web/components/BirthForm.js";
+import { BaziReading } from "../web/pages/BaziReading.js";
+import { LiuNianPanel } from "../web/components/LiuNianPanel.js";
+import { DayBoundaryChange } from "../web/components/DayBoundaryChange.js";
+import { BAZI_KEYS } from "../web/lib/liunian-chart.js";
+const birth = { ...rawBirth, calendar: "solar" as const, gender: "male" as const };
+const noop = () => { };
+test("缺时柱四柱表显示缺，生辰表单告知与港澳台提示", () => {
+    const input = sampleBazi("fortune", false);
+    const table = renderToStaticMarkup(createElement(BaziTable, { chart: input.chart, analysis: requireAnalysis(input.chart) }));
+    assert.match(table, /时柱/);
+    assert.match(table, /<td>缺<\/td>/);
+    for (const city of ["香港", "澳门", "台北"]) {
+        const form = renderToStaticMarkup(createElement(BirthForm, { initial: { ...birth, city }, onBirth: noop, onFallback: noop, onCancel: noop }));
+        assert.match(form, /生辰会发送给解读模型提供方/);
+        assert.match(form, /命盘可反推出生日期/);
+        assert.match(form, /当地历史夏令时不自动校正/);
+    }
+});
+import { analyzeBazi as requireAnalysis } from "../src/calendar/bazi-relations.js";
+test("命理无流年合议，分享不显示原始时刻，无档案切换禁用", async () => {
+    const f = await baziFixture();
+    try {
+        const value = await f.bazi.create({ kind: "destiny", question: "我适合做什么", birth, sect: 1, horizon: "year", feeProof: proof() });
+        await f.bazi.whenSettled(value.id);
+        const reading = publicBaziReading(await f.bazi.getReading(value.id));
+        const html = renderToStaticMarkup(createElement(BaziReading, { reading, birth: null, onReading: noop }));
+        assert.doesNotMatch(html, /流年运势|三家合议|合议：|15:30|14:30/);
+        assert.match(html, /校正摘要/);
+        const local = renderToStaticMarkup(createElement(BaziReading, { reading, birth, onReading: noop }));
+        assert.match(local, /15:30/);
+        assert.match(local, /14:30/);
+        const change = renderToStaticMarkup(createElement(DayBoundaryChange, { reading, birth: null, onReading: noop }));
+        assert.match(change, /disabled=""/);
+        assert.match(change, /需在填写生辰的设备上切换/);
+    }
+    finally {
+        await f.close();
+    }
+});
+test("流年一家失败不展示，全失败合议破折号且无折线", async () => {
+    const f = await baziFixture();
+    try {
+        const value = await f.bazi.create({ kind: "fortune", question: "今年运势如何", birth, sect: 1, horizon: "year", feeProof: proof() });
+        await f.bazi.whenSettled(value.id);
+        const stored = await f.bazi.getReading(value.id);
+        stored.schools.yuchuntai.status = "failed";
+        let reading = publicBaziReading(stored);
+        assert.equal(reading.kind, "fortune");
+        if (reading.kind !== "fortune") {
+            throw new Error("类型错误");
+        }
+        let html = renderToStaticMarkup(createElement(LiuNianPanel, { reading, currentYear: 2026 }));
+        assert.match(html, /未展示/);
+        assert.match(html, /虚岁/);
+        assert.match(html, /回看/);
+        assert.match(html, /甲申→乙酉/);
+        assert.ok(!html.includes("[object Object]"));
+        for (const key of BAZI_KEYS) {
+            stored.schools[key].status = "failed";
+        }
+        reading = publicBaziReading(stored);
+        if (reading.kind !== "fortune") {
+            throw new Error("类型错误");
+        }
+        html = renderToStaticMarkup(createElement(LiuNianPanel, { reading, currentYear: 2026 }));
+        assert.match(html, /<td[^>]*>—<\/td>/);
+        assert.doesNotMatch(html, /class="ln-line"/);
+    }
+    finally {
+        await f.close();
+    }
+});
+test("起运前不高亮第一步，交运当天切换当前大运", () => {
+    const chart = sampleBazi().chart;
+    const before = renderToStaticMarkup(createElement(BaziLuck, { chart, currentYear: 1997, currentDate: "1997-08-03" }));
+    assert.doesNotMatch(before, /class="luck-current"/);
+    assert.match(before, /当前起运前/);
+    const after = renderToStaticMarkup(createElement(BaziLuck, { chart, currentYear: 1997, currentDate: "1997-08-04" }));
+    assert.match(after, /class="luck-current"/);
+});
+```
+
+### Task B6.4：流年纯函数与交互面板
+
+- [ ] **Step 1：落入下列完整文件。** 对合议 null 切开路径，不连接到零；范围线以公开 min/max 为准。交运位置按公历年内日数，不把日期一律画在年首；表格仍注明流年立春口径。宽屏图的左侧 9% 与表格行名列一致，其余等分年份列；窄屏保留完整图，表格独立滚动，首列 sticky，effect 只滚容器。SVG 有文字摘要，键盘操作由原生年份按钮承担；悬停图区或聚焦按钮都显示夹在图区内的读数框。
+
+```ts
+// web/lib/liunian-chart.ts
+import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
+import type { YearConsensus } from "../../src/sanyi/bazi-public.js";
+export const BAZI_NAMES = { shenxiaozhan: "沈孝瞻", yuchuntai: "余春台", rentieqiao: "任铁樵" } as const;
+export const BAZI_KEYS = ["shenxiaozhan", "yuchuntai", "rentieqiao"] as const;
+export type FortuneReading = Extract<PublicBaziReading, {
+    kind: "fortune";
+}>;
+export const CHART = { width: 1000, height: 260, left: 90, right: 0, top: 25, bottom: 215 };
+export function yFor(value: number): number {
+    return CHART.bottom - (value - 1) / 8 * (CHART.bottom - CHART.top);
+}
+export function xFor(index: number, count: number): number {
+    return CHART.left + (index + 0.5) * (CHART.width - CHART.left - CHART.right) / Math.max(1, count);
+}
+export function yearGroups(years: readonly number[], currentYear: number) {
+    const groups: {
+        label: string;
+        count: number;
+    }[] = [];
+    for (const year of years) {
+        let label = "展望";
+        if (year < currentYear) {
+            label = "回看";
+        }
+        if (year === currentYear) {
+            label = "今年";
+        }
+        const last = groups.at(-1);
+        if (last?.label === label) {
+            last.count += 1;
+        }
+        else {
+            groups.push({ label, count: 1 });
+        }
+    }
+    return groups;
+}
+export function chartGeometry(years: readonly (YearConsensus | null)[], dates: readonly (string | null)[]) {
+    const points = years.map((item, index) => {
+        if (item === null) {
+            return null;
+        }
+        return { x: xFor(index, years.length), y: yFor(item.average), low: yFor(item.min), high: yFor(item.max) };
+    });
+    const paths: string[] = [];
+    let path = "";
+    for (const point of points) {
+        if (point === null) {
+            if (path) {
+                paths.push(path);
+            }
+            path = "";
+        }
+        else {
+            path += `${path ? " L" : "M"}${point.x},${point.y}`;
+        }
+    }
+    if (path) {
+        paths.push(path);
+    }
+    const changes = dates.flatMap((date, index) => {
+        if (!date) {
+            return [];
+        }
+        const year = Number(date.slice(0, 4));
+        const start = Date.UTC(year, 0, 1);
+        const end = Date.UTC(year + 1, 0, 1);
+        const fraction = (Date.parse(`${date}T00:00:00Z`) - start) / (end - start);
+        const cell = (CHART.width - CHART.left - CHART.right) / Math.max(1, years.length);
+        return [{ date, x: CHART.left + (index + fraction) * cell }];
+    });
+    return { points, paths, changes };
+}
+export function directLabels(years: readonly (YearConsensus | null)[], currentYear: number, narrow: boolean) {
+    const done = years.filter((year): year is YearConsensus => year !== null);
+    const best = [...done].sort((a, b) => b.average - a.average || a.year - b.year)[0];
+    const past = done.filter((year) => year.year < currentYear).sort((a, b) => a.average - b.average || a.year - b.year)[0];
+    return years.map((year) => {
+        const labels: string[] = [];
+        if (year?.year === currentYear) {
+            labels.push("今年");
+        }
+        if (year && year.year === best?.year) {
+            labels.push("十年最顺");
+        }
+        if (!narrow && year && year.year === past?.year) {
+            labels.push("回看中最低");
+        }
+        return labels;
+    });
+}
+export function tooltipLeft(x: number, width = 180): number {
+    return Math.max(CHART.left, Math.min(x - width / 2, CHART.width - CHART.right - width));
+}
+export function relationClass(kind: string): string {
+    if (["三合", "半合", "拱", "三会"].includes(kind)) {
+        return "relation-group";
+    }
+    if (kind === "合") {
+        return "relation-join";
+    }
+    return "relation-clash";
+}
+export function schoolYear(reading: FortuneReading, key: typeof BAZI_KEYS[number], year: number) {
+    const state = reading.schools[key];
+    if (state.status !== "done" || !state.output || !("years" in state.output)) {
+        return undefined;
+    }
+    return state.output.years.find((item) => item.year === year);
+}
+```
+
+```tsx
+// web/components/LiuNianPanel.tsx
+import { useEffect, useRef, useState } from "react";
+import { BAZI_KEYS, BAZI_NAMES, CHART, chartGeometry, directLabels, relationClass, schoolYear, tooltipLeft, xFor, yearGroups, yFor, type FortuneReading } from "../lib/liunian-chart.js";
+export function LiuNianPanel({ reading, currentYear }: {
+    reading: FortuneReading;
+    currentYear: number;
+}) {
+    const years = reading.chart.liunian.years;
+    const [selected, setSelected] = useState(reading.chart.liunian.anchorYear);
+    const [hover, setHover] = useState<number | null>(null);
+    const scroll = useRef<HTMLDivElement>(null);
+    const cells = useRef(new Map<number, HTMLTableCellElement>());
+    const geometry = chartGeometry(reading.years, years.map((year) => year.luckChange?.date ?? null));
+    const labels = directLabels(reading.years, currentYear, false);
+    useEffect(() => {
+        if (window.matchMedia("(min-width: 1060px)").matches) {
+            return;
+        }
+        const cell = cells.current.get(selected);
+        const container = scroll.current;
+        if (cell && container) {
+            container.scrollLeft = Math.max(0, cell.offsetLeft - 90 - (container.clientWidth - 180) / 2);
+        }
+    }, [selected]);
+    const rows: {
+        label: string;
+        render(index: number): React.ReactNode;
+    }[] = [
+        { label: "流年", render: (i) => <>{years[i]?.ganZhi}<small>虚岁 {years[i]?.age}</small></> },
+        { label: "十神", render: (i) => `${years[i]?.stemGod}／${years[i]?.hidden[0]?.god ?? "—"}` },
+        { label: "大运", render: (i) => {
+                const year = years[i]!;
+                if (year.luckChange) {
+                    return <>{year.luckChange.from ?? "起运前"}→{year.luckChange.to}<small>{year.luckChange.date}</small></>;
+                }
+                return year.luck?.ganZhi ?? year.luckLabel ?? "—";
+            } },
+        { label: "合冲刑害", render: (i) => reading.analysis.years.find((item) => item.year === years[i]?.year)?.relations.map((relation) => <span className={`relation-tag ${relationClass(relation.kind)}`} key={relation.id}>{relation.label}</span>) },
+        ...BAZI_KEYS.map((key) => ({ label: BAZI_NAMES[key], render: (i: number) => {
+                const entry = schoolYear(reading, key, years[i]!.year);
+                return entry ? <span className={`verdict verdict-${entry.verdict}`}>{entry.verdict} · {entry.confidenceTenths}成</span> : "未展示";
+            } })),
+        { label: "合议", render: (i) => reading.years[i] ? `${reading.years[i]!.average}成` : "—" },
+    ];
+    const hovered = hover === null ? null : years[hover];
+    const consensus = hover === null ? null : reading.years[hover];
+    return <section className="panel liunian-panel" aria-label="流年运势">
+    <header className="panel-head"><h2>流年运势</h2><p>以所问之年为锚，流年以立春为界；回看可与亲历对照。缺少断语的年份不连线。</p></header>
+    <div className="ln-chart">
+      <svg viewBox={`0 0 ${CHART.width} ${CHART.height}`} role="img" aria-label={`流年合议走势图，${years[0]?.year}至${years.at(-1)?.year}，纵轴一至九成；完整数值见下表。`}>
+        {[3, 5, 7].map((value) => <g key={value}><text x="48" y={yFor(value) + 4}>{value}成</text><line className={value === 5 ? "ln-five" : "ln-grid"} x1={CHART.left} x2="1000" y1={yFor(value)} y2={yFor(value)}/></g>)}
+        {years.map((year, i) => <g key={year.year}>
+          {year.year === currentYear ? <rect className="ln-now" x={CHART.left + i * 910 / years.length} y="20" width={910 / years.length} height="200"/> : null}
+          {year.year === selected ? <rect className="ln-selected" x={CHART.left + i * 910 / years.length} y="20" width={910 / years.length} height="200"/> : null}
+          {geometry.points[i] ? <><line className="ln-range" x1={xFor(i, years.length)} x2={xFor(i, years.length)} y1={geometry.points[i]!.low} y2={geometry.points[i]!.high}/><circle className="ln-dot" cx={xFor(i, years.length)} cy={geometry.points[i]!.y} r="4"/></> : null}
+          <text className="ln-tick" x={xFor(i, years.length)} y="238" textAnchor="middle">{year.ganZhi}</text><text x={xFor(i, years.length)} y="255" textAnchor="middle">{year.year}</text>
+          <rect className="ln-hover" x={CHART.left + i * 910 / years.length} y="20" width={910 / years.length} height="200" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} onClick={() => setSelected(year.year)}/>
+          {labels[i]?.map((label, j) => <text className={label === "回看中最低" ? "ln-past-low" : "ln-direct"} x={xFor(i, years.length)} y={35 + j * 17} textAnchor="middle" key={label}>{label}</text>)}
+        </g>)}
+        {geometry.paths.map((path, i) => <path className="ln-line" d={path} key={i}/>)}
+        {geometry.changes.map((change) => <g key={change.date}><line className="ln-change" x1={change.x} x2={change.x} y1="60" y2="215"/><text x={Math.max(180, Math.min(change.x, 860))} y="78" textAnchor="middle">{change.date} 交运</text></g>)}
+        {hovered ? <g className="ln-tooltip" transform={`translate(${tooltipLeft(xFor(hover!, years.length))}, 92)`}><rect width="180" height="52" rx="4"/><text x="8" y="20">{hovered.year} {hovered.ganZhi}</text><text x="8" y="40">{consensus ? `${consensus.average}成 · ${consensus.min}–${consensus.max}成` : "未展示"}</text></g> : null}
+      </svg>
+      <div className="ln-hit" style={{ gridTemplateColumns: `repeat(${years.length}, minmax(0, 1fr))` }}>
+        {years.map((year, i) => <button type="button" aria-label={`查看${year.year}年短评`} aria-pressed={selected === year.year} key={year.year} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} onClick={() => setSelected(year.year)}>{year.year}</button>)}
+      </div>
+    </div>
+    <div className="ln-scroll" ref={scroll} tabIndex={0} aria-label="流年逐年表，可横向滚动">
+      <table className="ln-table" style={{ width: `max(100%, ${90 + years.length * 90}px)` }}><colgroup><col style={{ width: 90 }}/>{years.map((year) => <col key={year.year}/>)}</colgroup><thead>
+        <tr><th scope="col">年份分组</th>{yearGroups(years.map((year) => year.year), currentYear).map((group) => <th scope="colgroup" colSpan={group.count} key={group.label}>{group.label}</th>)}</tr>
+        <tr><th scope="col">年份</th>{years.map((year) => <th scope="col" key={year.year} ref={(cell) => {
+                if (cell) {
+                    cells.current.set(year.year, cell);
+                }
+            }} className={year.year === currentYear ? "ln-current" : ""}><button type="button" aria-pressed={year.year === selected} onClick={() => setSelected(year.year)}>{year.year}</button></th>)}</tr>
+      </thead><tbody>{rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th>{years.map((year, i) => <td key={year.year} className={year.year === currentYear ? "ln-current" : ""}>{row.render(i)}</td>)}</tr>)}</tbody></table>
+    </div>
+    <div className="ln-notes" aria-live="polite"><h3>{selected} 年三家短评</h3>{BAZI_KEYS.map((key) => <p key={key}><b>{BAZI_NAMES[key]}：</b>{schoolYear(reading, key, selected)?.note ?? "未展示"}</p>)}</div>
+  </section>;
+}
+```
+
+### Task B6.5：客观命盘、三家与本机校正
+
+- [ ] **Step 1：落入以下完整文件，顺序按样稿。** 胎元、命宫、身宫不传对象作文本；时柱为空时各行显示缺。大运按创建日期判断当前步，交运当天切换，起运前不高亮第一步。三家只有 done 才展示输出，留意月份取 timing.window 与 condition；命理不显示吉凶、合议与流年面板。无本人档案换日按钮置灰；切换时重新读本机存储并交服务端核验，不复用原始时刻缓存。
+
+```tsx
+// web/components/BirthCorrection.tsx
+import { normalizeBirthProfile } from "../../src/sanyi/birth-profile.js";
+import { correctBirthTime, type CivilTime } from "../../src/calendar/solar-time.js";
+import { buildBaziChart } from "../../src/calendar/bazi.js";
+import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
+import { birthSummary, type BirthProfileInput } from "../lib/birth-profile.js";
+export function matchesReading(birth: BirthProfileInput, reading: PublicBaziReading): boolean {
+    try {
+        const profile = normalizeBirthProfile(birth);
+        const corrected = correctBirthTime(profile.civil, profile.timeKnown, profile.longitude, profile);
+        const chart = buildBaziChart({ corrected: corrected.effective, timeKnown: profile.timeKnown, gender: profile.gender, sect: reading.chart.sect, targetYear: reading.context.anchorYear });
+        const signature = (value: typeof chart) => ({ pillars: value.pillars, luck: value.luck });
+        return JSON.stringify(signature(chart)) === JSON.stringify(signature(reading.chart));
+    }
+    catch {
+        return false;
+    }
+}
+function civilText(value: CivilTime | null): string {
+    if (!value) {
+        return "未知";
+    }
+    return `${value.year}-${value.month}-${value.day} ${String(value.hour).padStart(2, "0")}:${String(value.minute).padStart(2, "0")}`;
+}
+const DST_LABELS = { applied: "已减一小时", "not-applied": "未校正", "skipped-region": "当地历史夏令时未自动校正" };
+export function BirthCorrection({ reading, birth }: {
+    reading: PublicBaziReading;
+    birth: BirthProfileInput | null;
+}) {
+    let local = null;
+    if (birth && matchesReading(birth, reading)) {
+        const profile = normalizeBirthProfile(birth);
+        local = correctBirthTime(profile.civil, profile.timeKnown, profile.longitude, profile);
+    }
+    return <div className="birth-correction">
+    {local && birth ? <><p>{birthSummary(birth)}</p><details><summary>逐步校正（本机重算）</summary>{local.steps.map((step) => <p key={step.kind}>{civilText(step.before)} → {civilText(step.after)} · {step.description}</p>)}</details></> : <p>校正摘要：夏令时 {DST_LABELS[reading.correction.dst]} · 真太阳时 {reading.correction.solar === "applied" ? "已校正" : "未校正"} · {reading.correction.timeKnown ? "已知时辰" : "时辰未知"} · {reading.chart.dayBoundary} 换日</p>}
+    {reading.chart.warnings.map((warning) => <p className="hint" key={warning}>{warning}</p>)}
+  </div>;
+}
+```
+
+```tsx
+// web/components/BaziTable.tsx
+import type { BaziChart } from "../../src/calendar/bazi.js";
+import type { BaziAnalysis } from "../../src/calendar/bazi-relations.js";
+export function BaziTable({ chart, analysis }: {
+    chart: BaziChart;
+    analysis: BaziAnalysis;
+}) {
+    const keys = ["year", "month", "day", "time"] as const;
+    const rows = ["天干", "地支", "藏干", "十神", "长生", "纳音", "神煞"];
+    return <div className="bazi-table-scroll"><table className="bazi-table"><caption>四柱</caption><thead><tr><th scope="col">四柱</th>{["年柱", "月柱", "日柱", "时柱"].map((label) => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{rows.map((label, index) => <tr key={label}><th scope="row">{label}</th>{keys.map((key) => {
+                const pillar = chart.pillars[key];
+                if (!pillar) {
+                    return <td key={key}>缺</td>;
+                }
+                const values = [pillar.stem, pillar.branch, pillar.hidden.map((item) => `${item.stem}·${item.god}`).join("、"), pillar.stemGod, pillar.diShi, pillar.naYin,
+                    analysis.shensha.filter((item) => item.nodeId.startsWith(`natal.${key}.`)).map((item) => item.name).join("、") || "—"];
+                return <td key={key}>{values[index]}</td>;
+            })}</tr>)}</tbody></table></div>;
+}
+```
+
+```tsx
+// web/components/BaziLuck.tsx
+import type { BaziChart } from "../../src/calendar/bazi.js";
+export function BaziLuck({ chart, currentYear, currentDate }: {
+    chart: BaziChart;
+    currentYear: number;
+    currentDate: string;
+}) {
+    const luck = chart.luck;
+    if (!luck) {
+        return <section className="panel"><h2>大运</h2><p>需补时辰确认起运与大运。</p></section>;
+    }
+    const monthDay = luck.start.solarDate.slice(4);
+    const current = luck.cycles.find((cycle, index) => {
+        const start = `${cycle.startYear}${monthDay}`;
+        const next = luck.cycles[index + 1];
+        const end = `${next?.startYear ?? cycle.endYear + 1}${monthDay}`;
+        return currentDate >= start && currentDate < end;
+    });
+    return <section className="panel"><h2>大运</h2><p>{luck.direction === "forward" ? "顺行" : "逆行"} · {luck.start.years}年{luck.start.months}个月{luck.start.days}天起运 · {luck.start.solarDate}{luck.approximate ? "（正午估算）" : ""}</p><div className="luck-timeline">{luck.cycles.map((cycle) => <div className={current?.index === cycle.index ? "luck-current" : ""} key={cycle.index}><b>{cycle.ganZhi}</b><span>{cycle.startYear}–{cycle.endYear}</span><small>{cycle.startAge}–{cycle.endAge}岁</small>{chart.liunian.anchorYear >= cycle.startYear && chart.liunian.anchorYear <= cycle.endYear ? <span>所问之年 {chart.liunian.anchorYear}</span> : null}</div>)}</div>{currentDate < luck.start.solarDate ? <p>当前起运前</p> : null}</section>;
+}
+```
+
+```tsx
+// web/components/BaziSchools.tsx
+import type { FortuneSchoolOutput } from "../../src/sanyi/bazi-schema.js";
+import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
+import { BAZI_KEYS, BAZI_NAMES } from "../lib/liunian-chart.js";
+const META = { shenxiaozhan: "格局派 · 子平真诠", yuchuntai: "调候派 · 穷通宝鉴", rentieqiao: "扶抑派 · 滴天髓阐微" };
+export function BaziSchools({ reading, onRetry }: {
+    reading: PublicBaziReading;
+    onRetry(key: typeof BAZI_KEYS[number]): void;
+}) {
+    return <section className="panel"><h2>三家用神对照</h2><div className="bazi-use">{BAZI_KEYS.map((key) => <p key={key}><b>{BAZI_NAMES[key]}</b> · {reading.schools[key].status === "done" ? reading.schools[key].output?.useGod : "未展示"}</p>)}</div><h2>三家断语</h2>
+    {reading.kind === "fortune" ? <div className="consensus" aria-label="三家合议"><p>合议：{reading.consensusTenths === null ? "—" : `${reading.consensusTenths.toFixed(1)}成`}</p><div className="consensus-track">
+      {reading.consensusTenths !== null ? <span className="mean" style={{ left: `${reading.consensusTenths * 10}%` }}>合议</span> : null}
+      {BAZI_KEYS.map((key) => {
+                const state = reading.schools[key];
+                const output = state.status === "done" ? state.output as FortuneSchoolOutput | undefined : undefined;
+                return output ? <span className="pin" key={key} style={{ left: `${output.confidenceTenths * 10}%` }}>{BAZI_NAMES[key].slice(0, 1)}</span> : null;
+            })}
+    </div><div className="consensus-scale"><span>断不成</span><span>断必成</span></div></div> : null}
+    {BAZI_KEYS.map((key) => {
+            const state = reading.schools[key];
+            const output = state.status === "done" ? state.output : undefined;
+            const fortune = output && "years" in output ? output as FortuneSchoolOutput : undefined;
+            return <article className="school-card" key={key}><span className="seal">{BAZI_NAMES[key].slice(0, 1)}</span><div className="school-copy"><h3>{BAZI_NAMES[key]}<small>{META[key]}</small></h3>{output ? <>
+        {reading.kind === "fortune" && fortune ? <p>{fortune.verdict} · {fortune.confidenceTenths}成</p> : null}
+        <p className="headline">{output.headline}</p><p>{output.reason}</p>
+        {fortune?.timing ? <p>留意 {fortune.timing.window} · {fortune.timing.condition}</p> : null}
+        <details><summary>展开详断</summary>{output.sections.map((section) => <p key={section.title}><b>{section.title}：</b>{section.text}</p>)}<ul>{output.advice.map((advice) => <li key={advice}>{advice}</li>)}</ul><p>{output.evidence.map((item) => `${item.ref}：${item.claim}`).join("；")}</p></details>
+      </> : <p>{state.status === "failed" ? "未展示" : "正在落笔"}</p>}
+        {state.status === "failed" ? <button type="button" disabled={state.retries >= 2 || reading.status !== "done"} onClick={() => onRetry(key)}>免费重试 · 剩余 {Math.max(0, 2 - state.retries)} 次</button> : null}
+      </div></article>;
+        })}
+  </section>;
+}
+```
+
+```tsx
+// web/components/BaziRelations.tsx
+import type { BaziAnalysis } from "../../src/calendar/bazi-relations.js";
+import { relationClass } from "../lib/liunian-chart.js";
+export function BaziRelations({ analysis }: {
+    analysis: BaziAnalysis;
+}) {
+    const nodes = analysis.nodes;
+    const x = (id: string) => 40 + nodes.findIndex((node) => node.id === id) * 50;
+    return <section className="panel"><h2>合冲刑害</h2><svg className="relation-diagram" viewBox={`0 0 ${Math.max(200, nodes.length * 50 + 30)} 150`} role="img" aria-label="原局、大运与流年关系，详细文字见下方列表">
+    {analysis.relations.map((relation, i) => <g key={relation.id}>{relation.nodeIds.slice(1).map((id) => <path className={relationClass(relation.kind)} fill="none" d={`M${x(relation.nodeIds[0]!)},100 Q${(x(id) + x(relation.nodeIds[0]!)) / 2},${20 + i % 4 * 15} ${x(id)},100`} key={id}/>)}</g>)}
+    {nodes.map((node) => <g key={node.id}><text x={x(node.id)} y="110" textAnchor="middle">{node.value}</text><text x={x(node.id)} y="135" textAnchor="middle">{node.label}</text></g>)}
+  </svg><ul>{analysis.relations.map((relation) => <li key={relation.id}><span className={`relation-tag ${relationClass(relation.kind)}`}>{relation.label}</span> · {relation.nodeIds.map((id) => nodes.find((node) => node.id === id)?.label ?? id).join("与")}</li>)}</ul></section>;
+}
+```
+
+```tsx
+// web/components/BaziElements.tsx
+import type { ElementCount } from "../../src/calendar/bazi-relations.js";
+export function BaziElements({ elements }: {
+    elements: readonly ElementCount[];
+}) {
+    return <section className="panel"><h2>五行分布</h2><p>只计个数，不据此下身强身弱结论。</p>{elements.map((item) => <div className="element-row" key={item.element}><b>{item.element}</b><meter min="0" max="20" value={item.total} aria-label={`${item.element}共${item.total}个`}/><span>天干 {item.stem} · 本气 {item.main} · 中气 {item.middle} · 余气 {item.residual} · 共 {item.total}</span></div>)}</section>;
+}
+```
+
+```tsx
+// web/components/DayBoundaryChange.tsx
+import { useState } from "react";
+import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
+import { matchesReading } from "./BirthCorrection.js";
+import { api } from "../lib/api.js";
+import { loadBirthProfile, type BirthProfileInput } from "../lib/birth-profile.js";
+export function DayBoundaryChange({ reading, birth, onReading }: {
+    reading: PublicBaziReading;
+    birth: BirthProfileInput | null;
+    onReading(value: PublicBaziReading): void;
+}) {
+    const available = birth !== null && matchesReading(birth, reading);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState("");
+    const change = async () => {
+        const local = loadBirthProfile();
+        if (!local) {
+            setError("需在填写生辰的设备上切换");
+            return;
+        }
+        setBusy(true);
+        try {
+            const value = await api.changeDayBoundary(reading.id, local, reading.chart.sect === 1 ? 2 : 1);
+            if (value.kind !== "question") {
+                onReading(value);
+            }
+        }
+        catch (caught) {
+            setError(caught instanceof Error ? caught.message : "切换暂不可用");
+        }
+        finally {
+            setBusy(false);
+        }
+    };
+    return <div className="day-boundary"><p>当前 {reading.chart.dayBoundary} 换日 · 剩余 {Math.max(0, 2 - reading.changes)} 次 · 免费</p><button type="button" disabled={!available || busy || reading.changes >= 2 || reading.status !== "done"} onClick={() => void change()}>切换换日口径</button>{!available ? <p>需在填写生辰的设备上切换</p> : null}{error ? <p className="error" role="alert">{error}</p> : null}</div>;
+}
+```
+
+```tsx
+// web/pages/BaziReading.tsx
+import { useState } from "react";
+import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
+import { resolveFortuneContext } from "../../src/sanyi/fortune-context.js";
+import { api } from "../lib/api.js";
+import { loadBirthProfile, type BirthProfileInput } from "../lib/birth-profile.js";
+import { BAZI_TERM_DEFINITIONS } from "../lib/term-definitions.js";
+import { BAZI_KEYS } from "../lib/liunian-chart.js";
+import { BirthCorrection } from "../components/BirthCorrection.js";
+import { BaziTable } from "../components/BaziTable.js";
+import { BaziLuck } from "../components/BaziLuck.js";
+import { BaziSchools } from "../components/BaziSchools.js";
+import { BaziRelations } from "../components/BaziRelations.js";
+import { BaziElements } from "../components/BaziElements.js";
+import { DayBoundaryChange } from "../components/DayBoundaryChange.js";
+import { LiuNianPanel } from "../components/LiuNianPanel.js";
+import { TermDisclosure } from "../components/TermDisclosure.js";
+export function BaziReading({ reading, onReading, birth: supplied }: {
+    reading: PublicBaziReading;
+    onReading(value: PublicBaziReading): void;
+    birth?: BirthProfileInput | null;
+}) {
+    const [birth] = useState(() => supplied === undefined ? loadBirthProfile() : supplied);
+    const [error, setError] = useState("");
+    const currentYear = resolveFortuneContext("year", () => new Date(reading.createdAt), reading.chart.sect).anchorYear;
+    const currentDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(new Date(reading.createdAt));
+    const retry = async (key: typeof BAZI_KEYS[number]) => {
+        try {
+            const value = await api.retrySchool(reading.id, key);
+            if (value.kind !== "question") {
+                onReading(value);
+            }
+        }
+        catch (caught) {
+            setError(caught instanceof Error ? caught.message : "重试暂不可用");
+        }
+    };
+    return <>
+    <div className="bazi-hero"><section className="panel"><h1>问题与生辰</h1><p>{reading.question}</p><BirthCorrection reading={reading} birth={birth}/><DayBoundaryChange reading={reading} birth={birth} onReading={onReading}/><BaziTable chart={reading.chart} analysis={reading.analysis}/><div className="bazi-derived">{([["胎元", reading.chart.taiYuan], ["命宫", reading.chart.mingGong], ["身宫", reading.chart.shenGong]] as const).map(([term, value]) => <TermDisclosure key={term!} term={term!} value={value ?? "缺"} definition={BAZI_TERM_DEFINITIONS[term]} actual={value ?? "缺时辰，需补充确认。"}/>)}</div><p>起运：{reading.chart.luck?.start.solarDate ?? "需补时辰确认"}</p></section><BaziSchools reading={reading} onRetry={(key) => void retry(key)}/></div>
+    {error ? <p className="error" role="alert">{error}</p> : null}
+    <BaziLuck chart={reading.chart} currentYear={currentYear} currentDate={currentDate}/>
+    {reading.kind === "fortune" ? <LiuNianPanel reading={reading} currentYear={currentYear}/> : null}
+    <div className="bazi-secondary"><BaziRelations analysis={reading.analysis}/><BaziElements elements={reading.analysis.elements}/></div>
+    <p className="provenance">数据来源：四柱、十神、藏干、长生、纳音与大运由 lunar-javascript 推算；合冲刑害与神煞按传统查表；调候据《穷通宝鉴》{reading.tiaohou.section}。原始生辰与逐步校正只在本机展示；流年以立春为界，三家各自独立落笔。</p>
+  </>;
+}
+```
+
+### Task B6.6：kind 分流、布局与字体字表
+
+- [ ] **Step 1：应用精确 diff。** Reading 按公开 kind 分流，顶栏沿用 WalletBar、时空栏沿用此刻 almanac；问事 CoinThrow/retry 显式收窄联合。继续复用 TermDisclosure、1A school-card 与 consensus 样式，不改旧问事算法。page 使用 minmax(0, 1fr)，宽表不能撑开页面；窄屏触控按钮两行排列。
+
+```diff
+--- a/web/pages/Reading.tsx
++++ b/web/pages/Reading.tsx
+@@ -9,7 +9,8 @@
+ import { Luopan } from "../components/Luopan.js";
+ import { ShikongBar, toView } from "../components/ShikongBar.js";
+ import { ThrowRecord } from "../components/ThrowRecord.js";
+-import { api, type PublicReading } from "../lib/api.js";
++import { BaziReading } from "./BaziReading.js";
++import { api, type AnyPublicReading, type PublicReading } from "../lib/api.js";
+ import { saveRecentReading } from "../lib/recent-readings.js";
+ import { readingStage, shouldPollReading } from "../lib/reading-state.js";
+ import { AlmanacPanel } from "../components/AlmanacPanel.js";
+@@ -45,7 +46,10 @@
+   const retry = async (key: typeof SCHOOL_KEYS[number]) => {
+     setRetryError("");
+     try {
+-      props.onReading(await api.retrySchool(reading.id, key));
++      const value = await api.retrySchool(reading.id, key);
++      if (value.kind === "question") {
++        props.onReading(value);
++      }
+     } catch (caught) {
+       setRetryError(caught instanceof Error ? caught.message : "此家暂未能重试，请稍后再试");
+     }
+@@ -114,7 +118,7 @@
+   );
+ }
+ export function Reading({ id }: { id: string }) {
+-  const [reading, setReading] = useState<PublicReading>();
++  const [reading, setReading] = useState<AnyPublicReading>();
+   const [error, setError] = useState("");
+   const refresh = useCallback(async () => {
+     try {
+@@ -159,6 +163,9 @@
+       </main>
+     );
+   }
++  if (reading.kind !== "question") {
++    return <main className="page"><header className="topbar"><span className="seal">问</span><span className="brand">三易</span><a href="#/">返回首页</a><WalletBar /></header><ShikongBar data={toView(reading.almanac)} /><BaziReading reading={reading} onReading={setReading} /></main>;
++  }
+   const stage = readingStage(reading);
+   const view = reading.almanac ? toView(reading.almanac) : undefined;
+   return (
+--- a/web/components/CoinThrow.tsx
++++ b/web/components/CoinThrow.tsx
+@@ -30,7 +30,9 @@
+       const result = await api.throwCoin(props.reading.id, state.nextIndex);
+       dispatch({ type: "resolved", result });
+       const reading = await api.getReading(props.reading.id);
+-      props.onReading(reading);
++      if (reading.kind === "question") {
++        props.onReading(reading);
++      }
+     } catch (caught) {
+       const message = caught instanceof ApiError && [409, 503].includes(caught.status)
+         ? caught.message || ARC_MESSAGE
+--- a/web/lib/reading-state.ts
++++ b/web/lib/reading-state.ts
+@@ -1,5 +1,5 @@
+ // web/lib/reading-state.ts
+-import type { PublicReading } from "./api.js";
++import type { AnyPublicReading, PublicReading } from "./api.js";
+
+ export type ReadingStage = "awaiting-throws" | "charting" | "writing" | "done" | "failed";
+ type Schools = PublicReading["schools"];
+@@ -21,7 +21,7 @@
+   return reading.status === "done" ? "done" : "writing";
+ }
+
+-export function shouldPollReading(reading: PublicReading): boolean {
++export function shouldPollReading(reading: AnyPublicReading): boolean {
+   if (reading.status === "charting" || reading.status === "writing") {
+     return true;
+   }
+--- a/web/components/RecentReadings.tsx
++++ b/web/components/RecentReadings.tsx
+@@ -9,7 +9,7 @@
+           {readings.map((item) => (
+             <li key={item.id}>
+               <a href={`#/r/${item.id}`}>
+-                <span>{item.question}</span>
++                <span>{item.kind === "destiny" ? "命理" : null}{item.kind === "fortune" ? "运势" : null} · {item.question}</span>
+                 <time>{item.createdAt}</time>
+               </a>
+             </li>
+--- a/web/lib/term-definitions.ts
++++ b/web/lib/term-definitions.ts
+@@ -79,3 +79,9 @@
+     },
+   ];
+ }
++
++export const BAZI_TERM_DEFINITIONS = {
++  胎元: "从出生月柱推算的传统辅助字段。",
++  命宫: "按出生月份与时辰推算的传统辅助字段，缺时辰不展示。",
++  身宫: "按出生月份与时辰推算的传统辅助字段，缺时辰不展示。",
++} as const;
+--- a/web/styles/layout.css
++++ b/web/styles/layout.css
+@@ -28,6 +28,7 @@
+ }
+ .page {
+   display: grid;
++  grid-template-columns: minmax(0, 1fr);
+   gap: 26px;
+   width: 100%;
+   max-width: 1280px;
+--- a/web/styles/tokens.css
++++ b/web/styles/tokens.css
+@@ -18,8 +18,8 @@
+   --line-strong: rgb(201 168 102 / 0.42);
+   --cinnabar: #D0614A;
+   --cinnabar-soft: rgb(208 97 74 / 0.15);
+-  --jade: #82B59E;
+-  --jade-soft: rgb(130 181 158 / 0.14);
++  --jade: #45A07E;
++  --jade-soft: rgb(69 160 126 / 0.14);
+   --seal-bg: #A63A2B;
+   --seal-text: #F6EFE2;
+   --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+--- a/web/styles/components.css
++++ b/web/styles/components.css
+@@ -638,3 +638,73 @@
+     font-size: 12px;
+   }
+ }
++
++/* 八字页沿用水墨夜：金色合议、翠色合类、朱色冲刑害破。 */
++.bazi-hero, .bazi-secondary { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 26px; }
++.bazi-hero > *, .bazi-secondary > *, .liunian-panel { min-width: 0; }
++.birth-form label { display: grid; gap: 6px; margin: 12px 0; }
++.birth-form input, .birth-form select { color: var(--paper); background: var(--panel-2); border: 1px solid var(--line-strong); padding: 8px; min-width: 0; width: 100%; }
++.birth-form input[type="checkbox"] { width: auto; }
++.birth-date, .bazi-derived, .bazi-use { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
++.bazi-table-scroll { overflow-x: auto; }
++.bazi-table { width: 100%; border-collapse: collapse; text-align: center; }
++.bazi-table th, .bazi-table td { border-bottom: 1px solid var(--line); padding: 8px 4px; }
++.bazi-table caption { font-family: var(--brush); font-size: 28px; margin: 18px; }
++.luck-timeline { display: flex; overflow-x: auto; gap: 10px; }
++.luck-timeline > div { display: grid; min-width: 100px; padding: 12px; border: 1px solid var(--line); }
++.luck-current { background: var(--gold-soft); color: var(--gold); }
++.bazi-consensus meter { display: block; width: 100%; }
++.relation-diagram { width: 100%; height: auto; }
++.relation-diagram text, .ln-chart text { fill: var(--paper); font-size: 13px; }
++.relation-join { color: var(--jade); stroke: var(--jade); }
++.relation-clash { color: var(--cinnabar); stroke: var(--cinnabar); }
++.relation-group { color: var(--gold); stroke: var(--gold); }
++.relation-tag { display: inline-block; border: 1px solid currentColor; border-radius: 3px; margin: 2px; padding: 2px 4px; }
++.element-row { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; margin: 12px 0; }
++.element-row span { grid-column: 2; }
++.element-row meter { width: 100%; }
++.ln-chart { position: relative; width: 100%; }
++.ln-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
++.ln-grid { stroke: var(--line); }
++.ln-five { stroke: var(--muted); stroke-dasharray: 5 5; }
++.ln-line { stroke: var(--gold); stroke-width: 2px; fill: none; vector-effect: non-scaling-stroke; }
++.ln-dot { fill: var(--gold); stroke: var(--gold); stroke-width: 8px; vector-effect: non-scaling-stroke; }
++.ln-range { stroke: var(--muted); stroke-width: 2; }
++.ln-change { stroke: var(--gold); stroke-dasharray: 3 4; }
++.ln-now { fill: var(--gold-soft); }
++.ln-tooltip rect { fill: var(--panel-2); stroke: var(--line-strong); }
++.ln-hit { display: grid; margin: 0 0 12px 9%; }
++.ln-hit button { padding: 0; min-width: 0; min-height: 32px; background: transparent; color: var(--paper); border: 1px solid transparent; }
++.ln-hit button[aria-pressed="true"], .ln-table button[aria-pressed="true"] { border-color: var(--gold); background: var(--gold-soft); }
++.ln-hit button:focus-visible, .ln-table button:focus-visible { outline: 2px solid var(--gold); }
++.ln-scroll { width: 100%; min-width: 0; overflow-x: auto; }
++.ln-table { table-layout: fixed; border-collapse: separate; border-spacing: 0; text-align: center; font-size: 12px; }
++.ln-table th, .ln-table td { padding: 8px 3px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
++.ln-table th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); width: 90px; }
++.ln-table button { min-height: 32px; width: 100%; background: transparent; color: var(--paper); border: 1px solid transparent; }
++.ln-table small { display: block; color: var(--muted); }
++.ln-current { background: var(--gold-soft); }
++.ln-notes { border-top: 1px solid var(--line); margin-top: 18px; }
++.verdict-吉, .verdict-大吉 { color: var(--jade); }
++.verdict-凶, .verdict-大凶 { color: var(--cinnabar); }
++@media (max-width: 1059px) {
++  .ln-past-low { display: none; }
++  .ln-chart text { font-size: 22px; }
++  .ln-chart .ln-direct, .ln-chart .ln-change + text { font-size: 16px; }
++}
++@media (max-width: 980px) {
++  .bazi-hero, .bazi-secondary { grid-template-columns: minmax(0, 1fr); }
++}
++
++@media (min-width: 1060px) {
++  .ln-table { width: 100% !important; }
++  .ln-table col:first-child, .ln-table th:first-child { width: 9% !important; }
++}
++@media (max-width: 1059px) {
++  .ln-hit { grid-template-columns: repeat(5, minmax(32px, 1fr)) !important; margin-left: 0; }
++}
++
++.ln-selected { fill: none; stroke: var(--gold); vector-effect: non-scaling-stroke; }
++
++.ln-hover { fill: transparent; cursor: pointer; }
++.ln-line, .ln-dot, .ln-range, .ln-change, .ln-tooltip { pointer-events: none; }
+--- a/scripts/font-charset.ts
++++ b/scripts/font-charset.ts
+@@ -14,6 +14,8 @@
+   "三易", "所问之事", "三家断语", "六爻排盘", "奇门时盘", "当日黄历", "卦历",
+   "公历", "农历", "四柱", "节气", "月建日辰", "值日", "最近所问", "问卦",
+   "程颐", "京房", "邵雍", "问",
++  "问题与生辰", "三家用神对照", "流年运势", "大运", "合冲刑害", "五行分布",
++  "胎元", "命宫", "身宫", "起运", "沈孝瞻", "余春台", "任铁樵",
+ ] as const;
+ export function buildFontCharset(): string {
+   const source = [
+--- a/web/fonts/mashanzheng-chars.txt
++++ b/web/fonts/mashanzheng-chars.txt
+@@ -1 +1 @@
+-丁三丑世丙中丰临为之乙九乾事井亥京人任休伤值兄兑公六农冲剥勾升午卦卯历合同否咸嗑噬四困地坎坤壬壮复大天太夬夷奇妄妹妻姤子孙孚官家寅小履屯山己巳巽师应庚建开弟归当心恒惊戊戌房所损排断旅无既日时明易晋景最月有未朱杜柱武死母比气水泰泽济涣渐火父爻玄生甲申畜癸白益盘睽离禽程符腾艮节芮英萃蒙蓬虎蛇蛊螣观解讼语谦豫财贲蹇辅辛辰过近遁邵酉门问阴陈随雀雍雷需震青革颐风鬼黄鼎龙
++丁三与丑世丙中丰临为之乙九乾事五井亥京人任休伤余值元兄兑公六农冲分刑剥势勾升午卦卯历台合同否命咸嗑噬四困地坎坤壬壮复大天太夬夷奇妄妹妻姤子孙孚孝官宫害家寅对小履屯山己巳巽布师年应庚建开弟归当心恒惊戊戌房所损排断旅无既日时明易春晋景最月有未朱杜柱樵武死母比气水沈泰泽流济涣渐火照父爻玄生用甲申畜癸白益盘睽瞻神离禽程符胎腾艮节芮英萃蒙蓬虎蛇蛊螣行观解讼语谦豫财贲起蹇身辅辛辰过运近遁邵酉铁门问阴陈随雀雍雷需震青革颐题风鬼黄鼎龙
+--- a/tests/frontend-font.test.ts
++++ b/tests/frontend-font.test.ts
+@@ -16,7 +16,7 @@
+ test("毛笔体字表确定、有关键字且没有假名", () => {
+   const charset = buildFontCharset();
+   assert.equal(charset, [...charset].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join(""));
+-  for (const value of ["泰", "巽", "螣", "勾", "程", "世", "应"]) {
++  for (const value of ["泰", "巽", "螣", "勾", "程", "世", "应", ..."沈孝瞻余春台任铁樵流年运势胎元命宫身宫"]) {
+     assert.match(charset, new RegExp(value));
+   }
+   assert.doesNotMatch(charset, /[\u3040-\u30ff]/u);
+```
+
+- [ ] **Step 2：运行 `npm run font:charset` 与 `npm run font:subset`。** `.venv-tools` 已有 fonttools、brotli，无需安装。字表生成器与产出的 chars.txt 同步，重跑不会丢掉新增标题与三家姓氏。字体二进制与 sha256 均现场生成；不在计划猜摘要，按 B7 固定摘要并运行字形守卫。
+- [ ] **Step 3：运行 B6 全部新测试、`npm run typecheck` 与 `npm run frontend:build`。** 新测试转 GREEN，严格类型检查 0 错；不可用的字体下载或监听限制按 B7 记录，不以旧字体充当重建结果。
+- [ ] **Step 4：核对翠色。** 新 token 为 #45A07E，已有 school-verdict.good、almanac-grid .good、door.good 都是文字前景；在 #151816 上约 5.6:1，#1B1F1C 上也超过 4.5:1，背景色不变。吉凶始终带文字，关系图另附文字列表。
 
 ## Chunk B7：清理与 1B 验收
 
-后续轮次补充清理与验收步骤，核对实现和规范、tasks 实际状态及全量验证证据。
+### Task B7.1：清理、文化守卫与规范同步
 
-## 本轮计划代码验证记录
+- [ ] **Step 1：运行 `rg -n 'NotOpenYetError|即将开放|尚未开放|后续轮次|待用户确认' src/sanyi web openspec/changes/sanyi-chinese-redesign`，逐处核实调用。** B5 已开放命理/运势，B6 删除 ClassificationTags 的过期八字提示；NotOpenYetError 仍服务起名等未开放类型，不能删。问事模块、旧问事类型别名与仍有调用的 helpers 不删；不清理运行时存档、密钥或本机配置。
+- [ ] **Step 2：追加下列文化守卫 diff。** 新组件与构建产物均扫描，禁词表沿用 1A，自托管字体约束保留。
+
+```diff
+--- a/tests/frontend-sanyi-content.test.ts
++++ b/tests/frontend-sanyi-content.test.ts
+@@ -57,3 +57,11 @@
+   const paths = ["web/dist/app.js", "web/dist/app.css", ...await sourceFiles()];
+   await assertNoMatch(paths, REMOTE_FONT, "发现外部字体地址");
+ });
++
++ test("八字新组件纳入文化守卫且没有外部字体", async () => {
++  const paths = ["BirthForm", "BirthEntry", "BirthCorrection", "BaziTable", "BaziLuck", "BaziSchools", "BaziRelations", "BaziElements", "DayBoundaryChange", "LiuNianPanel"].map((name) => `web/components/${name}.tsx`);
++  paths.push("web/pages/BaziReading.tsx");
++  await assertNoMatch(paths, CULTURE_FORBIDDEN, "八字文化守卫");
++  await assertNoMatch(paths, VISIBLE_FORBIDDEN, "八字可见文案");
++  await assertNoMatch(paths, REMOTE_FONT, "八字字体守卫");
++});
+```
+
+- [ ] **Step 3：核对实施证据后应用规范 diff。** tasks 第 2 节 2.0、2.2–2.9 仅在相应实现与测试实际通过后勾选，已确认的 2.1 保留，2.10 留给用户验收。以下 diff 是实施后的目标状态；编写计划或沙箱抽取不能据此给工作区勾选。birth-profile 修订明确逐步校正的本机边界，与公开存档隐私一致。
+
+```diff
+--- a/openspec/changes/sanyi-chinese-redesign/specs/birth-profile/spec.md
++++ b/openspec/changes/sanyi-chinese-redesign/specs/birth-profile/spec.md
+@@ -27,7 +27,7 @@
+
+ ### Requirement: 夏令时与真太阳时校正
+
+-系统 MUST 按固定顺序校正出生时刻：先对 1986–1991 年中国夏令时期间的出生时间减 1 小时，再在有经度时按「(经度 − 120°) × 4 分钟 + 均时差」换算真太阳时；每项校正 MUST 在命盘上标注原始时刻与校正结果。
++系统 MUST 按固定顺序校正出生时刻：先对 1986–1991 年中国夏令时期间的出生时间减 1 小时，再在有经度时按「(经度 − 120°) × 4 分钟 + 均时差」换算真太阳时；每项校正 MUST 在持有匹配本人档案的浏览器中重算并标注原始时刻与校正结果；分享查看者 MUST 只见校正摘要，不见原始生辰与逐步校正。
+
+ #### Scenario: 夏令时出生
+
+--- a/openspec/changes/sanyi-chinese-redesign/tasks.md
++++ b/openspec/changes/sanyi-chinese-redesign/tasks.md
+@@ -25,16 +25,16 @@
+
+ ## 2. 里程碑 1B：八字命理与运势
+
+-- [ ] 2.0 编写里程碑 1B 实现计划（在 1A 验收与八字样稿确认之后）
++- [x] 2.0 编写里程碑 1B 实现计划（在 1A 验收与八字样稿确认之后）
+ - [x] 2.1 八字结果页样稿，用户确认（含十年流年运势面板，`docs/plans/assets/2026-10-06-bazi-mockup.html`）
+-- [ ] 2.2 生辰档案：前端表单与本机存储、城市经度表、夏令时与真太阳时校正 `src/calendar/solar-time.ts`
+-- [ ] 2.3 八字排盘 `src/calendar/bazi.ts`（≥ 30 命例，含十年流年窗口）与关系、神煞、五行计数 `src/calendar/bazi-relations.ts`
+-- [ ] 2.4 调候表 `src/calendar/data/qiongtong.json`（120 条）及完整性测试
+-- [ ] 2.5 命理与运势三家提示词与输入组装（沈孝瞻、余春台、任铁樵）、运势逐年断语 `years` 的 Schema 与核对规则及测试
+-- [ ] 2.6 编排服务支持八字：命理、运势时间范围、换日口径切换重排
+-- [ ] 2.7 八字结果页：四柱表、大运时间轴、流年运势面板（走势图、逐年表格、逐年短评）、五行分布、合冲刑害图、三家用神对照、三家断语
+-- [ ] 2.8 服务端存档不含原始生辰的断言测试
+-- [ ] 2.9 `demo:rehearse` 增加八字一卦
++- [x] 2.2 生辰档案：前端表单与本机存储、城市经度表、夏令时与真太阳时校正 `src/calendar/solar-time.ts`
++- [x] 2.3 八字排盘 `src/calendar/bazi.ts`（≥ 30 命例，含十年流年窗口）与关系、神煞、五行计数 `src/calendar/bazi-relations.ts`
++- [x] 2.4 调候表 `src/calendar/data/qiongtong.json`（120 条）及完整性测试
++- [x] 2.5 命理与运势三家提示词与输入组装（沈孝瞻、余春台、任铁樵）、运势逐年断语 `years` 的 Schema 与核对规则及测试
++- [x] 2.6 编排服务支持八字：命理、运势时间范围、换日口径切换重排
++- [x] 2.7 八字结果页：四柱表、大运时间轴、流年运势面板（走势图、逐年表格、逐年短评）、五行分布、合冲刑害图、三家用神对照、三家断语
++- [x] 2.8 服务端存档不含原始生辰的断言测试
++- [x] 2.9 `demo:rehearse` 增加八字一卦
+ - [ ] 2.10 用户验收里程碑 1B
+
+ ## 3. 收尾
+```
+
+- [ ] **Step 4：运行 `OPENSPEC_TELEMETRY=0 openspec validate sanyi-chinese-redesign --strict`。** 预期 valid；若有实际实现偏差，先修实现或同步对应 spec，再运行，不删除规格以躲验证。bazi-chart、bazi-three-schools、unified-question-entry、reading-archive 的场景逐项对照 B6 测试与下列验收清单。设计中的已更正命例保持不变。
+
+### Task B7.2：字体现场摘要与字形守卫
+
+- [ ] **Step 1：先落入完整测试，旧字体与尚无现场摘要时 RED。** 摘要文件和 woff2 是生成物，现场生成，不给虚构内容块；摘要必须随资产一起保存，随后改字表不能静默更新守卫。
+
+```ts
+// tests/frontend-bazi-font.test.ts
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import test from "node:test";
+test("重建字体符合现场锁定摘要且没有新增缺字", async () => {
+  const expected = (await readFile("web/fonts/mashanzheng-subset.sha256", "utf8")).trim();
+  assert.match(expected, /^[a-f0-9]{64}$/);
+  const bytes = await readFile("web/fonts/mashanzheng-subset.woff2");
+  assert.equal(createHash("sha256").update(bytes).digest("hex"), expected);
+  assert.ok(bytes.length < 100_000);
+  const { stdout } = await promisify(execFile)(".venv-tools/bin/python", ["-c", [
+    "import json",
+    "from pathlib import Path",
+    "from fontTools.ttLib import TTFont",
+    "cmap = TTFont('web/fonts/mashanzheng-subset.woff2').getBestCmap() or {}",
+    "chars = set(Path('web/fonts/mashanzheng-chars.txt').read_text().strip())",
+    "missing = sorted(c for c in chars if ord(c) not in cmap and c not in {'夬', '姤', '螣'})",
+    "print(json.dumps(missing))",
+  ].join("\n")]);
+  assert.deepEqual(JSON.parse(stdout), []);
+});
+```
+
+- [ ] **Step 2：运行以下命令重建并现场更新摘要守卫。** 字体下载被隔离网络拒绝时由主管在允许下载的目录执行；不能新增缺字豁免。三枚既有缺字维持系统字体回退，八字新增字符必须全有。
+
+```bash
+npm run font:charset
+npm run font:subset
+python3 - <<'PY'
+from pathlib import Path
+from hashlib import sha256
+font = Path('web/fonts/mashanzheng-subset.woff2')
+digest = sha256(font.read_bytes()).hexdigest()
+Path('web/fonts/mashanzheng-subset.sha256').write_text(digest + '\n')
+print('现场字体 sha256：' + digest)
+PY
+node --import tsx --test tests/frontend-font.test.ts tests/frontend-bazi-font.test.ts
+```
+
+- [ ] **Step 3：核对字表、woff2、现场摘要与守卫一起交付。** 测试用 fontTools 读取产物 cmap，所有新增字形缺失都失败；#45A07E 的 1A 文字对比度与自托管字体在截图中再核对。不要只对源 ttf 查字而漏检查实际子集。
+
+### Task B7.3：完整验收清单
+
+- [ ] **Step 1：新建下列清单，所有验收项先不勾。**
+
+```markdown
+// docs/plans/2026-10-06-sanyi-1b-acceptance.md
+# 三易里程碑 1B 用户验收
+
+## 启动准备
+
+1. 在实施完成的隔离目录使用已配置的 `.env`（不要把密钥抄到计划或截图），确认模型与 Arc Testnet 钱包可用。
+2. 运行 `npm run font:charset`、`npm run font:subset`，完成计划 B7 的字形与摘要守卫更新。
+3. 运行 `npm run frontend:dev`，浏览器打开 `http://127.0.0.1:4173`。
+4. 先按计划运行全量测试、严格类型检查、构建、秘密扫描、mock 排练与 OpenSpec 验证；允许监听的环境由主管执行。
+5. 准备本人命例：公历 1990-05-15 15:30、男、未填出生地、23:00 换日；时间固定在 2026-10-06 的排练期待下列年份窗口，真实当前日期变化时按提问立春年核对。
+
+## 验收清单
+
+每项通过后勾选；失败记录地址、操作、实际结果、浏览器宽度与截图，截图遮蔽钱包信息与原始生辰。
+
+- [ ] **本人档案与临时生辰**
+  - 怎么做：清空本机本人档案，输入「我今年运势如何」，点击填写生辰；取消后改为问事。重新填本人并记住，再选「本次临时换一个生辰」。
+  - 应看到：付款前取得生辰，取消或改为问事不收费；保存只有一份本人档案；临时输入不覆盖本人。模拟存储禁用仍能使用本次生辰。
+
+- [ ] **日期、闰月与时辰未知**
+  - 怎么做：试公历 2 月 30 日、农历 2023 年闰三月；再试 2023 年闰二月初一。勾选不知道时辰提交普通日期与 1990-05-06 交节日。
+  - 应看到：非法日期和不存在闰月就地提示不提交，合法闰月可用；缺时柱显示「缺」。普通日期提示正午估算；交节日提示年/月柱与大运需补时辰确认，不声称已有近似大运，不公开节气时刻。
+
+- [ ] **港澳台与地点二选一**
+  - 怎么做：分别选择香港、澳门、台北，再切换为手填经度。
+  - 应看到：34 城可选，港澳台明确提示当地历史夏令时不自动校正；城市与经度只提交一种。底部两条告知完整。
+
+- [ ] **夏令时命例与真太阳时**
+  - 怎么做：本人命例问今年运势，查看本机逐步校正；再用 1988-07-01 08:30 男、无经度，以及 2000-11-03 09:10、经度 87.6°。
+  - 应看到：本人命例减一小时为 14:30，四柱庚午、辛巳、庚辰、癸未；1988 命例为 07:30；2000 命例约 07:17（辰时）。校正顺序先夏令时后真太阳时。
+
+- [ ] **今年、明年与命理**
+  - 怎么做：分别问今年、明年运势，再问「我适合做什么」，也试时间范围标签与指定年份。
+  - 应看到：2026 提问今年窗口为 2023–2032，明年窗口为 2024–2033、默认选中 2027；干支与虚岁取排盘字段。命理显示五分项与用神，不显示吉凶、合议或流年运势面板。
+
+- [ ] **流年桌面图表**
+  - 怎么做：视口 1320px，核对曲线与表格逐列对齐，悬停与 Tab 聚焦读数、Enter/Space 点选年份短评。
+  - 应看到：纵轴一至九成，三/五/七刻度、五成虚线；金色合议、范围线、2027-08-04 年内交运位置；今年高亮、所问年选中。表格有回看/今年/展望与全部数据行，短评取三家实际响应。
+
+- [ ] **390px 窄屏**
+  - 怎么做：视口 390px，打开今年与明年结果，横向滑动流年表并点选年份；保存完整页面截图与面板截图。
+  - 应看到：页面本身不横向滚动，走势图完整显示十年干支与年份；回看中最低标注隐藏；表格只在自身容器滚动、行名固定，打开即滚到所问年；触控年份按钮至少 32px。
+
+- [ ] **换日切换与身份**
+  - 怎么做：23:20 出生命例，切换两次并尝试第三次；同一生辰换性别后尝试切换；起运前命例查看大运。
+  - 应看到：日柱按当前口径重算，三家重新落笔；两次限额可见、第三次禁用；相反性别返回 400「生辰与本卦命盘不符」；起运前不高亮第一步。换日无钱包确认与新付款。
+
+- [ ] **一家失败与免费重试**
+  - 怎么做：主管用隔离 mock provider 按 B5 失败用例让一家失败，再点击该家免费重试；再验全失败数据视图。
+  - 应看到：失败家逐年显示未展示，其它家仍可看；只重跑失败家，最多两次。全失败合议为「—」，图断线，不连到零；恢复后重新计算实际合议。
+
+- [ ] **分享隐私与刷新**
+  - 怎么做：复制结果链接到无本机档案的浏览器；再到持有另一份档案的浏览器；刷新两种页面。
+  - 应看到：同一份结果，无重复收费或模型调用；分享者只见校正摘要，不见原始日期时间、地点与逐步校正；无匹配档案不能切换口径。命盘本身可反推出生日期，表单已经告知。
+
+- [ ] **单笔付款与补问**
+  - 怎么做：连接 Arc Testnet 钱包，检查确认内容与交易日志；模拟创建返回 400「请先填写生辰」后补填再创建。
+  - 应看到：每次新解读仍为向收款地址单笔转账 0.05 USDC，没有授权或新增付款路径；400 补填后复用已付款凭证。刷新、三家重试与换日不新增转账。
+
+- [ ] **文化、字体与旧问事回归**
+  - 怎么做：核对八字固定标题字形；走一次六掷问事、三家断语、奇门与黄历。
+  - 应看到：自托管字体，无缺失的新字形，无守卫禁词；翠色在现有背景上对比度至少 4.5:1，吉凶附文字；1A 付款与问事阅读可用。
+
+## 截图证据与结论
+
+- 桌面 1320px：首页补问、完整运势结果、流年点选、命理结果。
+- 手机 390px：完整运势结果、流年滚动表、明年默认选中、无档案分享。
+- 两种视口都记录 `document.documentElement.scrollWidth <= window.innerWidth`；另记录表格容器 `scrollWidth/clientWidth`、固定行名与选中列位置。
+- [ ] 上述项目全部通过，可以由主管勾选 OpenSpec 2.10。
+- 验收人：
+- 验收日期：
+- 未通过项或备注：
+```
+
+### Task B7.4：全量验证与截图
+
+- [ ] **Step 1：在实施完成目录运行以下命令并保存退出码。** 前端构建先于全量测试，以满足 1A 构建产物守卫；隔离演练可用全零的公开 WalletConnect 项目标识，不用于真实钱包验收。秘密扫描必须读取实施环境配置；没有 .env 的纯隔离演练用下方直接脚本扫描，注明未加载真实秘密值，不复制用户密钥。
+
+```bash
+npm run frontend:build
+npm test
+npm run typecheck
+npm run frontend:secrets
+npm run demo:rehearse
+OPENSPEC_TELEMETRY=0 openspec validate sanyi-chinese-redesign --strict
+```
+
+```bash
+# 仅无 .env 的隔离抽取验证使用，公开标识不是密钥。
+WALLETCONNECT_PROJECT_ID=00000000000000000000000000000000 npm run frontend:build
+node --import tsx scripts/check-frontend-secrets.ts
+```
+
+- [ ] **Step 2：由主管在允许监听目录启动 `npm run frontend:dev`，按 B7.3 走查桌面 1320 与手机 390。** 当前沙箱监听 EPERM，不能运行服务或声称完成端到端截图；全量测试的监听项同样由主管复跑，不跳过。截图必须包含整个流年面板、固定表头、所选短评及窄屏横向表格，不以隐藏内容来消除横向滚动。
+- [ ] **Step 3：有既有 Playwright CLI 时按下面流程留证，无需安装依赖。** 先 `command -v npx` 与 `command -v playwright-cli`；CLI 未有时用主管现成浏览器开发者工具完成同样步骤，不通过 npx 自动下载。导航到实际结果后，用最新 snapshot 的 refs 点选年份并 Tab/Enter 验证；禁止截图密钥或未遮蔽的钱包详情。
+
+```bash
+mkdir -p output/playwright
+playwright-cli open http://127.0.0.1:4173
+playwright-cli resize 1320 1000
+playwright-cli snapshot
+# 用最新 snapshot 的 refs 填表、付一次款，导航到实际 #/r/<id>。
+playwright-cli snapshot
+playwright-cli eval '({ width: innerWidth, page: document.documentElement.scrollWidth, table: document.querySelector(".ln-scroll")?.scrollWidth })'
+playwright-cli run-code 'await page.screenshot({ path: "output/playwright/sanyi-desktop.png", fullPage: true })'
+playwright-cli resize 390 844
+playwright-cli reload
+playwright-cli snapshot
+playwright-cli eval '({ width: innerWidth, page: document.documentElement.scrollWidth, table: document.querySelector(".ln-scroll")?.scrollWidth, left: document.querySelector(".ln-scroll")?.scrollLeft })'
+playwright-cli run-code 'await page.screenshot({ path: "output/playwright/sanyi-mobile.png", fullPage: true })'
+```
+
+- [ ] **Step 4：主管核对截图像素与操作结果。** 宽屏表格每列中心与对应图点中心一致；390px 页面 scrollWidth 不大于 innerWidth、表容器可滚动、行名固定、默认所问列可见；切换与单家重试付款计数不增加。截图与全量验证通过后才勾 tasks 2.2–2.9，用户完成清单后再勾 2.10。
+- [ ] **Step 5：核对任务状态与实际结果。** 本轮只编写并抽取计划，所有计划实施复选框保持未勾；主管实际实施时逐项更新，不能把纯静态渲染通过等同用户验收完成。
+
+## 第 5 轮计划代码验证记录
+
+最终文档又复抽到 `/private/tmp/sanyi-round5-final4`，60 块/17 diff 全部应用成功；与下述已测试目录的所有完整块和修改目标逐字节一致，`git diff --check` 通过。
+
+本轮只修改本计划，不改工作区其它文件、不提交、不安装依赖。最终复抽目录 `/private/tmp/sanyi-round5-final3` 从工作区基线重建；60 个完整块（含 tsx 与验收 markdown）全部抽出，17 个 diff 按依赖顺序逐块 `git apply --check` 再 `git apply`。每个检查与应用退出码均为 0；同一文件的 B5/B6 修改不能倒序应用。未复制运行时 .env 或密钥，现有 node_modules 与 .venv-tools 仅符号链接。
+
+以下是本轮完整抽取方法；重复时使用新的空目录。旧第 4 轮抽取脚本只描述当时范围，不适用于本轮新增 tsx/markdown。
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import re,shutil,subprocess
+base=Path('/Users/captain/python/Claude/arc-main-first')
+root=Path('/private/tmp/sanyi-round5-reproduce')
+root.mkdir(exist_ok=False)
+for name in ['src','tests','scripts','web','tools','contracts','openspec','docs']:
+ shutil.copytree(base/name,root/name)
+for name in ['package.json','tsconfig.json','README.md','.env.example']:
+ shutil.copy2(base/name,root/name)
+for name in ['node_modules','.venv-tools']:
+ (root/name).symlink_to(base/name,target_is_directory=True)
+plan=(base/'docs/plans/2026-10-06-sanyi-milestone-1b.md').read_text()
+blocks=list(re.finditer(r'```(ts|tsx|json|python|css|markdown)\n// ([^\n]+)\n(.*?)\n```',plan,re.S))
+for m in blocks:
+ path=root/m[2]
+ path.parent.mkdir(parents=True,exist_ok=True)
+ code=m[3]+'\n'
+ if m[1] in ['ts','tsx']:
+  code='// '+m[2]+'\n'+code
+ path.write_text(code)
+patches=re.findall(r'```diff\n(.*?)```',plan,re.S)
+# 同一既有文件跨 B5/B6 逐块修改，依赖补丁按计划顺序应用。
+for index,patch in enumerate(patches):
+ path=root/f'plan-modifications-{index+1}.patch'
+ path.write_text(patch)
+ subprocess.run(['git','apply','--check',str(path)],cwd=root,check=True)
+ subprocess.run(['git','apply',str(path)],cwd=root,check=True)
+print(f'抽取 {len(blocks)} 个完整块，依次应用 {len(patches)} 个 diff：{root}')
+PY
+```
+
+验证证据（本轮隔离演练不勾计划或工作区 OpenSpec）：
+
+| 验证 | 命令与实跑结果 |
+|---|---|
+| 完整块与 diff | 上述抽取方法；60 块、17 diff 全部应用，退出 0 |
+| 小修 RED | `/private/tmp/round5-red.log`：旧四柱签名下两个相反性别回归失败，旧固定警示断言失败；B6 模块缺失的四个测试文件失败 |
+| B5/B6 GREEN | 下方六文件命令：23 通过、0 失败、0 跳过；`/private/tmp/round5-final3-new.log` |
+| 严格类型检查 | `npm run typecheck`：退出 0，tsconfig 保留 strict、noUncheckedIndexedAccess、exactOptionalPropertyTypes；0 错 |
+| 双源 fixtures | `.venv-tools/bin/python tools/bazi/generate_fixtures.py`：55 个时刻，每个双 sect；旧 fixtures ENOENT 后已重建并重新全量验证 |
+| 前端构建 | `WALLETCONNECT_PROJECT_ID=00000000000000000000000000000000 npm run frontend:build`：退出 0，app.js/app.css 生成；真实 .env 未复制 |
+| 秘密扫描 | `node --import tsx scripts/check-frontend-secrets.ts`：退出 0，61 个文件扫描通过；无 .env，未加载真实秘密值，主管还需运行 npm run frontend:secrets |
+| 排练 | `npm run demo:rehearse`：退出 0，庚午 辛巳 庚辰 癸未、2023–2032、三家 done、逐年合议 10 项；总付款 2 笔（问事+运势），换日未增加；`/private/tmp/round5-final3-rehearse.log` |
+| OpenSpec | `OPENSPEC_TELEMETRY=0 openspec validate sanyi-chinese-redesign --strict`：退出 0，valid（仅隔离目录目标 diff） |
+| 字体 | `npm run font:charset` 退出 0，固定字与三家姓氏已进入新字表；`npm run font:subset` 退出 1，下载遭 Operation not permitted；`/private/tmp/round5-final3-font.log`。不编造摘要，不为旧字体生成新守卫摘要 |
+| 全量回归 | `npm test`：440 项，429 通过、11 失败、0 跳过，退出 1；`/private/tmp/round5-final3-regression.log`。10 项 HTTP 为 listen EPERM，1 项字体守卫因现场摘要尚未生成而 ENOENT；不能声称全量通过 |
+| 截图 | 沙箱不能监听；未执行桌面/390px 端到端截图，不以静态渲染替代。按 B7.4 交主管实跑 |
+
+```bash
+cd /private/tmp/sanyi-round5-final3
+node --import tsx --test \
+  tests/frontend-birth-profile.test.ts tests/frontend-birth-entry.test.ts \
+  tests/frontend-liunian-chart.test.ts tests/frontend-bazi-components.test.ts \
+  tests/sanyi-bazi-public-warnings.test.ts tests/sanyi-bazi-reading-service.test.ts
+```
+
+字体守卫是额外的第七文件 `tests/frontend-bazi-font.test.ts`；它已在全量测试中实跑失败，不能算入上述 GREEN。主管须先按 B7.2 成功重建字体、现场写摘要并检查产物字形，再跑全量测试；已确认旧子集缺少本轮「沈孝瞻、余春台、任铁樵、流年运势」等新增字形，绝不以旧资产宣布验收。
+
+## 第 4 轮计划代码验证记录
 
 第 4 轮最终代码从当前计划重新抽到 `/private/tmp/sanyi-round4-final`，不依赖第 3 轮目录里的已修改文件。基线复制工作区的 src/tests/scripts/web/tools/contracts、README、package.json、tsconfig.json 与 `.env.example`；node_modules 仅建立指向工作区现有依赖的符号链接。只读复制示例配置，不复制运行时密钥或本地 `.env`。39 个完整文件块按首行 `// 路径` 写入，JSON/Python 去标记，TypeScript 保留注释；13 个既有文件修改块单独抽出，先 `git apply --check`，再 `git apply` 应用到隔离目录，不能将 diff 当完整文件覆盖。空白上下文行可为空行，git apply 实跑接受，既有文件原有空行保持。
 
@@ -5218,16 +6852,20 @@ node_modules/.bin/tsc --noEmit --strict \
 | B3 | 701 | 既有关系与调候实现 |
 | B4a | 606 | 锚年流月事实和节气日期，audit 只列修改片段 |
 | B4b | 596 | 余家全部四柱藏干、提示词分工、mock 精确片段与 4 项回归 |
-| B5a | 945 | B5.1 时间范围、B5.2 存储与公开投影、B5.3 编排和完整测试 |
+| B5a | 988 | B5.1 时间范围、B5.2 存储与公开投影、B5.3 编排和完整测试 |
 | B5b | 635 | B5.4 API、B5.5 HTTP、B5.6 隐私、B5.7 排练、B5.8 交叉验收 |
+| B6a | 470 | B6.1 档案/入口测试，B6.2 表单与付款前补问 |
+| B6b | 810 | B6.3 流年/组件测试，B6.4 图表，B6.5 命盘，B6.6 分流/样式/字表 |
+| B7 | 239 | B7.1 清理/规范，B7.2 字体守卫，B7.3 验收清单，B7.4 全量验证/截图 |
 
-所有完整 Chunk 均 ≤ 1000 行；B5 分为 a/b 两块。既有文件只有精确 diff，新建文件才有路径标记完整块；修改片段新增语句保留 1A 排版，新增 TypeScript 代码每行一条语句，if/for 均使用换行花括号，无嵌套三元。本轮只修改本计划文件，不提交、不安装依赖。
+所有完整 Chunk 均 ≤ 1000 行；B5、B6 各分为 a/b 两块。既有文件只有精确 diff，新建文件才有路径标记完整块；修改片段新增语句保留 1A 排版，新增 TypeScript 代码每行一条语句，if/for 均使用换行花括号，无嵌套三元。本轮只修改本计划文件，不提交、不安装依赖。
 
 ## 待主管确认的口径
 
 1. 无新增业务口径或阻塞疑点。按主管已定边界，原始生辰与校正详情只在请求期和本机使用；服务端保存派生命盘与不可逆校正摘要。起运与交运日期可能反推出生日期的局限已写明，不删除字段。
-2. 唯一剩余验证项是允许监听环境里的 HTTP 复跑：沙箱拒绝本机端口，10 项监听测试不能据此判定业务通过。需主管实跑 `node --import tsx --test tests/frontend-server.test.ts` 与 `npm test`，不需重新确认已经裁定的实现口径。
-3. B6 要按公开 kind 联合接八字页和本机生辰；B5 不展示原始校正详情，旧问事组件使用 question 类型别名。免费切换需要重传生辰，服务端只比较旧口径四柱，这就是本轮已定的身份核验边界。
+2. 剩余验证项是允许监听环境里的 10 项 HTTP 测试、字体子集重建与摘要/字形守卫、1320/390px 截图走查；沙箱监听和字体下载被拒绝，不能据此宣称这些项通过。按 B7 复跑，无需重新确认已裁定的业务口径。
+3. B6 要按公开 kind 联合接八字页和本机生辰；B5 不展示原始校正详情，旧问事组件使用 question 类型别名。免费切换需要重传生辰，服务端同时比较旧口径四柱、大运方向与起运；缺时辰交节日的大运为 null 时比较 null。
+4. 供主管复核的身份限制：交节日缺时辰时 luck=null，四柱与 null 本身无法区分性别；本轮按用户明确要求比较 null，不新增原始性别存档。已知时辰与缺时辰非交节日的相反性别均实测返回 400。
 
 ### 已裁定的取材歧义记录
 
