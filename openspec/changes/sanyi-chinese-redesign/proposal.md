@@ -10,9 +10,10 @@
 - **BREAKING** 移除易者押注、赔付、封存、见证结算、双轨分流、mock/live 切换、六步工作台、Brier 与回放证据页等用户可见能力（合约与 CLI 脚本保留）。
 - **BREAKING** 移除「夜の神社」视觉与全部日本文化元素，新增「水墨夜」视觉系统与文化守卫测试。
 - 新增统一入口：一个问题框，规则分类为问事、命理、运势、起名、择日、星座、合婚、其它；第一期开放问事、命理、运势。
-- 新增生辰档案：本机保存，支持缺时辰、夏令时与真太阳时校正、换日口径切换；服务端不落原始生辰。
-- 新增亲手六掷起卦：每掷取 Arc 新区块哈希确定性派生，可公开复算。
+- 新增生辰档案：只收日期、时间（选填，空即三柱）与性别，填好自动存本机；支持夏令时校正与换日口径切换，不收出生地、不做真太阳时校正；服务端不落原始生辰。
+- 新增自动六掷起卦：付款后服务端自动连掷，每掷取 Arc 新区块哈希确定性派生，可公开复算。
 - 新增问事三家（程颐义理、京房纳甲、邵雍梅花）与命理运势三家（沈孝瞻格局、余春台调候、任铁樵扶抑），统一结构化断语与盘面证据核对。
+- 新增白话总述与解法：三家之后用白话汇总结论，并给出心法（问事取《大象传》原文）、怎么做、别做什么；核对不过时删错留对。
 - 新增八字排盘（四柱、十神、藏干、长生、纳音、大运流年、合冲刑害、神煞、调候表）。
 - 新增时空栏、黄历（lunar-javascript）与奇门时盘（时家转盘拆补法，仅显示）。
 - 新增解读存档：每次解读有不可枚举的独立链接，付款凭证持久化防重用。
@@ -23,11 +24,12 @@
 ## Impact
 
 - Affected specs:
-  - 新增：`unified-question-entry`、`birth-profile`、`six-throw-casting`、`question-three-schools`、`bazi-chart`、`bazi-three-schools`、`shikong-almanac-qimen`、`ink-night-theme`、`reading-archive`
+  - 新增：`unified-question-entry`、`birth-profile`、`six-throw-casting`、`question-three-schools`、`bazi-chart`、`bazi-three-schools`、`shikong-almanac-qimen`、`ink-night-theme`、`reading-archive`、`plain-summary`
   - 修改：`paid-oracle-flow`、`rich-liuyao-question-chart`、`wallet-signed-divination`
   - 移除：`action-first-oracle`、`compact-oracle-layout`、`dual-track-question-routing`、`human-settled-wager`、`live-default-demo`、`night-shrine-terminal-theme`、`single-screen-oracle-workbench`、`walletless-question-reading`
   - 不变：`explicit-five-elements`
 - Affected code: `web/`（重写）、`src/frontend/server.ts`、新增 `src/sanyi/`、`src/calendar/`、`web/fonts/`；复用 `src/oracle/liuyao-chart.ts`、`src/oracle/fee-payment.ts`、`src/oracle/arc-question-fee-verifier.ts`、`src/agent/*-provider.ts`；`package.json`、`README.md`、`tests/`
+- 新语料：《大象传》64 条（维基文库公版，繁转简后与 ctext 交叉核对）。
 - 新依赖：`lunar-javascript`（MIT）；开发期工具：kinqimen（生成奇门标准答案，不进运行时）、fonttools（字体子集化）
 - 合约：不改
 - 设计文档：`docs/plans/2026-09-30-sanyi-redesign-design.md`
