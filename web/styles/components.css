@@ -873,6 +873,13 @@
 .birth-input.year {
   width: 6.5em;
 }
+.birth-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
 .seg {
   display: inline-flex;
   border: 1px solid var(--line-strong);

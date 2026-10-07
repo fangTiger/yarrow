@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api.js";
 import {
-  EMPTY_BIRTH, birthProblem, fromBirthInput, loadBirthProfile, toBirthInput, useBirthProfile,
+  EMPTY_BIRTH, birthProblem, fromBirthInput, loadBirthProfile, saveBirthProfile, toBirthInput,
   type BirthFormValues,
 } from "../lib/birth-profile.js";
 import {
@@ -28,7 +28,6 @@ export function QuestionForm() {
   const [classifying, setClassifying] = useState(false);
   const [error, setError] = useState("");
   const [birthValues, setBirthValues] = useState<BirthFormValues>(initialBirthValues());
-  const [remember, setRemember] = useState(true);
   const length = [...question.trim()].length;
   const valid = length >= 4 && length <= 280;
   useEffect(() => {
@@ -72,11 +71,6 @@ export function QuestionForm() {
   } else if (classifying) {
     status = "识别中";
   }
-  const saveBirth = (values: BirthFormValues, keep: boolean) => {
-    if (keep && birthProblem(values) === null) {
-      useBirthProfile(toBirthInput(values), true);
-    }
-  };
   const needsBirth = entry.kind !== "question";
   return (
     <form className="home-form" onSubmit={(event) => event.preventDefault()}>
@@ -111,14 +105,12 @@ export function QuestionForm() {
         <BirthFields
           onChange={(values) => {
             setBirthValues(values);
-            saveBirth(values, remember);
-          }}
-          onRememberChange={(keep) => {
-            setRemember(keep);
-            saveBirth(birthValues, keep);
+            // 生辰填完整即存入本机，下次自动带出。
+            if (birthProblem(values) === null) {
+              saveBirthProfile(toBirthInput(values));
+            }
           }}
           problem={problem}
-          remember={remember}
           values={birthValues}
         />
       ) : null}

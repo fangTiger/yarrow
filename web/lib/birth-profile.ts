@@ -2,22 +2,22 @@
 import { normalizeBirthProfile, type BirthProfileInput } from "../../src/sanyi/birth-profile.js";
 export type { BirthProfileInput };
 
-/** 首页内嵌生辰行的表单值：只收生辰八字所需的日期、时辰与性别，不收出生地。 */
+/** 首页内嵌生辰行的表单值：只收生辰八字所需的日期、时间（选填）与性别，不收出生地。 */
 export interface BirthFormValues {
   calendar: "solar" | "lunar";
   year: string;
   month: string;
   day: string;
   isLeapMonth: boolean;
+  /** 出生时间，选填；空串表示时辰不详，按年月日三柱排盘。 */
   time: string;
-  unknownTime: boolean;
   gender: "male" | "female" | "";
 }
 
 /** 新用户从空白开始，不预填任何样例生日，避免误用。 */
 export const EMPTY_BIRTH: BirthFormValues = {
   calendar: "solar", year: "", month: "", day: "", isLeapMonth: false,
-  time: "", unknownTime: false, gender: "",
+  time: "", gender: "",
 };
 
 export const LUNAR_MONTHS = [
@@ -47,20 +47,21 @@ export function toBirthInput(values: BirthFormValues): BirthProfileInput {
   if (!values.year.trim() || !values.month.trim() || !values.day.trim()) {
     throw new Error("请填写出生日期");
   }
-  if (!values.unknownTime && !/^\d{1,2}:\d{2}$/.test(values.time)) {
-    throw new Error("请填写出生时间，或勾选不知道时辰");
+  const time = values.time.trim();
+  if (time !== "" && !/^\d{1,2}:\d{2}$/.test(time)) {
+    throw new Error("出生时间格式不对，也可以留空");
   }
   if (values.gender === "") {
     throw new Error("请选择性别（用于排大运顺逆）");
   }
-  const parts = values.time.split(":");
+  const parts = time.split(":");
   const input: BirthProfileInput = {
     calendar: values.calendar,
     year: Number(values.year),
     month: Number(values.month),
     day: Number(values.day),
     isLeapMonth: values.calendar === "lunar" && values.isLeapMonth,
-    time: values.unknownTime ? null : { hour: Number(parts[0]), minute: Number(parts[1]) },
+    time: time === "" ? null : { hour: Number(parts[0]), minute: Number(parts[1]) },
     gender: values.gender,
   };
   normalizeBirthProfile(input);
@@ -86,7 +87,6 @@ export function fromBirthInput(input: BirthProfileInput): BirthFormValues {
     day: String(input.day),
     isLeapMonth: input.isLeapMonth,
     time: input.time ? `${pad(input.time.hour)}:${pad(input.time.minute)}` : "",
-    unknownTime: input.time === null,
     gender: input.gender,
   };
 }
@@ -129,25 +129,20 @@ export function loadBirthProfile(storage?: BirthStorage): BirthProfileInput | nu
   }
 }
 
-export function useBirthProfile(
-  input: BirthProfileInput,
-  remember: boolean,
-  storage?: BirthStorage,
-): BirthProfileInput {
+/** 合法生辰直接存入本机，下次自动带出；存储不可用时静默跳过，不影响本次排盘。 */
+export function saveBirthProfile(input: BirthProfileInput, storage?: BirthStorage): BirthProfileInput {
   normalizeBirthProfile(input);
-  if (remember) {
-    try {
-      const target = storage ?? globalThis.localStorage;
-      target.setItem(KEY, JSON.stringify(input));
-    } catch {
-      // 记住失败不影响本次排盘。
-    }
+  try {
+    const target = storage ?? globalThis.localStorage;
+    target.setItem(KEY, JSON.stringify(input));
+  } catch {
+    // 保存失败不影响本次排盘。
   }
   return input;
 }
 
 export function birthSummary(input: BirthProfileInput): string {
-  const time = input.time ? `${pad(input.time.hour)}:${pad(input.time.minute)}` : "不知道时辰";
+  const time = input.time ? `${pad(input.time.hour)}:${pad(input.time.minute)}` : "未填时间";
   const leap = input.isLeapMonth ? "闰" : "";
   const calendar = input.calendar === "solar" ? "公历" : "农历";
   const gender = input.gender === "male" ? "男" : "女";

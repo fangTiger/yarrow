@@ -19,34 +19,37 @@ const filled: BirthFormValues = {
 };
 function fields(values: BirthFormValues, problem: string | null = null): string {
   return renderToStaticMarkup(createElement(BirthFields, {
-    values, remember: true, problem, onChange: noop, onRememberChange: noop,
+    values, problem, onChange: noop,
   }));
 }
 
-test("生辰行只收日期、时辰、性别，不出现城市与经纬度", () => {
+test("生辰行只收日期、时间（选填）、性别，没有勾选与告知，不出现城市与经纬度", () => {
   const html = fields(filled);
   assert.match(html, /type="date"/);
   assert.match(html, /value="1990-05-15"/);
   assert.match(html, /type="time"/);
-  assert.match(html, /不知道时辰/);
+  assert.match(html, /时间（选填）/);
   assert.match(html, />男</);
   assert.match(html, />女</);
-  assert.match(html, /记住为本人生辰（仅存本机）/);
-  assert.match(html, /生辰只存本机/);
-  assert.match(html, /分享链接会显示命盘/);
+  assert.doesNotMatch(html, /type="checkbox"/);
+  assert.doesNotMatch(html, /不知道时辰|记住|仅存本机|只存本机|分享链接/);
   assert.doesNotMatch(html, /城市|经度|经纬|出生地|港澳台|真太阳时/);
   assert.doesNotMatch(html, forbidden);
 });
 
-test("农历改用中文月日与闰月勾选；不知道时辰时禁用时间框", () => {
+test("农历改用中文月日与闰月勾选；日期已填而时间空着时提示按三柱推算", () => {
   const lunar = fields({ ...filled, calendar: "lunar" });
   assert.doesNotMatch(lunar, /type="date"/);
   assert.match(lunar, /正月/);
   assert.match(lunar, /腊月/);
   assert.match(lunar, /初一/);
   assert.match(lunar, /闰月/);
-  const unknown = fields({ ...filled, unknownTime: true });
-  assert.match(unknown, /type="time"[^>]*disabled=""|disabled=""[^>]*type="time"/);
+  assert.match(fields({ ...filled, time: "" }), /未填时间，按年月日三柱推算/);
+  assert.doesNotMatch(fields(filled), /未填时间/);
+  assert.doesNotMatch(fields(EMPTY_BIRTH), /未填时间/);
+  const form = readFileSync(new URL("../web/components/QuestionForm.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(form, /remember/i);
+  assert.match(form, /saveBirthProfile\(/);
 });
 
 test("还没开始填时不显示报错，填了一半才就地提示", () => {

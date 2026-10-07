@@ -5,17 +5,16 @@ import {
 
 interface BirthFieldsProps {
   values: BirthFormValues;
-  remember: boolean;
   problem: string | null;
   onChange(values: BirthFormValues): void;
-  onRememberChange(remember: boolean): void;
 }
 
-/** 首页内嵌的生辰行：只收出生日期、时辰（或不知道）与性别。 */
+/** 首页内嵌的生辰行：只收出生日期、时间（选填，空着按三柱）与性别。 */
 export function BirthFields(props: BirthFieldsProps) {
   const { values } = props;
   const solar = values.calendar === "solar";
   const started = [values.year, values.month, values.day, values.time].some((value) => value !== "");
+  const dated = [values.year, values.month, values.day].every((value) => value !== "");
   function update(patch: Partial<BirthFormValues>): void {
     props.onChange({ ...values, ...patch });
   }
@@ -88,21 +87,15 @@ export function BirthFields(props: BirthFieldsProps) {
             </label>
           </span>
         )}
-        <input
-          aria-label="出生时间"
-          className="birth-input"
-          disabled={values.unknownTime}
-          onChange={(event) => update({ time: event.target.value })}
-          type="time"
-          value={values.time}
-        />
-        <label className="check">
+        <label className="birth-time">
+          <span>时间（选填）</span>
           <input
-            checked={values.unknownTime}
-            onChange={(event) => update({ unknownTime: event.target.checked })}
-            type="checkbox"
+            aria-label="出生时间（选填）"
+            className="birth-input"
+            onChange={(event) => update({ time: event.target.value })}
+            type="time"
+            value={values.time}
           />
-          不知道时辰
         </label>
         <div aria-label="性别" className="seg" role="group">
           {(["male", "female"] as const).map((gender) => (
@@ -117,15 +110,7 @@ export function BirthFields(props: BirthFieldsProps) {
           ))}
         </div>
       </div>
-      <label className="check">
-        <input
-          checked={props.remember}
-          onChange={(event) => props.onRememberChange(event.target.checked)}
-          type="checkbox"
-        />
-        记住为本人生辰（仅存本机）
-      </label>
-      <p className="hint">生辰只存本机；解读时会发送给模型，分享链接会显示命盘（可反推出生日期）。</p>
+      {dated && values.time === "" ? <p className="hint">未填时间，按年月日三柱推算</p> : null}
       {started && props.problem ? <p className="error" role="alert">{props.problem}</p> : null}
     </fieldset>
   );
