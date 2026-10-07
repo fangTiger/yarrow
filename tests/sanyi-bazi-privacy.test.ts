@@ -49,8 +49,10 @@ test("模型错误回显生辰不会进入存档、日志或公开响应，重�
   try {
     const r = await f.api.createReading({ question: "我今年运势如何", birth, feeProof: proof() });
     await f.bazi.whenSettled(r.id);
+    // 日志也用固定时钟：真实时间戳可能恰好含「15:30」「09:10」等受检串，造成误报。
+    const clock = () => new Date("2026-10-06T13:00:00Z");
     const restarted = new BaziReadingService({ store: f.store, provider: mock,
-      clock: () => new Date("2026-10-06T13:00:00Z"), logger: createSanyiLogger(join(f.root, "log")),
+      clock, logger: createSanyiLogger(join(f.root, "log"), clock),
       feeVerifier: { verify: async () => {
         throw new Error("免费重试不得核验新付款");
       } } });
