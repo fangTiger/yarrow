@@ -264,7 +264,7 @@ export class BaziReadingService {
     const result = await runSummaryWithRetry({ provider: this.deps.provider }, input);
     await this.deps.store.update<StoredBaziReading>(id, (current) => ({
       ...current,
-      summary: summaryState(current.summary, result, basis, true),
+      summary: { ...summaryState(current.summary, result, basis, true), anchor: input.anchor },
     }));
   }
 
@@ -312,6 +312,14 @@ export class BaziReadingService {
       consensus: reading.kind === "fortune" ? averageConfidence(values) : null,
       chartPoints: points,
       schools,
+      // 解法心法依据：三家各自取用与《穷通宝鉴》调候取用。
+      anchor: {
+        title: "三家取用",
+        lines: [
+          ...schools.map((item) => `${item.name}：${item.useGod ?? ""}`),
+          `调候：${reading.tiaohou.useStems.join("、")}（《穷通宝鉴》）`,
+        ],
+      },
       proseErrors: (text) => auditBaziSummaryProse(text, facts),
     };
     if (reading.kind === "fortune") {

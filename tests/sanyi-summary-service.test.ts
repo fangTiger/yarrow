@@ -11,6 +11,8 @@ import { createSanyiLogger } from "../src/sanyi/log.js";
 import { MockSchoolsProvider, mockSingleFeeReceipt } from "../src/sanyi/mock-provider.js";
 import { ReadingService, StateConflictError } from "../src/sanyi/reading-service.js";
 import { ReadingStore } from "../src/sanyi/store.js";
+import { getDaxiang } from "../src/agent/daxiang-corpus.js";
+import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
 import { expectedTone } from "../src/sanyi/summary.js";
 import { shouldPollReading } from "../web/lib/reading-state.js";
 import { baziFixture, birth, proof as baziProof } from "./helpers/bazi-service.js";
@@ -80,6 +82,13 @@ test("问事三家落笔后写白话总述，倾向合合议，写完才算完�
     assert.equal(reading.summary?.status, "done");
     assert.equal(reading.summary?.basis, 3);
     assert.equal(reading.summary?.output?.tone, expectedTone(consensusOf(reading.schools)));
+    // 解法：心法原文取本卦《大象传》，由系统给出。
+    const primary = deriveFiveHexagrams(reading.lines!).primary;
+    assert.deepEqual(reading.summary?.anchor, {
+      title: `《象传》· ${primary.name}`, lines: [getDaxiang(primary.kingWenNumber)],
+    });
+    assert.ok((reading.summary?.output?.remedy?.plan.length ?? 0) >= 2);
+    assert.equal(reading.summary?.output?.advice, undefined);
   } finally {
     await f.close();
   }
@@ -164,6 +173,13 @@ test("运势与命理也写白话总述：运势带倾向与十年走势，命�
     assert.equal(a.summary?.basis, 3);
     assert.ok(a.summary?.output?.tone);
     assert.ok(a.summary?.output?.outlook);
+    // 八字心法依据：三家取用与调候。
+    assert.equal(a.summary?.anchor?.title, "三家取用");
+    const lines = a.summary?.anchor?.lines.join("\n") ?? "";
+    for (const name of ["沈孝瞻：", "余春台：", "任铁樵：", "调候："]) {
+      assert.ok(lines.includes(name), name);
+    }
+    assert.ok(a.summary?.output?.remedy);
     const destiny = await f.bazi.create({ kind: "destiny", question: "我适合做什么", birth, sect: 1,
       horizon: "year", feeProof: baziProof(2) });
     await f.bazi.whenSettled(destiny.id);
@@ -171,6 +187,7 @@ test("运势与命理也写白话总述：运势带倾向与十年走势，命�
     assert.equal(b.summary?.status, "done");
     assert.equal(b.summary?.output?.tone, undefined);
     assert.equal(b.summary?.output?.outlook, undefined);
+    assert.ok(b.summary?.output?.remedy);
   } finally {
     await f.close();
   }

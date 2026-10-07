@@ -11,6 +11,8 @@ test("mock 排练完成六掷与三家落笔", async () => {
   assert.equal(Number.isFinite(summary.consensusTenths), true);
   assert.ok(summary.conclusions.question.length > 0);
   assert.ok(summary.conclusions.fortune.length > 0);
+  assert.ok(summary.remedies.question > 0);
+  assert.ok(summary.remedies.fortune > 0);
 });
 
 test("mock 排练追加十年运势与免费换日，只有两笔付款", async () => {

@@ -15,6 +15,7 @@ const input: SummaryInput = {
   question: "这次面试能过吗",
   consensus: 4.67,
   chartPoints: ["本卦地天泰，之卦地风升", "用神官鬼在二爻，寅木旬空"],
+  anchor: { title: "《象传》· 地天泰", lines: ["天地交，泰；后以财成天地之道，辅相天地之宜，以左右民。"] },
   schools: [
     { name: "程颐", school: "义理派", verdict: "平", confidenceTenths: 5, headline: "守正待时",
       reason: "时机未至", sections: [{ title: "卦义", text: "泰卦小往大来" }], advice: ["稍安勿躁"] },
@@ -31,7 +32,14 @@ const good: PlainSummary = {
   agreement: "三家都认为时机还没完全到。",
   difference: "京房更悲观一些，程颐、邵雍认为还有余地。",
   explanation: ["代表这件事的那一爻目前力量不足，所以结果还不明朗。", "整体局面平稳，没有大的阻碍，也没有明显的助力。"],
-  advice: ["面试前把作品集再打磨一遍。", "结果出来前别急着放弃其他机会。"],
+  remedy: {
+    principle: "顺势而为，先把能做的准备做足。",
+    plan: [
+      { action: "面试前把作品集再打磨一遍", basis: "三家都认为时机还没完全到", timing: "面试前一周" },
+      { action: "结果出来前别放弃其他机会", basis: "用神力量不足，结果未明" },
+    ],
+    avoid: ["不要急着催问结果"],
+  },
 };
 
 test("倾向由合议决定：六成以上偏顺，四成以下偏不顺，其余为中", () => {
@@ -45,10 +53,11 @@ test("倾向由合议决定：六成以上偏顺，四成以下偏不顺，其�
 
 test("提示词含所问、合议倾向、盘面要点与三家断语；系统提示写明白话与边界", () => {
   const prompt = buildSummaryPrompt(input);
-  for (const text of ["这次面试能过吗", "约4.7成", "合议倾向：中", "依据 3 家断语", "地天泰", "程颐", "京房", "邵雍", "官鬼旬空无力"]) {
+  for (const text of ["这次面试能过吗", "约4.7成", "合议倾向：中", "依据 3 家断语", "地天泰", "程颐", "京房", "邵雍",
+    "官鬼旬空无力", "心法依据（《象传》· 地天泰）", "天地交，泰"]) {
     assert.ok(prompt.includes(text), text);
   }
-  for (const text of ["白话", "括号", "不得新增", "医疗", "JSON Schema"]) {
+  for (const text of ["白话", "括号", "不得新增", "医疗", "JSON Schema", "remedy", "开光", "不给颜色、方位"]) {
     assert.ok(SUMMARY_SYSTEM_PROMPT.includes(text), text);
   }
   assert.doesNotMatch(SUMMARY_SYSTEM_PROMPT, /押钱|赔付|封存|易者/);
@@ -74,16 +83,53 @@ test("删错留对：删去编造盘面的句子，倾向不符时改为合议�
     tone: "顺",
     conclusion: "大有可为，十拿九稳。",
     explanation: ["代表这件事的那一爻力量不足。午火官鬼发动，形势不妙。", "整体局面平稳。"],
-    advice: ["午火官鬼当令宜守。", "多做准备。"],
+    remedy: {
+      principle: "顺势而为。",
+      plan: [
+        { action: "午火官鬼当令宜守", basis: "官鬼当令" },
+        { action: "佩戴开光貔貅化解", basis: "可保平安" },
+        { action: "多做准备", basis: "三家都认为时机未到" },
+      ],
+      avoid: ["不要急于求成"],
+    },
   };
   const { output, removed, adjusted } = repairSummary(bad, input);
   assert.equal(output.tone, "中");
   assert.equal(output.conclusion, "合议约4.7成，成败参半，尚无定数。");
   assert.deepEqual(output.explanation, ["代表这件事的那一爻力量不足。", "整体局面平稳。"]);
-  assert.deepEqual(output.advice, ["多做准备。"]);
-  assert.equal(removed, 2);
+  assert.deepEqual(output.remedy?.plan, [{ action: "多做准备", basis: "三家都认为时机未到" }]);
+  assert.equal(removed, 3);
   assert.equal(adjusted, 1);
   assert.deepEqual(checkSummary(output, input), []);
+});
+
+test("解法禁用词：开光、法器、放生之类与颜色方位趋避判为不符", () => {
+  const charm = { ...good, remedy: { ...good.remedy!, avoid: ["不要去放生"] } };
+  assert.match(checkSummary(charm, input).join(""), /放生/);
+  const lucky = { ...good, explanation: [...good.explanation, "穿幸运色出门更顺。"] };
+  assert.match(checkSummary(lucky, input).join(""), /幸运色/);
+});
+
+test("心法原文在核对前剔除，原文以外的编造照常报错", () => {
+  const strict: SummaryInput = { ...input, proseErrors: (text) => (/财成|午火/.test(text) ? ["编造"] : []) };
+  const quoted = { ...good, remedy: { ...good.remedy!, principle: "后以财成天地之道，凡事先顺势。" } };
+  assert.deepEqual(checkSummary(quoted, strict), []);
+  const made = { ...good, explanation: [...good.explanation, "午火发动。"] };
+  assert.deepEqual(checkSummary(made, strict), ["编造"]);
+});
+
+test("解法全被删时用模板兜底：问事与八字心法不同", () => {
+  const empty: PlainSummary = {
+    ...good,
+    remedy: { principle: "开光转运。", plan: [{ action: "烧香供奉", basis: "求神" }], avoid: ["放生"] },
+  };
+  const question = repairSummary(empty, input).output.remedy;
+  assert.equal(question?.principle, "按上方原文之意，守正而行。");
+  assert.deepEqual(question?.plan, [{ action: "对照下方三家依据，择其稳妥者先行", basis: "三家断语" }]);
+  assert.deepEqual(question?.avoid, ["不要据此做重大财务或医疗决定"]);
+  const destiny = { ...input, kind: "destiny" as const, consensus: null };
+  const { tone: _tone, ...noTone } = empty;
+  assert.equal(repairSummary(noTone, destiny).output.remedy?.principle, "按三家取用之意，扬长避短。");
 });
 
 class Fake implements StructuredOutputProvider {

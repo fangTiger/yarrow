@@ -84,10 +84,13 @@ export function PlainSummaryPanel(props: {
       <div className="summary-explain">
         {output.explanation.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
       </div>
-      <div className="summary-advice">
-        <h3>建议</h3>
-        <ol>{output.advice.map((item) => <li key={item}>{item}</li>)}</ol>
-      </div>
+      {output.advice ? (
+        // 只有改版前的旧存档才有建议；新总述的建议并入下方解法。
+        <div className="summary-advice">
+          <h3>建议</h3>
+          <ol>{output.advice.map((item) => <li key={item}>{item}</li>)}</ol>
+        </div>
+      ) : null}
       {output.watch ? (
         <p className="summary-watch"><b>留意</b>{output.watch.window}（{output.watch.condition}）</p>
       ) : null}

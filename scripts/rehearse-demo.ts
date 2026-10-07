@@ -27,6 +27,8 @@ export interface RehearsalSummary {
   consensusTenths: number;
   /** 问事与运势两卦的白话总述结论。 */
   conclusions: { question: string; fortune: string };
+  /** 两卦解法的步骤数。 */
+  remedies: { question: number; fortune: number };
   payments: number;
   bazi: {
     pillars: (string | null)[];
@@ -129,6 +131,10 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
       conclusions: {
         question: reading.summary?.output?.conclusion ?? "",
         fortune: after.summary?.output?.conclusion ?? "",
+      },
+      remedies: {
+        question: reading.summary?.output?.remedy?.plan.length ?? 0,
+        fortune: after.summary?.output?.remedy?.plan.length ?? 0,
       },
       payments,
       bazi: { pillars, window, schools: Object.values(after.schools).map((state) => state.status),

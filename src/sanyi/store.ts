@@ -36,6 +36,8 @@ export interface SummaryState {
   error?: string;
   removed?: number;
   adjusted?: number;
+  /** 解法的心法依据（问事为《大象传》原文，八字为三家取用），由系统给出，随存档公开。 */
+  anchor?: import("./summary.js").SummaryAnchor;
 }
 
 export interface StoredQuestionReading {

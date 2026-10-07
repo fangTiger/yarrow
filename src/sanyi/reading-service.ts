@@ -1,4 +1,5 @@
 // src/sanyi/reading-service.ts
+import { getDaxiang } from "../agent/daxiang-corpus.js";
 import { almanacAt } from "../calendar/almanac.js";
 import { selectPrimaryOracleText } from "../calendar/bianzhan.js";
 import { deriveMeihua } from "../calendar/meihua.js";
@@ -502,7 +503,7 @@ export class ReadingService {
     const result = await runSummaryWithRetry({ provider: this.deps.provider }, input);
     await this.deps.store.update(id, (current) => ({
       ...current,
-      summary: summaryState(current.summary, result, basis, true),
+      summary: { ...summaryState(current.summary, result, basis, true), anchor: input.anchor },
     }));
   }
 
@@ -539,6 +540,8 @@ export class ReadingService {
         `月建${chart.month.branch}，日辰${chart.day.ganzhi}，旬空${chart.day.voidBranches.join("")}`,
       ],
       schools,
+      // 解法心法取本卦《大象传》原文。
+      anchor: { title: `《象传》· ${five.primary.name}`, lines: [getDaxiang(five.primary.kingWenNumber)] },
       proseErrors: (text) => auditQuestionProse(text, context.facts),
     };
   }

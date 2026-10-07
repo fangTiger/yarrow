@@ -18,7 +18,14 @@ export function mockSummaryOutput(kind: SummaryKind, prompt: string): PlainSumma
       "三家从不同角度看同一件事，结论大体相近。",
       "眼下的有利条件和不利条件并存，需要结合自身情况判断。",
     ],
-    advice: ["先把手头能做的准备做足。", "关键节点前多留一些余地。"],
+    remedy: {
+      principle: "先稳住自己，再看时机行事。",
+      plan: [
+        { action: "先把手头能做的准备做足", basis: "三家都认为关键在把握时机", timing: "近期" },
+        { action: "关键节点前多留一些余地", basis: "有利与不利条件并存" },
+      ],
+      avoid: ["不要急于求成"],
+    },
   };
   if (kind !== "destiny" && tone) {
     output.tone = tone;

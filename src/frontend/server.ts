@@ -222,7 +222,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         return { number: block.number, hash: block.hash, timestamp: block.timestamp };
       },
     },
-    provider: createDefaultProvider({ maxTokens: 2_048 }),
+    // 白话总述同次写解法，输出较长，放宽上限以免截断。
+    provider: createDefaultProvider({ maxTokens: 4_096 }),
     store,
     logger,
   });
