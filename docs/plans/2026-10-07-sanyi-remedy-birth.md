@@ -53,14 +53,14 @@
 
 **Files:** Modify `web/lib/birth-profile.ts`；Test `tests/frontend-birth-profile.test.ts`
 
-- [ ] **Step 1: 改测试（先红）**
+- [x] **Step 1: 改测试（先红）**
   - 删除所有 `unknownTime` 用法；`EMPTY_BIRTH` 不再有该字段。
   - 「空白生辰」测试：`birthProblem({ ...filled, time: "" })` 为 `null`；`toBirthInput({ ...filled, time: "" }).time` 为 `null`；`birthProblem({ ...filled, time: "25:99" })` 匹配 `/出生时间/`。
   - 闰月测试里 `unknownTime: true` 改为 `time: ""`。
   - 摘要测试：`birthSummary(toBirthInput({ ...filled, time: "", gender: "female" }))` 等于 `"公历 1990-05-15 未填时间 · 女"`。
   - 存储测试改名「存储读写抛错仍返回本次生辰；合法生辰自动保存并可读回」，改用 `saveBirthProfile(birth, storage)`，不再有不保存分支。
-- [ ] **Step 2: 运行确认失败**：`node --import tsx --test tests/frontend-birth-profile.test.ts`，预期因 `saveBirthProfile` 未导出与时间校验而失败。
-- [ ] **Step 3: 实现**
+- [x] **Step 2: 运行确认失败**：`node --import tsx --test tests/frontend-birth-profile.test.ts`，预期因 `saveBirthProfile` 未导出与时间校验而失败。
+- [x] **Step 3: 实现**
   ```ts
   export interface BirthFormValues {
     calendar: "solar" | "lunar"; year: string; month: string; day: string;
@@ -78,24 +78,24 @@
   export function saveBirthProfile(input: BirthProfileInput, storage?: BirthStorage): BirthProfileInput
   // birthSummary：无时间写「未填时间」
   ```
-- [ ] **Step 4: 运行通过**（同上命令）。
+- [x] **Step 4: 运行通过**（同上命令）。
 
 ### Task 2: 生辰行组件与表单
 
 **Files:** Modify `web/components/BirthFields.tsx`、`web/components/QuestionForm.tsx`；Test `tests/frontend-home-parts.test.ts`
 
-- [ ] **Step 1: 改测试（先红）**
+- [x] **Step 1: 改测试（先红）**
   - `fields()` 只传 `{ values, problem, onChange }`。
   - 第一条测试改为：有 `type="time"` 与「时间（选填）」；不出现 `不知道时辰|记住|仅存本机|只存本机|分享链接`。
   - 第二条测试去掉禁用时间框断言，改为：日期已填、时间为空时出现「未填时间，按年月日三柱推算」；时间已填时不出现。
   - 新增源码断言：`QuestionForm.tsx` 不含 `remember`，含 `saveBirthProfile(`。
-- [ ] **Step 2: 运行确认失败**：`node --import tsx --test tests/frontend-home-parts.test.ts`
-- [ ] **Step 3: 实现**
+- [x] **Step 2: 运行确认失败**：`node --import tsx --test tests/frontend-home-parts.test.ts`
+- [x] **Step 3: 实现**
   - `BirthFields` props 去掉 `remember`、`onRememberChange`；删去「不知道时辰」与「记住」两个勾选和告知行；时间框外包 `<label className="birth-time"><span>时间（选填）</span><input …/></label>`。
   - 日期齐全且 `values.time === ""` 时显示 `<p className="hint">未填时间，按年月日三柱推算</p>`。
   - `QuestionForm`：删去 `remember` 状态；`onChange` 里 `setBirthValues(values)`，`birthProblem(values) === null` 时 `saveBirthProfile(toBirthInput(values))`。
-- [ ] **Step 4: 运行通过**，并跑 `tests/frontend-*.test.ts` 防回归。
-- [ ] **Step 5: 提交**：`fix(web): 生辰时间选填、去掉记住勾选，填好自动保存`；勾选 tasks 2B.1。
+- [x] **Step 4: 运行通过**，并跑 `tests/frontend-*.test.ts` 防回归。
+- [x] **Step 5: 提交**：`fix(web): 生辰时间选填、去掉记住勾选，填好自动保存`；勾选 tasks 2B.1。
 
 ---
 
@@ -105,7 +105,7 @@
 
 **Files:** Create `src/agent/daxiang-corpus.json`、`src/agent/daxiang-corpus.ts`、`tests/sanyi-daxiang.test.ts`
 
-- [ ] **Step 1: 写测试（先红）**
+- [x] **Step 1: 写测试（先红）**
   ```ts
   import { DAXIANG, getDaxiang } from "../src/agent/daxiang-corpus.js";
   test("大象传 64 条齐全，按文王卦序", () => {
@@ -121,10 +121,10 @@
     assert.doesNotMatch(DAXIANG.join(""), /[強載經綸雲於與違師親諸萬國辯誥歷樂過澤說險習]/u);
   });
   ```
-- [ ] **Step 2: 运行确认失败**（模块不存在）。
-- [ ] **Step 3: 生成数据**：取维基文库《周易/大象》原始 wikitext（`action=raw`），按 `#卦名：正文` 解析出 64 条。用一次性脚本（放 scratchpad，不入库）做繁转简；再逐条对照 ctext《周易》各卦「象曰」，人工核定异体字（保留「无」「遯」等通行写法），写入 JSON 数组。
-- [ ] **Step 4: 实现读取模块**：校验长度为 64、每条非空；`getDaxiang(n)` 越界抛错；导出 `DAXIANG_SOURCE`（底本与参照链接、责任说明，写法同 `zhouyi-corpus.ts`）。
-- [ ] **Step 5: 运行通过并提交**：`feat(sanyi): 补《大象传》64 条语料`；勾选 2B.2。
+- [x] **Step 2: 运行确认失败**（模块不存在）。
+- [x] **Step 3: 生成数据**：取维基文库《周易/大象》原始 wikitext（`action=raw`），按 `#卦名：正文` 解析出 64 条。用一次性脚本（放 scratchpad，不入库）做繁转简；再逐条对照 ctext《周易》各卦「象曰」，人工核定异体字（保留「无」「遯」等通行写法），写入 JSON 数组。
+- [x] **Step 4: 实现读取模块**：校验长度为 64、每条非空；`getDaxiang(n)` 越界抛错；导出 `DAXIANG_SOURCE`（底本与参照链接、责任说明，写法同 `zhouyi-corpus.ts`）。
+- [x] **Step 5: 运行通过并提交**：`feat(sanyi): 补《大象传》64 条语料`；勾选 2B.2。
 
 ---
 
@@ -134,7 +134,7 @@
 
 **Files:** Modify `src/sanyi/summary.ts`、`src/sanyi/mock-summary.ts`；Test `tests/sanyi-summary.test.ts`
 
-- [ ] **Step 1: 改测试（先红）**
+- [x] **Step 1: 改测试（先红）**
   - `input` 增加 `anchor: { title: "《象传》· 地天泰", lines: ["天地交，泰；后以财成天地之道，辅相天地之宜，以左右民。"] }`。
   - `good` 去掉 `advice`，增加
     `remedy: { principle: "顺势而为，先把能做的准备做足。", steps: [{ action: "面试前把作品集再打磨一遍", basis: "三家都认为时机还没完全到", timing: "面试前一周" }, { action: "结果出来前别放弃其他机会", basis: "用神力量不足，结果未明" }], avoid: ["不要急着催问结果"] }`。
@@ -143,8 +143,8 @@
   - 新测试「心法原文剔除」：`proseErrors` 设为遇到「后以财成」就报错；`principle` 写「后以财成天地之道，凡事先顺势。」→ `checkSummary` 无错；而 `explanation` 里出现「后以财成」之外的编造仍按原核对报错。
   - 修补测试：含禁用词的步骤与不符盘面的步骤被删；步骤全删时用模板 `{ action: "对照下方三家依据，择其稳妥者先行", basis: "三家断语" }`；避忌全删时用「不要据此做重大财务或医疗决定」；心法白话被删时问事用「按上方原文之意，守正而行」，八字用「按三家取用之意，扬长避短」。
   - 运行器 Schema 提示测试照旧；mock 三类型测试照旧通过（mock 带 remedy）。
-- [ ] **Step 2: 运行确认失败**：`node --import tsx --test tests/sanyi-summary.test.ts`
-- [ ] **Step 3: 实现**
+- [x] **Step 2: 运行确认失败**：`node --import tsx --test tests/sanyi-summary.test.ts`
+- [x] **Step 3: 实现**
   ```ts
   export interface RemedyStep { action: string; basis: string; timing?: string }
   export interface Remedy { principle: string; steps: RemedyStep[]; avoid: string[] }
@@ -162,25 +162,25 @@
   - `buildSummaryPrompt` 在盘面要点之前加 `心法依据（${anchor.title}）：` 与各行。
   - `summaryTexts` 纳入 remedy 全部文字与旧 advice。
   - mock 输出加 remedy（不含干支），删除 advice。
-- [ ] **Step 4: 运行通过**。
+- [x] **Step 4: 运行通过**。
 
 ### Task 5: 编排、存档与输出上限
 
 **Files:** Modify `src/sanyi/store.ts`、`src/sanyi/reading-service.ts`、`src/sanyi/bazi-reading-service.ts`、`src/frontend/server.ts`；Test `tests/sanyi-summary-service.test.ts`、`tests/sanyi-rehearsal.test.ts`、`scripts/rehearse-demo.ts`
 
-- [ ] **Step 1: 改测试（先红）**
+- [x] **Step 1: 改测试（先红）**
   - 问事：`reading.summary.anchor.title` 等于 `` `《象传》· ${本卦名}` ``，`lines[0]` 等于 `getDaxiang(本卦文王序)`；`summary.output.remedy.steps.length >= 2`。
   - 八字：运势 `anchor.title === "三家取用"`，`lines` 含三家名与「调候：」行；命理同样有 remedy。
   - 排练：`conclusions` 旁加 `remedies: { question: number; fortune: number }`（步骤数），测试断言大于 0。
-- [ ] **Step 2: 运行确认失败**。
-- [ ] **Step 3: 实现**
+- [x] **Step 2: 运行确认失败**。
+- [x] **Step 3: 实现**
   - `SummaryState.anchor?: { title: string; lines: string[] }`。
   - 问事 `summaryInput`：`anchor = { title: \`《象传》· ${five.primary.name}\`, lines: [getDaxiang(five.primary.kingWenNumber)] }`。
   - 八字 `summaryInput`：`lines = schools.map((s) => \`${s.name}：${s.useGod}\`)` 再加 `` `调候：${tiaohou.useStems.join("、")}（《穷通宝鉴》）` ``，`title = "三家取用"`。
   - 两处 `writeSummary` 写回时：`{ ...summaryState(...), anchor: input.anchor }`。
   - `server.ts` 问事 provider `maxTokens: 4_096`。
-- [ ] **Step 4: 运行通过**：summary-service、rehearsal、bazi-reading-service、api 测试。
-- [ ] **Step 5: 提交**：`feat(sanyi): 解法——总述同次生成心法、怎么做、别做什么，原文由程序给出`；勾选 2B.3；同步设计文档 22.3 中 `summary.classic` 的写法为 `summary.anchor: { title, lines }`。
+- [x] **Step 4: 运行通过**：summary-service、rehearsal、bazi-reading-service、api 测试。
+- [x] **Step 5: 提交**：`feat(sanyi): 解法——总述同次生成心法、怎么做、别做什么，原文由程序给出`；勾选 2B.3；同步设计文档 22.3 中 `summary.classic` 的写法为 `summary.anchor: { title, lines }`。
 
 ---
 
@@ -190,13 +190,13 @@
 
 **Files:** Create `web/components/RemedyPanel.tsx`；Modify `web/components/PlainSummaryPanel.tsx`、`web/pages/Reading.tsx`、`web/pages/BaziReading.tsx`、`web/styles/components.css`、`scripts/font-charset.ts`；Test `tests/frontend-plain-summary.test.ts`
 
-- [ ] **Step 1: 改测试（先红）**
+- [x] **Step 1: 改测试（先红）**
   - fixture `output` 去掉 advice、加 remedy；`summary` 加 `anchor`。
   - 「解法面板」：渲染含「解法」「心法」、anchor 标题与原文、principle、每步 action、「依据：」「时机：」、「别做什么」及避忌；没有 remedy（旧存档或未完成）时返回空串。
   - 「旧存档」：`output` 只有 advice 无 remedy 时，`PlainSummaryPanel` 仍显示「建议」；新存档不显示「建议」。
   - 布局：两个结果页源码中 `<RemedyPanel` 位于 `<PlainSummaryPanel` 之后、「看三家依据」之前。
-- [ ] **Step 2: 运行确认失败**：`node --import tsx --test tests/frontend-plain-summary.test.ts`
-- [ ] **Step 3: 实现**
+- [x] **Step 2: 运行确认失败**：`node --import tsx --test tests/frontend-plain-summary.test.ts`
+- [x] **Step 3: 实现**
   ```tsx
   /** 白话总述之后的解法：心法（原文或三家取用）、怎么做、别做什么。 */
   export function RemedyPanel(props: { reading: AnyPublicReading }) {
@@ -227,8 +227,8 @@
   - 两个结果页：`<PlainSummaryPanel …/>` 之后紧接 `<RemedyPanel reading={reading} />`。
   - CSS：`.remedy` 三段纵排；`blockquote` 用 `var(--dynamic)` 楷体、左侧金线；步骤里 `span` 换行显示为次要色；窄屏不溢出。
   - 字体：`FIXED_COPY` 加 `"解法"`，运行 `node --import tsx scripts/font-charset.ts` 与项目既有的子集化命令重建 `mashanzheng-subset.woff2` 与 sha256。
-- [ ] **Step 4: 运行通过**，再跑全量、类型、构建、秘密扫描。
-- [ ] **Step 5: 提交**：`feat(web): 结果页解法面板，旧存档照旧显示建议`；勾选 2B.4。
+- [x] **Step 4: 运行通过**，再跑全量、类型、构建、秘密扫描。
+- [x] **Step 5: 提交**：`feat(web): 结果页解法面板，旧存档照旧显示建议`；勾选 2B.4。
 
 ---
 
@@ -236,6 +236,19 @@
 
 ### Task 7: 真实模型冒烟与截图
 
-- [ ] **Step 1:** 用 `output/real-question-smoke.ts` 跑 2–3 卦问事、`output/real-bazi-smoke.ts` 跑运势与命理各 1–2 卦，检查：总述 done；remedy 步骤 2–3、依据贴合盘面；无禁用词；无颜色方位之类；删去处数。
-- [ ] **Step 2:** 用临时截图服务（`output/summary-shot-server.ts`，端口 4179）与 `scratchpad/cdp-shot.mjs`，在 1320 与 390 宽度下看问事、运势、命理结果页，以及首页生辰行（未填时间提示）。
-- [ ] **Step 3:** 重启 4173 服务；全量检查通过后提交，勾选 2B.5，向用户汇报并请验收（2B.6）。
+- [x] **Step 1:** 用 `output/real-question-smoke.ts` 跑 2–3 卦问事、`output/real-bazi-smoke.ts` 跑运势与命理各 1–2 卦，检查：总述 done；remedy 步骤 2–3、依据贴合盘面；无禁用词；无颜色方位之类；删去处数。
+- [x] **Step 2:** 用临时截图服务（`output/summary-shot-server.ts`，端口 4179）与 `scratchpad/cdp-shot.mjs`，在 1320 与 390 宽度下看问事、运势、命理结果页，以及首页生辰行（未填时间提示）。
+- [x] **Step 3:** 重启 4173 服务；全量检查通过后提交，勾选 2B.5，向用户汇报并请验收（2B.6）。
+
+---
+
+## 执行记录（2026-10-07）
+
+与计划的出入：
+- 解法步骤字段由 `steps` 改名为 `plan`：隐私测试禁止存档出现生辰校正的 `steps` 键，保持该检查严格，改字段名而不放宽测试。
+- 《大象传》对照来源：ctext 网页拒绝抓取、接口需订阅，改为与维基文库 64 个单卦页逐条对照（52 条一致，其余只差标点与异体字；剥卦从通行本作「山附于地」）。
+- 冒烟发现八字用神有时写成整段推理，使「三家取用」与用神对照难读：提示词要求用神一句话（≤20 字），Schema 加 40 字上限。
+- 截图走查发现生辰行报错与按钮下提示重复：生辰行已就地报错时，按钮下不再重复。
+- 顺带修复隐私测试的偶发失败：重建服务时日志用了真实时钟，时间戳恰含「15:30」等受检串即误报，改为固定时钟。
+
+验证：全量 583 个测试通过；类型检查、前端构建、秘密扫描、OpenSpec 严格校验通过；真实模型问事两卦、运势与命理各两卦均落笔并写出解法，无禁用词；1320 与 390 宽度截图走查通过。
