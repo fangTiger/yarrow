@@ -1040,3 +1040,61 @@
 .repair-note {
   margin: 4px 0 0;
 }
+
+/* 解法（设计文档 22.2）：总述之后依次是心法、怎么做、别做什么。 */
+.remedy-part {
+  display: grid;
+  gap: 8px;
+}
+.remedy-part h3 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+}
+.remedy-anchor {
+  margin: 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--gold);
+}
+.remedy-anchor cite {
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.1em;
+}
+.remedy-anchor p {
+  margin: 4px 0 0;
+  font-family: var(--dynamic);
+  font-size: 18px;
+  line-height: 1.7;
+}
+.remedy-principle {
+  margin: 0;
+  line-height: 1.8;
+}
+.remedy-plan {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 1.4em;
+}
+.remedy-plan li {
+  line-height: 1.7;
+}
+.remedy-plan b {
+  display: block;
+  font-weight: 600;
+}
+.remedy-plan span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+.remedy-avoid {
+  margin: 0;
+  padding-left: 1.4em;
+  line-height: 1.9;
+}

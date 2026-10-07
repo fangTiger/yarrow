@@ -7,6 +7,7 @@ import { loadBirthProfile, type BirthProfileInput } from "../lib/birth-profile.j
 import { BAZI_KEYS } from "../lib/liunian-chart.js";
 import { BirthCorrection } from "../components/BirthCorrection.js";
 import { PlainSummaryPanel } from "../components/PlainSummaryPanel.js";
+import { RemedyPanel } from "../components/RemedyPanel.js";
 import { BaziTable } from "../components/BaziTable.js";
 import { BaziLuck } from "../components/BaziLuck.js";
 import { BaziSchools } from "../components/BaziSchools.js";
@@ -40,6 +41,7 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
                 onReading(value);
             }
         }}/>
+    <RemedyPanel reading={reading}/>
     <details className="panel schools-fold">
       <summary>看三家依据<span>沈孝瞻 · 余春台 · 任铁樵，三派各自取用神、各自下断</span></summary>
       <BaziSchools reading={reading} onRetry={(key) => void retry(key)}/>

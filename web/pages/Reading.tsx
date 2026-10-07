@@ -16,6 +16,7 @@ import { readingStage, shouldPollReading } from "../lib/reading-state.js";
 import { AlmanacPanel } from "../components/AlmanacPanel.js";
 import { ConsensusTrack } from "../components/ConsensusTrack.js";
 import { PlainSummaryPanel } from "../components/PlainSummaryPanel.js";
+import { RemedyPanel } from "../components/RemedyPanel.js";
 import { FiveElementsDetail } from "../components/FiveElementsDetail.js";
 import { LiuyaoTable } from "../components/LiuyaoTable.js";
 import { QimenBoard } from "../components/QimenBoard.js";
@@ -65,6 +66,7 @@ function Result(props: {
         }}
         reading={reading}
       />
+      <RemedyPanel reading={reading} />
       <details className="panel schools-fold">
         <summary>
           看三家依据
