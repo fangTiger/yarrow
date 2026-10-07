@@ -64,3 +64,12 @@ test("总断和每一项复用问事自洽规则，裁剪窗口仍精确覆盖",
     years: input.chart.liunian.years.slice(3) } };
   assert.deepEqual(checkBaziConsistency({ ...output, years: output.years.slice(3) }, chart, "year"), []);
 });
+test("用神一句话：不超过四十字，提示词写明推理放在理由与详断", async () => {
+  const { BAZI_BOUNDARIES } = await import("../src/sanyi/schools/bazi-shared.js");
+  const output = fortune();
+  assert.doesNotThrow(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, { ...output, useGod: "取".repeat(40) }));
+  assert.throws(() => validateStructuredOutput(FORTUNE_SCHOOL_SCHEMA, { ...output, useGod: "取".repeat(41) }));
+  const destiny = mockBaziSchoolOutput("shenxiaozhan", sampleBazi("destiny").facts, "destiny");
+  assert.throws(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, { ...destiny, useGod: "取".repeat(41) }));
+  assert.match(BAZI_BOUNDARIES, /useGod 只写一句/);
+});

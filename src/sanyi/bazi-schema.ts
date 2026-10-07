@@ -25,7 +25,8 @@ export interface FortuneSchoolOutput extends QuestionSchoolOutput {
 export type BaziSchoolOutput = DestinySchoolOutput | FortuneSchoolOutput;
 export const DESTINY_TITLES = ["性格", "事业", "财运", "感情", "健康"] as const;
 const properties = QUESTION_SCHOOL_SCHEMA.properties;
-const useGod = { type: "string", minLength: 1 } as const;
+// 用神只写一句取用，推理放在理由与详断；过长会让三家用神对照与解法心法难读。
+const useGod = { type: "string", minLength: 1, maxLength: 40 } as const;
 const section = properties.sections.items;
 // Ajv 默认使用 draft-07：元组 items 按位置限定五个标题，避免仅凭数量通过。
 export const DESTINY_SCHOOL_SCHEMA = {
