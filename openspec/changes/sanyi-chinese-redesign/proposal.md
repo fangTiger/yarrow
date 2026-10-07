@@ -29,7 +29,7 @@
   - 移除：`action-first-oracle`、`compact-oracle-layout`、`dual-track-question-routing`、`human-settled-wager`、`live-default-demo`、`night-shrine-terminal-theme`、`single-screen-oracle-workbench`、`walletless-question-reading`
   - 不变：`explicit-five-elements`
 - Affected code: `web/`（重写）、`src/frontend/server.ts`、新增 `src/sanyi/`、`src/calendar/`、`web/fonts/`；复用 `src/oracle/liuyao-chart.ts`、`src/oracle/fee-payment.ts`、`src/oracle/arc-question-fee-verifier.ts`、`src/agent/*-provider.ts`；`package.json`、`README.md`、`tests/`
-- 新语料：《大象传》64 条（维基文库公版，繁转简后与 ctext 交叉核对）。
+- 新语料：《大象传》64 条（维基文库公版，繁转简后与维基文库单卦页逐条对照）。
 - 新依赖：`lunar-javascript`（MIT）；开发期工具：kinqimen（生成奇门标准答案，不进运行时）、fonttools（字体子集化）
 - 合约：不改
 - 设计文档：`docs/plans/2026-09-30-sanyi-redesign-design.md`
