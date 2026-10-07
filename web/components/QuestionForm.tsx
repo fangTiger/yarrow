@@ -59,8 +59,11 @@ export function QuestionForm() {
   }, [question, valid]);
   const entry = deriveEntry(view, choice);
   const problem = birthProblem(birthValues);
+  // 生辰行开始填后会就地报错，按钮下不再重复。
+  const birthShown = [birthValues.year, birthValues.month, birthValues.day, birthValues.time]
+    .some((value) => value !== "");
   const gate = entryGate({
-    questionLength: length, classified: view !== undefined, entry, birthProblem: problem,
+    questionLength: length, classified: view !== undefined, entry, birthProblem: problem, birthShown,
   });
   // 分类结果一到就显示结果，不再停留在「识别中」。
   let status = "";

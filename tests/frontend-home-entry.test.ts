@@ -69,6 +69,10 @@ test("问卦可用条件：问题至少 4 字、已识别或已手选、命理�
   const auto = applyClassification(DEFAULT_ENTRY, fortune);
   assert.deepEqual(entryGate({ questionLength: 6, classified: true, entry: auto, birthProblem: "请填写出生日期" }),
     { ready: false, reason: "请先填好生辰：请填写出生日期" });
+  // 生辰行已开始填、已就地报错时，按钮下不再重复同一句。
+  assert.deepEqual(entryGate({
+    questionLength: 6, classified: true, entry: auto, birthProblem: "请选择性别", birthShown: true,
+  }), { ready: false, reason: "" });
   assert.equal(entryGate({ questionLength: 6, classified: true, entry: auto, birthProblem: null }).ready, true);
   // 问事不需要生辰，生辰无效也不拦
   assert.equal(entryGate({

@@ -120,6 +120,8 @@ export interface GateInput {
   classified: boolean;
   entry: EntryState;
   birthProblem: string | null;
+  /** 生辰行已开始填并就地报错；此时按钮下不再重复同一句。 */
+  birthShown?: boolean;
 }
 
 /** 问卦按钮是否可用，不可用时给出就地说明。 */
@@ -134,7 +136,7 @@ export function entryGate(input: GateInput): { ready: boolean; reason: string } 
     return { ready: false, reason: input.entry.unsupported };
   }
   if (input.entry.kind !== "question" && input.birthProblem) {
-    return { ready: false, reason: `请先填好生辰：${input.birthProblem}` };
+    return { ready: false, reason: input.birthShown ? "" : `请先填好生辰：${input.birthProblem}` };
   }
   return { ready: true, reason: "" };
 }
