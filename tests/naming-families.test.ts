@@ -166,3 +166,9 @@ test("三家系统提示词完整写明规则且通过文化守卫", () => {
     assert.doesNotMatch(systemPrompt, /易者|押钱|赔付|封存|[\u3040-\u30ff]|・/u);
   }
 });
+
+test("诗文家要求名字自成词意，不机械截取原句相邻字", () => {
+  const shiwen = NAMING_FAMILIES.find((family) => family.key === "shiwen");
+  assert.match(shiwen?.systemPrompt ?? "", /自成词意/);
+  assert.match(shiwen?.systemPrompt ?? "", /不得机械截取/);
+});
