@@ -209,7 +209,8 @@ test("短问题不分类，快速修改重置防抖，过期响应不能启用�
   responses[1]!(classifyQuestion("帮我取个名字"));
   await Promise.resolve();
   children = childrenOf(harness.render());
-  assert.match(textOf(children), /起名即将开放/u);
+  // N3 已开放服务端分类；N4 表单尚未接入时，首页仍以通用提示安全禁用该入口。
+  assert.match(textOf(children), /这类问题即将开放/u);
   children.find((child) => child.type === KindOptions)!.props.onChange("question");
   assert.ok(childrenOf(harness.render()).some((child) => child.type === PaymentButton));
 });

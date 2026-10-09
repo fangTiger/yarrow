@@ -243,3 +243,24 @@ test("MockSchoolsProvider 覆盖三家与合参的六种上下文，均一次通
     }
   }
 });
+
+test("诗文 mock 不把字典释义中的禁用词带进名字文案", async () => {
+  const ctx: NamingContext = {
+    ...context,
+    candidates: [
+      { id: "ts-0253-01", book: "唐诗三百首", title: "杜甫《古柏行》",
+        text: "孔明庙前有老柏，柯如青铜根如石" },
+      ...candidates.slice(1),
+    ],
+  };
+  const result = await runNamingFamily(
+    { provider: new MockSchoolsProvider() },
+    { family: NAMING_FAMILIES[1]!, ctx },
+  );
+  assert.equal(result.status, "done");
+  if (result.status === "done") {
+    assert.equal(result.calls, 1);
+    assert.equal(result.output.names.length, 3);
+    assert.deepEqual(auditFamily("shiwen", result.output, ctx), []);
+  }
+});

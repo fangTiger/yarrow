@@ -27,7 +27,7 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
     const retry = async (key: typeof BAZI_KEYS[number]) => {
         try {
             const value = await api.retrySchool(reading.id, key);
-            if (value.kind !== "question") {
+            if (value.kind === "destiny" || value.kind === "fortune") {
                 onReading(value);
             }
         }
@@ -37,7 +37,7 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
     };
     return <div className="bazi" data-reading={reading.id}>
     <PlainSummaryPanel reading={reading} onReading={(value) => {
-            if (value.kind !== "question") {
+            if (value.kind === "destiny" || value.kind === "fortune") {
                 onReading(value);
             }
         }}/>

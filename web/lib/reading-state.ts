@@ -33,7 +33,8 @@ export function shouldPollReading(reading: AnyPublicReading): boolean {
   if (reading.status === "awaiting-throws") {
     return !(reading.kind === "question" && reading.castPaused === true);
   }
-  return Object.values(reading.schools).some((school) => {
+  const states = reading.kind === "naming" ? Object.values(reading.families) : Object.values(reading.schools);
+  return states.some((school) => {
     return school.status === "pending" || school.status === "writing";
   });
 }
@@ -80,7 +81,8 @@ export function summaryStatus(reading: AnyPublicReading): SummaryStatus {
   if (summary?.status === "writing") {
     return { kind: "progress", text: "正在写白话总述" };
   }
-  const states = Object.values(reading.schools).map((school) => school.status);
+  const states = (reading.kind === "naming" ? Object.values(reading.families) : Object.values(reading.schools))
+    .map((school) => school.status);
   const finished = states.filter((status) => status !== "pending" && status !== "writing").length;
   if (finished < states.length) {
     return { kind: "progress", text: `三家落笔中（${finished}/${states.length}）` };

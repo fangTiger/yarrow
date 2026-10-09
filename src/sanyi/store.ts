@@ -108,7 +108,54 @@ export interface StoredBaziReading {
   schools: Record<import("./schools/bazi-shared.js").BaziSchoolKey, BaziSchoolState>;
   summary?: SummaryState;
 }
-export type StoredReading = StoredQuestionReading | StoredBaziReading;
+
+export interface NamingFamilyState {
+  status: "pending" | "writing" | "done" | "failed";
+  output?: import("./naming/schema.js").NamingFamilyOutput;
+  attempts: number;
+  retries: number;
+  error?: string;
+  /** 删错留对时删去的名字数（不保存被删原文）。 */
+  removed?: number;
+}
+
+export interface NamingSummaryState {
+  status: "writing" | "done" | "failed";
+  output?: import("./naming/schema.js").NamingSummaryOutput;
+  basis: number;
+  attempts: number;
+  retries: number;
+  error?: string;
+  removed?: number;
+}
+
+export interface StoredNamingReading {
+  id: string;
+  kind: "naming";
+  createdAt: string;
+  target: "person" | "business";
+  question: string;
+  surname?: string;
+  gender: "male" | "female" | "any";
+  length: 1 | 2 | 3 | 4;
+  unborn: boolean;
+  payment: StoredQuestionReading["payment"];
+  status: "writing" | "done" | "failed";
+  basis: {
+    pillars: { year: string; month: string; day: string; time: string | null } | null;
+    elements: import("../calendar/bazi-relations.js").ElementCount[];
+    tiaohou: import("../calendar/qiongtong.js").QiongtongEntry | null;
+    favorable: import("./naming/lexicon.js").Element[] | null;
+    favorableSource: "tiaohou" | "industry" | "model";
+    unborn: boolean;
+  };
+  /** 诗文候选只存稳定编号，重试时从入库语料还原。 */
+  candidateIds: string[];
+  families: Record<import("./naming/schema.js").NamingFamilyKey, NamingFamilyState>;
+  summary?: NamingSummaryState;
+}
+
+export type StoredReading = StoredQuestionReading | StoredBaziReading | StoredNamingReading;
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz234567";
 

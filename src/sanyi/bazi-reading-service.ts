@@ -100,7 +100,7 @@ export class BaziReadingService {
   }
   async getReading(id: string): Promise<StoredBaziReading> {
     const reading = await this.deps.store.read<StoredReading>(id);
-    if (reading.kind === "question") {
+    if (reading.kind !== "destiny" && reading.kind !== "fortune") {
       throw new StateConflictError("此接口只适用于命理或运势");
     }
     return reading;

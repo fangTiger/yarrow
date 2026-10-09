@@ -203,7 +203,8 @@ test("换日与八字重试路由沿用 Origin、JSON、8 KiB 和 id 边界", as
   const item = await fixture();
   try {
     const id = "abcdefghijklmnopqrstuvwxyz";
-    for (const path of [`/api/readings/${id}/day-boundary`, `/api/readings/${id}/schools/yuchuntai/retry`]) {
+    for (const path of [`/api/readings/${id}/day-boundary`, `/api/readings/${id}/schools/yuchuntai/retry`,
+      `/api/readings/${id}/schools/shiwen/retry`]) {
       assert.equal((await post(item.base, path, {})).status, 200);
       assert.equal((await fetch(`${item.base}${path}`, { method: "POST",
         headers: { "content-type": "application/json" }, body: "{}" })).status, 403);

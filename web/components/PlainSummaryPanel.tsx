@@ -13,6 +13,9 @@ export function PlainSummaryPanel(props: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const { reading } = props;
+  if (reading.kind === "naming") {
+    return null;
+  }
   const status = summaryStatus(reading);
   if (status.kind === "none") {
     return null;

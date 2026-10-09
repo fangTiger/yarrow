@@ -19,6 +19,8 @@ import { ReadingService, PaymentAlreadyUsedError } from "../sanyi/reading-servic
 import { BaziReadingService } from "../sanyi/bazi-reading-service.js";
 import type { BaziSchoolKey } from "../sanyi/schools/bazi-shared.js";
 import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
+import { NamingReadingService } from "../sanyi/naming/service.js";
+import type { NamingFamilyKey } from "../sanyi/naming/schema.js";
 import { isReadingId, ReadingStore } from "../sanyi/store.js";
 interface FrontendServerOptions {
   publicDir?: string;
@@ -33,8 +35,9 @@ const CONTENT_TYPES: Record<string, string> = {
   ".svg": "image/svg+xml",
   ".woff2": "font/woff2",
 };
-const SCHOOL_KEYS = new Set<QuestionSchoolKey | BaziSchoolKey>([
+const SCHOOL_KEYS = new Set<QuestionSchoolKey | BaziSchoolKey | NamingFamilyKey>([
   "chengyi", "jingfang", "shaoyong", "shenxiaozhan", "yuchuntai", "rentieqiao",
+  "wuxing", "shiwen", "yinyi",
 ]);
 export function resolveStaticPath(publicDir: string, pathname: string): string | null {
   let decoded: string;
@@ -151,7 +154,7 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         json(response, 200, await api.retrySummary(summaryRoute[1] as string));
         return;
       }
-      const retryKey = retryRoute?.[2] as QuestionSchoolKey | BaziSchoolKey | undefined;
+      const retryKey = retryRoute?.[2] as QuestionSchoolKey | BaziSchoolKey | NamingFamilyKey | undefined;
       if (
         retryRoute
         && request.method === "POST"
@@ -205,12 +208,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const publicClient = createArcPublicClient();
   const recipient = feeRecipientFromEnv(process.env);
   const store = new ReadingStore("data");
-  const logger = createSanyiLogger();
+  const clock = () => new Date();
+  const logger = createSanyiLogger("log", clock);
   const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
+  const longProvider = createDefaultProvider({ maxTokens: 8_192, timeoutMilliseconds: 90_000 });
   const bazi = new BaziReadingService({ store, logger, feeVerifier,
     // 八字运势含十年逐年断语，输出较长，放宽输出上限与单次超时。
-    provider: createDefaultProvider({ maxTokens: 8_192, timeoutMilliseconds: 90_000 }),
-    clock: () => new Date() });
+    provider: longProvider, clock });
+  const naming = new NamingReadingService({ store, logger, feeVerifier,
+    provider: longProvider, clock });
   const service = new ReadingService({
     feeVerifier,
     blockSource: {
@@ -228,7 +234,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     logger,
   });
   const port = Number(process.env.FRONTEND_PORT ?? "4173");
-  const api = createSanyiApi(service, { recipient, bazi });
+  const api = createSanyiApi(service, { recipient, bazi, naming });
   createFrontendServer({ api }).listen(port, "127.0.0.1", () => {
     console.log(`三易服务已启动：http://127.0.0.1:${port}`);
     console.log(`三易收款地址：${recipient}`);

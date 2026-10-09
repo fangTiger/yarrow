@@ -15,6 +15,10 @@ import { overrideClassification, type FortuneHorizon, type QuestionKind } from "
 import type { BaziReadingService } from "./bazi-reading-service.js";
 import { publicBaziReading, type PublicBaziReading } from "./bazi-public.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
+import type { NamingReadingService } from "./naming/service.js";
+import { publicNamingReading, type PublicNamingReading } from "./naming/public.js";
+import type { NamingFamilyKey } from "./naming/schema.js";
+import { isSurname } from "./naming/lexicon.js";
 type ServiceBoundary = Pick<
   ReadingService,
   "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject" | "retrySummary"
@@ -24,7 +28,7 @@ export interface PublicQuestionReading extends Omit<StoredReading, "payment" | "
   payment: { firstHash: StoredReading["payment"]["transactionHash"] };
   schools: Record<QuestionSchoolKey, Omit<StoredReading["schools"][QuestionSchoolKey], "attempts">>;
 }
-export type PublicReading = PublicQuestionReading | PublicBaziReading;
+export type PublicReading = PublicQuestionReading | PublicBaziReading | PublicNamingReading;
 export interface PaymentConfiguration {
   recipient: Address;
   amountUsdc6: string;
@@ -41,7 +45,7 @@ export interface SanyiApi {
   /** 白话总述暂未生成时免费重试。 */
   retrySummary(id: string): Promise<PublicReading>;
   getReading(id: string): Promise<PublicReading>;
-  retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey): Promise<PublicReading>;
+  retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey | NamingFamilyKey): Promise<PublicReading>;
   changeSubject(id: string, input: unknown): Promise<PublicReading>;
   changeDayBoundary(id: string, input: unknown): Promise<PublicReading>;
 }
@@ -112,7 +116,12 @@ async function notFound<T>(operation: () => Promise<T>): Promise<T> {
 }
 export function createSanyiApi(
   service: ServiceBoundary,
-  options: { now?: () => Date; recipient?: Address; bazi?: BaziReadingService } = {},
+  options: {
+    now?: () => Date;
+    recipient?: Address;
+    bazi?: BaziReadingService;
+    naming?: NamingReadingService;
+  } = {},
 ): SanyiApi {
   const clock = options.now ?? (() => new Date());
   let cache: { createdAt: number; value: ReturnType<typeof almanacAt> } | undefined;
@@ -135,6 +144,58 @@ export function createSanyiApi(
     },
     async createReading(input) {
       const body = record(input);
+      const createNaming = async (suggestedTarget?: "person" | "business") => {
+        if (!options.naming) throw new Error("起名服务尚未配置");
+        if (typeof body.question !== "string") throw new SanyiInputError("起名期望必须是字符串");
+        const question = body.question.trim().replace(/\s+/gu, " ");
+        if ([...question].length > 280) throw new SanyiInputError("起名期望须为 0–280 个字符");
+        const target = body.target ?? suggestedTarget;
+        if (target !== "person" && target !== "business") throw new SanyiInputError("起名对象无效");
+        if (body.gender !== "male" && body.gender !== "female" && body.gender !== "any") {
+          throw new SanyiInputError("性别无效");
+        }
+        if (typeof body.unborn !== "boolean") throw new SanyiInputError("未出生标记无效");
+        if (target === "person") {
+          if (typeof body.surname !== "string" || !body.surname) {
+            throw new SanyiInputError("请先填写姓氏");
+          }
+          if (!isSurname(body.surname)) throw new SanyiInputError("这个姓暂不支持，请联系我们");
+          if (body.length !== 1 && body.length !== 2) {
+            throw new SanyiInputError("人名须选择单名或双名");
+          }
+          if (body.birth === undefined || body.birth === null) {
+            throw new SanyiInputError("请先填写生辰");
+          }
+        } else {
+          if (body.length !== 2 && body.length !== 3 && body.length !== 4) {
+            throw new SanyiInputError("商号字数须为 2–4 字");
+          }
+          if ([...question].length < 2) {
+            throw new SanyiInputError("商号行业与期望至少填写 2 个字符");
+          }
+          if (body.unborn) throw new SanyiInputError("商号不支持未出生标记");
+        }
+        if (body.birth !== undefined && body.birth !== null) {
+          try {
+            normalizeBirthProfile(body.birth);
+          } catch {
+            throw new SanyiInputError("生辰格式无效，请检查填写内容");
+          }
+        }
+        const length = body.length as 1 | 2 | 3 | 4;
+        const gender = body.gender as "male" | "female" | "any";
+        return publicNamingReading(await options.naming.create({
+          target,
+          question,
+          ...(target === "person" ? { surname: body.surname as string } : {}),
+          gender,
+          length,
+          unborn: body.unborn,
+          ...(body.birth === undefined || body.birth === null ? {} : { birth: body.birth }),
+          feeProof: feeProofFrom(body.feeProof),
+        }));
+      };
+      if (body.kind === "naming") return createNaming();
       let classification = classifyQuestion(questionFrom(body));
       try {
         classification = overrideClassification(classification, {
@@ -144,6 +205,7 @@ export function createSanyiApi(
       } catch {
         throw new SanyiInputError("问题类型或时间范围无效");
       }
+      if (classification.kind === "naming") return createNaming(classification.target);
       if (classification.kind === "destiny" || classification.kind === "fortune") {
         if (body.birth === undefined || body.birth === null) {
           throw new SanyiInputError("请先填写生辰");
@@ -181,25 +243,38 @@ export function createSanyiApi(
     },
     async retrySummary(id) {
       const reading = await notFound(async (): Promise<AnyStoredReading> => {
+        if (options.naming) return options.naming.readAny(id);
         return options.bazi ? options.bazi.readAny(id) : service.getReading(id);
       });
-      if (reading.kind === "question" || !options.bazi) {
+      if (reading.kind === "question") {
         return publicReading(await notFound(() => service.retrySummary(id)));
       }
+      if (reading.kind === "naming") {
+        if (!options.naming) throw new SanyiInputError("起名服务尚未配置");
+        return publicNamingReading(await notFound(() => options.naming!.retrySummary(id)));
+      }
+      if (!options.bazi) throw new SanyiInputError("八字服务尚未配置");
       const bazi = options.bazi;
       return publicBaziReading(await notFound(() => bazi.retrySummary(id)));
     },
     async getReading(id) {
       const reading = await notFound(async (): Promise<AnyStoredReading> => {
+        if (options.naming) return options.naming.readAny(id);
         if (options.bazi) {
           // 共用 store 读取判别，问事仍走原服务，不重新排盘或调用模型。
           return options.bazi.readAny(id);
         }
         return service.getReading(id);
       });
-      return reading.kind === "question" ? publicReading(reading) : publicBaziReading(reading);
+      if (reading.kind === "question") return publicReading(reading);
+      if (reading.kind === "naming") return publicNamingReading(reading);
+      return publicBaziReading(reading);
     },
     async retrySchool(id, key) {
+      if (key === "wuxing" || key === "shiwen" || key === "yinyi") {
+        if (!options.naming) throw new SanyiInputError("起名服务尚未配置");
+        return publicNamingReading(await notFound(() => options.naming!.retryFamily(id, key)));
+      }
       if (key === "shenxiaozhan" || key === "yuchuntai" || key === "rentieqiao") {
         if (!options.bazi) {
           throw new SanyiInputError("八字服务尚未配置");

@@ -112,12 +112,11 @@ test("命理与运势缺生辰先给中文 400", async () => {
     });
   }
 });
-test("未开放类型返回具体替代建议", async () => {
+test("起名开放但未装配服务时返回配置错误", async () => {
   const { api } = fixture();
   await assert.rejects(
     api.createReading({ question: "给女儿起个名字，姓王", feeProof: PROOF }),
-    (error: unknown) => error instanceof SanyiInputError
-      && /给孩子起名叫某某好不好/.test(error.message),
+    (error: unknown) => error instanceof Error && /起名服务尚未配置/.test(error.message),
   );
 });
 test("公开 reading 保留复算材料但移除内部字段", async () => {

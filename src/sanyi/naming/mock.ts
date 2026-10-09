@@ -1,4 +1,5 @@
 import { charInfo, isNameChar, nameChars, type Element } from "./lexicon.js";
+import { NAMING_FORBIDDEN } from "./audit.js";
 import type { NamingFamilyKey, NamingFamilyOutput, NamingName, NamingSummaryOutput } from "./schema.js";
 
 function promptLength(prompt: string): 1 | 2 | 3 | 4 {
@@ -9,6 +10,7 @@ function promptLength(prompt: string): 1 | 2 | 3 | 4 {
 
 function gloss(char: string): string {
   const meaning = charInfo(char)?.meaning.split("；")[0]?.trim() || "取其美好含义";
+  if (meaning.match(NAMING_FORBIDDEN)) return "取其美好含义";
   return [...meaning].slice(0, 12).join("");
 }
 

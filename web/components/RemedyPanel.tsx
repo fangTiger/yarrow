@@ -3,6 +3,9 @@ import type { AnyPublicReading } from "../lib/api.js";
 
 /** 白话总述之后的解法：心法（原文或三家取用）、怎么做、别做什么；旧存档与生成中不显示。 */
 export function RemedyPanel(props: { reading: AnyPublicReading }) {
+  if (props.reading.kind === "naming") {
+    return null;
+  }
   const summary = props.reading.summary;
   const remedy = summary?.status === "done" ? summary.output?.remedy : undefined;
   if (!summary || !remedy) {

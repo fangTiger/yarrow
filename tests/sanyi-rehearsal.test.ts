@@ -15,7 +15,7 @@ test("mock 排练完成六掷与三家落笔", async () => {
   assert.ok(summary.remedies.fortune > 0);
 });
 
-test("mock 排练追加十年运势与免费换日，只有两笔付款", async () => {
+test("mock 排练追加十年运势、免费换日与两类起名，共四笔付款", async () => {
   const summary = await runRehearsal();
   assert.deepEqual(summary.bazi.pillars, ["庚午", "辛巳", "庚辰", "癸未"]);
   assert.deepEqual(summary.bazi.window, [2023, 2032]);
@@ -23,5 +23,8 @@ test("mock 排练追加十年运势与免费换日，只有两笔付款", async 
   assert.equal(summary.bazi.years, 10);
   assert.equal(summary.bazi.sectAfterSwitch, 2);
   assert.equal(summary.bazi.changes, 1);
-  assert.equal(summary.payments, 2);
+  assert.ok(summary.naming.person.length >= 2);
+  assert.ok(summary.naming.person.every((name) => name.startsWith("张")));
+  assert.ok(summary.naming.business.length >= 2);
+  assert.equal(summary.payments, 4);
 });

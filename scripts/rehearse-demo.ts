@@ -12,6 +12,8 @@ import { createSanyiLogger } from "../src/sanyi/log.js";
 import { MockSchoolsProvider, mockSingleFeeReceipt } from "../src/sanyi/mock-provider.js";
 import { ReadingService } from "../src/sanyi/reading-service.js";
 import { ReadingStore } from "../src/sanyi/store.js";
+import { NamingReadingService } from "../src/sanyi/naming/service.js";
+import { publicNamingReading } from "../src/sanyi/naming/public.js";
 const SCHOOL_NAMES = { chengyi: "程颐", jingfang: "京房", shaoyong: "邵雍" } as const;
 export interface RehearsalSummary {
   status: "done";
@@ -38,6 +40,7 @@ export interface RehearsalSummary {
     sectAfterSwitch: number;
     changes: number;
   };
+  naming: { person: string[]; business: string[] };
 }
 export async function runRehearsal(): Promise<RehearsalSummary> {
   const root = await mkdtemp(join(tmpdir(), "sanyi-rehearsal-"));
@@ -49,7 +52,8 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
       transactionHash: `0x${"22".repeat(32)}`,
     };
     const store = new ReadingStore(root);
-    const logger = createSanyiLogger(join(root, "log"));
+    const clock = () => new Date("2026-10-09T21:00:00+08:00");
+    const logger = createSanyiLogger(join(root, "log"), clock);
     const provider = new MockSchoolsProvider();
     const feeVerifier = { verify: async (value: SanyiFeeProof) => {
       payments += 1;
@@ -127,6 +131,25 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
     assert.equal(reading.summary?.status, "done");
     assert.equal(after.summary?.status, "done");
     assert.equal(after.summary?.basis, 3);
+    const namingService = new NamingReadingService({ store, provider, logger, feeVerifier,
+      clock });
+    const person = await namingService.create({
+      target: "person", surname: "张", gender: "female", length: 2, unborn: false,
+      question: "温和有书卷气", birth: { ...birth, gender: "female" },
+      feeProof: { ...proof, transactionHash: `0x${"55".repeat(32)}` },
+    });
+    const business = await namingService.create({
+      target: "business", gender: "any", length: 2, unborn: false,
+      question: "社区咖啡馆，温暖安静",
+      feeProof: { ...proof, transactionHash: `0x${"66".repeat(32)}` },
+    });
+    await Promise.all([namingService.whenSettled(person.id), namingService.whenSettled(business.id)]);
+    const personView = publicNamingReading(await namingService.getReading(person.id));
+    const businessView = publicNamingReading(await namingService.getReading(business.id));
+    const naming = {
+      person: personView.summary?.output?.picks.map(({ full }) => full) ?? [],
+      business: businessView.summary?.output?.picks.map(({ full }) => full) ?? [],
+    };
     return {
       conclusions: {
         question: reading.summary?.output?.conclusion ?? "",
@@ -137,6 +160,7 @@ export async function runRehearsal(): Promise<RehearsalSummary> {
         fortune: after.summary?.output?.remedy?.plan.length ?? 0,
       },
       payments,
+      naming,
       bazi: { pillars, window, schools: Object.values(after.schools).map((state) => state.status),
         years: publicBefore.years.length, sectAfterSwitch: after.chart.sect, changes: after.changes },
       status: "done",
@@ -166,6 +190,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     console.log(`运势四柱：${summary.bazi.pillars.join(" ")}；窗口：${summary.bazi.window.join("–")}`);
     console.log(`三家已完成，逐年合议 ${summary.bazi.years} 项；免费换日后重跑完成`);
     console.log(`运势白话总述：${summary.conclusions.fortune}`);
+    console.log(`人名合参：${summary.naming.person.join("、")}`);
+    console.log(`商号合参：${summary.naming.business.join("、")}`);
     console.log(`付款共 ${summary.payments} 笔，换日未新增付款`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

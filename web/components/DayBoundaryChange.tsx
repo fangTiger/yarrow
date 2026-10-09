@@ -21,7 +21,7 @@ export function DayBoundaryChange({ reading, birth, onReading }: {
         setBusy(true);
         try {
             const value = await api.changeDayBoundary(reading.id, local, reading.chart.sect === 1 ? 2 : 1);
-            if (value.kind !== "question") {
+            if (value.kind === "destiny" || value.kind === "fortune") {
                 onReading(value);
             }
         }

@@ -29,9 +29,15 @@ test("问事复用现有事项分类", () => {
   assert.equal(result.subject?.useGod, "官鬼");
 });
 test("未开放类型给出问事替代建议", () => {
-  const result = classifyQuestion("给女儿起个名字，姓王");
-  assert.equal(result.supported, false);
-  assert.match(result.suggestion ?? "", /给孩子起名叫某某好不好/);
+  const person = classifyQuestion("给孩子起个名字");
+  assert.equal(person.supported, true);
+  assert.equal(person.target, "person");
+  assert.equal(person.needsBirth, true);
+  assert.equal(person.suggestion, undefined);
+  const business = classifyQuestion("给我的咖啡馆起个名字");
+  assert.equal(business.supported, true);
+  assert.equal(business.target, "business");
+  assert.equal(business.needsBirth, false);
 });
 test("付款前可改类型、事项和时间范围", () => {
   const base = classifyQuestion("我本月财运怎么样");

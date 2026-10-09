@@ -172,6 +172,17 @@ export function Reading({ id }: { id: string }) {
       </main>
     );
   }
+  if (reading.kind === "naming") {
+    return (
+      <main className="page">
+        <header className="topbar">
+          <span className="seal">名</span><span className="brand">三易</span>
+          <nav className="nav"><a href="#/">返回首页</a></nav><WalletBar />
+        </header>
+        <section className="panel" aria-live="polite">起名结果页将在下一批接入</section>
+      </main>
+    );
+  }
   if (reading.kind !== "question") {
     return <main className="page"><header className="topbar"><span className="seal">问</span><span className="brand">三易</span><nav className="nav"><a href="#/">返回首页</a></nav><WalletBar /></header><ShikongBar data={toView(reading.almanac)} /><BaziReading reading={reading} onReading={setReading} /></main>;
   }
