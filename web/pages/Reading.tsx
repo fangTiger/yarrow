@@ -10,6 +10,7 @@ import { Luopan } from "../components/Luopan.js";
 import { ShikongBar, toView } from "../components/ShikongBar.js";
 import { ThrowRecord } from "../components/ThrowRecord.js";
 import { BaziReading } from "./BaziReading.js";
+import { NamingReading } from "./NamingReading.js";
 import { api, type AnyPublicReading, type PublicReading } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
 import { readingStage, shouldPollReading } from "../lib/reading-state.js";
@@ -179,7 +180,7 @@ export function Reading({ id }: { id: string }) {
           <span className="seal">名</span><span className="brand">三易</span>
           <nav className="nav"><a href="#/">返回首页</a></nav><WalletBar />
         </header>
-        <section className="panel" aria-live="polite">起名结果页将在下一批接入</section>
+        <NamingReading reading={reading} onReading={setReading} />
       </main>
     );
   }

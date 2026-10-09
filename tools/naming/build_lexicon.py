@@ -92,20 +92,25 @@ def untoned_pinyin(value: str) -> str:
 
 
 def unique_readings(values: list[str]) -> list[str]:
-    """过滤并按出现顺序去重无调拼音。"""
+    """过滤拼音，按去调音节去重并保留首个带调形式。"""
     output: list[str] = []
+    seen: set[str] = set()
     for value in values:
-        reading = untoned_pinyin(value.strip())
-        if re.fullmatch(r"[a-zü]+", reading) and reading not in output:
+        reading = value.strip().lower().replace("ɡ", "g")
+        syllable = untoned_pinyin(reading)
+        if re.fullmatch(r"[a-zü]+", syllable) and syllable not in seen:
+            seen.add(syllable)
             output.append(reading)
     return output
 
 
 def parse_unihan_readings(value: str) -> list[str]:
-    """读取 kXHC1983 或 kHanyuPinyin 各索引后的拼音。"""
+    """按字段顺序读取 kTGHZ2013、kXHC1983 或 kMandarin 拼音。"""
     readings: list[str] = []
     for group in re.findall(r":([^\s]+)", value):
         readings.extend(group.split(","))
+    if not readings:
+        readings.extend(re.split(r"[\s,]+", value))
     return unique_readings(readings)
 
 
@@ -325,25 +330,6 @@ def read_meanings() -> dict[str, str]:
     return meanings
 
 
-def read_more_readings() -> dict[str, list[str]]:
-    """从新华字典 more 首行读取去调拼音列表。"""
-    rows = json.loads((RAW_DIR / "xinhua-word.json").read_text(encoding="utf-8"))
-    readings: dict[str, list[str]] = {}
-    for row in rows:
-        char = row.get("word")
-        more = row.get("more", "")
-        if not isinstance(char, str) or len(char) != 1 or not isinstance(more, str):
-            continue
-        first_line = more.splitlines()[0] if more else ""
-        match = re.match(rf"^{re.escape(char)}\s+(.+?)\s+部首(?:\s|$)", first_line)
-        if not match:
-            continue
-        parsed = unique_readings(re.split(r"[、,，]", match.group(1)))
-        if parsed and char not in readings:
-            readings[char] = parsed
-    return readings
-
-
 def read_blocked() -> set[str]:
     """读取每行一字的不宜入名字表。"""
     blocked: set[str] = set()
@@ -370,13 +356,12 @@ def build() -> dict[str, list[object] | list[str]]:
     """构建并校验完整字库。"""
     tgh = read_unihan_field("Unihan_OtherMappings.txt", "kTGH")
     readings = read_unihan_field("Unihan_Readings.txt", "kMandarin")
+    tghz_readings = read_unihan_field("Unihan_Readings.txt", "kTGHZ2013")
     xhc_readings = read_unihan_field("Unihan_Readings.txt", "kXHC1983")
-    hanyu_readings = read_unihan_field("Unihan_Readings.txt", "kHanyuPinyin")
     variants = read_unihan_field("Unihan_Variants.txt", "kTraditionalVariant")
     rs_values = read_unihan_field("Unihan_IRGSources.txt", "kRSUnicode")
     stroke_values = read_unihan_field("Unihan_IRGSources.txt", "kTotalStrokes")
     meanings = read_meanings()
-    more_readings = read_more_readings()
     blocked = read_blocked()
     radicals = radical_chars()
     radical_strokes = {
@@ -400,12 +385,9 @@ def build() -> dict[str, list[object] | list[str]]:
         simple_strokes = int(stroke_values[char].split()[0])
         level = 1 if number <= 3500 else 2 if number <= 6500 else 3
         element, basis = wuxing(radical, initial, radicals)
-        alternatives = parse_unihan_readings(
-            xhc_readings.get(char, hanyu_readings.get(char, ""))
+        all_readings = parse_unihan_readings(
+            tghz_readings.get(char, xhc_readings.get(char, readings[char]))
         )
-        all_readings = unique_readings([
-            *more_readings.get(char, []), *alternatives, pinyin,
-        ])
         output[char] = [
             pinyin, tone, initial, final, trad, kangxi, simple_strokes, level,
             element, basis, meanings.get(char, ""), int(char in blocked),

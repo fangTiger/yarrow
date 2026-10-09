@@ -30,6 +30,8 @@ test("人名付款后排四柱，三家与合参依次从 writing 到 done", asy
     assert.equal(reading.summary?.status, "done");
     assert.ok((reading.summary?.output?.picks.length ?? 0) >= 2);
     assert.equal(reading.basis.favorableSource, "tiaohou");
+    assert.equal(reading.basis.favorableNote,
+      `调候取${reading.basis.tiaohou?.useStems.join("、") ?? ""}`);
     assert.deepEqual(reading.basis.favorable,
       favorableFromTiaohou(reading.basis.tiaohou?.useStems ?? []));
     assert.ok(reading.basis.pillars?.year);
@@ -78,13 +80,42 @@ test("商号无生辰按行业或模型定五行，带店主生辰时按调候",
     assert.ok(a && b && c);
     assert.deepEqual(a.basis.favorable, ["火"]);
     assert.equal(a.basis.favorableSource, "industry");
+    assert.equal(a.basis.favorableNote, "按行业：咖啡 → 火");
     assert.equal(a.basis.pillars, null);
     assert.equal(a.surname, undefined);
     assert.equal(b.basis.favorable, null);
     assert.equal(b.basis.favorableSource, "model");
+    assert.equal(b.basis.favorableNote, "行业未匹配，由五行补益家自选");
     assert.ok(b.families.wuxing.output?.element);
     assert.equal(c.basis.favorableSource, "tiaohou");
     assert.ok(c.basis.pillars?.time);
+  } finally {
+    await f.close();
+  }
+});
+
+test("模型滥填的 element 在写入存档前完成规范化", async () => {
+  const mock = new MockSchoolsProvider();
+  const provider = {
+    ...mock,
+    generateStructured: async <T>(request: Parameters<typeof mock.generateStructured>[0]) => {
+      const output = await mock.generateStructured<T>(request);
+      return request.taskId.startsWith("sanyi/naming/") && request.taskId !== "sanyi/naming/summary"
+        ? { ...(output as object), element: "木" } as T
+        : output;
+    },
+  };
+  const f = await namingFixture(provider);
+  try {
+    const created = await f.naming.create({
+      target: "person", surname: "张", gender: "female", length: 2, unborn: false,
+      question: "温和有书卷气", birth: namingBirth, feeProof: namingProof(),
+    });
+    await f.naming.whenSettled(created.id);
+    const stored = await f.naming.getReading(created.id);
+    for (const family of Object.values(stored.families)) {
+      assert.equal(family.output?.element, undefined);
+    }
   } finally {
     await f.close();
   }

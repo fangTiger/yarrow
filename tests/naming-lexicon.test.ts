@@ -40,7 +40,7 @@ test("样例字的读音、笔画、繁体与五行可核验", () => {
     wuxingBasis: "部首·水",
     meaning: charInfo("泽")?.meaning,
     blocked: false,
-    readings: ["ze"],
+    readings: ["zé"],
     polyphonic: false,
   });
 
@@ -66,22 +66,18 @@ test("样例字的读音、笔画、繁体与五行可核验", () => {
   assert.equal(charInfo("王")?.kangxi, 4);
 });
 
-test("常见多音字列出全部去调读音，单音字不误标", () => {
-  const polyphonic = {
-    乐: "yue",
-    长: "chang",
-    朝: "zhao",
-    行: "hang",
-    重: "chong",
-  } as const;
-  for (const [char, reading] of Object.entries(polyphonic)) {
-    const info = charInfo(char);
-    assert.equal(info?.polyphonic, true, `${char} 应标为多音字`);
-    assert.ok(info?.readings.includes(reading), `${char} 应包含读音 ${reading}`);
+test("现代字典多音字保留带调读音，同音节异调不误标", () => {
+  for (const char of [..."乐长朝行重和露曾单解"]) {
+    assert.equal(charInfo(char)?.polyphonic, true, `${char} 应标为多音字`);
   }
-  for (const char of [..."泽涵瑾"]) {
+  assert.deepEqual(charInfo("乐")?.readings, ["lè", "yuè"]);
+  assert.deepEqual(charInfo("长")?.readings, ["cháng", "zhǎng"]);
+  assert.deepEqual(charInfo("朝")?.readings, ["cháo", "zhāo"]);
+  for (const char of [..."宁暖泽涵"]) {
     assert.equal(charInfo(char)?.polyphonic, false, `${char} 不应误标为多音字`);
   }
+  assert.deepEqual(charInfo("宁")?.readings, ["níng"]);
+  assert.deepEqual(charInfo("暖")?.readings, ["nuǎn"]);
 });
 
 test("不宜入名字会被拦截，姓氏只接受一至两个字表内汉字", () => {

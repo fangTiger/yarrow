@@ -147,6 +147,8 @@ export interface StoredNamingReading {
     tiaohou: import("../calendar/qiongtong.js").QiongtongEntry | null;
     favorable: import("./naming/lexicon.js").Element[] | null;
     favorableSource: "tiaohou" | "industry" | "model";
+    /** 旧存档可能没有此字段，公开页按 favorableSource 回退通用说明。 */
+    favorableNote?: string;
     unborn: boolean;
   };
   /** 诗文候选只存稳定编号，重试时从入库语料还原。 */

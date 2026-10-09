@@ -76,10 +76,10 @@ test("卦历收在右上角图标里：收起时只有图标与条数，展开�
   assert.doesNotMatch(open + empty, forbidden);
 });
 
-test("三个类型选项以单选组呈现，当前项高亮", () => {
+test("四个类型选项以单选组呈现，当前项高亮", () => {
   const html = renderToStaticMarkup(createElement(KindOptions, { value: "fortune", onChange: noop }));
   assert.match(html, /role="radiogroup"/);
-  assert.equal((html.match(/role="radio"/g) ?? []).length, 3);
+  assert.equal((html.match(/role="radio"/g) ?? []).length, 4);
   assert.match(html, /aria-checked="true"[^>]*>运势</);
   assert.match(html, /aria-checked="false"[^>]*>问事</);
 });

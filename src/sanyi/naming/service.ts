@@ -140,14 +140,26 @@ function chartBasis(input: NamingCreateInput, targetYear: number): Pick<
 function favorableBasis(
   question: string,
   basis: Pick<StoredNamingReading["basis"], "tiaohou">,
-): Pick<StoredNamingReading["basis"], "favorable" | "favorableSource"> {
+): Pick<StoredNamingReading["basis"], "favorable" | "favorableSource" | "favorableNote"> {
   if (basis.tiaohou) {
-    return { favorable: favorableFromTiaohou(basis.tiaohou.useStems), favorableSource: "tiaohou" };
+    return {
+      favorable: favorableFromTiaohou(basis.tiaohou.useStems),
+      favorableSource: "tiaohou",
+      favorableNote: `调候取${basis.tiaohou.useStems.join("、")}`,
+    };
   }
   const industry = industryElement(question);
   return industry
-    ? { favorable: [industry.element], favorableSource: "industry" }
-    : { favorable: null, favorableSource: "model" };
+    ? {
+      favorable: [industry.element],
+      favorableSource: "industry",
+      favorableNote: `按行业：${industry.keyword} → ${industry.element}`,
+    }
+    : {
+      favorable: null,
+      favorableSource: "model",
+      favorableNote: "行业未匹配，由五行补益家自选",
+    };
 }
 
 function favorableNote(reading: StoredNamingReading): string {
@@ -156,9 +168,9 @@ function favorableNote(reading: StoredNamingReading): string {
   }
   if (reading.basis.favorableSource === "industry") {
     const industry = industryElement(reading.question);
-    return industry ? `行业：${industry.keyword} → ${industry.element}` : "按行业确定五行";
+    return industry ? `按行业：${industry.keyword} → ${industry.element}` : "按行业确定五行";
   }
-  return "行业关键词未命中";
+  return "行业未匹配，由五行补益家自选";
 }
 
 export class NamingReadingService {
@@ -249,7 +261,7 @@ export class NamingReadingService {
       question: reading.question,
       favorable: reading.basis.favorable,
       favorableSource: reading.basis.favorableSource,
-      favorableNote: favorableNote(reading),
+      favorableNote: reading.basis.favorableNote ?? favorableNote(reading),
       candidates: reading.candidateIds.flatMap((id) => {
         const line = lineById(id);
         return line ? [line] : [];

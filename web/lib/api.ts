@@ -2,6 +2,7 @@
 import type { SanyiFeeProof } from "../../src/sanyi/fee.js";
 import type { SanyiApi } from "../../src/sanyi/api.js";
 import type { QuestionSchoolKey } from "../../src/sanyi/schools/index.js";
+import type { NamingFamilyKey } from "../../src/sanyi/naming/schema.js";
 export type PaymentConfiguration = Awaited<ReturnType<SanyiApi["payment"]>>;
 export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
 export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
@@ -15,6 +16,11 @@ export interface CreateReadingInput {
   horizon?: string;
   birth?: import("./birth-profile.js").BirthProfileInput;
   sect?: 1 | 2;
+  target?: "person" | "business";
+  surname?: string;
+  gender?: "male" | "female" | "any";
+  length?: 1 | 2 | 3 | 4;
+  unborn?: boolean;
   feeProof: SanyiFeeProof;
 }
 export class ApiError extends Error {
@@ -47,10 +53,12 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     continueCasting: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/cast`, {}),
     retrySummary: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/summary/retry`, {}),
     getReading: (id: string) => request<AnyPublicReading>(`/api/readings/${id}`),
-    retrySchool: (id: string, key: QuestionSchoolKey | import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey) => request<AnyPublicReading>(
-      `/api/readings/${id}/schools/${key}/retry`,
-      {},
-    ),
+    retrySchool: (
+      id: string,
+      key: QuestionSchoolKey
+        | import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey
+        | NamingFamilyKey,
+    ) => request<AnyPublicReading>(`/api/readings/${id}/schools/${key}/retry`, {}),
     changeDayBoundary: (id: string, birth: import("./birth-profile.js").BirthProfileInput, sect: 1 | 2) =>
       request<AnyPublicReading>(`/api/readings/${id}/day-boundary`, { birth, sect }),
     changeSubject: (id: string, subjectKey: string) => request<PublicReading>(

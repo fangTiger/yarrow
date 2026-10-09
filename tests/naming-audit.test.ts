@@ -111,7 +111,7 @@ test("音律提示覆盖同调、相邻同声韵、生僻字与多音字", () =>
   assert.match(toneHints("张", "思").join("\n"), /姓名声调全同/);
   assert.match(toneHints("张", "章泽").join("\n"), /同声母|同韵母/);
   assert.match(toneHints("张", "明亍").join("\n"), /亍.*较生僻/);
-  assert.match(toneHints("张", "乐清").join("\n"), /「乐」是多音字（le、yue），请确认读音/);
+  assert.match(toneHints("张", "乐清").join("\n"), /「乐」是多音字（lè、yuè），请确认读音/);
 });
 
 test("合参核对只准推荐合格名字且不可重复", () => {

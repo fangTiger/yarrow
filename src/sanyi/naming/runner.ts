@@ -6,6 +6,7 @@ import {
 import {
   auditFamily,
   auditNamingSummary,
+  normalizeFamilyOutput,
   repairFamily,
   repairNamingSummary,
 } from "./audit.js";
@@ -57,7 +58,12 @@ export async function runNamingFamily(
       lastValid = output;
       errors = auditFamily(input.family.key, output, input.ctx);
       if (errors.length === 0) {
-        return { status: "done", output, calls, removed: 0 };
+        return {
+          status: "done",
+          output: normalizeFamilyOutput(input.family.key, output, input.ctx),
+          calls,
+          removed: 0,
+        };
       }
     } catch (error) {
       if (!(error instanceof StructuredOutputError)) {
@@ -75,7 +81,12 @@ export async function runNamingFamily(
   if (lastValid) {
     const repaired = repairFamily(input.family.key, lastValid, input.ctx);
     if (repaired.output.names.length > 0) {
-      return { status: "done", output: repaired.output, calls, removed: repaired.removed };
+      return {
+        status: "done",
+        output: normalizeFamilyOutput(input.family.key, repaired.output, input.ctx),
+        calls,
+        removed: repaired.removed,
+      };
     }
   }
   return { status: "failed", error: "本家三次都未给出合规名字，请稍后重试", calls };

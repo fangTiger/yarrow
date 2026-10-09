@@ -16,6 +16,17 @@ const FAMILY_NAMES: Readonly<Record<NamingFamilyKey, string>> = {
   yinyi: "音形字义",
 };
 
+/** element 仅用于商号五行家在行业未命中时声明自选五行。 */
+export function normalizeFamilyOutput(
+  key: NamingFamilyKey,
+  output: NamingFamilyOutput,
+  ctx: Pick<NamingContext, "favorableSource">,
+): NamingFamilyOutput {
+  if (key === "wuxing" && ctx.favorableSource === "model") return output;
+  const { element: _element, ...normalized } = output;
+  return normalized;
+}
+
 function forbiddenWords(text: string): string[] {
   return [...new Set(text.match(NAMING_FORBIDDEN) ?? [])];
 }

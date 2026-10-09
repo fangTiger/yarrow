@@ -1,5 +1,5 @@
 import type { NamingFamilyState, StoredNamingReading } from "../store.js";
-import { toneHints } from "./audit.js";
+import { normalizeFamilyOutput, toneHints } from "./audit.js";
 import { lineById } from "./classics.js";
 import { NAMING_FAMILIES } from "./families.js";
 import { charInfo } from "./lexicon.js";
@@ -56,12 +56,19 @@ function visibleName(reading: StoredNamingReading, value: NamingName) {
   };
 }
 
-function visibleFamily(reading: StoredNamingReading, state: NamingFamilyState) {
+function visibleFamily(
+  reading: StoredNamingReading,
+  key: NamingFamilyKey,
+  state: NamingFamilyState,
+) {
   const { attempts: _attempts, output, ...visible } = state;
+  const normalized = output
+    ? normalizeFamilyOutput(key, output, { favorableSource: reading.basis.favorableSource })
+    : undefined;
   return {
     ...visible,
-    ...(output ? {
-      output: { ...output, names: output.names.map((name) => visibleName(reading, name)) },
+    ...(normalized ? {
+      output: { ...normalized, names: normalized.names.map((name) => visibleName(reading, name)) },
     } : {}),
   };
 }
@@ -106,9 +113,9 @@ export function publicNamingReading(reading: StoredNamingReading) {
     payment: { firstHash: reading.payment.transactionHash },
     basis: reading.basis,
     families: {
-      wuxing: visibleFamily(reading, reading.families.wuxing),
-      shiwen: visibleFamily(reading, reading.families.shiwen),
-      yinyi: visibleFamily(reading, reading.families.yinyi),
+      wuxing: visibleFamily(reading, "wuxing", reading.families.wuxing),
+      shiwen: visibleFamily(reading, "shiwen", reading.families.shiwen),
+      yinyi: visibleFamily(reading, "yinyi", reading.families.yinyi),
     },
     ...(visibleSummary ? { summary: visibleSummary } : {}),
   };

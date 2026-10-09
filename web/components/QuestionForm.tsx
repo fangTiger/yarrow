@@ -6,12 +6,14 @@ import {
   type BirthFormValues,
 } from "../lib/birth-profile.js";
 import {
-  PLACEHOLDERS, autoHint, deriveEntry, entryGate, fromClassification, paymentClassification,
-  type ClassificationView, type EntryChoice,
+  DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint, deriveEntry, entryGate,
+  fromClassification, namingBirthProblem, namingGate, namingRequest, paymentClassification,
+  type ClassificationView, type EntryChoice, type NamingFormValues,
 } from "../lib/home-entry.js";
 import { BirthFields } from "./BirthFields.js";
 import { HorizonChips } from "./HorizonChips.js";
 import { KindOptions } from "./KindOptions.js";
+import { NamingFields } from "./NamingFields.js";
 import { PaymentButton } from "./PaymentButton.js";
 import { SubjectSelect } from "./SubjectSelect.js";
 
@@ -20,7 +22,7 @@ function initialBirthValues(): BirthFormValues {
   return stored ? fromBirthInput(stored) : EMPTY_BIRTH;
 }
 
-/** 首页中间的问卦表单：类型选项、细项、问题框、命理运势的生辰行与问卦按钮。 */
+/** 首页中间的问卦表单：类型选项、细项、问题框、生辰行与问卦按钮。 */
 export function QuestionForm() {
   const [question, setQuestion] = useState("");
   const [view, setView] = useState<ClassificationView>();
@@ -28,6 +30,9 @@ export function QuestionForm() {
   const [classifying, setClassifying] = useState(false);
   const [error, setError] = useState("");
   const [birthValues, setBirthValues] = useState<BirthFormValues>(initialBirthValues());
+  const [namingValues, setNamingValues] = useState<NamingFormValues>({
+    ...DEFAULT_NAMING_FORM, birth: { ...DEFAULT_NAMING_FORM.birth },
+  });
   const length = [...question.trim()].length;
   const valid = length >= 4 && length <= 280;
   useEffect(() => {
@@ -58,13 +63,17 @@ export function QuestionForm() {
     };
   }, [question, valid]);
   const entry = deriveEntry(view, choice);
+  const naming = { ...namingValues, target: entry.target };
   const problem = birthProblem(birthValues);
+  const namingProblem = namingBirthProblem(naming.birth, naming.unborn);
   // 生辰行开始填后会就地报错，按钮下不再重复。
   const birthShown = [birthValues.year, birthValues.month, birthValues.day, birthValues.time]
     .some((value) => value !== "");
-  const gate = entryGate({
-    questionLength: length, classified: view !== undefined, entry, birthProblem: problem, birthShown,
-  });
+  const gate = entry.kind === "naming"
+    ? namingGate({ questionLength: length, value: naming, birthProblem: namingProblem })
+    : entryGate({
+        questionLength: length, classified: view !== undefined, entry, birthProblem: problem, birthShown,
+      });
   // 分类结果一到就显示结果，不再停留在「识别中」。
   let status = "";
   if (entry.unsupported) {
@@ -74,7 +83,23 @@ export function QuestionForm() {
   } else if (classifying) {
     status = "识别中";
   }
-  const needsBirth = entry.kind !== "question";
+  const needsBirth = entry.kind === "fortune" || entry.kind === "destiny";
+  const questionField = (
+    <textarea
+      aria-label="所问之事"
+      className="question-input"
+      maxLength={280}
+      {...(entry.kind === "naming" ? {} : { minLength: 4 })}
+      onChange={(event) => {
+        setQuestion(event.target.value);
+        setView(undefined);
+        setClassifying(false);
+        setError("");
+      }}
+      placeholder={entry.kind === "naming" ? NAMING_PLACEHOLDERS[naming.target] : PLACEHOLDERS[entry.kind]}
+      value={question}
+    />
+  );
   return (
     <form className="home-form" onSubmit={(event) => event.preventDefault()}>
       <h1 className="ask-title">想问什么？</h1>
@@ -89,27 +114,24 @@ export function QuestionForm() {
       {entry.kind === "fortune" ? (
         <HorizonChips onChange={(horizon) => setChoice({ ...choice, horizon })} value={entry.horizon} />
       ) : null}
-      <textarea
-        aria-label="所问之事"
-        className="question-input"
-        maxLength={280}
-        minLength={4}
-        onChange={(event) => {
-          setQuestion(event.target.value);
-          setView(undefined);
-          setClassifying(false);
-          setError("");
-        }}
-        placeholder={PLACEHOLDERS[entry.kind]}
-        value={question}
-      />
+      {entry.kind === "naming" ? (
+        <NamingFields
+          birthProblem={namingProblem}
+          onChange={(value) => {
+            setNamingValues(value);
+            if (value.target !== entry.target) setChoice({ ...choice, target: value.target });
+          }}
+          questionField={questionField}
+          value={naming}
+        />
+      ) : questionField}
       {status ? <p className="hint status" role="status">{status}</p> : null}
       {needsBirth ? (
         <BirthFields
           onChange={(values) => {
             setBirthValues(values);
             // 生辰填完整即存入本机，下次自动带出。
-            if (birthProblem(values) === null) {
+            if (entry.kind !== "naming" && birthProblem(values) === null) {
               saveBirthProfile(toBirthInput(values));
             }
           }}
@@ -122,6 +144,7 @@ export function QuestionForm() {
         <PaymentButton
           birth={needsBirth ? toBirthInput(birthValues) : null}
           classification={paymentClassification(entry, question)}
+          {...(entry.kind === "naming" ? { naming: namingRequest(question, naming) } : {})}
           onMissingBirth={() => setError("请先填好生辰")}
           question={question}
         />

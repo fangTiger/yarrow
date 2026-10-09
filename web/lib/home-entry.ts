@@ -1,8 +1,12 @@
 // web/lib/home-entry.ts
 import type { Classification } from "./api.js";
+import {
+  EMPTY_BIRTH, birthProblem, toBirthInput, type BirthFormValues, type BirthProfileInput,
+} from "./birth-profile.js";
 import { entryHorizon } from "./birth-entry.js";
 
-export type EntryKind = "question" | "fortune" | "destiny";
+export type EntryKind = "question" | "fortune" | "destiny" | "naming";
+export type NamingTarget = "person" | "business";
 
 /** 规则分类的前端视图，也是付款时带给服务端的分类。 */
 export interface ClassificationView {
@@ -13,6 +17,7 @@ export interface ClassificationView {
   subject?: string;
   horizon?: string;
   suggestion?: string;
+  target?: NamingTarget;
 }
 
 /** 首页入口状态：所选类型、是否手动点选、事项、时间范围与未开放提示。 */
@@ -22,23 +27,31 @@ export interface EntryState {
   subjectKey: string;
   subject: string;
   horizon: string;
+  target: NamingTarget;
   unsupported?: string;
 }
 
 export const DEFAULT_ENTRY: EntryState = {
-  kind: "question", manual: false, subjectKey: "", subject: "", horizon: "year",
+  kind: "question", manual: false, subjectKey: "", subject: "", horizon: "year", target: "person",
 };
 
 export const KIND_OPTIONS = [
   ["question", "问事"],
   ["fortune", "运势"],
   ["destiny", "命理"],
+  ["naming", "起名"],
 ] as const;
 
 export const PLACEHOLDERS: Record<EntryKind, string> = {
   question: "例如：这次面试能过吗？",
   fortune: "例如：我今年运势如何？",
   destiny: "例如：我适合做什么工作？",
+  naming: "对名字的期望（选填）：如温和有书卷气、第二个字用『子』字辈",
+};
+
+export const NAMING_PLACEHOLDERS: Record<NamingTarget, string> = {
+  person: "对名字的期望（选填）：如温和有书卷气、第二个字用『子』字辈",
+  business: "做什么生意、想要什么感觉？例：社区咖啡馆，想要温暖安静",
 };
 
 export const HORIZON_OPTIONS = [
@@ -57,7 +70,7 @@ export function horizonLabel(horizon: string): string {
   return year ? `${year[1]} 年` : "今年";
 }
 
-const ENTRY_KINDS: readonly string[] = ["question", "fortune", "destiny"];
+const ENTRY_KINDS: readonly string[] = ["question", "fortune", "destiny", "naming"];
 
 export function fromClassification(value: Classification): ClassificationView {
   const item = value as Classification & { subject?: { key?: string; label?: string }; horizon?: string };
@@ -69,6 +82,7 @@ export function fromClassification(value: Classification): ClassificationView {
     ...(item.subject?.label ? { subject: item.subject.label } : {}),
     ...(item.horizon ? { horizon: item.horizon } : {}),
     ...(item.suggestion ? { suggestion: item.suggestion } : {}),
+    ...(item.target === "person" || item.target === "business" ? { target: item.target } : {}),
   };
 }
 
@@ -82,6 +96,9 @@ export function applyClassification(state: EntryState, view: ClassificationView)
   }
   if (view.kind === "fortune") {
     next.horizon = entryHorizon(view.horizon);
+  }
+  if (view.kind === "naming" && view.target) {
+    next.target = view.target;
   }
   if (state.manual) {
     return next;
@@ -111,6 +128,9 @@ export function autoHint(state: EntryState): string | null {
   }
   if (state.kind === "fortune") {
     return `已自动识别为运势 · ${horizonLabel(state.horizon)}`;
+  }
+  if (state.kind === "naming") {
+    return `已自动识别为起名 · ${state.target === "business" ? "商号" : "人名"}`;
   }
   return "已自动识别为命理";
 }
@@ -159,6 +179,7 @@ export interface EntryChoice {
   subjectKey?: string;
   subject?: string;
   horizon?: string;
+  target?: NamingTarget;
 }
 
 /** 渲染时由分类结果与手动选择合成入口状态，避免异步分类覆盖用户手选。 */
@@ -176,5 +197,87 @@ export function deriveEntry(view: ClassificationView | undefined, choice: EntryC
   if (choice.horizon) {
     state = { ...state, horizon: choice.horizon };
   }
+  if (choice.target) {
+    state = { ...state, target: choice.target };
+  }
   return state;
+}
+
+export type NamingBirthValues = Omit<BirthFormValues, "gender"> & {
+  gender: BirthFormValues["gender"] | "any";
+};
+
+export interface NamingFormValues {
+  entry: EntryState;
+  target: NamingTarget;
+  surname: string;
+  length: 1 | 2 | 3 | 4;
+  unborn: boolean;
+  ownerBirthEnabled: boolean;
+  birth: NamingBirthValues;
+}
+
+export const DEFAULT_NAMING_FORM: NamingFormValues = {
+  entry: { ...DEFAULT_ENTRY, kind: "naming" }, target: "person", surname: "", length: 2,
+  unborn: false, ownerBirthEnabled: false, birth: { ...EMPTY_BIRTH },
+};
+
+/** 起名生辰单独校验；「不限」只影响取名用字，排盘按男命传入。 */
+export function namingBirthProblem(value: NamingBirthValues, unborn: boolean): string | null {
+  return birthProblem({
+    ...value,
+    time: unborn ? "" : value.time,
+    gender: value.gender === "any" ? "male" : value.gender,
+  });
+}
+
+export function namingGate(input: {
+  questionLength: number;
+  value: NamingFormValues;
+  birthProblem: string | null;
+}): { ready: boolean; reason: string } {
+  const { value } = input;
+  if (value.target === "person") {
+    if (!/^[一-鿿]{1,2}$/u.test(value.surname.trim())) {
+      return { ready: false, reason: "请填写 1–2 个汉字的姓氏" };
+    }
+    if (input.birthProblem) {
+      return { ready: false, reason: `请先填好起名生辰：${input.birthProblem}` };
+    }
+    return { ready: true, reason: "" };
+  }
+  if (input.questionLength < 2) {
+    return { ready: false, reason: "请写下行业与期望（至少 2 个字）" };
+  }
+  if (value.ownerBirthEnabled && input.birthProblem) {
+    return { ready: false, reason: `请填好店主生辰：${input.birthProblem}` };
+  }
+  return { ready: true, reason: "" };
+}
+
+export interface NamingRequest {
+  question: string;
+  kind: "naming";
+  target: NamingTarget;
+  surname?: string;
+  gender: "male" | "female" | "any";
+  length: 1 | 2 | 3 | 4;
+  unborn: boolean;
+  birth?: BirthProfileInput;
+}
+
+export function namingRequest(question: string, value: NamingFormValues): NamingRequest {
+  const useBirth = value.target === "person" || value.ownerBirthEnabled;
+  const gender: NamingRequest["gender"] = value.birth.gender || "any";
+  const normalized: BirthFormValues = {
+    ...value.birth,
+    time: value.unborn ? "" : value.birth.time,
+    gender: value.birth.gender === "any" ? "male" : value.birth.gender,
+  };
+  return {
+    question, kind: "naming", target: value.target,
+    ...(value.target === "person" ? { surname: value.surname.trim() } : {}),
+    gender, length: value.length, unborn: value.target === "person" && value.unborn,
+    ...(useBirth ? { birth: toBirthInput(normalized) } : {}),
+  };
 }

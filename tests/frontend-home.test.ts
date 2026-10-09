@@ -93,11 +93,11 @@ function textOf(children: React.ReactElement<any>[]): string {
   return children.map((child) => typeof child.props.children === "string" ? child.props.children : "").join("\n");
 }
 
-test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起名提示且禁用、点选问事放行", async (t) => {
+test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起名开放但缺姓氏禁用", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const classify = t.mock.method(api, "classify", async (question: string) => ({
     question, kind: question.includes("名字") ? "naming" : "question",
-    supported: !question.includes("名字"), suggestion: "起名即将开放，可改为问事",
+    supported: true, ...(question.includes("名字") ? { target: "person" as const } : {}),
     subject: { key: "career", label: "工作官职" },
   }));
   const harness = formHarness();
@@ -127,7 +127,8 @@ test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起�
   await Promise.resolve();
   children = childrenOf(harness.render());
   assert.equal(children.find((child) => child.type === "button")!.props.disabled, true);
-  assert.match(textOf(children), /起名即将开放，可改为问事/);
+  assert.match(textOf(children), /已自动识别为起名 · 人名/);
+  assert.match(textOf(children), /姓氏/);
   children.find((child) => child.type === KindOptions)!.props.onChange("question");
   assert.ok(childrenOf(harness.render()).some((child) => child.type === PaymentButton));
 });
@@ -209,8 +210,8 @@ test("短问题不分类，快速修改重置防抖，过期响应不能启用�
   responses[1]!(classifyQuestion("帮我取个名字"));
   await Promise.resolve();
   children = childrenOf(harness.render());
-  // N3 已开放服务端分类；N4 表单尚未接入时，首页仍以通用提示安全禁用该入口。
-  assert.match(textOf(children), /这类问题即将开放/u);
+  assert.match(textOf(children), /已自动识别为起名 · 人名/u);
+  assert.match(textOf(children), /姓氏/u);
   children.find((child) => child.type === KindOptions)!.props.onChange("question");
   assert.ok(childrenOf(harness.render()).some((child) => child.type === PaymentButton));
 });

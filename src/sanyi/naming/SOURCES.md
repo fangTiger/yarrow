@@ -3,7 +3,9 @@
 ## 字库
 
 - **Unihan Database**：Unicode 18.0.0，原始文件头日期为 2026-07-31。使用
-  `kTGH`、`kMandarin`、`kTraditionalVariant`、`kRSUnicode` 与 `kTotalStrokes`。
+  `kTGH`、`kMandarin`、`kTGHZ2013`、`kXHC1983`、`kTraditionalVariant`、`kRSUnicode`
+  与 `kTotalStrokes`。多音字读音优先取 `kTGHZ2013`，缺失时依次回退 `kXHC1983`
+  与 `kMandarin`；按去调音节去重并保留首个带调形式。
   数据遵循 [Unicode License v3](https://www.unicode.org/license.txt)。
 - **新华字典数据**：`pwxcoo/chinese-xinhua` 的 `data/word.json`，用于简短释义，遵循 MIT
   许可证。

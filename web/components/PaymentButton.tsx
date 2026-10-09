@@ -9,7 +9,14 @@ import { api, ApiError } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
 import { useFeePayment } from "../lib/use-fee-payment.js";
 import type { ClassificationView } from "../lib/home-entry.js";
-export function PaymentButton(props: { question: string; classification: ClassificationView; birth?: BirthProfileInput | null; onMissingBirth?(): void }) {
+import type { NamingRequest } from "../lib/home-entry.js";
+export function PaymentButton(props: {
+  question: string;
+  classification: ClassificationView;
+  birth?: BirthProfileInput | null;
+  naming?: NamingRequest;
+  onMissingBirth?(): void;
+}) {
   const { pay, payment, estimatedGasWei18, connectionMessage } = useFeePayment();
   const [paidProof, setPaidProof] = useState<SanyiFeeProof>();
   const [busy, setBusy] = useState(false);
@@ -20,16 +27,16 @@ export function PaymentButton(props: { question: string; classification: Classif
     try {
       const feeProof = paidProof ?? await pay();
       setPaidProof(feeProof);
-      const reading = await api.createReading({
-        question: props.question,
-        kind: props.classification.kind as "question" | "destiny" | "fortune",
-        ...(props.birth ? { birth: props.birth, sect: 1 as const } : {}),
-        ...(props.classification.horizon ? { horizon: props.classification.horizon } : {}),
-        ...(props.classification.subjectKey
-          ? { subjectKey: props.classification.subjectKey }
-          : {}),
-        feeProof,
-      });
+      const reading = await api.createReading(props.naming
+        ? { ...props.naming, feeProof }
+        : {
+            question: props.question,
+            kind: props.classification.kind as "question" | "destiny" | "fortune",
+            ...(props.birth ? { birth: props.birth, sect: 1 as const } : {}),
+            ...(props.classification.horizon ? { horizon: props.classification.horizon } : {}),
+            ...(props.classification.subjectKey ? { subjectKey: props.classification.subjectKey } : {}),
+            feeProof,
+          });
       saveRecentReading({
         id: reading.id,
         kind: reading.kind,

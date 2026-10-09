@@ -86,6 +86,59 @@ test("单家运行器一次通过，请求参数与 taskId 符合约定", async 
   assert.equal(provider.requests[0]?.cacheSystemPrompt, true);
 });
 
+test("单家结果只在商号五行家自选时保留 element", async () => {
+  const withElement = { ...valid, element: "木" as const };
+  const wuxing = await runNamingFamily(
+    { provider: new Fake([withElement]) },
+    { family: NAMING_FAMILIES[0]!, ctx: context },
+  );
+  assert.equal(wuxing.status, "done");
+  if (wuxing.status === "done") assert.equal(wuxing.output.element, undefined);
+
+  const shiwenOutput: NamingFamilyOutput = {
+    ...withElement,
+    names: [
+      name("清宁", { sourceId: "S02" }),
+      name("知夏", { sourceId: "S02" }),
+      name("明远", { sourceId: "S02" }),
+    ],
+  };
+  const shiwen = await runNamingFamily(
+    { provider: new Fake([shiwenOutput]) },
+    { family: NAMING_FAMILIES[1]!, ctx: context },
+  );
+  assert.equal(shiwen.status, "done");
+  if (shiwen.status === "done") assert.equal(shiwen.output.element, undefined);
+
+  const yinyi = await runNamingFamily(
+    { provider: new Fake([withElement]) },
+    { family: NAMING_FAMILIES[2]!, ctx: context },
+  );
+  assert.equal(yinyi.status, "done");
+  if (yinyi.status === "done") assert.equal(yinyi.output.element, undefined);
+
+  const { surname: _surname, ...businessBase } = context;
+  const business: NamingContext = {
+    ...businessBase,
+    target: "business",
+    gender: "any",
+    favorable: null,
+    favorableSource: "model",
+    favorableNote: "行业未匹配，由五行补益家自选",
+  };
+  const selected: NamingFamilyOutput = {
+    note: "按行业气质自选五行。",
+    element: "木",
+    names: [name("林森"), name("松柏"), name("荣杰")],
+  };
+  const model = await runNamingFamily(
+    { provider: new Fake([selected]) },
+    { family: NAMING_FAMILIES[0]!, ctx: business },
+  );
+  assert.equal(model.status, "done");
+  if (model.status === "done") assert.equal(model.output.element, "木");
+});
+
 test("业务核对失败后带中文错误完整重写", async () => {
   const invalid = { ...valid, names: [name("林森"), ...valid.names.slice(1)] };
   const provider = new Fake([invalid, valid]);
@@ -215,12 +268,12 @@ test("MockSchoolsProvider 覆盖三家与合参的六种上下文，均一次通
     {
       ...businessBase, target: "business", gender: "any", length: 2,
       question: "社区咖啡馆，温暖安静", favorable: ["火"], favorableSource: "industry",
-      favorableNote: "行业：咖啡 → 火",
+      favorableNote: "按行业：咖啡 → 火",
     },
     {
       ...businessBase, target: "business", gender: "any", length: 2,
       question: "卖手工皂，朴素自然", favorable: null, favorableSource: "model",
-      favorableNote: "行业关键词未命中",
+      favorableNote: "行业未匹配，由五行补益家自选",
     },
   ];
   for (const ctx of contexts) {

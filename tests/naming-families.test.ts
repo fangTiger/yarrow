@@ -36,7 +36,7 @@ const business: NamingContext = {
   question: "卖手工皂，朴素自然",
   favorable: null,
   favorableSource: "model",
-  favorableNote: "行业关键词未命中",
+  favorableNote: "行业未匹配，由五行补益家自选",
   candidates,
 };
 

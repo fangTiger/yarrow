@@ -116,6 +116,7 @@
 - 第 1 批审查修订（已执行）：
   - 释义优先取新华数据 `more` 字段中英文方括号前的义项，避免粘着例词；
   - 字库增加 `polyphonic` 与 `readings`（多音字）；
+  - `readings` 优先取 Unihan `kTGHZ2013`，缺失时依次回退 `kXHC1983`、`kMandarin`；保留带调拼音并按去调音节去重；
   - 候选诗句的消极字扩充，并按书分配名额：诗经 14、楚辞 12、唐诗 10、宋词 10、周易 7、论语 7，`prefer` 至多 20 句；
   - 题名中的日文中点「・」统一为「·」。
 
@@ -214,7 +215,7 @@
     question: string;
     favorable: Element[] | null;          // null：商号自选五行
     favorableSource: "tiaohou" | "industry" | "model";
-    favorableNote: string;                // 如「调候取丙、癸」「行业：咖啡 → 火」
+    favorableNote: string;                // 如「调候取丙、癸」「按行业：咖啡 → 火」
     candidates: ClassicLine[];            // 诗文家候选
   }
   export const NAMING_FAMILIES: ReadonlyArray<{
@@ -251,7 +252,7 @@
     - 「思远」通过；
     - 叠字「依依」不受此限。
   - `repairFamily`：保留合格名字，返回 `removed` 个数；全不合格时返回 `names: []`。名字本身合格、只有 `chars` 不合格时不删名字，用字库 `meaning`（截到第一个「；」、≤12 字）补齐 `gloss`。
-  - `toneHints("张", "思清")` 含「姓名声调全同」；`toneHints("张", "章泽")` 含「同声母」或「同韵母」提示；含三级字时提示「较生僻」；含多音字时提示「「乐」是多音字（le、yue），请确认读音」。
+  - `toneHints("张", "思清")` 含「姓名声调全同」；`toneHints("张", "章泽")` 含「同声母」或「同韵母」提示；含三级字时提示「较生僻」；含多音字时提示「「乐」是多音字（lè、yuè），请确认读音」。
   - 合参核对：
     - `picks` 不在合格名字中报错；
     - `picks` 重复报错；

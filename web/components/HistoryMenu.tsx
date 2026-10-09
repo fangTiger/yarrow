@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import type { RecentReading } from "../lib/recent-readings.js";
 
-const KIND_LABELS: Record<string, string> = { question: "问事", fortune: "运势", destiny: "命理" };
+const KIND_LABELS: Record<string, string> = {
+  question: "问事", fortune: "运势", destiny: "命理", naming: "起名",
+};
 
 function shortTime(value: string): string {
   const date = new Date(value);

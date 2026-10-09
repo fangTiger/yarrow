@@ -26,6 +26,7 @@ test("公开视图补全全名、拼音、逐字信息、出处与合参所属�
     const stored = await f.naming.getReading(created.id);
     const view = publicNamingReading(stored);
     assert.equal(view.kind, "naming");
+    assert.equal(view.basis.favorableNote, stored.basis.favorableNote);
     const wuxing = view.families.wuxing.output?.names[0];
     assert.ok(wuxing);
     assert.equal(wuxing.full, `张${wuxing.given}`);
@@ -66,6 +67,27 @@ test("商号公开视图不加姓，缺模型字义时回退字库释义", async
     const name = view.families.wuxing.output?.names[0];
     assert.equal(name?.full, name?.given);
     assert.ok(name?.chars.every(({ meaning }) => meaning.length > 0));
+  } finally {
+    await f.close();
+  }
+});
+
+test("公开视图会清理旧存档中不该出现的 element", async () => {
+  const f = await namingFixture();
+  try {
+    const created = await f.naming.create({
+      target: "person", surname: "张", gender: "female", length: 2, unborn: false,
+      question: "温和有书卷气", birth: namingBirth, feeProof: namingProof(),
+    });
+    await f.naming.whenSettled(created.id);
+    const stored = await f.naming.getReading(created.id);
+    for (const family of Object.values(stored.families)) {
+      if (family.output) family.output.element = "木";
+    }
+    const view = publicNamingReading(stored);
+    assert.equal(view.families.wuxing.output?.element, undefined);
+    assert.equal(view.families.shiwen.output?.element, undefined);
+    assert.equal(view.families.yinyi.output?.element, undefined);
   } finally {
     await f.close();
   }

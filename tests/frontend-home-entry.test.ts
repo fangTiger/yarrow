@@ -10,14 +10,14 @@ const fortune: ClassificationView = {
   question: "我今年运势如何", kind: "fortune", supported: true, horizon: "year",
 };
 const naming: ClassificationView = {
-  question: "帮我取个名字", kind: "naming", supported: false, suggestion: "起名即将开放，可改为问事",
+  question: "帮我取个名字", kind: "naming", supported: true, target: "person",
 };
 const career: ClassificationView = {
   question: "这次面试能过吗", kind: "question", supported: true, subjectKey: "career", subject: "工作官职",
 };
 
-test("三个选项固定为问事、运势、命理，默认问事；占位文字随类型变化", () => {
-  assert.deepEqual(KIND_OPTIONS.map(([, label]) => label), ["问事", "运势", "命理"]);
+test("四个选项固定为问事、运势、命理、起名，默认问事；占位文字随类型变化", () => {
+  assert.deepEqual(KIND_OPTIONS.map(([, label]) => label), ["问事", "运势", "命理", "起名"]);
   assert.equal(DEFAULT_ENTRY.kind, "question");
   assert.equal(DEFAULT_ENTRY.manual, false);
   assert.match(PLACEHOLDERS.question, /面试/);
@@ -48,14 +48,12 @@ test("手动点选的类型优先，之后的识别不再改类型", () => {
   assert.equal(autoHint(after), null);
 });
 
-test("未开放类型：自动模式下给建议并禁止问卦；点选问事后可问", () => {
-  const blocked = applyClassification(DEFAULT_ENTRY, naming);
-  assert.equal(blocked.unsupported, "起名即将开放，可改为问事");
-  assert.deepEqual(entryGate({ questionLength: 6, classified: true, entry: blocked, birthProblem: null }),
-    { ready: false, reason: "起名即将开放，可改为问事" });
-  const chosen = chooseKind(blocked, "question");
-  assert.equal(chosen.unsupported, undefined);
-  assert.equal(entryGate({ questionLength: 6, classified: true, entry: chosen, birthProblem: null }).ready, true);
+test("起名分类已开放并保留人名细项", () => {
+  const opened = applyClassification(DEFAULT_ENTRY, naming);
+  assert.equal(opened.unsupported, undefined);
+  assert.equal(opened.kind, "naming");
+  assert.equal(opened.target, "person");
+  assert.equal(autoHint(opened), "已自动识别为起名 · 人名");
 });
 
 test("问卦可用条件：问题至少 4 字、已识别或已手选、命理运势生辰有效", () => {
