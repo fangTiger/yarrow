@@ -40,6 +40,12 @@ const BOOK_QUOTAS = [
 ] as const;
 const BOOK_ORDER = BOOK_QUOTAS.map(([book]) => book);
 const NEGATIVE = /[死亡病泣哀悲愁怨恨哭泪别孤寂苦凄惨伤恸残断衰枯憔悴叹忧惆怅萧啼寡鳏丧殇坟墓骨血兵戈杀]/u;
+const REVIEW_NEGATIVE = /[烽战征戍虏敌胡囚狱乱逃魂魄冢鬼妖刑罚贼寇]/u;
+
+/** 消极字：候选诗句与宜入名字池共用，单字判断。 */
+export function isNegativeChar(char: string): boolean {
+  return NEGATIVE.test(char) || REVIEW_NEGATIVE.test(char);
+}
 const SPLIT_PATTERN = /[。！？!?；;]+/u;
 const REMOVE_PATTERN = /[“”‘’「」『』\s]/gu;
 
@@ -140,6 +146,9 @@ function eligible(line: ClassicLine, length: number): boolean {
   const chars = [...line.text];
   return chars.length >= 4 && chars.length <= 24
     && !NEGATIVE.test(line.text)
+    && !REVIEW_NEGATIVE.test(line.text)
+    && !line.text.includes("单于")
+    && !/[《》]/u.test(line.text)
     && chars.filter(isNameChar).length >= length
     && chars.every((char) => charInfo(char)?.blocked !== true);
 }

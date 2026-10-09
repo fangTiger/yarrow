@@ -13,6 +13,8 @@ import { mockSummaryOutput } from "./mock-summary.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
 import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
+import { mockNamingFamilyOutput, mockNamingSummaryOutput } from "./naming/mock.js";
+import type { NamingFamilyKey } from "./naming/schema.js";
 function baziFactsFromPrompt(prompt: string): FactTable {
   const line = prompt.split("\n").find((row) => row.startsWith("事实表 JSON："));
   if (!line) {
@@ -51,6 +53,13 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
   readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
   readonly providerConfigHash = hashJson(this.providerConfig);
   async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    if (request.taskId === "sanyi/naming/summary") {
+      return mockNamingSummaryOutput(request.userPrompt) as T;
+    }
+    const naming = request.taskId.match(/^sanyi\/naming\/(wuxing|shiwen|yinyi)$/u);
+    if (naming) {
+      return mockNamingFamilyOutput(naming[1] as NamingFamilyKey, request.userPrompt) as T;
+    }
     const summary = request.taskId.match(/^sanyi\/summary\/(question|fortune|destiny)$/u);
     if (summary) {
       return mockSummaryOutput(summary[1] as "question" | "fortune" | "destiny", request.userPrompt) as T;

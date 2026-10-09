@@ -7,7 +7,7 @@ import {
 } from "../src/sanyi/naming/classics.js";
 import { charInfo, isNameChar } from "../src/sanyi/naming/lexicon.js";
 
-const NEGATIVE = /[死亡病泣哀悲愁怨恨哭泪别孤寂苦凄惨伤恸残断衰枯憔悴叹忧惆怅萧啼寡鳏丧殇坟墓骨血兵戈杀]/u;
+const NEGATIVE = /[死亡病泣哀悲愁怨恨哭泪别孤寂苦凄惨伤恸残断衰枯憔悴叹忧惆怅萧啼寡鳏丧殇坟墓骨血兵戈杀烽战征戍虏敌胡囚狱乱逃魂魄冢鬼妖刑罚贼寇]/u;
 const EXPECTED_BOOK_COUNTS: Readonly<Record<string, number>> = {
   诗经: 14,
   楚辞: 12,
@@ -67,8 +67,20 @@ test("候选抽取确定、合规、覆盖多书并优先含期望字", () => {
   for (const line of first) {
     assert.ok([...line.text].length >= 4 && [...line.text].length <= 24);
     assert.doesNotMatch(line.text, NEGATIVE);
+    assert.equal(line.text.includes("单于"), false, line.text);
+    assert.doesNotMatch(line.text, /[《》]/u);
     assert.ok([...line.text].filter((char) => isNameChar(char)).length >= 2);
     assert.ok([...line.text].every((char) => !charInfoBlocked(char)));
+  }
+
+  const completePool = pickCandidates({
+    seed: "negative-audit", length: 1, count: CLASSIC_LINES.length, prefer: [],
+  });
+  assert.ok(completePool.length > first.length);
+  for (const line of completePool) {
+    assert.doesNotMatch(line.text, NEGATIVE);
+    assert.equal(line.text.includes("单于"), false, line.text);
+    assert.doesNotMatch(line.text, /[《》]/u);
   }
 });
 
