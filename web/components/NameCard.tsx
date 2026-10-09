@@ -5,10 +5,16 @@ type FamilyOutput = NonNullable<PublicNamingReading["families"][FamilyKey]["outp
 export type PublicNamingName = FamilyOutput["names"][number];
 
 function sourceText(text: string, given: string) {
-  const used = new Set([...given]);
-  return [...text].map((char, index) => used.has(char)
-    ? <b key={`${char}-${index}`}>{char}</b>
-    : <span key={`${char}-${index}`}>{char}</span>);
+  const remaining = new Map<string, number>();
+  for (const char of [...given]) remaining.set(char, (remaining.get(char) ?? 0) + 1);
+  return [...text].map((char, index) => {
+    const count = remaining.get(char) ?? 0;
+    if (count > 0) {
+      remaining.set(char, count - 1);
+      return <b key={`${char}-${index}`}>{char}</b>;
+    }
+    return <span key={`${char}-${index}`}>{char}</span>;
+  });
 }
 
 /** 单个名字的完整公开卡片；所有逐字资料均由接口公开视图提供。 */

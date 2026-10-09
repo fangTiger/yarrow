@@ -361,7 +361,9 @@ export class NamingReadingService {
     }));
     const result = await runNamingSummaryWithRetry(
       { provider: this.deps.provider },
-      { target: reading.target, families },
+      reading.target === "person"
+        ? { target: "person", surname: reading.surname ?? "", families }
+        : { target: "business", families },
     );
     await this.deps.store.update<StoredNamingReading>(id, (current) => {
       const before = current.summary;

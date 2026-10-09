@@ -9,6 +9,7 @@ import {
   normalizeFamilyOutput,
   repairFamily,
   repairNamingSummary,
+  toneHints,
 } from "./audit.js";
 import { NAMING_FAMILIES } from "./families.js";
 import {
@@ -103,16 +104,20 @@ export async function runNamingFamilyWithRetry(
   return { ...again, calls: first.calls + again.calls };
 }
 
-export interface NamingSummaryInput {
-  target: "person" | "business";
+interface NamingSummaryInputBase {
   families: Partial<Record<NamingFamilyKey, NamingFamilyOutput>>;
 }
+
+export type NamingSummaryInput =
+  | NamingSummaryInputBase & { target: "person"; surname: string }
+  | NamingSummaryInputBase & { target: "business"; surname?: never };
 
 export const NAMING_SUMMARY_SYSTEM_PROMPT = `你是「三易」起名的三家合参执笔人。
 你的任务是从程序给出的合格名字中推荐 2 至 3 个，概括已落笔各家思路，并给出实际挑选方法。
 - picks 只能使用合格名字清单中的名字，不得另起新名；推荐不得重复，reason 不超过 60 字。
+- 优先推荐没有音律提示的名字；推荐带音律提示的名字时，理由必须如实说明该提示。
 - overview 只说明清单中已落笔各家的相同点与不同点，不得评论未提供的一家，不超过 150 字。
-- tips 写 2 至 3 条，每条不超过 40 字；可建议念全名、请家人检查方言谐音、查询重名或商标。
+- tips 写 2 至 3 条，每条不超过 40 字；人名不得提商标、工商，商号不得提重名、户口。
 - 不用五格、三才、数理，不承诺改运；不写开光、法器、符咒、转运、化煞、放生或供奉。
 输出必须严格符合给定 JSON Schema。`;
 
@@ -130,7 +135,11 @@ export function buildNamingSummaryPrompt(input: NamingSummaryInput): string {
   for (const key of ["wuxing", "shiwen", "yinyi"] as const) {
     const output = input.families[key];
     if (!output || output.names.length === 0) continue;
-    lines.push(`${labels[key]}：${output.names.map(({ given }) => given).join("、")}`);
+    lines.push(`${labels[key]}：`);
+    for (const { given } of output.names) {
+      const hints = toneHints(input.target === "person" ? input.surname : undefined, given);
+      lines.push(`- ${given}${hints.length > 0 ? `｜音律提示：${hints.join("；")}` : ""}`);
+    }
     lines.push(`${labels[key]}思路：${output.note}`);
   }
   lines.push("输出必须严格符合给定 JSON Schema。");
@@ -146,12 +155,20 @@ function validNames(input: NamingSummaryInput): string[] {
     .flatMap((family) => family?.names.map(({ given }) => given) ?? []);
 }
 
+function sameToneNames(input: NamingSummaryInput): string[] {
+  const surname = input.target === "person" ? input.surname : undefined;
+  return validNames(input).filter((given) => (
+    toneHints(surname, given).some((hint) => hint.startsWith("姓名声调全同"))
+  ));
+}
+
 export async function runNamingSummary(
   deps: { provider: StructuredOutputProvider },
   input: NamingSummaryInput,
 ): Promise<NamingSummaryRunResult> {
   const basePrompt = buildNamingSummaryPrompt(input);
   const valid = validNames(input);
+  const sameTone = sameToneNames(input);
   let userPrompt = basePrompt;
   let calls = 0;
   let lastValid: NamingSummaryOutput | undefined;
@@ -169,7 +186,7 @@ export async function runNamingSummary(
       });
       const output = validateStructuredOutput<NamingSummaryOutput>(NAMING_SUMMARY_SCHEMA, raw);
       lastValid = output;
-      errors = auditNamingSummary(output, valid);
+      errors = auditNamingSummary(output, valid, { target: input.target, sameToneNames: sameTone });
       if (errors.length === 0) {
         return { status: "done", output, calls, removed: 0 };
       }
@@ -191,7 +208,7 @@ export async function runNamingSummary(
       key,
       family?.names.map(({ given }) => given) ?? [],
     ])) as Partial<Record<NamingFamilyKey, string[]>>;
-    const repaired = repairNamingSummary(lastValid, families, input.target);
+    const repaired = repairNamingSummary(lastValid, families, input.target, sameTone);
     if (repaired.output.picks.length >= 2) {
       return { status: "done", output: repaired.output, calls, removed: repaired.removed };
     }

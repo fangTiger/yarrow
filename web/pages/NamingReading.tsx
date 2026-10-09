@@ -17,7 +17,8 @@ function genderLabel(value: PublicNamingReading["gender"]): string {
 function subjectLine(reading: PublicNamingReading): string {
   if (reading.target === "business") return `起名 · 商号（${reading.length} 字）`;
   const length = reading.length === 1 ? "单名" : "双名";
-  return `起名 · 人名（${reading.surname ?? ""}姓 · ${length} · ${genderLabel(reading.gender)}）`;
+  const unborn = reading.unborn ? " · 按预产期" : "";
+  return `起名 · 人名（${reading.surname ?? ""}姓 · ${length} · ${genderLabel(reading.gender)}${unborn}）`;
 }
 
 function NamingSummary(props: {

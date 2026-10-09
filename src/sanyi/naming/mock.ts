@@ -120,10 +120,22 @@ export function mockNamingFamilyOutput(key: NamingFamilyKey, prompt: string): Na
 }
 
 export function mockNamingSummaryOutput(prompt: string): NamingSummaryOutput {
-  const families = prompt.split("\n").flatMap((line): Array<{ label: string; names: string[] }> => {
-    const match = line.match(/^(五行补益|诗文出处|音形字义)：(.+)$/u);
-    return match?.[1] && match[2] ? [{ label: match[1], names: match[2].split("、") }] : [];
-  });
+  const families: Array<{ label: string; names: string[] }> = [];
+  let current: { label: string; names: string[] } | undefined;
+  for (const line of prompt.split("\n")) {
+    const heading = line.match(/^(五行补益|诗文出处|音形字义)：$/u);
+    if (heading?.[1]) {
+      current = { label: heading[1], names: [] };
+      families.push(current);
+      continue;
+    }
+    const name = current ? line.match(/^- ([^｜]+)(?:｜音律提示：.+)?$/u)?.[1] : undefined;
+    if (name) {
+      current?.names.push(name);
+      continue;
+    }
+    if (line.includes("思路：")) current = undefined;
+  }
   const names = families.flatMap((family) => family.names);
   const picks = [...new Set(names)].slice(0, 2)
     .map((given) => ({ given, reason: "兼顾本家取法与名字整体表现" }));

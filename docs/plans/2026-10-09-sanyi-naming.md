@@ -256,8 +256,9 @@
   - 合参核对：
     - `picks` 不在合格名字中报错；
     - `picks` 重复报错；
-    - 修补后为空时，取各家首个合格名字，理由写「某家首选」；
-    - `tips` 不合格时用固定三条，人名与商号各一套，见设计第 7 节。
+    - 合参提示词逐名附音律提示；至少有两个无「姓名声调全同」提示的名字时，不得推荐带该提示的名字；
+    - 修补不足两个推荐时，优先取各家首个无上述提示的合格名字，理由写「某家首选」；
+    - 人名 `tips` 不提商标、工商，商号 `tips` 不提重名、户口；不合格时用对应对象的固定三条，见设计第 7 节。
 - [ ] **Step 2–4：实现并通过。** 导出：
   ```ts
   export const NAMING_FORBIDDEN: RegExp;
@@ -265,9 +266,11 @@
   export function repairFamily(key: NamingFamilyKey, output: NamingFamilyOutput, ctx: NamingContext):
     { output: NamingFamilyOutput; removed: number };
   export function toneHints(surname: string | undefined, given: string): string[];
-  export function auditNamingSummary(output: NamingSummaryOutput, valid: readonly string[]): string[];
+  export function auditNamingSummary(output: NamingSummaryOutput, valid: readonly string[], options?: {
+    target?: "person" | "business"; sameToneNames?: readonly string[] }): string[];
   export function repairNamingSummary(output: NamingSummaryOutput, families: Partial<Record<NamingFamilyKey,
-    string[]>>, target: "person" | "business"): { output: NamingSummaryOutput; removed: number };
+    string[]>>, target: "person" | "business", sameToneNames?: readonly string[]):
+    { output: NamingSummaryOutput; removed: number };
   ```
   错误信息用中文，并写明是哪个名字，便于模型重写。
 

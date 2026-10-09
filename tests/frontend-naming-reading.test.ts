@@ -143,6 +143,24 @@ test("名字卡展示逐字公开信息、出处加重、生僻与音律提示",
   assert.match(rareHtml, /同声母/u);
 });
 
+test("出处中每个名字字只按名字里的出现次数依次加重", () => {
+  const base = baseReading.families.shiwen.output!.names[0]!;
+  const source = { book: "论语", title: "宪问", text: "有德者必有言，有言者不必有德" };
+  const distinct = { ...base, given: "有言", full: "张有言", source };
+  const distinctHtml = renderToStaticMarkup(createElement(NameCard, {
+    name: distinct, familyKey: "shiwen",
+  }));
+  assert.equal((distinctHtml.match(/<b>有<\/b>/gu) ?? []).length, 1);
+  assert.equal((distinctHtml.match(/<b>言<\/b>/gu) ?? []).length, 1);
+
+  const repeated = { ...base, given: "有有", full: "张有有", source };
+  const repeatedHtml = renderToStaticMarkup(createElement(NameCard, {
+    name: repeated, familyKey: "shiwen",
+  }));
+  assert.equal((repeatedHtml.match(/<b>有<\/b>/gu) ?? []).length, 2);
+  assert.equal((repeatedHtml.match(/<b>言<\/b>/gu) ?? []).length, 0);
+});
+
 test("商号结果页无姓氏，登记提示替代查重名", () => {
   const business = {
     ...baseReading,
@@ -204,6 +222,7 @@ test("未出生的人名在起名依据注明预产期与时辰不详", () => {
     basis: { ...baseReading.basis, unborn: true, pillars: { ...baseReading.basis.pillars!, time: null } },
   } as PublicNamingReading;
   const html = renderToStaticMarkup(createElement(NamingReading, { reading: unborn, onReading: noop }));
+  assert.match(html, /起名 · 人名（张姓 · 双名 · 不限 · 按预产期）/u);
   assert.match(html, /按预产期，时辰不详/u);
   assert.match(html, /不限/u);
 });

@@ -129,6 +129,79 @@ test("合参核对只准推荐合格名字且不可重复", () => {
   }, ["明泽", "清宁"]).join("\n"), /明泽.*重复/);
 });
 
+test("合参有至少两个无全同声调提示的名字时拒绝带提示的推荐", () => {
+  const output = {
+    picks: [
+      { given: "清淑", reason: "与张姓音调协调" },
+      { given: "明泽", reason: "五行与字义兼顾" },
+    ],
+    overview: "三家各有侧重。",
+    tips: ["念出全名听听是否顺口", "上户口前查一查重名"],
+  };
+  const options = { target: "person" as const, sameToneNames: ["清淑"] };
+  assert.match(
+    auditNamingSummary(output, ["清淑", "明泽", "河洲"], options).join("\n"),
+    /清淑.*姓名声调全同.*不应优先推荐/u,
+  );
+  assert.doesNotMatch(
+    auditNamingSummary(output, ["清淑", "明泽"], options).join("\n"),
+    /不应优先推荐/u,
+  );
+});
+
+test("合参挑选提示须符合人名或商号对象", () => {
+  const base = {
+    picks: [{ given: "明泽", reason: "五行与字义兼顾" }, { given: "河洲", reason: "出处清楚" }],
+    overview: "三家各有侧重。",
+    tips: ["念出全名听听是否顺口", "问问家人方言里有无不雅谐音"],
+  };
+  assert.match(auditNamingSummary({
+    ...base, tips: ["念出全名听听是否顺口", "可查重名与商标"],
+  }, ["明泽", "河洲"], { target: "person" }).join("\n"), /人名.*商标/u);
+  assert.match(auditNamingSummary({
+    ...base, tips: ["念出字号听听是否顺口", "注册前查重名与户口"],
+  }, ["明泽", "河洲"], { target: "business" }).join("\n"), /商号.*重名|户口/u);
+});
+
+test("合参修补跳过全同声调名字，并替换对象不符的挑选提示", () => {
+  const bad = {
+    picks: [
+      { given: "清淑", reason: "合张姓音调" },
+      { given: "云舒", reason: "不在清单" },
+    ],
+    overview: "三家各有侧重。",
+    tips: ["念出全名听听是否顺口", "可查重名与商标"],
+  };
+  const families = {
+    wuxing: ["清淑", "明泽"],
+    shiwen: ["清淑", "河洲"],
+    yinyi: ["清淑", "知涵"],
+  };
+  const repaired = repairNamingSummary(bad, families, "person", ["清淑"]);
+  assert.deepEqual(repaired.output.picks, [
+    { given: "明泽", reason: "五行补益首选" },
+    { given: "河洲", reason: "诗文出处首选" },
+    { given: "知涵", reason: "音形字义首选" },
+  ]);
+  assert.deepEqual(repaired.output.tips, [
+    "念出全名听听是否顺口",
+    "问问家人方言里有无不雅谐音",
+    "上户口前查一查重名",
+  ]);
+});
+
+test("只有一家落笔时仍可从该家其它无提示名字补足推荐", () => {
+  const repaired = repairNamingSummary({
+    picks: [
+      { given: "明泽", reason: "五行与字义兼顾" },
+      { given: "云舒", reason: "不在清单" },
+    ],
+    overview: "此家提供三个合格名字。",
+    tips: ["念出全名听听是否顺口", "上户口前查一查重名"],
+  }, { wuxing: ["明泽", "知涵", "河洲"] }, "person");
+  assert.deepEqual(repaired.output.picks.map(({ given }) => given), ["明泽", "知涵"]);
+});
+
 test("合参修补去尽推荐时取各家首选，并按对象补固定提示", () => {
   const bad = {
     picks: [{ given: "云舒", reason: "开光后更好" }, { given: "山高", reason: "五格大吉" }],

@@ -212,9 +212,16 @@ export function toneHints(surname: string | undefined, given: string): string[] 
 export function auditNamingSummary(
   output: NamingSummaryOutput,
   valid: readonly string[],
+  options: {
+    target?: "person" | "business";
+    sameToneNames?: readonly string[];
+  } = {},
 ): string[] {
   const errors: string[] = [];
   const allowed = new Set(valid);
+  const sameTone = new Set(options.sameToneNames ?? []);
+  const withoutSameTone = new Set(valid.filter((given) => !sameTone.has(given)));
+  const rejectSameTone = withoutSameTone.size >= 2;
   const seen = new Set<string>();
   for (const pick of output.picks) {
     if (!allowed.has(pick.given)) {
@@ -224,10 +231,20 @@ export function auditNamingSummary(
       errors.push(`推荐「${pick.given}」重复`);
     }
     seen.add(pick.given);
+    if (rejectSameTone && sameTone.has(pick.given)) {
+      errors.push(`推荐「${pick.given}」有姓名声调全同提示，另有至少两个无此提示的名字，不应优先推荐`);
+    }
     errors.push(...forbiddenError(`推荐「${pick.given}」的理由`, [pick.reason]));
   }
   errors.push(...forbiddenError("合参总述", [output.overview]));
   errors.push(...forbiddenError("挑选提示", output.tips));
+  const tips = output.tips.join("\n");
+  if (options.target === "person" && /商标|工商/u.test(tips)) {
+    errors.push("人名挑选提示不得提商标或工商");
+  }
+  if (options.target === "business" && /重名|户口/u.test(tips)) {
+    errors.push("商号挑选提示不得提重名或户口");
+  }
   return errors;
 }
 
@@ -243,28 +260,56 @@ export function repairNamingSummary(
   output: NamingSummaryOutput,
   families: Partial<Record<NamingFamilyKey, string[]>>,
   target: "person" | "business",
+  sameToneNames: readonly string[] = [],
 ): { output: NamingSummaryOutput; removed: number } {
   const valid = new Set(Object.values(families).flatMap((names) => names ?? []));
+  const sameTone = new Set(sameToneNames);
+  const rejectSameTone = [...valid].filter((given) => !sameTone.has(given)).length >= 2;
   const seen = new Set<string>();
   const picks = output.picks.filter((pick) => {
     const keep = valid.has(pick.given) && !seen.has(pick.given)
-      && forbiddenWords(pick.reason).length === 0;
+      && forbiddenWords(pick.reason).length === 0
+      && !(rejectSameTone && sameTone.has(pick.given));
     if (keep) seen.add(pick.given);
     return keep;
   });
   const removed = output.picks.length - picks.length;
   if (picks.length < 2) {
-    for (const key of ["wuxing", "shiwen", "yinyi"] as const) {
-      const given = families[key]?.find((name) => !seen.has(name));
+    const keys = ["wuxing", "shiwen", "yinyi"] as const;
+    const represented = new Set<NamingFamilyKey>();
+    for (const pick of picks) {
+      const key = keys.find((family) => (
+        !represented.has(family) && families[family]?.includes(pick.given)
+      ));
+      if (key) represented.add(key);
+    }
+    for (const key of keys) {
+      if (represented.has(key)) continue;
+      const given = families[key]?.find((name) => (
+        !seen.has(name) && !(rejectSameTone && sameTone.has(name))
+      ));
+      if (given) {
+        picks.push({ given, reason: `${FAMILY_NAMES[key]}首选` });
+        seen.add(given);
+        represented.add(key);
+      }
+      if (picks.length === 3) break;
+    }
+    for (const key of keys) {
+      if (picks.length >= 2) break;
+      const given = families[key]?.find((name) => (
+        !seen.has(name) && !(rejectSameTone && sameTone.has(name))
+      ));
       if (given) {
         picks.push({ given, reason: `${FAMILY_NAMES[key]}首选` });
         seen.add(given);
       }
-      if (picks.length === 3) break;
     }
   }
   const tipsInvalid = output.tips.length < 2 || output.tips.length > 3
-    || forbiddenWords(output.tips.join("\n")).length > 0;
+    || forbiddenWords(output.tips.join("\n")).length > 0
+    || (target === "person" && /商标|工商/u.test(output.tips.join("\n")))
+    || (target === "business" && /重名|户口/u.test(output.tips.join("\n")));
   return {
     output: {
       picks,

@@ -204,9 +204,63 @@ const summaryFamilies: Partial<Record<NamingFamilyKey, NamingFamilyOutput>> = {
   yinyi: { note: "读音舒展。", names: [name("思远")] },
 };
 
+const warningSummaryFamilies: Partial<Record<NamingFamilyKey, NamingFamilyOutput>> = {
+  wuxing: { ...valid, names: [name("清淑"), name("明泽"), name("知涵")] },
+  shiwen: { note: "取自诗文。", names: [name("河洲"), name("云舒"), name("景行")] },
+  yinyi: { note: "兼顾音义。", names: [name("思远"), name("知夏"), name("言蹊")] },
+};
+
+test("合参提示词逐名附音律提示，并按对象约束推荐与挑选建议", () => {
+  const prompt = buildNamingSummaryPrompt({
+    target: "person", surname: "张", families: warningSummaryFamilies,
+  });
+  assert.match(prompt, /- 清淑｜音律提示：姓名声调全同，连读时可再听听是否顺口/u);
+  assert.match(prompt, /- 明泽(?:\n|$)/u);
+  assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /优先推荐没有音律提示的名字/u);
+  assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /推荐带音律提示的名字时.*理由.*如实说明/u);
+  assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /人名.*不得提商标、工商/u);
+  assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /商号.*不得提重名、户口/u);
+});
+
+test("合参推荐全同声调名字时重写，三次不改则修补为各家首个无提示名字", async () => {
+  const invalid: NamingSummaryOutput = {
+    ...summary,
+    picks: [
+      { given: "清淑", reason: "合张姓音调" },
+      { given: "明泽", reason: "五行与字义兼顾" },
+    ],
+  };
+  const validSummary: NamingSummaryOutput = {
+    ...summary,
+    picks: [
+      { given: "明泽", reason: "五行与字义兼顾" },
+      { given: "河洲", reason: "出处清楚" },
+    ],
+  };
+  const provider = new Fake([invalid, validSummary]);
+  const rewritten = await runNamingSummary(
+    { provider },
+    { target: "person", surname: "张", families: warningSummaryFamilies },
+  );
+  assert.equal(rewritten.status, "done");
+  assert.equal(rewritten.calls, 2);
+  assert.match(provider.requests[1]?.userPrompt ?? "", /清淑.*姓名声调全同.*不应优先推荐/u);
+
+  const repaired = await runNamingSummary(
+    { provider: new Fake([invalid, invalid, invalid]) },
+    { target: "person", surname: "张", families: warningSummaryFamilies },
+  );
+  assert.equal(repaired.status, "done");
+  if (repaired.status === "done") {
+    assert.deepEqual(repaired.output.picks.map(({ given }) => given), ["明泽", "河洲", "思远"]);
+  }
+});
+
 test("合参运行器使用独立 taskId，失败时外层自动再试", async () => {
   const provider = new Fake([summary]);
-  const result = await runNamingSummary({ provider }, { target: "person", families: summaryFamilies });
+  const result = await runNamingSummary(
+    { provider }, { target: "person", surname: "张", families: summaryFamilies },
+  );
   assert.equal(result.status, "done");
   assert.equal(provider.requests[0]?.taskId, "sanyi/naming/summary");
   assert.equal(provider.requests[0]?.effort, "medium");
@@ -214,7 +268,7 @@ test("合参运行器使用独立 taskId，失败时外层自动再试", async (
 
   const retryProvider = new Fake([new Error("超时"), summary]);
   const retried = await runNamingSummaryWithRetry(
-    { provider: retryProvider }, { target: "person", families: summaryFamilies },
+    { provider: retryProvider }, { target: "person", surname: "张", families: summaryFamilies },
   );
   assert.equal(retried.status, "done");
   assert.equal(retried.calls, 2);
@@ -225,13 +279,13 @@ test("缺一家时合参提示与 mock 只概括已落笔的两家", async () =>
     wuxing: valid,
     yinyi: { note: "读音舒展。", names: [name("思远"), name("安和"), name("景明")] },
   };
-  const prompt = buildNamingSummaryPrompt({ target: "person", families: twoFamilies });
+  const prompt = buildNamingSummaryPrompt({ target: "person", surname: "张", families: twoFamilies });
   assert.match(prompt, /依据 2 家/);
   assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /已落笔各家/);
   assert.doesNotMatch(NAMING_SUMMARY_SYSTEM_PROMPT, /五行、诗文、音形字义三种思路/);
   const result = await runNamingSummary(
     { provider: new MockSchoolsProvider() },
-    { target: "person", families: twoFamilies },
+    { target: "person", surname: "张", families: twoFamilies },
   );
   assert.equal(result.status, "done");
   if (result.status === "done") {
@@ -252,7 +306,7 @@ test("合参三次不合规且修补后不足两个推荐时返回 failed", asyn
   };
   const result = await runNamingSummary(
     { provider: new Fake([invalid, invalid, invalid]) },
-    { target: "person", families: onlyOne },
+    { target: "person", surname: "张", families: onlyOne },
   );
   assert.equal(result.status, "failed");
   assert.equal(result.calls, 3);
@@ -288,7 +342,10 @@ test("MockSchoolsProvider 覆盖三家与合参的六种上下文，均一次通
         outputs[family.key] = result.output;
       }
     }
-    const result = await runNamingSummary({ provider }, { target: ctx.target, families: outputs });
+    const summaryInput = ctx.target === "person"
+      ? { target: "person" as const, surname: ctx.surname ?? "张", families: outputs }
+      : { target: "business" as const, families: outputs };
+    const result = await runNamingSummary({ provider }, summaryInput);
     assert.equal(result.status, "done", `${ctx.target}/${ctx.length}/summary`);
     if (result.status === "done") {
       const names = Object.values(outputs).flatMap((item) => item?.names.map(({ given }) => given) ?? []);
