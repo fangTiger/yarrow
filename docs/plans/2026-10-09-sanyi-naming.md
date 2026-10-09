@@ -113,6 +113,11 @@
   - 构建命令；
   - 五行规则。
 - [ ] **Step 6：运行构建与测试通过**：`.venv-tools/bin/python tools/naming/build_lexicon.py` 后跑单测。
+- 第 1 批审查修订（已执行）：
+  - 释义优先取新华数据 `more` 字段中英文方括号前的义项，避免粘着例词；
+  - 字库增加 `polyphonic` 与 `readings`（多音字）；
+  - 候选诗句的消极字扩充，并按书分配名额：诗经 14、楚辞 12、唐诗 10、宋词 10、周易 7、论语 7，`prefer` 至多 20 句；
+  - 题名中的日文中点「・」统一为「·」。
 
 ### Task 2：构建诗文语料
 
@@ -174,7 +179,7 @@
 **Files:** Create `src/sanyi/naming/schema.ts`、`src/sanyi/naming/families.ts`；Test `tests/naming-families.test.ts`
 
 - [ ] **Step 1：写测试（先红）**：
-  - Schema 校验：`names` 恰好 3 项；`given` 长度 1–4；`meaning`、`why` ≤50；`note` ≤80；`element` 只能取五行之一；不允许多余字段。
+  - Schema 校验：`names` 恰好 3 项；`given` 长度 1–4；`meaning`、`why` ≤50；`chars` 1–4 项、`gloss` 1–12 字；`note` ≤80；`element` 只能取五行之一；不允许多余字段。
   - 提示词：三家用户提示词都含：
     - 起名对象行（如「人名 · 姓张 · 双名 · 性别女」「商号 · 字号 2 字」）；
     - 期望原文；
@@ -190,7 +195,11 @@
 - [ ] **Step 2–4：实现并通过。** 导出：
   ```ts
   export type NamingFamilyKey = "wuxing" | "shiwen" | "yinyi";
-  export interface NamingName { given: string; meaning: string; why: string; sourceId?: string }
+  export interface NamingName {
+    given: string; meaning: string; why: string; sourceId?: string;
+    /** 逐字字义：该字在这个名字里取的意思，顺序与 given 一致，gloss ≤12 字 */
+    chars: { char: string; gloss: string }[];
+  }
   export interface NamingFamilyOutput { note: string; element?: Element; names: NamingName[] }
   export interface NamingSummaryOutput {
     picks: { given: string; reason: string }[]; overview: string; tips: string[];
@@ -225,7 +234,8 @@
     - 字数不符报「应为 2 字」；
     - 表外字或 blocked 字报「不宜入名」或「不在通用规范汉字表」；
     - 三个名字重复报错；
-    - 文案含「五格」「开光」报禁用词。
+    - 文案含「五格」「开光」报禁用词；
+    - `chars` 与 `given` 逐字不一致（字数或字不同）报错。
   - 五行家：
     - 「林森」（都属木）报「无一字属喜用（火、水）」；
     - 「明泽」通过；
@@ -240,8 +250,8 @@
     - 姓张（1 声）加「思清」（1 声、1 声）报「姓名声调全同」；
     - 「思远」通过；
     - 叠字「依依」不受此限。
-  - `repairFamily`：保留合格名字，返回 `removed` 个数；全不合格时返回 `names: []`。
-  - `toneHints("张", "思清")` 含「姓名声调全同」；`toneHints("张", "章泽")` 含「同声母」或「同韵母」提示；含三级字时提示「较生僻」。
+  - `repairFamily`：保留合格名字，返回 `removed` 个数；全不合格时返回 `names: []`。名字本身合格、只有 `chars` 不合格时不删名字，用字库 `meaning`（截到第一个「；」、≤12 字）补齐 `gloss`。
+  - `toneHints("张", "思清")` 含「姓名声调全同」；`toneHints("张", "章泽")` 含「同声母」或「同韵母」提示；含三级字时提示「较生僻」；含多音字时提示「「乐」是多音字（le、yue），请确认读音」。
   - 合参核对：
     - `picks` 不在合格名字中报错；
     - `picks` 重复报错；
@@ -334,7 +344,7 @@
     - 原有「起名即将开放」的测试改为新行为。
   - 公开视图：
     - 每个名字有 `full`（人名为姓加名，商号即字号）、`pinyin`（逐字带调，空格分隔）；
-    - `chars[]` 含 `char/pinyin/tone/wuxing/wuxingBasis/kangxi/meaning/level`；
+    - `chars[]` 含 `char/pinyin/tone/wuxing/wuxingBasis/kangxi/meaning/level/polyphonic`，其中 `meaning` 取模型的 `gloss`，没有时用字库释义；
     - `hints[]`；
     - 诗文家名字有 `source: { book, title, text }`；
     - 合参 `picks` 补上 `full`、`pinyin` 与所出家名。
