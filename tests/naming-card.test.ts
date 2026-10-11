@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isNegativeChar } from "../src/sanyi/naming/classics.js";
+import { isNegativeChar, type ClassicLine } from "../src/sanyi/naming/classics.js";
 import {
   charAnalysis,
   echoLines,
@@ -82,12 +82,24 @@ test("补益标记和用字分析分别覆盖缺、补、行业与只写寓意",
 test("意蕴内涵至多三句，先取含全部字的一句并稳定过滤和排除出处", () => {
   const lines = echoLines("明月");
   assert.ok(lines.length <= 3);
-  assert.equal(lines[0]?.id, "sj-0096-04");
+  assert.equal(lines[0]?.id, "sc-0034-03");
   assert.ok([..."明月"].every((char) => lines[0]?.text.includes(char)));
   assert.ok(lines.every((line) => ![...line.text].some(isNegativeChar) && !/[《》]/u.test(line.text)));
-  const excluded = echoLines("明月", "sj-0096-04");
-  assert.ok(excluded.every(({ id }) => id !== "sj-0096-04"));
+  const excluded = echoLines("明月", "sc-0034-03");
+  assert.ok(excluded.every(({ id }) => id !== "sc-0034-03"));
   assert.deepEqual(echoLines("明月").map(({ id }) => id), lines.map(({ id }) => id));
+});
+
+test("意蕴内涵优先选意象分高的句子，同分按书序与编号稳定排序", () => {
+  const corpus: ClassicLine[] = [
+    { id: "sj-test-01", book: "诗经", title: "低分", text: "书灵的了不无有所是此彼尔汝" },
+    { id: "ly-test-02", book: "论语", title: "高分三", text: "书清淑诗灵明月" },
+    { id: "ts-test-02", book: "唐诗三百首", title: "高分二", text: "书清淑诗灵明月" },
+    { id: "ts-test-01", book: "唐诗三百首", title: "高分一", text: "书清淑诗灵明月" },
+  ];
+  const ids = echoLines("书灵", undefined, corpus).map(({ id }) => id);
+  assert.deepEqual(ids, ["ts-test-01", "ts-test-02", "ly-test-02"]);
+  assert.deepEqual(echoLines("书灵", undefined, corpus).map(({ id }) => id), ids);
 });
 
 test("公开视图附评分、补益、分析、回响与姓氏字块，并兼容旧存档", async () => {
@@ -122,4 +134,14 @@ test("公开视图附评分、补益、分析、回响与姓氏字块，并兼�
   } finally {
     await f.close();
   }
+});
+
+test("意蕴内涵优先 7 字以上的整句，短句意象分再高也排在后面", () => {
+  const corpus = [
+    { id: "sc-0001-01", book: "宋词三百首", title: "甲", text: "近清明" },
+    { id: "ts-0001-01", book: "唐诗三百首", title: "乙", text: "明月松间照，清泉石上流" },
+  ];
+  assert.equal(echoLines("清", undefined, corpus)[0]?.id, "ts-0001-01");
+  // 只有短句时仍可入选。
+  assert.equal(echoLines("清", undefined, corpus.slice(0, 1))[0]?.id, "sc-0001-01");
 });

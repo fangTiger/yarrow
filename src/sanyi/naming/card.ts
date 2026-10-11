@@ -2,15 +2,29 @@ import { CLASSIC_LINES, isNegativeChar, type ClassicLine } from "./classics.js";
 import { toneHints } from "./audit.js";
 import { ELEMENT_VIRTUES } from "./favorable.js";
 import { charInfo, ELEMENTS, type Element } from "./lexicon.js";
+import { nameWorthyChars } from "./pool.js";
 
 const BOOK_ORDER = ["诗经", "楚辞", "唐诗三百首", "宋词三百首", "周易", "论语"] as const;
 const bookRank = new Map<string, number>(BOOK_ORDER.map((book, index) => [book, index]));
-const usableLines = CLASSIC_LINES
-  .filter((line) => ![...line.text].some(isNegativeChar) && !/[《》]/u.test(line.text))
-  .sort((left, right) => (
-    (bookRank.get(left.book) ?? BOOK_ORDER.length) - (bookRank.get(right.book) ?? BOOK_ORDER.length)
-    || left.id.localeCompare(right.id)
-  ));
+const nameWorthySet = new Set(nameWorthyChars().map(({ char }) => char));
+
+function imageryScore(line: ClassicLine): number {
+  const chars = [...line.text];
+  return chars.filter((char) => nameWorthySet.has(char)).length / Math.max(chars.length, 1);
+}
+
+/** 意蕴内涵优先整句：去掉标点后不少于 7 字；短句（如「近清明」）意象分再高也排在后面。 */
+function isFullLine(line: ClassicLine): boolean {
+  return [...line.text.replace(/[，、：；,]/gu, "")].length >= 7;
+}
+
+function compareEchoLines(left: ClassicLine, right: ClassicLine): number {
+  return Number(isFullLine(right)) - Number(isFullLine(left))
+    || imageryScore(right) - imageryScore(left)
+    || (bookRank.get(left.book) ?? BOOK_ORDER.length) - (bookRank.get(right.book) ?? BOOK_ORDER.length)
+    || left.id.localeCompare(right.id);
+}
+
 function indexLines(lines: readonly ClassicLine[]): Map<string, ClassicLine[]> {
   const index = new Map<string, ClassicLine[]>();
   for (const line of lines) {
@@ -22,8 +36,16 @@ function indexLines(lines: readonly ClassicLine[]): Map<string, ClassicLine[]> {
   }
   return index;
 }
+
+function echoCatalog(lines: readonly ClassicLine[]) {
+  const usable = lines
+    .filter((line) => ![...line.text].some(isNegativeChar) && !/[《》]/u.test(line.text))
+    .sort(compareEchoLines);
+  return { usable, byChar: indexLines(usable) };
+}
+
+const productionEchoCatalog = echoCatalog(CLASSIC_LINES);
 const corpusLinesByChar = indexLines(CLASSIC_LINES);
-const echoLinesByChar = indexLines(usableLines);
 
 export interface NameScoreInput {
   target: "person" | "business";
@@ -164,7 +186,12 @@ export function charAnalysis(char: string, context: {
   return `「${char}」五行属${info.wuxing}（${info.wuxingBasis}）${relation}；${virtue}。`;
 }
 
-export function echoLines(given: string, excludeId?: string): ClassicLine[] {
+export function echoLines(
+  given: string,
+  excludeId?: string,
+  sourceLines?: readonly ClassicLine[],
+): ClassicLine[] {
+  const catalog = sourceLines ? echoCatalog(sourceLines) : productionEchoCatalog;
   const chars = [...new Set([...given])];
   const result: ClassicLine[] = [];
   const selected = new Set<string>(excludeId ? [excludeId] : []);
@@ -173,11 +200,11 @@ export function echoLines(given: string, excludeId?: string): ClassicLine[] {
     result.push(line);
     selected.add(line.id);
   };
-  add(usableLines.find((line) => (
+  add(catalog.usable.find((line) => (
     !selected.has(line.id) && chars.every((char) => line.text.includes(char))
   )));
   for (const char of chars) {
-    add(echoLinesByChar.get(char)?.find((line) => !selected.has(line.id)));
+    add(catalog.byChar.get(char)?.find((line) => !selected.has(line.id)));
   }
   return result;
 }

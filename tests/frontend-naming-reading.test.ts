@@ -36,7 +36,7 @@ function visibleName(given: string, source = false) {
     chars,
     surnameChars: [{
       char: "张", pinyin: "zhāng", tone: 1 as const, wuxing: "金" as const,
-      wuxingBasis: "读音·齿音", kangxi: 11, meaning: "开弓", level: 1 as const,
+      wuxingBasis: "读音·齿音", kangxi: 11, meaning: "把弦安在弓上；开弓；拉弓弦", level: 1 as const,
       polyphonic: false,
     }],
     scores: { overall: 91, sound: 92, form: 90, wuxing: 95, poetry: 88 },
@@ -186,6 +186,13 @@ test("名字卡展示逐字公开信息、出处加重、生僻与音律提示",
   const rareHtml = renderToStaticMarkup(createElement(NameCard, { name: rare, familyKey: "yinyi" }));
   assert.match(rareHtml, /较生僻/u);
   assert.match(rareHtml, /同声母/u);
+});
+
+test("姓氏字块只展示读音、五行与康熙笔画，不展示字典释义", () => {
+  const name = baseReading.families.wuxing.output!.names[0]!;
+  const html = renderToStaticMarkup(createElement(NameCard, { name, familyKey: "wuxing" }));
+  assert.match(html, /张[\s\S]*zhāng[\s\S]*金 · 康熙 11 画/u);
+  assert.doesNotMatch(html, /把弦安在弓上|开弓|拉弓弦/u);
 });
 
 test("出处中每个名字字只按名字里的出现次数依次加重", () => {

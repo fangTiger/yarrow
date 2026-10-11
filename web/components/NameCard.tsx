@@ -58,9 +58,9 @@ export function NameCard(props: { name: PublicNamingName; familyKey: FamilyKey }
               <div className={`name-char-block${char.surname ? " surname" : ""}`} key={`${char.char}-${index}`}>
                 {char.surname ? <small>姓</small> : null}<strong>{char.char}</strong>
                 <span>{char.pinyin}</span><span>{char.wuxing} · 康熙 {char.kangxi} 画</span>
-                <span>{char.wuxingBasis}</span>
-                <span className="name-char-gloss">{char.meaning}</span>
-                {char.level === 3 ? <em>较生僻</em> : null}
+                {!char.surname && "wuxingBasis" in char ? <span>{char.wuxingBasis}</span> : null}
+                {!char.surname && "meaning" in char ? <span className="name-char-gloss">{char.meaning}</span> : null}
+                {!char.surname && "level" in char && char.level === 3 ? <em>较生僻</em> : null}
               </div>
             ))}
           </div>

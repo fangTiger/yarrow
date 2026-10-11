@@ -34,7 +34,7 @@ function sourceCandidateId(reading: StoredNamingReading, sourceId: string | unde
 }
 
 
-function visibleChars(value: string) {
+function visibleSurnameChars(value: string) {
   return [...value].flatMap((char) => {
     const info = charInfo(char);
     return info ? [{
@@ -42,11 +42,7 @@ function visibleChars(value: string) {
       pinyin: info.pinyin,
       tone: info.tone,
       wuxing: info.wuxing,
-      wuxingBasis: info.wuxingBasis,
       kangxi: info.kangxi,
-      meaning: info.meaning,
-      level: info.level,
-      polyphonic: info.polyphonic,
     }] : [];
   });
 }
@@ -89,7 +85,7 @@ function visibleName(reading: StoredNamingReading, key: NamingFamilyKey, value: 
     full,
     pinyin: pinyin(full),
     chars,
-    ...(reading.target === "person" ? { surnameChars: visibleChars(reading.surname ?? "") } : {}),
+    ...(reading.target === "person" ? { surnameChars: visibleSurnameChars(reading.surname ?? "") } : {}),
     hints: toneHints(reading.target === "person" ? reading.surname : undefined, value.given),
     scores: nameScores({
       target: reading.target,

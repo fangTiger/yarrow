@@ -83,9 +83,13 @@ test("现代字典多音字保留带调读音，同音节异调不误标", () =>
 test("不宜入名字会被拦截，姓氏只接受一至两个字表内汉字", () => {
   assert.equal(charInfo("死")?.blocked, true);
   assert.equal(isNameChar("死"), false);
+  for (const char of [..."离别寡散逝泪殇凄"]) {
+    assert.equal(isNameChar(char), false, `${char} 不应进入名字`);
+  }
   assert.equal(isNameChar("泽"), true);
   assert.equal(isSurname("欧阳"), true);
   assert.equal(isSurname("张"), true);
+  assert.equal(isSurname("萧"), true);
   assert.equal(isSurname("Ab"), false);
   assert.equal(isSurname("张王李"), false);
 });
