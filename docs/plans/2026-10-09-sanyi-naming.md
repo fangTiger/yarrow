@@ -441,3 +441,99 @@
 - [ ] 检查要点：三家 done；名字合规；诗文出处可核；合参推荐在九个名字内；无禁用词；耗时。
 - [ ] 截图走查：在 1320 与 390 宽度下看首页起名表单（人名、商号、未出生）和三种结果页。
 - [ ] OpenSpec 任务勾选；向用户汇报。
+
+---
+
+## Chunk N6：五行分析与名字卡加厚（第二版，设计第 14 节）
+
+### Task 11：五行计数与补益五行新规则
+
+**Files:** Modify `src/sanyi/naming/favorable.ts`、`src/sanyi/naming/service.ts`、`src/sanyi/store.ts`、`src/sanyi/naming/public.ts`；Test `tests/naming-favorable.test.ts`、`tests/naming-service.test.ts`
+
+- [ ] 先写测试（先红）：
+  - `eightCharCounts(pillars)`：按天干与地支本气计数；时柱缺失时为 6 字。
+  - `supplementElements({ counts, tiaohou })` 的四种情形：
+    - 缺一行（金），调候喜木火 → `["金","木"]`，来源 `missing`；
+    - 缺两行（木、金），调候喜金 → `["金","木"]`，同在调候的优先；
+    - 缺三行 → 取前两个；
+    - 不缺 → 调候前两个，来源 `tiaohou`。
+  - `favorableNote` 三种文案按设计 14.1。
+  - `ELEMENT_VIRTUES` 五行寓意表按设计 14.1。
+  - 服务存档 `basis.counts`（五行到计数）、`basis.missing`；公开视图透出这两项与 `hiddenCounts`（含藏干的计数，取自 `elements[].total`）。
+  - 既有测试中依赖旧喜用规则的期望，按新规则更新并在报告中列出。
+- [ ] 实现并通过。
+
+### Task 12：名字卡程序生成内容
+
+**Files:** Create `src/sanyi/naming/card.ts`；Modify `src/sanyi/naming/public.ts`；Test `tests/naming-card.test.ts`
+
+- [ ] 先写测试（先红），覆盖设计 14.3 的每条规则：
+  - `nameScores(...)`：
+    - 好听：声调全同、同声母或同韵母、多音字、三级字的扣分；商号声调全同；
+    - 字形：笔画、等级、笔画差；
+    - 八字五行：比例公式与「含所缺 +3」；
+    - 诗文意蕴：五档；
+    - 下限 60；
+    - 综合为四项平均、四舍五入。
+  - `charAnalysis(...)`：「补八字所缺之金」「合所补之火」「合行业之火」与只写寓意四种句式。
+  - `echoLines(given, excludeId?)`：
+    - 至多 3 句；
+    - 先找含全部字的一句；
+    - 按书序（诗经、楚辞、唐诗三百首、宋词三百首、周易、论语）与编号稳定选句；
+    - 不含消极字与书名号；
+    - 不重复诗文家的出处句。
+  - 公开视图每个名字新增：`scores`、`supplements`、`analysis`（逐字句子）、`echoes`、`tags`；逐字信息增加 `sense`。人名另附 `surnameChars` 逐字信息。
+- [ ] 实现并通过。检索用语料构建一次倒排索引（字 → 句编号），不要每次全量扫描。
+
+### Task 13：模型新增 sense 与 tags；合参按分数与补益推荐
+
+**Files:** Modify `src/sanyi/naming/schema.ts`、`families.ts`、`audit.ts`、`runner.ts`、`mock.ts`；Test 对应测试文件
+
+- [ ] 先写测试（先红）：
+  - Schema：
+    - `chars[].sense` 1–30 字；
+    - `tags` 3–5 项，每项 2–4 字。
+  - 提示词：
+    - 写明 `sense` 为「用作名字意指……」；
+    - `tags` 为性格寓意词，不写负面词。
+  - 核对：
+    - `tags` 含禁用词、消极字或长度不符时报错；
+    - `sense` 含禁用词时报错。
+  - 修补：
+    - `sense` 不合格时用字典释义兜底；
+    - `tags` 不合格时用所含五行的寓意词兜底（如水 →「聪慧」「灵动」），去重后至少 3 个。
+  - 合参：
+    - 用户提示词中每个名字附「综合 N 分」与「补X」；
+    - 系统提示词写明优先推荐综合分高且补上所缺五行的名字，理由写明补了什么。
+  - mock 输出含 `sense` 与 `tags`，并一次通过核对。
+- [ ] 实现并通过。
+
+### Task 14：前端
+
+**Files:** Create `web/components/WuxingPanel.tsx`；Modify `web/components/NameCard.tsx`、`web/pages/NamingReading.tsx`、`web/styles/components.css`、`scripts/font-charset.ts`；Test `tests/frontend-naming-reading.test.ts`
+
+- [ ] 先写测试（先红）：
+  - 五行分析面板：
+    - 五行顺序为木火土金水；
+    - 计数与「缺」「补」标记；
+    - 结论与寓意；
+    - 小字说明；
+    - 未出生注明六字；
+    - 商号无店主生辰时不画条、只写行业五行；
+    - 旧存档没有计数时只显示说明。
+  - 名字卡：
+    - 字块，人名含姓；
+    - 综合分小牌；
+    - 四项评分条，带文字标签与数值；
+    - 「补X」；
+    - 用字分析、字义分析、意蕴内涵（加重所用字）、性格标签；
+    - 原有寓意、理由、出处、提示仍在；
+    - 旧存档缺字段时不报错。
+  - 合参推荐卡显示综合分与「补X」。
+  - 页脚有计分说明与「参考分，仅供参考」。
+- [ ] 实现并通过：
+  - 布局按设计 14.3：桌面端每张卡占满一行、卡内左右两栏，≤900px 上下排列；
+  - 条形统一用 `var(--gold)`，轨道用 `var(--line)`，条高 8px、圆角 4px；
+  - 综合分小牌用朱砂色；
+  - 页面主体不横向溢出。
+- [ ] 字体：`FIXED_COPY` 补「五行分析」，重建字库字符表。子集需要联网，由主管执行，沙箱内只更新字符表。
