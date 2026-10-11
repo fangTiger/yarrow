@@ -1,10 +1,59 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  ELEMENT_VIRTUES,
+  eightCharCounts,
   favorableFromTiaohou,
   industryElement,
+  supplementElements,
   stemElement,
 } from "../src/sanyi/naming/favorable.js";
+
+test("八字五行按天干与地支本气计数，缺时柱则按六字计", () => {
+  assert.deepEqual(eightCharCounts({
+    year: "甲子", month: "丙午", day: "戊申", time: "辛酉",
+  }), { 木: 1, 火: 2, 土: 1, 金: 3, 水: 1 });
+  assert.deepEqual(eightCharCounts({
+    year: "甲子", month: "丙午", day: "戊申", time: null,
+  }), { 木: 1, 火: 2, 土: 1, 金: 1, 水: 1 });
+});
+
+test("补益五行有缺时缺的优先，调候补位并记录来源", () => {
+  assert.deepEqual(supplementElements({
+    counts: { 木: 2, 火: 2, 土: 1, 金: 0, 水: 1 }, tiaohou: ["甲", "丙"],
+  }), {
+    favorable: ["金", "木"], favorableSource: "missing", missing: ["金"],
+    favorableNote: "八字缺金，宜补金；调候喜木，兼补木",
+  });
+  assert.deepEqual(supplementElements({
+    counts: { 木: 0, 火: 2, 土: 2, 金: 0, 水: 2 }, tiaohou: ["庚"],
+  }), {
+    favorable: ["金", "木"], favorableSource: "missing", missing: ["木", "金"],
+    favorableNote: "八字缺木、金，宜补木、金",
+  });
+  assert.deepEqual(supplementElements({
+    counts: { 木: 0, 火: 2, 土: 0, 金: 0, 水: 2 }, tiaohou: ["辛", "甲"],
+  }).favorable, ["木", "金"]);
+});
+
+test("五行俱全时按调候取前两个并生成说明", () => {
+  assert.deepEqual(supplementElements({
+    counts: { 木: 1, 火: 2, 土: 1, 金: 2, 水: 2 }, tiaohou: ["丙", "癸", "甲"],
+  }), {
+    favorable: ["火", "水"], favorableSource: "tiaohou", missing: [],
+    favorableNote: "八字五行俱全，按调候取丙、癸，宜补火、水",
+  });
+});
+
+test("五行寓意采用固定五常表", () => {
+  assert.deepEqual(ELEMENT_VIRTUES, {
+    木: "木主仁：仁爱上进、生机勃勃",
+    火: "火主礼：热情有礼、开朗明快",
+    土: "土主信：诚信稳重、宽厚包容",
+    金: "金主义：果断重义、坚毅有守",
+    水: "水主智：聪慧灵动、善思通达",
+  });
+});
 
 test("天干换算五行，调候喜用去重保序且最多取两个", () => {
   assert.equal(stemElement("丙"), "火");

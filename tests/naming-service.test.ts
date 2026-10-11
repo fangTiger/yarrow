@@ -3,7 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
-import { favorableFromTiaohou } from "../src/sanyi/naming/favorable.js";
+import { publicNamingReading } from "../src/sanyi/naming/public.js";
 import { statusForError } from "../src/sanyi/http-errors.js";
 import { namingBirth, namingFixture, namingProof } from "./helpers/naming-service.js";
 
@@ -29,11 +29,18 @@ test("人名付款后排四柱，三家与合参依次从 writing 到 done", asy
     )));
     assert.equal(reading.summary?.status, "done");
     assert.ok((reading.summary?.output?.picks.length ?? 0) >= 2);
-    assert.equal(reading.basis.favorableSource, "tiaohou");
-    assert.equal(reading.basis.favorableNote,
-      `调候取${reading.basis.tiaohou?.useStems.join("、") ?? ""}`);
-    assert.deepEqual(reading.basis.favorable,
-      favorableFromTiaohou(reading.basis.tiaohou?.useStems ?? []));
+    assert.ok(["missing", "tiaohou"].includes(reading.basis.favorableSource));
+    assert.match(reading.basis.favorableNote ?? "", /^八字/u);
+    assert.deepEqual(Object.keys(reading.basis.counts ?? {}), ["木", "火", "土", "金", "水"]);
+    assert.deepEqual(reading.basis.missing,
+      Object.entries(reading.basis.counts ?? {}).filter(([, count]) => count === 0)
+        .map(([element]) => element));
+    const view = publicNamingReading(reading);
+    assert.deepEqual(view.basis.counts, reading.basis.counts);
+    assert.deepEqual(view.basis.missing, reading.basis.missing);
+    assert.deepEqual(view.basis.hiddenCounts, Object.fromEntries(
+      reading.basis.elements.map(({ element, total }) => [element, total]),
+    ));
     assert.ok(reading.basis.pillars?.year);
     assert.ok(reading.basis.pillars?.time);
   } finally {
@@ -53,6 +60,7 @@ test("未出生按预产期排三柱并保留 unborn 标记", async () => {
     const done = await f.naming.getReading(reading.id);
     assert.equal(done.basis.unborn, true);
     assert.equal(done.basis.pillars?.time, null);
+    assert.equal(Object.values(done.basis.counts ?? {}).reduce((sum, count) => sum + count, 0), 6);
     assert.equal(done.gender, "any");
   } finally {
     await f.close();
@@ -87,7 +95,7 @@ test("商号无生辰按行业或模型定五行，带店主生辰时按调候",
     assert.equal(b.basis.favorableSource, "model");
     assert.equal(b.basis.favorableNote, "行业未匹配，由五行补益家自选");
     assert.ok(b.families.wuxing.output?.element);
-    assert.equal(c.basis.favorableSource, "tiaohou");
+    assert.ok(["missing", "tiaohou"].includes(c.basis.favorableSource));
     assert.ok(c.basis.pillars?.time);
   } finally {
     await f.close();

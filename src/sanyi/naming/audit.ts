@@ -1,4 +1,5 @@
 import { charInfo } from "./lexicon.js";
+import { isNegativeChar } from "./classics.js";
 import type {
   NamingContext,
   NamingFamilyKey,
@@ -8,7 +9,7 @@ import type {
 } from "./schema.js";
 
 export const NAMING_FORBIDDEN =
-  /开光|法器|符咒|符箓|护身符|转运|化煞|吉祥物|摆件|放生|捐款|供奉|烧香|五格|三才|数理|天格|人格|地格|总格|外格/gu;
+  /开光|法器|符咒|符箓|护身符|转运|化煞|吉祥物|摆件|放生|捐款|供奉|烧香|五格|三才|数理|天格|人格|地格|总格|外格|[\u3041-\u3096\u30a1-\u30fa\u30fb]/gu;
 
 const FAMILY_NAMES: Readonly<Record<NamingFamilyKey, string>> = {
   wuxing: "五行补益",
@@ -42,12 +43,26 @@ function nameTexts(name: NamingName): string[] {
 
 interface CommonNameAudit {
   fatal: string[];
-  chars: string[];
+  repairable: string[];
+}
+
+function validSense(sense: string): boolean {
+  const length = [...sense].length;
+  return length >= 1 && length <= 30 && forbiddenWords(sense).length === 0;
+}
+
+function validTags(tags: readonly string[]): boolean {
+  return tags.length >= 3 && tags.length <= 5 && tags.every((tag) => {
+    const length = [...tag].length;
+    return length >= 2 && length <= 4
+      && forbiddenWords(tag).length === 0
+      && ![...tag].some(isNegativeChar);
+  });
 }
 
 function commonNameAudit(name: NamingName, ctx: NamingContext): CommonNameAudit {
   const fatal: string[] = [];
-  const charErrors: string[] = [];
+  const repairable: string[] = [];
   const chars = [...name.given];
   if (chars.length !== ctx.length) {
     fatal.push(`名字「${name.given}」应为 ${ctx.length} 字`);
@@ -62,20 +77,41 @@ function commonNameAudit(name: NamingName, ctx: NamingContext): CommonNameAudit 
   }
   const mapped = name.chars.map(({ char }) => char);
   if (mapped.length !== chars.length || mapped.some((char, index) => char !== chars[index])) {
-    charErrors.push(`名字「${name.given}」的 chars 须与 given 逐字一致`);
+    repairable.push(`名字「${name.given}」的 chars 须与 given 逐字一致`);
   }
   for (const item of name.chars) {
     const length = [...item.gloss].length;
     if (length < 1 || length > 12) {
-      charErrors.push(`名字「${name.given}」的 chars 字义须为 1 至 12 字`);
+      repairable.push(`名字「${name.given}」的 chars 字义须为 1 至 12 字`);
       break;
+    }
+    const senseLength = [...item.sense].length;
+    if (senseLength < 1 || senseLength > 30) {
+      repairable.push(`名字「${name.given}」的 sense 须为 1 至 30 字`);
+    } else if (forbiddenWords(item.sense).length > 0) {
+      repairable.push(`名字「${name.given}」的 sense 含禁用词`);
+    }
+  }
+  if (name.tags.length < 3 || name.tags.length > 5) {
+    repairable.push(`名字「${name.given}」的 tags 须为 3 至 5 项`);
+  }
+  for (const tag of name.tags) {
+    const length = [...tag].length;
+    if (length < 2 || length > 4) {
+      repairable.push(`名字「${name.given}」的 tags 每项须为 2 至 4 字`);
+    }
+    if (forbiddenWords(tag).length > 0) {
+      repairable.push(`名字「${name.given}」的 tags 含禁用词`);
+    }
+    if ([...tag].some(isNegativeChar)) {
+      repairable.push(`名字「${name.given}」的 tags 含消极字`);
     }
   }
   const nameForbidden = forbiddenError(`名字「${name.given}」的文案`, nameTexts(name));
   if (nameForbidden.length > 0) {
     fatal.push(...nameForbidden);
   }
-  return { fatal, chars: charErrors };
+  return { fatal, repairable };
 }
 
 function allSameTone(surname: string | undefined, given: string): boolean {
@@ -137,7 +173,7 @@ export function auditFamily(
   const seen = new Set<string>();
   for (const name of output.names) {
     const common = commonNameAudit(name, ctx);
-    errors.push(...common.fatal, ...common.chars);
+    errors.push(...common.fatal, ...common.repairable);
     if (seen.has(name.given)) {
       errors.push(`名字「${name.given}」重复，三个名字须互不相同`);
     }
@@ -152,8 +188,48 @@ function fallbackGloss(char: string): string {
   return [...meaning].slice(0, 12).join("");
 }
 
-function repairedChars(given: string): NamingName["chars"] {
-  return [...given].map((char) => ({ char, gloss: fallbackGloss(char) }));
+/** 字义分析兜底：先用模型按名字取意写的逐字字义；没有时用字典释义原文，不套「用作名字意指」，
+ * 免得把字典首义（如「心：心脏」）说成名字的取意。 */
+export function fallbackSense(char: string, gloss?: string): string {
+  if (gloss && [...gloss].length >= 1 && [...gloss].length <= 12 && forbiddenWords(gloss).length === 0) {
+    return `取「${gloss}」之意`;
+  }
+  const meaning = charInfo(char)?.meaning.split("；")[0]?.trim() || "取其美好含义";
+  return forbiddenWords(meaning).length > 0 ? "取其美好含义" : [...meaning].slice(0, 30).join("");
+}
+
+function repairedChars(name: NamingName): NamingName["chars"] {
+  return [...name.given].map((char, index) => {
+    const current = name.chars[index];
+    const modelGloss = current?.char === char && [...current.gloss].length >= 1
+      && [...current.gloss].length <= 12 && forbiddenWords(current.gloss).length === 0 ? current.gloss : "";
+    return {
+      char,
+      gloss: modelGloss || fallbackGloss(char),
+      sense: current?.char === char && validSense(current.sense)
+        ? current.sense : fallbackSense(char, modelGloss),
+    };
+  });
+}
+
+const ELEMENT_TAGS = {
+  木: ["仁爱", "上进", "蓬勃"],
+  火: ["热情", "有礼", "开朗", "明快"],
+  土: ["诚信", "稳重", "宽厚", "包容"],
+  金: ["果断", "重义", "坚毅", "守正"],
+  水: ["聪慧", "灵动", "善思", "通达"],
+} as const;
+
+function fallbackTags(given: string): string[] {
+  const tags: string[] = [...new Set([...given].flatMap((char) => {
+    const element = charInfo(char)?.wuxing;
+    return element ? ELEMENT_TAGS[element] : [];
+  }))];
+  for (const tag of ["温和", "好学", "明朗"]) {
+    if (tags.length >= 3) break;
+    if (!tags.includes(tag)) tags.push(tag);
+  }
+  return tags.slice(0, 5);
 }
 
 export function repairFamily(
@@ -170,7 +246,11 @@ export function repairFamily(
       continue;
     }
     seen.add(name.given);
-    names.push(common.chars.length > 0 ? { ...name, chars: repairedChars(name.given) } : name);
+    names.push(common.repairable.length > 0 ? {
+      ...name,
+      chars: repairedChars(name),
+      tags: validTags(name.tags) ? name.tags : fallbackTags(name.given),
+    } : name);
   }
   const note = forbiddenWords(output.note).length > 0 ? "本家按既定规则取名。" : output.note;
   return {

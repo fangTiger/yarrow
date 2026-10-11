@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { PublicNamingReading } from "../../src/sanyi/naming/public.js";
 import { NameCard } from "../components/NameCard.js";
+import { WuxingPanel } from "../components/WuxingPanel.js";
 import { api } from "../lib/api.js";
 
 const FAMILY_META = {
@@ -83,7 +84,12 @@ function NamingSummary(props: {
         {summary.output.picks.map((pick) => (
           <article className="summary-name" key={pick.given}>
             <h3>{pick.full}</h3><p className="name-pinyin">{pick.pinyin}</p>
-            <span className="tag">{pick.family}</span><p>{pick.reason}</p>
+            <div className="summary-name-meta"><span className="tag">{pick.family}</span>
+              {pick.scores ? <b>综合 {pick.scores.overall} 分</b> : null}</div>
+            {pick.supplements?.map(({ element, chars }) => (
+              <span className="summary-supplement" key={element}>补{element}：{chars.join("、")}</span>
+            ))}
+            <p>{pick.reason}</p>
           </article>
         ))}
       </div>
@@ -160,6 +166,7 @@ export function NamingReading(props: {
         <span className="label">所问</span><h1>{subjectLine(props.reading)}</h1>
         {props.reading.question ? <p>{props.reading.question}</p> : null}
       </section>
+      <WuxingPanel reading={props.reading} />
       <NamingSummary reading={props.reading} onReading={props.onReading} />
       <section aria-label="三家名字" className="naming-families">
         {(Object.keys(FAMILY_META) as FamilyKey[]).map((key) => {
@@ -203,6 +210,8 @@ export function NamingReading(props: {
       {error ? <p className="error" role="alert">{error}</p> : null}
       <NamingBasis reading={props.reading} />
       <footer className="panel naming-notes">
+        <p><strong>参考分，仅供参考。</strong> 综合分为好听、字形、八字五行、诗文意蕴四项的平均分。</p>
+        <p>好听与字形从 96 分起按声调、声韵、多音、生僻和笔画等扣分；八字五行按补益字比例计分，含所缺五行加 3 分；诗文意蕴按出处与语料命中分档。</p>
         <p>字的五行各家说法不一，本站按字形部首优先、读音五音其次判定。</p>
         <p>本站不采用姓名笔画吉凶之说，也不承诺名字改变运势。</p>
         <p>{props.reading.target === "person"

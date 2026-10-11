@@ -64,7 +64,10 @@ function name(given: string, extra: Partial<NamingName> = {}): NamingName {
     given,
     meaning: "温润明朗",
     why: "符合本家取名规则",
-    chars: [...given].map((char) => ({ char, gloss: "取其美好含义" })),
+    chars: [...given].map((char) => ({
+      char, gloss: "取其美好含义", sense: "用作名字意指温润明朗",
+    })),
+    tags: ["温和", "好学", "明朗"],
     ...extra,
   };
 }
@@ -213,13 +216,17 @@ const warningSummaryFamilies: Partial<Record<NamingFamilyKey, NamingFamilyOutput
 test("合参提示词逐名附音律提示，并按对象约束推荐与挑选建议", () => {
   const prompt = buildNamingSummaryPrompt({
     target: "person", surname: "张", families: warningSummaryFamilies,
+    favorable: ["火", "水"], missing: [],
   });
-  assert.match(prompt, /- 清淑｜音律提示：姓名声调全同，连读时可再听听是否顺口/u);
-  assert.match(prompt, /- 明泽(?:\n|$)/u);
+  assert.match(prompt, /- 清淑｜综合 \d+ 分.*音律提示：姓名声调全同，连读时可再听听是否顺口/u);
+  assert.match(prompt, /- 明泽｜综合 \d+ 分/u);
+  assert.match(prompt, /明泽.*综合 \d+ 分.*补火.*补水/u);
   assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /优先推荐没有音律提示的名字/u);
   assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /推荐带音律提示的名字时.*理由.*如实说明/u);
   assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /人名.*不得提商标、工商/u);
   assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /商号.*不得提重名、户口/u);
+  assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /优先推荐综合分高.*补上所缺五行/u);
+  assert.match(NAMING_SUMMARY_SYSTEM_PROMPT, /理由写明补了什么/u);
 });
 
 test("合参推荐全同声调名字时重写，三次不改则修补为各家首个无提示名字", async () => {

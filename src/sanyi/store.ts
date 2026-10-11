@@ -146,9 +146,13 @@ export interface StoredNamingReading {
     elements: import("../calendar/bazi-relations.js").ElementCount[];
     tiaohou: import("../calendar/qiongtong.js").QiongtongEntry | null;
     favorable: import("./naming/lexicon.js").Element[] | null;
-    favorableSource: "tiaohou" | "industry" | "model";
+    favorableSource: "missing" | "tiaohou" | "industry" | "model";
     /** 旧存档可能没有此字段，公开页按 favorableSource 回退通用说明。 */
     favorableNote?: string;
+    /** 天干与地支本气计数；旧存档没有此字段。 */
+    counts?: import("./naming/favorable.js").ElementCounts;
+    /** 本气计数为零的五行；旧存档没有此字段。 */
+    missing?: import("./naming/lexicon.js").Element[];
     unborn: boolean;
   };
   /** 诗文候选只存稳定编号，重试时从入库语料还原。 */

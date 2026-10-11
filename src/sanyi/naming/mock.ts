@@ -14,12 +14,28 @@ function gloss(char: string): string {
   return [...meaning].slice(0, 12).join("");
 }
 
+const MOCK_TAGS: Readonly<Record<Element, readonly string[]>> = {
+  木: ["仁爱", "上进", "蓬勃"], 火: ["热情", "有礼", "开朗"],
+  土: ["诚信", "稳重", "宽厚"], 金: ["果断", "重义", "坚毅"],
+  水: ["聪慧", "灵动", "善思"],
+};
+
+function tags(given: string): string[] {
+  return [...new Set([...given].flatMap((char) => {
+    const element = charInfo(char)?.wuxing;
+    return element ? MOCK_TAGS[element] : [];
+  }))].slice(0, 5);
+}
+
 function mockName(given: string, why: string, sourceId?: string): NamingName {
   const value: NamingName = {
     given,
     meaning: [...given].map(gloss).join("，"),
     why,
-    chars: [...given].map((char) => ({ char, gloss: gloss(char) })),
+    chars: [...given].map((char) => ({
+      char, gloss: gloss(char), sense: `用作名字意指${gloss(char)}`,
+    })),
+    tags: tags(given),
   };
   if (sourceId) value.sourceId = sourceId;
   return value;
@@ -129,7 +145,7 @@ export function mockNamingSummaryOutput(prompt: string): NamingSummaryOutput {
       families.push(current);
       continue;
     }
-    const name = current ? line.match(/^- ([^｜]+)(?:｜音律提示：.+)?$/u)?.[1] : undefined;
+    const name = current ? line.match(/^- ([^｜]+)｜综合 \d+ 分/u)?.[1] : undefined;
     if (name) {
       current?.names.push(name);
       continue;

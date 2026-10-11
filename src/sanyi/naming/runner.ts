@@ -21,6 +21,8 @@ import {
   type NamingSummaryOutput,
 } from "./schema.js";
 import { schemaHints } from "../schema-hints.js";
+import { nameScores, nameSupplements } from "./card.js";
+import type { Element } from "./lexicon.js";
 
 const MAX_CALLS = 3;
 
@@ -106,6 +108,8 @@ export async function runNamingFamilyWithRetry(
 
 interface NamingSummaryInputBase {
   families: Partial<Record<NamingFamilyKey, NamingFamilyOutput>>;
+  favorable?: readonly Element[] | null;
+  missing?: readonly Element[];
 }
 
 export type NamingSummaryInput =
@@ -116,6 +120,7 @@ export const NAMING_SUMMARY_SYSTEM_PROMPT = `你是「三易」起名的三家�
 你的任务是从程序给出的合格名字中推荐 2 至 3 个，概括已落笔各家思路，并给出实际挑选方法。
 - picks 只能使用合格名字清单中的名字，不得另起新名；推荐不得重复，reason 不超过 60 字。
 - 优先推荐没有音律提示的名字；推荐带音律提示的名字时，理由必须如实说明该提示。
+- 优先推荐综合分高且补上所缺五行的名字，推荐理由写明补了什么。
 - overview 只说明清单中已落笔各家的相同点与不同点，不得评论未提供的一家，不超过 150 字。
 - tips 写 2 至 3 条，每条不超过 40 字；人名不得提商标、工商，商号不得提重名、户口。
 - 不用五格、三才、数理，不承诺改运；不写开光、法器、符咒、转运、化煞、放生或供奉。
@@ -136,9 +141,27 @@ export function buildNamingSummaryPrompt(input: NamingSummaryInput): string {
     const output = input.families[key];
     if (!output || output.names.length === 0) continue;
     lines.push(`${labels[key]}：`);
-    for (const { given } of output.names) {
+    for (const name of output.names) {
+      const { given } = name;
       const hints = toneHints(input.target === "person" ? input.surname : undefined, given);
-      lines.push(`- ${given}${hints.length > 0 ? `｜音律提示：${hints.join("；")}` : ""}`);
+      const favorable = input.favorable ?? (key === "wuxing" && output.element
+        ? [output.element] : null);
+      const scores = nameScores({
+        target: input.target,
+        ...(input.target === "person" ? { surname: input.surname } : {}),
+        given,
+        favorable,
+        missing: input.missing ?? [],
+        sourceVerified: key === "shiwen" && name.sourceId !== undefined,
+      });
+      const supplements = nameSupplements(given, favorable)
+        .map(({ element, chars }) => `补${element}：${chars.join("、")}`);
+      lines.push([
+        `- ${given}`,
+        `综合 ${scores.overall} 分`,
+        ...supplements,
+        ...(hints.length > 0 ? [`音律提示：${hints.join("；")}`] : []),
+      ].join("｜"));
     }
     lines.push(`${labels[key]}思路：${output.note}`);
   }

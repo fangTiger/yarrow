@@ -26,7 +26,10 @@ function namingName(given: string, extra: Partial<NamingName> = {}): NamingName 
     given,
     meaning: "寓意温润明朗",
     why: "读写自然",
-    chars: [...given].map((char) => ({ char, gloss: `${char}在名字里的好意` })),
+    chars: [...given].map((char) => ({
+      char, gloss: `${char}在名字里的好意`, sense: "用作名字意指温润明朗",
+    })),
+    tags: ["温和", "好学", "明朗"],
     ...extra,
   };
 }
@@ -49,12 +52,57 @@ test("通用核对报告字数、表外或不宜入名字、重复与禁用词",
 });
 
 test("chars 须与 given 逐字一致", () => {
-  const short = namingName("明泽", { chars: [{ char: "明", gloss: "明亮" }] });
+  const short = namingName("明泽", {
+    chars: [{ char: "明", gloss: "明亮", sense: "用作名字意指明朗" }],
+  });
   assert.match(auditFamily("wuxing", output(short), context).join("\n"), /chars.*逐字一致/);
   const wrong = namingName("明泽", {
-    chars: [{ char: "明", gloss: "明亮" }, { char: "河", gloss: "河流" }],
+    chars: [
+      { char: "明", gloss: "明亮", sense: "用作名字意指明朗" },
+      { char: "河", gloss: "河流", sense: "用作名字意指宽广" },
+    ],
   });
   assert.match(auditFamily("wuxing", output(wrong), context).join("\n"), /chars.*逐字一致/);
+});
+
+test("sense 与 tags 核对禁用词、消极字及长度", () => {
+  const bad = namingName("明泽", {
+    chars: [
+      { char: "明", gloss: "明亮", sense: "用作名字意指开光转运" },
+      { char: "泽", gloss: "恩泽", sense: "甲".repeat(31) },
+    ],
+    tags: ["哀愁", "好", "过分冗长词", "开光"],
+  });
+  const errors = auditFamily("wuxing", output(bad), context).join("\n");
+  assert.match(errors, /sense.*禁用词|禁用词.*sense/u);
+  assert.match(errors, /sense.*1 至 30 字/u);
+  assert.match(errors, /tags.*消极字/u);
+  assert.match(errors, /tags.*2 至 4 字/u);
+});
+
+test("修补时 sense 先用模型逐字字义兜底，不给字典首义套「用作名字意指」，并按名字五行兜底 tags", () => {
+  const bad = namingName("明泽", {
+    chars: [
+      { char: "明", gloss: "明亮", sense: "开光" },
+      { char: "泽", gloss: "恩泽", sense: "" },
+    ],
+    tags: ["哀愁", "坏"],
+  });
+  const repaired = repairFamily("wuxing", output(bad), context).output.names[0];
+  assert.ok(repaired);
+  assert.deepEqual(repaired.chars.map(({ sense }) => sense), ["取「明亮」之意", "取「恩泽」之意"]);
+  // 逐字字义也不合格时，用字典释义原文，不加前缀。
+  const both = namingName("明泽", {
+    chars: [
+      { char: "明", gloss: "", sense: "" },
+      { char: "泽", gloss: "", sense: "" },
+    ],
+  });
+  const plain = repairFamily("wuxing", output(both), context).output.names[0];
+  assert.ok(plain?.chars.every(({ sense }) => !sense.startsWith("用作名字意指") && [...sense].length <= 30));
+  assert.ok(repaired.tags.length >= 3);
+  assert.ok(repaired.tags.includes("聪慧") || repaired.tags.includes("灵动"));
+  assert.deepEqual(auditFamily("wuxing", output(repaired), context), []);
 });
 
 test("五行家每名至少一字属喜用，商号自选时必须声明 element", () => {
@@ -90,7 +138,9 @@ test("音义家禁止全名同调，叠字除外", () => {
 });
 
 test("三次不过后的修补保留合格名，仅 chars 不合格时用字库释义补齐", () => {
-  const malformed = namingName("清宁", { chars: [{ char: "清", gloss: "清澈" }] });
+  const malformed = namingName("清宁", {
+    chars: [{ char: "清", gloss: "清澈", sense: "用作名字意指清澈" }],
+  });
   const repaired = repairFamily("wuxing", output(
     namingName("明泽"), namingName("林森"), malformed,
   ), context);

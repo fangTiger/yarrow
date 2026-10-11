@@ -23,7 +23,7 @@ import {
 } from "../store.js";
 import { lineById, pickCandidates } from "./classics.js";
 import { NAMING_FAMILIES } from "./families.js";
-import { favorableFromTiaohou, industryElement } from "./favorable.js";
+import { eightCharCounts, industryElement, supplementElements } from "./favorable.js";
 import { isNameChar, isSurname } from "./lexicon.js";
 import {
   runNamingFamilyWithRetry,
@@ -105,7 +105,7 @@ function birthFor(input: NamingCreateInput): unknown {
 }
 
 function chartBasis(input: NamingCreateInput, targetYear: number): Pick<
-  StoredNamingReading["basis"], "pillars" | "elements" | "tiaohou"
+  StoredNamingReading["basis"], "pillars" | "elements" | "tiaohou" | "counts"
 > {
   if (input.birth === undefined || input.birth === null) {
     return { pillars: null, elements: [], tiaohou: null };
@@ -122,15 +122,17 @@ function chartBasis(input: NamingCreateInput, targetYear: number): Pick<
       targetYear,
     }));
     const tiaohou = lookupQiongtong(chart.dayMaster, chart.pillars.month.branch);
-    return {
-      pillars: {
+    const pillars = {
         year: chart.pillars.year.ganZhi,
         month: chart.pillars.month.ganZhi,
         day: chart.pillars.day.ganZhi,
         time: chart.pillars.time?.ganZhi ?? null,
-      },
+      };
+    return {
+      pillars,
       elements: analyzeBazi(chart).elements,
       tiaohou,
+      counts: eightCharCounts(pillars),
     };
   } catch {
     throw new SanyiInputError("生辰格式或排盘口径无效，请检查填写内容");
@@ -139,14 +141,13 @@ function chartBasis(input: NamingCreateInput, targetYear: number): Pick<
 
 function favorableBasis(
   question: string,
-  basis: Pick<StoredNamingReading["basis"], "tiaohou">,
-): Pick<StoredNamingReading["basis"], "favorable" | "favorableSource" | "favorableNote"> {
-  if (basis.tiaohou) {
-    return {
-      favorable: favorableFromTiaohou(basis.tiaohou.useStems),
-      favorableSource: "tiaohou",
-      favorableNote: `调候取${basis.tiaohou.useStems.join("、")}`,
-    };
+  basis: Pick<StoredNamingReading["basis"], "tiaohou" | "counts">,
+): Pick<
+  StoredNamingReading["basis"],
+  "favorable" | "favorableSource" | "favorableNote" | "missing"
+> {
+  if (basis.tiaohou && basis.counts) {
+    return supplementElements({ counts: basis.counts, tiaohou: basis.tiaohou.useStems });
   }
   const industry = industryElement(question);
   return industry
@@ -163,6 +164,11 @@ function favorableBasis(
 }
 
 function favorableNote(reading: StoredNamingReading): string {
+  if (reading.basis.favorableSource === "missing") {
+    return reading.basis.missing?.length
+      ? `八字缺${reading.basis.missing.join("、")}，宜补${reading.basis.favorable?.join("、") ?? ""}`
+      : "按八字所缺五行补益";
+  }
   if (reading.basis.favorableSource === "tiaohou") {
     return `调候取${reading.basis.tiaohou?.useStems.join("、") ?? ""}`;
   }
@@ -362,8 +368,14 @@ export class NamingReadingService {
     const result = await runNamingSummaryWithRetry(
       { provider: this.deps.provider },
       reading.target === "person"
-        ? { target: "person", surname: reading.surname ?? "", families }
-        : { target: "business", families },
+        ? {
+          target: "person", surname: reading.surname ?? "", families,
+          favorable: reading.basis.favorable, missing: reading.basis.missing ?? [],
+        }
+        : {
+          target: "business", families,
+          favorable: reading.basis.favorable, missing: reading.basis.missing ?? [],
+        },
     );
     await this.deps.store.update<StoredNamingReading>(id, (current) => {
       const before = current.summary;

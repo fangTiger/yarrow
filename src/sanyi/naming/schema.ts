@@ -10,7 +10,8 @@ export interface NamingName {
   why: string;
   sourceId?: string;
   /** 逐字字义：该字在这个名字里取的意思，顺序与 given 一致，gloss 不超过 12 字。 */
-  chars: { char: string; gloss: string }[];
+  chars: { char: string; gloss: string; sense: string }[];
+  tags: string[];
 }
 
 export interface NamingFamilyOutput {
@@ -32,7 +33,7 @@ export interface NamingContext {
   length: 1 | 2 | 3 | 4;
   question: string;
   favorable: Element[] | null;
-  favorableSource: "tiaohou" | "industry" | "model";
+  favorableSource: "missing" | "tiaohou" | "industry" | "model";
   favorableNote: string;
   candidates: ClassicLine[];
 }
@@ -40,23 +41,30 @@ export interface NamingContext {
 const charMeaningSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["char", "gloss"],
+  required: ["char", "gloss", "sense"],
   properties: {
     char: { type: "string", minLength: 1, maxLength: 1 },
     gloss: { type: "string", minLength: 1, maxLength: 12 },
+    sense: { type: "string", minLength: 1, maxLength: 30 },
   },
 } as const;
 
 const nameSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["given", "meaning", "why", "chars"],
+  required: ["given", "meaning", "why", "chars", "tags"],
   properties: {
     given: { type: "string", minLength: 1, maxLength: 4 },
     meaning: { type: "string", minLength: 1, maxLength: 50 },
     why: { type: "string", minLength: 1, maxLength: 50 },
     sourceId: { type: "string", minLength: 1, maxLength: 12 },
     chars: { type: "array", minItems: 1, maxItems: 4, items: charMeaningSchema },
+    tags: {
+      type: "array",
+      minItems: 3,
+      maxItems: 5,
+      items: { type: "string", minLength: 2, maxLength: 4 },
+    },
   },
 } as const;
 

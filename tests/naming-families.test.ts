@@ -46,7 +46,10 @@ const familyOutput: NamingFamilyOutput = {
     given,
     meaning: "温润明朗",
     why: "读写自然",
-    chars: [...given].map((char) => ({ char, gloss: "名字里的好寓意" })),
+    chars: [...given].map((char) => ({
+      char, gloss: "名字里的好寓意", sense: "用作名字意指温润明朗",
+    })),
+    tags: ["温和", "好学", "明朗"],
   })),
 };
 
@@ -68,6 +71,15 @@ test("三家 Schema 限定项目数、字数、枚举与多余字段", () => {
     )) },
     { ...familyOutput, names: familyOutput.names.map((name, index) => (
       index === 0 ? { ...name, chars: [{ char: "明", gloss: "甲".repeat(13) }] } : name
+    )) },
+    { ...familyOutput, names: familyOutput.names.map((name, index) => (
+      index === 0 ? { ...name, chars: name.chars.map((item) => ({ ...item, sense: "甲".repeat(31) })) } : name
+    )) },
+    { ...familyOutput, names: familyOutput.names.map((name, index) => (
+      index === 0 ? { ...name, tags: ["温和", "好学"] } : name
+    )) },
+    { ...familyOutput, names: familyOutput.names.map((name, index) => (
+      index === 0 ? { ...name, tags: ["甲", "好学", "明朗"] } : name
     )) },
     { ...familyOutput, note: "甲".repeat(81) },
     { ...familyOutput, element: "风" },
@@ -103,6 +115,14 @@ test("三家用户提示词写明对象、期望与严格输出要求", () => {
     const businessPrompt = family.buildUserPrompt(business);
     assert.match(businessPrompt, /商号 · 字号 2 字/);
     assert.match(businessPrompt, /期望原文：卖手工皂，朴素自然/);
+  }
+});
+
+test("三家提示词要求 sense 与 tags 的用途和正面边界", () => {
+  for (const { systemPrompt } of NAMING_FAMILIES) {
+    assert.match(systemPrompt, /sense.*用作名字意指/u);
+    assert.match(systemPrompt, /tags.*性格寓意词/u);
+    assert.match(systemPrompt, /tags.*不写负面词/u);
   }
 });
 
