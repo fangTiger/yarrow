@@ -1084,7 +1084,7 @@
 .wuxing-marks b { color: var(--gold); }
 .wuxing-conclusion { color: var(--paper); line-height: 1.8; }
 .wuxing-virtues { display: grid; gap: 5px; padding-left: 12px; border-left: 2px solid var(--gold); }
-.wuxing-virtues p { color: var(--muted); line-height: 1.7; }
+.wuxing-virtues p { margin: 0; color: var(--muted); line-height: 1.7; }
 .wuxing-fineprint { display: grid; gap: 3px; }
 .wuxing-fineprint p { color: var(--dim); font-size: 11.5px; line-height: 1.65; }
 .name-card {
@@ -1456,4 +1456,71 @@
   margin: 0;
   padding-left: 1.4em;
   line-height: 1.9;
+}
+
+/* 五行生克图（设计 14.2）：外圈实线为相生，星形虚线为相克；补的金色，缺的朱砂虚线。 */
+.wuxing-body {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+.wuxing-side { display: grid; gap: 14px; min-width: 0; }
+.wx-figure { display: grid; gap: 6px; justify-items: center; margin: 0; }
+.wx-figure svg { width: 100%; max-width: 320px; height: auto; overflow: visible; }
+.wx-node circle { fill: var(--panel-2); stroke: var(--line-strong); stroke-width: 1.5; }
+.wx-node.supplement circle { fill: var(--gold-soft); stroke: var(--gold); stroke-width: 2.5; }
+.wx-node.missing circle { stroke: var(--cinnabar); stroke-dasharray: 5 4; stroke-width: 2; }
+.wx-char {
+  fill: var(--paper);
+  font-family: var(--dynamic);
+  font-size: 24px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.wx-node.supplement .wx-char { fill: var(--gold); }
+.wx-count {
+  fill: var(--muted);
+  font-family: var(--sans);
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.wx-tags {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.wx-tags .que { fill: var(--cinnabar); }
+.wx-tags .bu { fill: var(--gold); }
+.wx-tags .dm { fill: var(--muted); font-weight: 400; }
+.wx-sheng { stroke: var(--gold); stroke-opacity: 0.55; stroke-width: 1.6; }
+.wx-head-sheng { fill: var(--gold); fill-opacity: 0.7; }
+.wx-ke { stroke: var(--dim); stroke-width: 1; stroke-dasharray: 4 4; }
+.wx-head-ke { fill: var(--dim); }
+.wx-legend { display: flex; gap: 16px; color: var(--dim); font-family: var(--sans); font-size: 11.5px; }
+.wx-legend .sheng::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-top: 2px solid var(--gold);
+  opacity: 0.7;
+}
+.wx-legend .ke::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-top: 1px dashed var(--dim);
+}
+.wuxing-relations { display: grid; gap: 4px; }
+.wuxing-relations p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+@media (max-width: 760px) {
+  .wuxing-body { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .wx-figure svg { max-width: 300px; }
 }

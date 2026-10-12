@@ -143,6 +143,16 @@ test("人名结果页依次展示所问、三家合参、三家九张名字卡�
   assert.doesNotMatch(html, /五格|天格|人格|地格|总格|外格|易者|押钱|赔付|封存|[぀-ヿ]|・/u);
 });
 
+test("五行分析附生克图：日主取自调候日干，图下写所补五行的生克说明", () => {
+  const html = renderToStaticMarkup(createElement(WuxingPanel, { reading: baseReading }));
+  assert.match(html, /<svg[^>]*role="img"/u);
+  assert.match(html, /class="wuxing-body"/u);
+  assert.match(html, /<title>金：0 个，缺，宜补；日主<\/title>/u);
+  assert.match(html, /补金：土生金，金生水；金克木，火克金/u);
+  assert.match(html, /补木：水生木，木生火；木克土，金克木/u);
+  assert.ok(html.indexOf("<svg") < html.indexOf('class="wuxing-bars"'));
+});
+
 test("五行分析按木火土金水显示计数、缺补、结论、寓意与藏干说明", () => {
   const html = renderToStaticMarkup(createElement(WuxingPanel, { reading: baseReading }));
   const positions = ["木", "火", "土", "金", "水"].map((element) => (
