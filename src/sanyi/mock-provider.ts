@@ -15,6 +15,24 @@ import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
 import { mockNamingFamilyOutput, mockNamingSummaryOutput } from "./naming/mock.js";
 import type { NamingFamilyKey } from "./naming/schema.js";
+import { findZhouyiEnglishReferences } from "../agent/zhouyi-en.js";
+import { glossaryRequirements } from "./translation/prompt.js";
+
+function mockTranslation(prompt: string): { texts: string[] } {
+  const line = prompt.split("\n").find((row) => row.startsWith("待翻译清单："));
+  if (!line) throw new Error("翻译 mock 请求缺少待翻译清单");
+  const entries = JSON.parse(line.slice("待翻译清单：".length)) as Array<{ text: string }>;
+  return {
+    texts: entries.map((entry, index) => {
+      const numbers = entry.text.match(/\d+/gu) ?? [];
+      const requirements = [
+        ...glossaryRequirements(entry.text).map((item) => item.display),
+        ...findZhouyiEnglishReferences(entry.text).map((item) => item.english),
+      ];
+      return [`Translation ${index + 1}.`, ...numbers, ...new Set(requirements)].join(" ");
+    }),
+  };
+}
 function baziFactsFromPrompt(prompt: string): FactTable {
   const line = prompt.split("\n").find((row) => row.startsWith("事实表 JSON："));
   if (!line) {
@@ -53,6 +71,9 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
   readonly providerConfig = Object.freeze({ kind: "sanyi-mock-schools" });
   readonly providerConfigHash = hashJson(this.providerConfig);
   async generateStructured<T>(request: StructuredOutputRequest): Promise<T> {
+    if (request.taskId.startsWith("sanyi/translate/")) {
+      return mockTranslation(request.userPrompt) as T;
+    }
     if (request.taskId === "sanyi/naming/summary") {
       return mockNamingSummaryOutput(request.userPrompt) as T;
     }

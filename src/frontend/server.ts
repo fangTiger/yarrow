@@ -23,6 +23,8 @@ import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
 import { NamingReadingService } from "../sanyi/naming/service.js";
 import type { NamingFamilyKey } from "../sanyi/naming/schema.js";
 import { isReadingId, ReadingStore } from "../sanyi/store.js";
+import { TranslationService } from "../sanyi/translation/service.js";
+import { TranslationStore } from "../sanyi/translation/store.js";
 interface FrontendServerOptions {
   publicDir?: string;
   api?: SanyiApi;
@@ -116,6 +118,7 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         return;
       }
       const idRoute = url.pathname.match(/^\/api\/readings\/([^/]+)$/);
+      const translateRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/translate$/);
       const castRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/cast$/);
       const summaryRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/summary\/retry$/);
       const retryRoute = url.pathname.match(
@@ -146,7 +149,12 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
         return;
       }
       if (idRoute && request.method === "GET" && api && isReadingId(idRoute[1] ?? "")) {
-        json(response, 200, await api.getReading(idRoute[1] as string));
+        const lang = url.searchParams.get("lang") ?? undefined;
+        json(response, 200, await api.getReading(idRoute[1] as string, lang));
+        return;
+      }
+      if (translateRoute && request.method === "POST" && api && isReadingId(translateRoute[1] ?? "")) {
+        json(response, 202, await api.translateReading(translateRoute[1] as string, body));
         return;
       }
       if (castRoute && request.method === "POST" && api && isReadingId(castRoute[1] ?? "")) {
@@ -215,6 +223,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const logger = createSanyiLogger("log", clock);
   const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
   const longProvider = createDefaultProvider({ maxTokens: 8_192, timeoutMilliseconds: 90_000 });
+  const translation = new TranslationService({
+    store,
+    translationStore: new TranslationStore("data"),
+    provider: longProvider,
+    logger,
+    clock,
+  });
   const bazi = new BaziReadingService({ store, logger, feeVerifier,
     // 八字运势含十年逐年断语，输出较长，放宽输出上限与单次超时。
     provider: longProvider, clock });
@@ -237,7 +252,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     logger,
   });
   const port = Number(process.env.FRONTEND_PORT ?? "4173");
-  const api = createSanyiApi(service, { recipient, bazi, naming });
+  const api = createSanyiApi(service, { recipient, bazi, naming, translation });
   createFrontendServer({ api }).listen(port, "127.0.0.1", () => {
     console.log(`三易服务已启动：http://127.0.0.1:${port}`);
     console.log(`三易收款地址：${recipient}`);

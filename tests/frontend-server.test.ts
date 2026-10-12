@@ -24,6 +24,7 @@ function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
     retrySchool: async () => reading as never,
     changeSubject: async () => reading as never,
     changeDayBoundary: async () => reading as never,
+    translateReading: async () => ({ lang: "en", units: {} }),
     ...overrides,
   };
 }

@@ -19,6 +19,8 @@ import type { NamingReadingService } from "./naming/service.js";
 import { publicNamingReading, type PublicNamingReading } from "./naming/public.js";
 import type { NamingFamilyKey } from "./naming/schema.js";
 import { isSurname } from "./naming/lexicon.js";
+import type { TranslationService } from "./translation/service.js";
+import type { StoredTranslation } from "./translation/store.js";
 type ServiceBoundary = Pick<
   ReadingService,
   "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject" | "retrySummary"
@@ -29,6 +31,7 @@ export interface PublicQuestionReading extends Omit<StoredReading, "payment" | "
   schools: Record<QuestionSchoolKey, Omit<StoredReading["schools"][QuestionSchoolKey], "attempts">>;
 }
 export type PublicReading = PublicQuestionReading | PublicBaziReading | PublicNamingReading;
+export type PublicReadingResponse = PublicReading & { translation?: StoredTranslation };
 export interface PaymentConfiguration {
   recipient: Address;
   amountUsdc6: string;
@@ -44,7 +47,9 @@ export interface SanyiApi {
   continueCasting(id: string): Promise<PublicReading>;
   /** 白话总述暂未生成时免费重试。 */
   retrySummary(id: string): Promise<PublicReading>;
-  getReading(id: string): Promise<PublicReading>;
+  getReading(id: string, lang?: string): Promise<PublicReadingResponse>;
+  /** 免费触发英文翻译；实际生成在后台继续。 */
+  translateReading(id: string, input: unknown): Promise<StoredTranslation>;
   retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey | NamingFamilyKey): Promise<PublicReading>;
   changeSubject(id: string, input: unknown): Promise<PublicReading>;
   changeDayBoundary(id: string, input: unknown): Promise<PublicReading>;
@@ -121,6 +126,7 @@ export function createSanyiApi(
     recipient?: Address;
     bazi?: BaziReadingService;
     naming?: NamingReadingService;
+    translation?: Pick<TranslationService, "trigger" | "read">;
   } = {},
 ): SanyiApi {
   const clock = options.now ?? (() => new Date());
@@ -257,7 +263,7 @@ export function createSanyiApi(
       const bazi = options.bazi;
       return publicBaziReading(await notFound(() => bazi.retrySummary(id)));
     },
-    async getReading(id) {
+    async getReading(id, lang) {
       const reading = await notFound(async (): Promise<AnyStoredReading> => {
         if (options.naming) return options.naming.readAny(id);
         if (options.bazi) {
@@ -266,9 +272,20 @@ export function createSanyiApi(
         }
         return service.getReading(id);
       });
-      if (reading.kind === "question") return publicReading(reading);
-      if (reading.kind === "naming") return publicNamingReading(reading);
-      return publicBaziReading(reading);
+      const visible = reading.kind === "question"
+        ? publicReading(reading)
+        : reading.kind === "naming" ? publicNamingReading(reading) : publicBaziReading(reading);
+      if (lang !== "en" || !options.translation) return visible;
+      const translation = await options.translation.read(id);
+      return translation ? { ...visible, translation } : visible;
+    },
+    async translateReading(id, input) {
+      const body = record(input);
+      if (body.lang !== "en") {
+        throw new SanyiInputError("目前只支持英文翻译", "invalid-language");
+      }
+      if (!options.translation) throw new Error("翻译服务尚未配置");
+      return notFound(() => options.translation!.trigger(id));
     },
     async retrySchool(id, key) {
       if (key === "wuxing" || key === "shiwen" || key === "yinyi") {

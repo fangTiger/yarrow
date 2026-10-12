@@ -6,6 +6,7 @@ import {
   StateConflictError,
 } from "./reading-service.js";
 import { ArcUnavailableError } from "./throws.js";
+import { TranslationHttpError } from "./translation/service.js";
 class HttpError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) {
     super(message);
@@ -40,6 +41,7 @@ export function statusForError(error: unknown): number {
     || error instanceof UnsupportedMediaType
     || error instanceof ForbiddenOrigin
     || error instanceof PayloadTooLarge
+    || error instanceof TranslationHttpError
   ) {
     return error.status;
   }
@@ -62,6 +64,7 @@ export function statusForError(error: unknown): number {
 /** 给浏览器的稳定错误码；消息保留中文供旧客户端显示。 */
 export function errorCodeForError(error: unknown): string | undefined {
   if (error instanceof HttpError) return error.code;
+  if (error instanceof TranslationHttpError) return error.code;
   if (error instanceof PaymentAlreadyUsedError) return "payment-already-used";
   if (error instanceof FeePaymentError) return "payment-invalid";
   return undefined;
