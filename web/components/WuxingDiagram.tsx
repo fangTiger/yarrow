@@ -1,4 +1,6 @@
 // web/components/WuxingDiagram.tsx
+import { ELEMENTS_EN } from "../../src/sanyi/i18n/glossary.js";
+import { enT, useLang, useT, zhT, type TFunction } from "../lib/i18n.js";
 type Element = "木" | "火" | "土" | "金" | "水";
 
 /** 相生顺序；图上按此顺序顺时针成圈，火居上。 */
@@ -44,11 +46,16 @@ function conquerorOf(element: Element): Element {
 }
 
 /** 所补五行的生克说明，由固定的相生相克表生成。 */
-export function wuxingRelations(favorable: readonly Element[]): string[] {
-  return favorable.map((element) => (
-    `补${element}：${motherOf(element)}生${element}，${element}生${SHENG[element]}；`
-    + `${element}克${KE[element]}，${conquerorOf(element)}克${element}`
-  ));
+export function wuxingRelations(
+  favorable: readonly Element[],
+  lang: "zh" | "en" = "zh",
+  translate: TFunction = lang === "en" ? enT : zhT,
+): string[] {
+  const name = (element: Element) => lang === "en" ? ELEMENTS_EN[element] : element;
+  return favorable.map((element) => translate("wuxing.relation", {
+    element: name(element), mother: name(motherOf(element)), child: name(SHENG[element]),
+    controlled: name(KE[element]), controller: name(conquerorOf(element)),
+  }));
 }
 
 /** 五行生克图：外圈实线为相生（顺时针），内部星形虚线为相克；缺的虚线描边，补的金色。 */
@@ -58,12 +65,19 @@ export function WuxingDiagram(props: {
   favorable: readonly Element[];
   dayMaster?: Element;
 }) {
+  const { lang } = useLang();
+  const t = useT();
   const { counts, missing, favorable, dayMaster } = props;
+  const name = (element: Element) => lang === "en" ? ELEMENTS_EN[element] : element;
+  const join = (items: readonly string[]) => items.join(lang === "en" ? ", " : "、");
   const label = counts
-    ? `五行生克图：${ORDER.map((element) => `${element} ${counts[element] ?? 0}`).join("、")}`
-      + (missing.length ? `；缺${missing.join("、")}` : "")
-      + (favorable.length ? `；补${favorable.join("、")}` : "")
-    : `五行生克图：用${favorable.join("、")}`;
+    ? t("wuxing.diagramCounts", {
+      counts: join(ORDER.map((element) => `${name(element)} ${counts[element] ?? 0}`)),
+      missing: missing.length ? t("wuxing.diagramMissing", { elements: join(missing.map(name)) }) : "",
+      favored: favorable.length
+        ? t("wuxing.diagramFavored", { elements: join(favorable.map(name)) }) : "",
+    })
+    : t("wuxing.diagramUse", { elements: join(favorable.map(name)) });
   return (
     <figure className="wx-figure">
       <svg aria-label={label} role="img" viewBox={`0 0 ${SIZE} ${SIZE}`}>
@@ -77,13 +91,15 @@ export function WuxingDiagram(props: {
         </defs>
         {ORDER.map((from) => (
           <line
-            data-relation="克" data-from={from} data-to={KE[from]} key={`ke-${from}`}
+            data-relation={lang === "en" ? "controls" : "克"} data-from={name(from)}
+            data-to={name(KE[from])} key={`ke-${from}`}
             className="wx-ke" markerEnd="url(#wx-arrow-ke)" {...edge(from, KE[from])}
           />
         ))}
         {ORDER.map((from) => (
           <line
-            data-relation="生" data-from={from} data-to={SHENG[from]} key={`sheng-${from}`}
+            data-relation={lang === "en" ? "generates" : "生"} data-from={name(from)}
+            data-to={name(SHENG[from])} key={`sheng-${from}`}
             className="wx-sheng" markerEnd="url(#wx-arrow-sheng)" {...edge(from, SHENG[from])}
           />
         ))}
@@ -97,25 +113,36 @@ export function WuxingDiagram(props: {
           const classes = ["wx-node", isMissing ? "missing" : "", isSupplement ? "supplement" : ""]
             .filter(Boolean).join(" ");
           const title = counts
-            ? `${element}：${count ?? 0} 个${isMissing ? "，缺" : ""}${isSupplement ? "，宜补" : ""}`
-              + `${isDayMaster ? "；日主" : ""}`
-            : `${element}${isSupplement ? "：所用五行" : ""}`;
+            ? t("wuxing.nodeCount", {
+              element: name(element), count: count ?? 0,
+              missing: isMissing ? `${lang === "en" ? ", " : "，"}${t("wuxing.missing")}` : "",
+              favored: isSupplement
+                ? `${lang === "en" ? ", " : "，宜"}${t("wuxing.supplement")}` : "",
+              dayMaster: isDayMaster
+                ? `${lang === "en" ? "; " : "；"}${t("wuxing.dayMaster")}` : "",
+            })
+            : t("wuxing.nodeUse", {
+              element: name(element), use: isSupplement ? t("wuxing.usefulElement") : "",
+            });
           return (
-            <g data-node={element} className={classes} key={element}>
+            <g data-node={name(element)} className={classes} key={element}>
               <title>{title}</title>
               <circle cx={round(x)} cy={round(y)} r={NODE} />
-              <text className="wx-char" x={round(x)} y={round(counts ? y - 5 : y)}>{element}</text>
+              <text className="wx-char" x={round(x)} y={round(counts ? y - 5 : y)}>{name(element)}</text>
               {counts ? (
-                <text className="wx-count" x={round(x)} y={round(y + 15)}>{`${count ?? 0} 个`}</text>
+                <text className="wx-count" x={round(x)} y={round(y + 15)}>{lang === "en"
+                  ? `${count ?? 0}` : `${count ?? 0} 个`}</text>
               ) : null}
               {isMissing || isSupplement || isDayMaster ? (
                 <text className="wx-tags" x={round(tag.x)} y={round(tag.y)}>
-                  {isMissing ? <tspan className="que">缺</tspan> : null}
+                  {isMissing ? <tspan className="que">{t("wuxing.missing")}</tspan> : null}
                   {isSupplement ? (
-                    <tspan className="bu" dx={isMissing ? 4 : 0}>{counts ? "补" : "用"}</tspan>
+                    <tspan className="bu" dx={isMissing ? 4 : 0}>{counts
+                      ? t("wuxing.supplement") : t("wuxing.use")}</tspan>
                   ) : null}
                   {isDayMaster ? (
-                    <tspan className="dm" dx={isMissing || isSupplement ? 4 : 0}>日主</tspan>
+                    <tspan className="dm" dx={isMissing || isSupplement ? 4 : 0}>
+                      {t("wuxing.dayMaster")}</tspan>
                   ) : null}
                 </text>
               ) : null}
@@ -124,8 +151,8 @@ export function WuxingDiagram(props: {
         })}
       </svg>
       <figcaption className="wx-legend">
-        <span className="sheng">相生（顺时针）</span>
-        <span className="ke">相克（星形）</span>
+        <span className="sheng">{t("wuxing.generatingCycle")}</span>
+        <span className="ke">{t("wuxing.controllingCycle")}</span>
       </figcaption>
     </figure>
   );

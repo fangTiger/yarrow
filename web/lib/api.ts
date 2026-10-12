@@ -80,7 +80,12 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
     continueCasting: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/cast`, {}),
     retrySummary: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/summary/retry`, {}),
-    getReading: (id: string) => request<AnyPublicReading>(`/api/readings/${id}`),
+    getReading: (id: string, lang?: "zh" | "en") => request<AnyPublicReading>(
+      `/api/readings/${id}${lang === "en" ? "?lang=en" : ""}`,
+    ),
+    translateReading: (id: string) => request<import("../../src/sanyi/translation/store.js").StoredTranslation>(
+      `/api/readings/${id}/translate`, { lang: "en" },
+    ),
     retrySchool: (
       id: string,
       key: QuestionSchoolKey

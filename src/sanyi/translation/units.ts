@@ -1,4 +1,5 @@
 import { lineById } from "../naming/classics.js";
+import { echoLines } from "../naming/card.js";
 import type { StoredReading } from "../store.js";
 
 export type TranslationUnitKey =
@@ -142,8 +143,14 @@ function namingUnits(reading: Extract<StoredReading, { kind: "naming" }>): Trans
           add(entries, `${namePrefix}.chars.${charIndex}.sense`, character.sense);
         });
         name.tags.forEach((tag, tagIndex) => add(entries, `${namePrefix}.tags.${tagIndex}`, tag));
+        const sourceIndex = name.sourceId?.match(/^S(\d{2})$/u)?.[1];
+        const sourceCandidateId = sourceIndex
+          ? reading.candidateIds[Number(sourceIndex) - 1]
+          : undefined;
+        echoLines(name.given, sourceCandidateId).forEach((line, echoIndex) => (
+          add(entries, `${namePrefix}.echoes.${echoIndex}.text`, line.text)
+        ));
         if (key === "shiwen") {
-          const sourceIndex = name.sourceId?.match(/^S(\d{2})$/u)?.[1];
           const sourceId = sourceIndex ? reading.candidateIds[Number(sourceIndex) - 1] : undefined;
           const source = sourceId ? lineById(sourceId) : undefined;
           add(entries, `${namePrefix}.source.text`, source?.text);

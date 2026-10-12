@@ -1,10 +1,10 @@
 import type { NamingFamilyState, StoredNamingReading } from "../store.js";
-import { normalizeFamilyOutput, toneHints, fallbackSense } from "./audit.js";
+import { normalizeFamilyOutput, fallbackSense } from "./audit.js";
 import { lineById } from "./classics.js";
 import { NAMING_FAMILIES } from "./families.js";
 import { charInfo } from "./lexicon.js";
 import type { NamingFamilyKey, NamingName } from "./schema.js";
-import { charAnalysis, echoLines, nameScores, nameSupplements } from "./card.js";
+import { charAnalysisData, echoLines, nameHintCodes, nameScores, nameSupplements } from "./card.js";
 
 const FAMILY_NAMES: Readonly<Record<NamingFamilyKey, string>> = {
   wuxing: "五行补益",
@@ -86,7 +86,7 @@ function visibleName(reading: StoredNamingReading, key: NamingFamilyKey, value: 
     pinyin: pinyin(full),
     chars,
     ...(reading.target === "person" ? { surnameChars: visibleSurnameChars(reading.surname ?? "") } : {}),
-    hints: toneHints(reading.target === "person" ? reading.surname : undefined, value.given),
+    hints: nameHintCodes(reading.target === "person" ? reading.surname : undefined, value.given),
     scores: nameScores({
       target: reading.target,
       ...(reading.surname ? { surname: reading.surname } : {}),
@@ -96,7 +96,7 @@ function visibleName(reading: StoredNamingReading, key: NamingFamilyKey, value: 
       sourceVerified: key === "shiwen" && source !== undefined,
     }),
     supplements: nameSupplements(value.given, cardFavorable),
-    analysis: [...value.given].map((char) => charAnalysis(char, cardContext)),
+    analysis: [...value.given].map((char) => charAnalysisData(char, cardContext)),
     echoes: echoLines(value.given, sourceCandidateId(reading, value.sourceId)),
     ...(source ? { source } : {}),
   };

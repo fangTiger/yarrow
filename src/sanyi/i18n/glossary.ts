@@ -5,6 +5,14 @@ export const GLOSSARY_VERSION = 1;
 
 export const ELEMENTS_EN = { 木: "Wood", 火: "Fire", 土: "Earth", 金: "Metal", 水: "Water" } as const;
 
+export const VIRTUES_ZH = {
+  木: "木主仁：仁爱上进、生机勃勃",
+  火: "火主礼：热情有礼、开朗明快",
+  土: "土主信：诚信稳重、宽厚包容",
+  金: "金主义：果断重义、坚毅有守",
+  水: "水主智：聪慧灵动、善思通达",
+} as const;
+
 /** 五德（五常）：起名与五行分析用。 */
 export const VIRTUES_EN = {
   木: "Wood stands for benevolence: kind, growing, full of life",

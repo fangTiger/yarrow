@@ -1,42 +1,38 @@
 import type { PublicNamingReading } from "../../src/sanyi/naming/public.js";
+import { VIRTUES_ZH } from "../../src/sanyi/i18n/glossary.js";
+import { useT, type TFunction } from "../lib/i18n.js";
 import { WuxingDiagram, wuxingRelations } from "./WuxingDiagram.js";
 
 const ELEMENTS = ["木", "火", "土", "金", "水"] as const;
-const VIRTUES = {
-  木: "木主仁：仁爱上进、生机勃勃",
-  火: "火主礼：热情有礼、开朗明快",
-  土: "土主信：诚信稳重、宽厚包容",
-  金: "金主义：果断重义、坚毅有守",
-  水: "水主智：聪慧灵动、善思通达",
-} as const;
-
 const STEM_ELEMENTS: Readonly<Record<string, (typeof ELEMENTS)[number]>> = {
   甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土", 己: "土", 庚: "金", 辛: "金", 壬: "水", 癸: "水",
 };
 
-function fallbackNote(basis: PublicNamingReading["basis"]): string {
-  if (basis.favorableSource === "missing") return "按八字所缺五行补益";
-  if (basis.favorableSource === "tiaohou") return "按调候取用";
-  if (basis.favorableSource === "industry") return "按行业确定五行";
-  return "行业未匹配，由五行补益家自选";
+function fallbackNote(basis: PublicNamingReading["basis"], t: TFunction): string {
+  if (basis.favorableSource === "missing") return t("wuxing.source.missing");
+  if (basis.favorableSource === "tiaohou") return t("wuxing.source.tiaohou");
+  if (basis.favorableSource === "industry") return t("wuxing.source.industry");
+  return t("wuxing.source.default");
 }
 
 export function WuxingPanel({ reading }: { reading: PublicNamingReading }) {
+  const t = useT();
   const { basis } = reading;
-  const note = basis.favorableNote ?? fallbackNote(basis);
+  const note = basis.favorableNote ?? fallbackNote(basis, t);
   const counts = basis.counts as Partial<Record<(typeof ELEMENTS)[number], number>> | undefined;
   const favorable = basis.favorable ?? [];
   const noBirthBusiness = reading.target === "business" && !basis.pillars;
   if (noBirthBusiness) {
     return (
-      <section aria-label="五行分析" className="panel wuxing-panel">
-        <header className="panel-head"><h2>五行分析</h2><p>以行业气质定所用五行</p></header>
+      <section aria-label={t("wuxing.title")} className="panel wuxing-panel">
+        <header className="panel-head"><h2>{t("wuxing.title")}</h2>
+          <p>{t("wuxing.businessIntro")}</p></header>
         <div className="wuxing-body">
           <WuxingDiagram counts={undefined} favorable={favorable} missing={[]} />
           <div className="wuxing-side">
             <p className="wuxing-conclusion">{note}</p>
             <div className="wuxing-virtues">
-              {favorable.map((element) => <p key={element}>{VIRTUES[element]}</p>)}
+              {favorable.map((element) => <p key={element}>{VIRTUES_ZH[element]}</p>)}
             </div>
           </div>
         </div>
@@ -49,8 +45,8 @@ export function WuxingPanel({ reading }: { reading: PublicNamingReading }) {
   const dayMaster = dayStem ? STEM_ELEMENTS[dayStem] : undefined;
   const hidden = basis.hiddenCounts as Partial<Record<(typeof ELEMENTS)[number], number>> | undefined;
   return (
-    <section aria-label="五行分析" className="panel wuxing-panel">
-      <header className="panel-head"><h2>五行分析</h2><p>先看所缺，再参考调候</p></header>
+    <section aria-label={t("wuxing.title")} className="panel wuxing-panel">
+      <header className="panel-head"><h2>{t("wuxing.title")}</h2><p>{t("wuxing.birthIntro")}</p></header>
       <div className="wuxing-body">
         {hasCounts ? (
           <WuxingDiagram
@@ -75,7 +71,8 @@ export function WuxingPanel({ reading }: { reading: PublicNamingReading }) {
                     </span>
                     <strong>{count}</strong>
                     <span className="wuxing-marks">
-                      {missing ? <em>缺</em> : null}{supplement ? <b>补</b> : null}
+                      {missing ? <em>{t("wuxing.missing")}</em> : null}
+                      {supplement ? <b>{t("wuxing.supplement")}</b> : null}
                     </span>
                   </div>
                 );
@@ -85,7 +82,7 @@ export function WuxingPanel({ reading }: { reading: PublicNamingReading }) {
           <p className="wuxing-conclusion">{note}</p>
           {hasCounts ? (
             <div className="wuxing-virtues">
-              {favorable.map((element) => <p key={element}>{VIRTUES[element]}</p>)}
+              {favorable.map((element) => <p key={element}>{VIRTUES_ZH[element]}</p>)}
             </div>
           ) : null}
           {hasCounts && favorable.length ? (
@@ -97,12 +94,12 @@ export function WuxingPanel({ reading }: { reading: PublicNamingReading }) {
       </div>
       <div className="wuxing-fineprint">
         {hidden ? (
-          <p>含藏干：{ELEMENTS.map((element) => `${element} ${hidden[element] ?? 0}`).join(" · ")}</p>
+          <p>{t("wuxing.hidden", { counts: ELEMENTS.map((element) => (
+            `${element} ${hidden[element] ?? 0}`
+          )).join(" · ") })}</p>
         ) : null}
-        {reading.unborn ? <p>按预产期，时辰不详，以年月日六字计</p> : null}
-        {hasCounts ? (
-          <p>缺什么补什么是民间通行的起名思路；本站在缺的五行之外，再参考《穷通宝鉴》调候喜用。</p>
-        ) : null}
+        {reading.unborn ? <p>{t("wuxing.unborn")}</p> : null}
+        {hasCounts ? <p>{t("wuxing.note")}</p> : null}
       </div>
     </section>
   );

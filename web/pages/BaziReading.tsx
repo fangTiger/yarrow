@@ -15,11 +15,16 @@ import { BaziRelations } from "../components/BaziRelations.js";
 import { BaziElements } from "../components/BaziElements.js";
 import { DayBoundaryChange } from "../components/DayBoundaryChange.js";
 import { LiuNianPanel } from "../components/LiuNianPanel.js";
-export function BaziReading({ reading, onReading, birth: supplied }: {
+import { EnglishBaziReading } from "../components/EnglishBaziReading.js";
+import { useLang } from "../lib/i18n.js";
+
+type BaziReadingProps = {
     reading: PublicBaziReading;
     onReading(value: PublicBaziReading): void;
     birth?: BirthProfileInput | null;
-}) {
+};
+
+function ChineseBaziReading({ reading, onReading, birth: supplied }: BaziReadingProps) {
     const [birth] = useState(() => supplied === undefined ? loadBirthProfile() : supplied);
     const [error, setError] = useState("");
     const currentYear = resolveFortuneContext("year", () => new Date(reading.createdAt), reading.chart.sect).anchorYear;
@@ -53,4 +58,11 @@ export function BaziReading({ reading, onReading, birth: supplied }: {
     <div className="row2"><BaziRelations analysis={reading.analysis}/><BaziElements elements={reading.analysis.elements}/></div>
     <p className="provenance">数据来源：四柱、十神、藏干、长生、纳音与大运由 lunar-javascript 推算；合冲刑害与神煞按传统查表；调候据《穷通宝鉴》{reading.tiaohou.section}。原始生辰与逐步校正只在本机展示；流年以立春为界，三家各自独立落笔。</p>
   </div>;
+}
+
+export function BaziReading(props: BaziReadingProps) {
+    const { lang } = useLang();
+    return lang === "en"
+        ? <EnglishBaziReading reading={props.reading} onReading={props.onReading} />
+        : <ChineseBaziReading {...props} />;
 }

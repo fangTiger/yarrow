@@ -17,7 +17,7 @@ export function createT(dictionary: Dictionary): TFunction {
 }
 
 export const zhT = createT(zh);
-const enT = createT(en);
+export const enT = createT(en);
 
 export class I18nError extends Error {
   constructor(readonly key: TranslationKey, readonly params: TranslationParams = {}) {

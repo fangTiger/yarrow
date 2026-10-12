@@ -1,6 +1,7 @@
 // web/components/SchoolCard.tsx
 import type { PublicReading } from "../lib/api.js";
 import { repairNote } from "../lib/reading-state.js";
+import { useT } from "../lib/i18n.js";
 
 type School = PublicReading["schools"][keyof PublicReading["schools"]];
 const META = {
@@ -14,20 +15,21 @@ export function SchoolCard(props: {
   school: School;
   onRetry: () => void;
 }) {
+  const t = useT();
   const meta = META[props.schoolKey];
   const remaining = Math.max(0, 2 - props.school.retries);
   if (props.school.status === "pending" || props.school.status === "writing") {
     return (
       <article className="school-card pending">
         <span className="seal">{meta.seal}</span>
-        <p>落笔中</p>
+        <p>{t("schools.pending")}</p>
       </article>
     );
   }
   if (props.school.status === "failed" || props.school.status === "rejected") {
     const message = props.school.status === "failed"
-      ? "此家暂未落笔"
-      : "此家断语未通过盘面核对，暂不展示";
+      ? t("schools.failed")
+      : t("schools.rejected");
     return (
       <article className="school-card failed">
         <span className="seal">{meta.seal}</span>
@@ -35,7 +37,7 @@ export function SchoolCard(props: {
           <h3>{meta.name}<small>{meta.school}</small></h3>
           <p>{message}</p>
           <button className="button" disabled={remaining === 0} onClick={props.onRetry} type="button">
-            {remaining ? `重试（还可 ${remaining} 次）` : "重试次数已用尽"}
+            {remaining ? t("schools.retry", { count: remaining }) : t("schools.retryExhausted")}
           </button>
         </div>
       </article>
@@ -60,7 +62,7 @@ export function SchoolCard(props: {
         <p className="school-reason">{output.reason}</p>
         {repairNote(props.school) ? <p className="hint repair-note">{repairNote(props.school)}</p> : null}
         <details>
-          <summary>展开详断</summary>
+          <summary>{t("schools.detail")}</summary>
           {output.sections.map((section) => (
             <section key={section.title}>
               <h4>{section.title}</h4>
@@ -68,9 +70,10 @@ export function SchoolCard(props: {
             </section>
           ))}
           {output.timing ? (
-            <p><b>应期：</b>{output.timing.window}；条件：{output.timing.condition}</p>
+            <p><b>{t("schools.timing")}</b>{output.timing.window}；{t("schools.condition")}
+              {output.timing.condition}</p>
           ) : null}
-          <div><b>建议：</b><ul>{output.advice.map((item) => <li key={item}>{item}</li>)}</ul></div>
+          <div><b>{t("schools.advice")}</b><ul>{output.advice.map((item) => <li key={item}>{item}</li>)}</ul></div>
         </details>
       </div>
     </article>

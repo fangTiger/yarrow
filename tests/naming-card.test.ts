@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { isNegativeChar, type ClassicLine } from "../src/sanyi/naming/classics.js";
 import {
+  charAnalysisData,
   charAnalysis,
   echoLines,
+  nameHintCodes,
   nameScores,
   nameSupplements,
 } from "../src/sanyi/naming/card.js";
@@ -79,6 +81,29 @@ test("补益标记和用字分析分别覆盖缺、补、行业与只写寓意",
   }), /补八字|合所补|合行业/u);
 });
 
+test("用字分析公开结构只含字、五行、依据码与关系码", () => {
+  assert.deepEqual(charAnalysisData("瑶", {
+    target: "person", favorable: ["金"], missing: ["金"], favorableSource: "missing",
+  }), { char: "瑶", wuxing: "金", basisCode: "radical-jade", relationCode: "missing" });
+  assert.deepEqual(charAnalysisData("明", {
+    target: "business", favorable: ["火"], missing: [], favorableSource: "industry",
+  }), { char: "明", wuxing: "火", basisCode: "radical-sun", relationCode: "industry" });
+  assert.equal(charAnalysisData("嘉", {
+    target: "person", favorable: ["金"], missing: ["金"], favorableSource: "missing",
+  }).relationCode, "neutral");
+});
+
+test("音律提示公开为 code 与参数，不公开固定中文句子", () => {
+  assert.deepEqual(nameHintCodes("张", "章泽"), [
+    { code: "same-initial", params: { surname: "张", char: "章" } },
+    { code: "same-final", params: { surname: "张", char: "章" } },
+  ]);
+  assert.deepEqual(nameHintCodes("张", "乐亍"), [
+    { code: "rare-char", params: { char: "亍" } },
+    { code: "polyphonic", params: { char: "乐", readings: "lè, yuè" } },
+  ]);
+});
+
 test("意蕴内涵至多三句，先取含全部字的一句并稳定过滤和排除出处", () => {
   const lines = echoLines("明月");
   assert.ok(lines.length <= 3);
@@ -117,6 +142,17 @@ test("公开视图附评分、补益、分析、回响与姓氏字块，并兼�
     assert.equal(typeof name.scores.overall, "number");
     assert.ok(Array.isArray(name.supplements));
     assert.equal(name.analysis.length, [...name.given].length);
+    assert.ok(name.analysis.every((item) => (
+      Object.keys(item).sort().join(",") === "basisCode,char,relationCode,wuxing"
+      && typeof item.char === "string"
+      && typeof item.basisCode === "string"
+      && typeof item.relationCode === "string"
+    )));
+    assert.ok(name.hints.every((hint) => (
+      Object.keys(hint).sort().join(",") === "code,params"
+      && typeof hint.code === "string"
+      && typeof hint.params === "object"
+    )));
     assert.ok(name.echoes.length <= 3);
     assert.ok(name.chars.every((item) => typeof item.sense === "string"));
     assert.equal(name.surnameChars?.length, 1);

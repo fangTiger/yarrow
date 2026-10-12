@@ -1,4 +1,7 @@
 import type { PublicNamingReading } from "../../src/sanyi/naming/public.js";
+import type { CharAnalysisData, NameHint } from "../../src/sanyi/naming/card.js";
+import { VIRTUES_ZH } from "../../src/sanyi/i18n/glossary.js";
+import { useT, type TFunction } from "../lib/i18n.js";
 
 type FamilyKey = keyof PublicNamingReading["families"];
 type FamilyOutput = NonNullable<PublicNamingReading["families"][FamilyKey]["output"]>;
@@ -27,11 +30,54 @@ function sourceText(text: string, given: string) {
 }
 
 const SCORE_LABELS = [
-  ["sound", "好听"], ["form", "字形"], ["wuxing", "八字五行"], ["poetry", "诗文意蕴"],
+  ["sound", "naming.sound"], ["form", "naming.form"],
+  ["wuxing", "naming.wuxingScore"], ["poetry", "naming.poetry"],
 ] as const;
+
+const BASIS_KEYS = {
+  "radical-wood": "naming.basis.radicalWood", "radical-fire": "naming.basis.radicalFire",
+  "radical-earth": "naming.basis.radicalEarth", "radical-metal": "naming.basis.radicalMetal",
+  "radical-water": "naming.basis.radicalWater", "radical-jade": "naming.basis.radicalJade",
+  "radical-grass": "naming.basis.radicalGrass", "radical-bamboo": "naming.basis.radicalBamboo",
+  "radical-sun": "naming.basis.radicalSun", "radical-mountain": "naming.basis.radicalMountain",
+  "radical-stone": "naming.basis.radicalStone", "radical-other": "naming.basis.radicalOther",
+  "sound-labial": "naming.basis.soundLabial", "sound-lingual": "naming.basis.soundLingual",
+  "sound-dental": "naming.basis.soundDental", "sound-molar": "naming.basis.soundMolar",
+  "sound-guttural": "naming.basis.soundGuttural", "sound-other": "naming.basis.soundOther",
+  "modern-meaning": "naming.basis.modernMeaning",
+} as const;
+
+function chineseAnalysis(value: string | CharAnalysisData, t: TFunction): string {
+  if (typeof value === "string") return value;
+  if (!value.wuxing) return t("naming.analysis.noElement", { char: value.char });
+  const relation = t(`naming.analysis.${value.relationCode}` as Parameters<TFunction>[0], {
+    element: value.wuxing,
+  });
+  const virtue = VIRTUES_ZH[value.wuxing].replace("：", "，寓意");
+  const basis = t(BASIS_KEYS[value.basisCode as keyof typeof BASIS_KEYS]
+    ?? "naming.basis.modernMeaning");
+  return t("naming.analysis.element", {
+    char: value.char, element: value.wuxing, basis, relation, virtue,
+  });
+}
+
+function chineseHint(value: string | NameHint, t: TFunction): string {
+  if (typeof value === "string") return value;
+  if (value.code === "same-tone") return t("hint.sameTone");
+  if (value.code === "same-initial") return t("hint.sameInitial", value.params);
+  if (value.code === "same-final") return t("hint.sameFinal", value.params);
+  if (value.code === "rare-char") return t("hint.rare", value.params);
+  if (value.code === "polyphonic") {
+    return t("hint.polyphonic", {
+      ...value.params, readings: value.params.readings.replaceAll(", ", "、"),
+    });
+  }
+  return "";
+}
 
 /** 单个名字的完整公开卡片；所有逐字资料均由接口公开视图提供。 */
 export function NameCard(props: { name: PublicNamingName; familyKey: FamilyKey }) {
+  const t = useT();
   const { name } = props;
   const scores = name.scores as typeof name.scores | undefined;
   const supplements = name.supplements as typeof name.supplements | undefined;
@@ -49,25 +95,26 @@ export function NameCard(props: { name: PublicNamingName; familyKey: FamilyKey }
     <article className="name-card">
       <header className="name-card-head">
         <div><h3>{name.full}</h3><p>{name.pinyin}</p></div>
-        {scores ? <span className="name-score-badge"><strong>{scores.overall}</strong><small>综合</small></span> : null}
+        {scores ? <span className="name-score-badge"><strong>{scores.overall}</strong>
+          <small>{t("naming.overall")}</small></span> : null}
       </header>
       <div className="name-card-layout">
-        <section className="name-card-metrics" aria-label="逐字与评分">
+        <section className="name-card-metrics" aria-label={t("naming.charactersAndScores")}>
           <div className="name-char-blocks">
             {blocks.map((char, index) => (
               <div className={`name-char-block${char.surname ? " surname" : ""}`} key={`${char.char}-${index}`}>
-                {char.surname ? <small>姓</small> : null}<strong>{char.char}</strong>
-                <span>{char.pinyin}</span><span>{char.wuxing} · 康熙 {char.kangxi} 画</span>
+                {char.surname ? <small>{t("naming.surnameMark")}</small> : null}<strong>{char.char}</strong>
+                <span>{char.pinyin}</span><span>{char.wuxing} · {t("naming.kangxi", { count: char.kangxi })}</span>
                 {!char.surname && "wuxingBasis" in char ? <span>{char.wuxingBasis}</span> : null}
                 {!char.surname && "meaning" in char ? <span className="name-char-gloss">{char.meaning}</span> : null}
-                {!char.surname && "level" in char && char.level === 3 ? <em>较生僻</em> : null}
+                {!char.surname && "level" in char && char.level === 3 ? <em>{t("naming.rare")}</em> : null}
               </div>
             ))}
           </div>
           {supplements && supplements.length > 0 ? (
             <div className="name-supplements">
               {supplements.map(({ element, chars }) => (
-                <span key={element}>补{element}：{chars.join("、")}</span>
+                <span key={element}>{t("naming.supplement", { element, chars: chars.join("、") })}</span>
               ))}
             </div>
           ) : null}
@@ -75,7 +122,7 @@ export function NameCard(props: { name: PublicNamingName; familyKey: FamilyKey }
             <div className="name-score-list">
               {SCORE_LABELS.map(([key, label]) => (
                 <div className="name-score-row" key={key}>
-                  <span>{label}</span>
+                  <span>{t(label)}</span>
                   <span className="score-track"><i className="score-fill" style={{ width: `${scores[key]}%` }} /></span>
                   <strong>{scores[key]}</strong>
                 </div>
@@ -83,18 +130,20 @@ export function NameCard(props: { name: PublicNamingName; familyKey: FamilyKey }
             </div>
           ) : null}
         </section>
-        <section className="name-card-copy" aria-label="名字分析">
+        <section className="name-card-copy" aria-label={t("naming.analysisAria")}>
           {analysis && analysis.length > 0 ? (
-            <div className="name-analysis"><h4>用字分析</h4>{analysis.map((line) => <p key={line}>{line}</p>)}</div>
+            <div className="name-analysis"><h4>{t("naming.characterAnalysis")}</h4>{analysis.map((line, index) => (
+              <p key={typeof line === "string" ? line : `${line.char}-${index}`}>{chineseAnalysis(line, t)}</p>
+            ))}</div>
           ) : null}
           {name.chars.some((char) => Boolean(char.sense)) ? (
-            <div className="name-analysis"><h4>字义分析</h4>
+            <div className="name-analysis"><h4>{t("naming.meaningAnalysis")}</h4>
               {name.chars.map((char) => char.sense
                 ? <p key={char.char}><b>「{char.char}」</b>{char.sense}</p> : null)}
             </div>
           ) : null}
           {echoes && echoes.length > 0 ? (
-            <div className="name-echoes"><h4>意蕴内涵</h4>
+            <div className="name-echoes"><h4>{t("naming.echoes")}</h4>
               {echoes.map((line) => (
                 <blockquote key={line.id}><p>{emphasizedText(line.text, name.given)}</p>
                   <cite>{line.book} · {line.title}</cite></blockquote>
@@ -102,11 +151,11 @@ export function NameCard(props: { name: PublicNamingName; familyKey: FamilyKey }
             </div>
           ) : null}
           {tags && tags.length > 0 ? (
-            <div className="name-tags"><h4>性格标签</h4><p>{tags.map((tag) => <span key={tag}>{tag}</span>)}</p></div>
+            <div className="name-tags"><h4>{t("naming.tags")}</h4><p>{tags.map((tag) => <span key={tag}>{tag}</span>)}</p></div>
           ) : null}
           <dl className="name-copy">
-            <div><dt>寓意</dt><dd>{name.meaning}</dd></div>
-            <div><dt>理由</dt><dd>{name.why}</dd></div>
+            <div><dt>{t("naming.meaning")}</dt><dd>{name.meaning}</dd></div>
+            <div><dt>{t("naming.reason")}</dt><dd>{name.why}</dd></div>
           </dl>
           {props.familyKey === "shiwen" && name.source ? (
             <blockquote className="name-source">
@@ -115,7 +164,8 @@ export function NameCard(props: { name: PublicNamingName; familyKey: FamilyKey }
             </blockquote>
           ) : null}
           {name.hints.length > 0 ? (
-            <ul className="name-hints">{name.hints.map((hint) => <li key={hint}>{hint}</li>)}</ul>
+            <ul className="name-hints">{name.hints.map((hint, index) => <li
+              key={typeof hint === "string" ? hint : `${hint.code}-${index}`}>{chineseHint(hint, t)}</li>)}</ul>
           ) : null}
         </section>
       </div>

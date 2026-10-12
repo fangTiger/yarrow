@@ -4,6 +4,63 @@ import { ELEMENT_VIRTUES } from "./favorable.js";
 import { charInfo, ELEMENTS, type Element } from "./lexicon.js";
 import { nameWorthyChars } from "./pool.js";
 
+export type CharBasisCode =
+  | "radical-wood" | "radical-fire" | "radical-earth" | "radical-metal"
+  | "radical-water" | "radical-jade" | "radical-grass" | "radical-bamboo"
+  | "radical-sun" | "radical-mountain" | "radical-stone" | "radical-other"
+  | "sound-labial" | "sound-lingual" | "sound-dental" | "sound-molar"
+  | "sound-guttural" | "sound-other" | "modern-meaning";
+
+export type CharRelationCode = "missing" | "favorable" | "industry" | "neutral";
+
+export interface CharAnalysisData {
+  char: string;
+  wuxing: Element | null;
+  basisCode: CharBasisCode;
+  relationCode: CharRelationCode;
+}
+
+export type NameHint =
+  | { code: "same-tone"; params: Record<string, never> }
+  | { code: "same-initial" | "same-final"; params: { surname: string; char: string } }
+  | { code: "rare-char"; params: { char: string } }
+  | { code: "polyphonic"; params: { char: string; readings: string } };
+
+const RADICAL_CODES: Readonly<Record<string, CharBasisCode>> = {
+  木: "radical-wood", 火: "radical-fire", 土: "radical-earth", 金: "radical-metal",
+  水: "radical-water", 玉: "radical-jade", 艸: "radical-grass", 竹: "radical-bamboo",
+  日: "radical-sun", 山: "radical-mountain", 石: "radical-stone",
+};
+
+const SOUND_CODES: Readonly<Record<string, CharBasisCode>> = {
+  唇音: "sound-labial", 舌音: "sound-lingual", 齿音: "sound-dental",
+  牙音: "sound-molar", 喉音: "sound-guttural",
+};
+
+function basisCode(value: string): CharBasisCode {
+  const [kind, detail = ""] = value.split("·");
+  if (kind === "部首") return RADICAL_CODES[detail] ?? "radical-other";
+  if (kind === "读音") return SOUND_CODES[detail] ?? "sound-other";
+  return "modern-meaning";
+}
+
+export function charAnalysisData(char: string, context: {
+  target: "person" | "business";
+  favorable: readonly Element[] | null;
+  missing: readonly Element[];
+  favorableSource: "missing" | "tiaohou" | "industry" | "model";
+}): CharAnalysisData {
+  const info = charInfo(char);
+  if (!info) return { char, wuxing: null, basisCode: "modern-meaning", relationCode: "neutral" };
+  let relationCode: CharRelationCode = "neutral";
+  if (context.missing.includes(info.wuxing)) relationCode = "missing";
+  else if (context.favorable?.includes(info.wuxing)) {
+    relationCode = context.target === "business" && context.favorableSource === "industry"
+      ? "industry" : "favorable";
+  }
+  return { char, wuxing: info.wuxing, basisCode: basisCode(info.wuxingBasis), relationCode };
+}
+
 const BOOK_ORDER = ["诗经", "楚辞", "唐诗三百首", "宋词三百首", "周易", "论语"] as const;
 const bookRank = new Map<string, number>(BOOK_ORDER.map((book, index) => [book, index]));
 const nameWorthySet = new Set(nameWorthyChars().map(({ char }) => char));
@@ -72,6 +129,37 @@ function allSameTone(value: string): boolean {
   const chars = [...value];
   const tones = chars.map((char) => charInfo(char)?.tone);
   return chars.length > 1 && tones.every(Boolean) && tones.every((tone) => tone === tones[0]);
+}
+
+/** 公开视图使用的音律提示；由 code 与参数交给前端双语模板。 */
+export function nameHintCodes(surname: string | undefined, given: string): NameHint[] {
+  const hints: NameHint[] = [];
+  if (surname && allSameTone(`${surname}${given}`)) {
+    hints.push({ code: "same-tone", params: {} });
+  }
+  const surnameChar = [...(surname ?? "")].at(-1);
+  const givenChar = [...given][0];
+  const surnameInfo = surnameChar ? charInfo(surnameChar) : undefined;
+  const firstInfo = givenChar ? charInfo(givenChar) : undefined;
+  if (surnameChar && givenChar && surnameInfo && firstInfo) {
+    if (surnameInfo.initial && surnameInfo.initial === firstInfo.initial) {
+      hints.push({ code: "same-initial", params: { surname: surnameChar, char: givenChar } });
+    }
+    if (surnameInfo.final && surnameInfo.final === firstInfo.final) {
+      hints.push({ code: "same-final", params: { surname: surnameChar, char: givenChar } });
+    }
+  }
+  const unique = [...new Set([...given])];
+  for (const char of unique) {
+    if (charInfo(char)?.level === 3) hints.push({ code: "rare-char", params: { char } });
+  }
+  for (const char of unique) {
+    const info = charInfo(char);
+    if (info?.polyphonic) {
+      hints.push({ code: "polyphonic", params: { char, readings: info.readings.join(", ") } });
+    }
+  }
+  return hints;
 }
 
 function soundScore(input: NameScoreInput): number {

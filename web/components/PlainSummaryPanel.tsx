@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { api, type AnyPublicReading } from "../lib/api.js";
 import { repairNote, summaryStatus } from "../lib/reading-state.js";
-
-const TONE_LABELS: Record<string, string> = { 顺: "偏顺", 中: "成败参半", 不顺: "偏不顺" };
+import { useT } from "../lib/i18n.js";
 
 /** 结果页最上方的白话总述：用大白话把三家合起来讲清楚；生成中显示进度，未生成可免费重试。 */
 export function PlainSummaryPanel(props: {
   reading: AnyPublicReading;
   onReading: (reading: AnyPublicReading) => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const { reading } = props;
@@ -22,8 +22,8 @@ export function PlainSummaryPanel(props: {
   }
   const head = (
     <header className="panel-head">
-      <h2>白话总述</h2>
-      <p>所问：{reading.question}</p>
+      <h2>{t("summary.title")}</h2>
+      <p>{t("summary.question", { question: reading.question })}</p>
     </header>
   );
   if (status.kind === "progress") {
@@ -43,7 +43,7 @@ export function PlainSummaryPanel(props: {
       try {
         props.onReading(await api.retrySummary(reading.id));
       } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "暂未能重试，请稍后再试");
+        setError(caught instanceof Error ? caught.message : t("result.tryLater"));
       } finally {
         setBusy(false);
       }
@@ -51,10 +51,10 @@ export function PlainSummaryPanel(props: {
     return (
       <section className="panel plain-summary failed">
         {head}
-        <p>{status.kind === "failed" ? status.text : "白话总述暂未生成"}</p>
+        <p>{status.kind === "failed" ? status.text : t("summary.notReady")}</p>
         {status.kind === "failed" && status.canRetry ? (
           <button className="button" disabled={busy} onClick={() => void retry()} type="button">
-            免费重试（还可 {remaining} 次）
+            {t("result.retryFree", { count: remaining })}
           </button>
         ) : null}
         {error ? <p className="error">{error}</p> : null}
@@ -64,22 +64,24 @@ export function PlainSummaryPanel(props: {
   const output = summary.output;
   const note = repairNote(summary);
   return (
-    <section aria-label="白话总述" className="panel plain-summary">
+    <section aria-label={t("summary.title")} className="panel plain-summary">
       {head}
       <div className="summary-conclusion">
         {output.tone
-          ? <span className={`tag summary-tone tone-${output.tone}`}>{TONE_LABELS[output.tone]}</span>
+          ? <span className={`tag summary-tone tone-${output.tone}`}>{t(output.tone === "顺"
+            ? "summary.tone.positive" : output.tone === "中"
+              ? "summary.tone.mixed" : "summary.tone.negative")}</span>
           : null}
         <p>{output.conclusion}</p>
       </div>
       <dl className="summary-points">
         <div>
-          <dt>三家一致</dt>
+          <dt>{t("summary.agreement")}</dt>
           <dd>{output.agreement}</dd>
         </div>
         {output.difference ? (
           <div>
-            <dt>三家分歧</dt>
+            <dt>{t("summary.difference")}</dt>
             <dd>{output.difference}</dd>
           </div>
         ) : null}
@@ -90,15 +92,16 @@ export function PlainSummaryPanel(props: {
       {output.advice ? (
         // 只有改版前的旧存档才有建议；新总述的建议并入下方解法。
         <div className="summary-advice">
-          <h3>建议</h3>
+          <h3>{t("summary.advice")}</h3>
           <ol>{output.advice.map((item) => <li key={item}>{item}</li>)}</ol>
         </div>
       ) : null}
       {output.watch ? (
-        <p className="summary-watch"><b>留意</b>{output.watch.window}（{output.watch.condition}）</p>
+        <p className="summary-watch"><b>{t("summary.watch")}</b>{output.watch.window}（{output.watch.condition}）</p>
       ) : null}
-      {output.outlook ? <p className="summary-outlook"><b>十年走势</b>{output.outlook}</p> : null}
-      <p className="hint">依据 {summary.basis} 家断语{note ? `；${note}` : ""}。三家原话见下方「看三家依据」。</p>
+      {output.outlook ? <p className="summary-outlook"><b>{t("summary.outlook")}</b>{output.outlook}</p> : null}
+      <p className="hint">{note ? t("summary.basisNote", { count: summary.basis, note })
+        : t("summary.basis", { count: summary.basis })}</p>
     </section>
   );
 }

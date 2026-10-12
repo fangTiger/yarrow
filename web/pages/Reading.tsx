@@ -1,6 +1,6 @@
 import { WalletBar } from "../components/WalletBar.js";
 // web/pages/Reading.tsx
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
 import { deriveFiveHexagrams } from "../../src/oracle/liuyao-chart.js";
 import { AutoCast } from "../components/AutoCast.js";
@@ -13,7 +13,7 @@ import { BaziReading } from "./BaziReading.js";
 import { NamingReading } from "./NamingReading.js";
 import { api, type AnyPublicReading, type PublicReading } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
-import { readingStage, shouldPollReading } from "../lib/reading-state.js";
+import { readingStage, shouldPollReading, shouldPollTranslation } from "../lib/reading-state.js";
 import { AlmanacPanel } from "../components/AlmanacPanel.js";
 import { ConsensusTrack } from "../components/ConsensusTrack.js";
 import { PlainSummaryPanel } from "../components/PlainSummaryPanel.js";
@@ -24,11 +24,15 @@ import { QimenBoard } from "../components/QimenBoard.js";
 import { SchoolCard } from "../components/SchoolCard.js";
 import { SubjectChange } from "../components/SubjectChange.js";
 import { VerifyPanel } from "../components/VerifyPanel.js";
+import { EnglishQuestionResult } from "../components/EnglishQuestionResult.js";
+import { useLang, useT } from "../lib/i18n.js";
+import { applyReadingTranslation, translationViewState } from "../lib/reading-translation.js";
+import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
 const SCHOOL_KEYS = ["chengyi", "jingfang", "shaoyong"] as const;
 const SUBJECT_LABELS: Record<string, string> = Object.fromEntries(
   QUESTION_SUBJECTS.map(({ key, label }) => [key, label]),
 );
-function Result(props: {
+function ChineseQuestionResult(props: {
   reading: PublicReading;
   onReading: (reading: PublicReading) => void;
 }) {
@@ -127,12 +131,53 @@ function Result(props: {
     </>
   );
 }
+export function QuestionResult(props: {
+  reading: PublicReading;
+  onReading: (reading: PublicReading) => void;
+}) {
+  const { lang } = useLang();
+  return lang === "en" ? <EnglishQuestionResult {...props} /> : <ChineseQuestionResult {...props} />;
+}
+
+export function TranslationStatusPanel(props: {
+  translation: StoredTranslation | undefined;
+  requestFailed?: boolean;
+  busy: boolean;
+  onRetry(): void;
+}) {
+  const t = useT();
+  const state = translationViewState(props.translation);
+  if (state.kind === "done" && !props.requestFailed) return null;
+  if (state.kind === "failed" || props.requestFailed) {
+    return <section aria-live="polite" className="panel translation-status failed">
+      <p>{t("translation.failed")}</p>
+      <button className="button" disabled={props.busy} onClick={props.onRetry} type="button">
+        {props.busy ? t("translation.retrying") : t("translation.retry")}
+      </button>
+    </section>;
+  }
+  return <section aria-live="polite" className="panel translation-status pending">
+    <p><strong>{t("translation.pending")}</strong> {t("translation.fallback")}</p>
+  </section>;
+}
+
+function translationReady(reading: AnyPublicReading): boolean {
+  const states = reading.kind === "naming"
+    ? Object.values(reading.families) : Object.values(reading.schools);
+  return states.every(({ status }) => status === "done" || status === "failed" || status === "rejected")
+    && reading.summary !== undefined && reading.summary.status !== "writing";
+}
 export function Reading({ id }: { id: string }) {
+  const { lang } = useLang();
+  const t = useT();
   const [reading, setReading] = useState<AnyPublicReading>();
   const [error, setError] = useState("");
+  const [translationBusy, setTranslationBusy] = useState(false);
+  const [translationRequestFailed, setTranslationRequestFailed] = useState(false);
+  const translationTrigger = useRef("");
   const refresh = useCallback(async () => {
     try {
-      const value = await api.getReading(id);
+      const value = await api.getReading(id, lang);
       setReading(value);
       setError("");
       saveRecentReading({
@@ -142,26 +187,49 @@ export function Reading({ id }: { id: string }) {
         createdAt: value.createdAt,
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "未能打开这一卦");
+      setError(caught instanceof Error ? caught.message : t("result.openError"));
     }
-  }, [id]);
+  }, [id, lang, t]);
   useEffect(() => {
     void refresh();
   }, [refresh]);
   useEffect(() => {
-    if (!reading || !shouldPollReading(reading)) {
+    if (!reading || !(shouldPollReading(reading)
+      || (lang === "en" && shouldPollTranslation(reading.translation)))) {
       return undefined;
     }
     const timer = window.setInterval(() => void refresh(), 1_000);
     return () => window.clearInterval(timer);
-  }, [reading, refresh]);
+  }, [lang, reading, refresh]);
+  const requestTranslation = useCallback(async () => {
+    setTranslationBusy(true);
+    setTranslationRequestFailed(false);
+    try {
+      await api.translateReading(id);
+      await refresh();
+    } catch {
+      setTranslationRequestFailed(true);
+    } finally {
+      setTranslationBusy(false);
+    }
+  }, [id, refresh]);
+  useEffect(() => {
+    if (lang !== "en" || !reading || !translationReady(reading)) return;
+    const state = translationViewState(reading.translation);
+    if (state.kind !== "pending") return;
+    const key = `${reading.id}:${Object.values(reading.translation?.units ?? {})
+      .map((unit) => `${unit.sourceHash}:${unit.status}`).join("|") || "new"}`;
+    if (translationTrigger.current === key) return;
+    translationTrigger.current = key;
+    void requestTranslation();
+  }, [lang, reading, requestTranslation]);
   if (error) {
     return (
       <main className="page">
         <section className="panel error-panel">
-          <h1>这一卦暂时打不开</h1>
+          <h1>{t("result.openError")}</h1>
           <p className="error">{error}</p>
-          <a className="button" href="#/">返回首页</a>
+          <a className="button" href="#/">{t("result.backHome")}</a>
         </section>
       </main>
     );
@@ -169,46 +237,52 @@ export function Reading({ id }: { id: string }) {
   if (!reading) {
     return (
       <main className="page">
-        <section aria-live="polite" className="panel">正在打开这一卦</section>
+        <section aria-live="polite" className="panel">{t("result.opening")}</section>
       </main>
     );
   }
-  if (reading.kind === "naming") {
+  const visibleReading = lang === "en" ? applyReadingTranslation(reading) : reading;
+  const translationPanel = lang === "en" ? <TranslationStatusPanel busy={translationBusy}
+    onRetry={() => void requestTranslation()} requestFailed={translationRequestFailed}
+    translation={reading.translation} /> : null;
+  if (visibleReading.kind === "naming") {
     return (
       <main className="page">
         <header className="topbar">
-          <span className="seal">名</span><span className="brand">三易</span>
-          <nav className="nav"><a href="#/">返回首页</a></nav><WalletBar />
+          <span className="seal">{lang === "en" ? "Y" : "名"}</span><span className="brand">{t("brand.name")}</span>
+          <nav className="nav"><a href="#/">{t("result.backHome")}</a></nav><WalletBar />
         </header>
-        <NamingReading reading={reading} onReading={setReading} />
+        {translationPanel}
+        <NamingReading reading={visibleReading} onReading={setReading} />
       </main>
     );
   }
-  if (reading.kind !== "question") {
-    return <main className="page"><header className="topbar"><span className="seal">问</span><span className="brand">三易</span><nav className="nav"><a href="#/">返回首页</a></nav><WalletBar /></header><ShikongBar data={toView(reading.almanac)} /><BaziReading reading={reading} onReading={setReading} /></main>;
+  if (visibleReading.kind !== "question") {
+    return <main className="page"><header className="topbar"><span className="seal">{lang === "en" ? "Y" : "问"}</span><span className="brand">{t("brand.name")}</span><nav className="nav"><a href="#/">{t("result.backHome")}</a></nav><WalletBar /></header>{lang === "zh" ? <ShikongBar data={toView(visibleReading.almanac)} /> : null}{translationPanel}<BaziReading reading={visibleReading} onReading={setReading} /></main>;
   }
-  const stage = readingStage(reading);
-  const view = reading.almanac ? toView(reading.almanac) : undefined;
+  const stage = readingStage(visibleReading);
+  const view = visibleReading.almanac ? toView(visibleReading.almanac) : undefined;
   return (
     <main className="page">
       <header className="topbar">
-        <span className="seal">问</span>
-        <span className="brand">三易</span>
-        <a href="#/">返回首页</a>
+        <span className="seal">{lang === "en" ? "Y" : "问"}</span>
+        <span className="brand">{t("brand.name")}</span>
+        <a href="#/">{t("result.backHome")}</a>
         <WalletBar />
       </header>
-      {view ? <ShikongBar data={view} /> : null}
-      {reading.chart?.month.boundaryUncertain ? <p className="boundary-tag">月建 · 近交节</p> : null}
+      {lang === "zh" && view ? <ShikongBar data={view} /> : null}
+      {translationPanel}
+      {lang === "zh" && visibleReading.chart?.month.boundaryUncertain ? <p className="boundary-tag">月建 · 近交节</p> : null}
       {stage === "awaiting-throws" ? (
-        <AutoCast onReading={setReading} reading={reading} />
-      ) : stage === "failed" && !reading.chart ? (
+        <AutoCast onReading={setReading} reading={visibleReading} />
+      ) : stage === "failed" && !visibleReading.chart ? (
         <section className="panel">
-          <h1>排盘未能完成</h1>
-          <p className="error">{reading.error ?? "请稍后再试"}</p>
-          <a className="button" href="#/">返回首页</a>
+          <h1>{t("result.chartFailed")}</h1>
+          <p className="error">{visibleReading.error ?? t("result.tryLater")}</p>
+          <a className="button" href="#/">{t("result.backHome")}</a>
         </section>
       ) : (
-        <Result onReading={setReading} reading={reading} />
+        <QuestionResult onReading={setReading} reading={visibleReading} />
       )}
     </main>
   );

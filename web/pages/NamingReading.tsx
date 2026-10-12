@@ -3,6 +3,8 @@ import type { PublicNamingReading } from "../../src/sanyi/naming/public.js";
 import { NameCard } from "../components/NameCard.js";
 import { WuxingPanel } from "../components/WuxingPanel.js";
 import { api } from "../lib/api.js";
+import { EnglishNamingReading } from "../components/EnglishNamingReading.js";
+import { useLang } from "../lib/i18n.js";
 
 const FAMILY_META = {
   wuxing: { name: "五行补益", seal: "五" },
@@ -142,7 +144,7 @@ function NamingBasis({ reading }: { reading: PublicNamingReading }) {
 }
 
 /** 起名结果页：合参、三家名字卡、依据与边界说明。 */
-export function NamingReading(props: {
+function ChineseNamingReading(props: {
   reading: PublicNamingReading;
   onReading(value: PublicNamingReading): void;
 }) {
@@ -220,4 +222,12 @@ export function NamingReading(props: {
       </footer>
     </div>
   );
+}
+
+export function NamingReading(props: {
+  reading: PublicNamingReading;
+  onReading(value: PublicNamingReading): void;
+}) {
+  const { lang } = useLang();
+  return lang === "en" ? <EnglishNamingReading {...props} /> : <ChineseNamingReading {...props} />;
 }

@@ -1,5 +1,6 @@
 // web/lib/reading-state.ts
 import type { AnyPublicReading, PublicReading } from "./api.js";
+import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
 
 export type ReadingStage = "awaiting-throws" | "charting" | "writing" | "done" | "failed";
 type Schools = PublicReading["schools"];
@@ -37,6 +38,14 @@ export function shouldPollReading(reading: AnyPublicReading): boolean {
   return states.some((school) => {
     return school.status === "pending" || school.status === "writing";
   });
+}
+
+/** 英译未出现、排队或生成中时沿用结果页轮询；失败为终态，等待用户免费重试。 */
+export function shouldPollTranslation(translation: StoredTranslation | undefined): boolean {
+  if (!translation || Object.keys(translation.units).length === 0) return true;
+  return Object.values(translation.units).some(({ status }) => (
+    status === "pending" || status === "writing"
+  ));
 }
 
 export function consensusTenths(schools: Schools): number | undefined {

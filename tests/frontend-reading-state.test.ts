@@ -107,6 +107,8 @@ function renderReading(value: PublicReading | undefined) {
     useState(initial: unknown) { return [index++ === 0 ? value : initial, () => {}]; },
     useEffect() {},
     useCallback(callback: unknown) { return callback; },
+    useContext(context: { _currentValue: unknown }) { return context._currentValue; },
+    useRef(initial: unknown) { return { current: initial }; },
   };
   let node: ReturnType<typeof Reading>;
   try { node = Reading({ id: "abcdefghijklmnopqrstuvwxyz" }); }
