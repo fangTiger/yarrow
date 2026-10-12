@@ -24,10 +24,19 @@ function exactNumberCount(text: string, token: string): number {
   return text.match(pattern)?.length ?? 0;
 }
 
-function unexpectedHan(text: string, allowed: readonly string[]): string[] {
+function unexpectedHan(text: string, allowed: readonly string[], sourceText = ""): string[] {
   let rest = text;
   for (const item of [...allowed].sort((a, b) => b.length - a.length)) {
     rest = rest.split(item).join("");
+  }
+  // 以英文为主的译文里，原样引用本条原文中「」“”《》『』括起来的片段（如诗句「美目清兮」）算引用，
+  // 放行；普通词（如「旺盛」）漏翻仍算硬性问题。
+  const quoted = [...sourceText.matchAll(/[「“《『]([^」”》』]+)[」”》』]/gu)].map((match) => match[1] ?? "");
+  const latin = (text.match(/[A-Za-z]/gu) ?? []).length;
+  const han = (rest.match(/\p{Script=Han}/gu) ?? []).length;
+  if (quoted.length > 0 && latin > 0 && latin / (latin + han) >= 0.6) {
+    rest = (rest.match(/\p{Script=Han}+/gu) ?? [])
+      .filter((run) => !quoted.some((segment) => segment.includes(run))).join("");
   }
   return [...new Set(rest.match(/\p{Script=Han}/gu) ?? [])];
 }
@@ -62,7 +71,7 @@ export function checkTranslation(unit: TranslationUnit, output: unknown): Transl
       fail(index, `${entry.path} 缺少译文`, true);
       return;
     }
-    const han = unexpectedHan(translated, unit.allowedHan);
+    const han = unexpectedHan(translated, unit.allowedHan, entry.text);
     if (han.length > 0) fail(index, `${entry.path} 含非白名单汉字：${han.join("")}`, true);
     const numbers = entry.text.match(/\d+/gu) ?? [];
     for (const token of new Set(numbers)) {

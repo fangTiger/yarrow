@@ -293,6 +293,17 @@ export class TranslationService {
         checked = checkTranslation(unit, { texts });
       }
       if (!checked.acceptable) {
+        // 偶发漏翻（如残留「旺盛」）时整单元再译一次，仍不合格才判失败。
+        const again = await this.generate(unit, false);
+        attempts += 1;
+        const retried = Array.isArray(again.texts) ? again.texts.slice(0, unit.entries.length) : [];
+        const retriedCheck = checkTranslation(unit, { texts: retried });
+        if (retriedCheck.acceptable) {
+          texts = retried;
+          checked = retriedCheck;
+        }
+      }
+      if (!checked.acceptable) {
         await this.failUnit(id, unit, state, attempts, checked.hardErrors.join("；"));
         return;
       }

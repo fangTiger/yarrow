@@ -6,7 +6,7 @@ import {
 } from "../i18n/glossary.js";
 import type { TranslationUnit } from "./units.js";
 
-export const PROMPT_VERSION = 4;
+export const PROMPT_VERSION = 5;
 
 export interface GlossaryRequirement {
   source: string;
@@ -68,14 +68,18 @@ export const TRANSLATION_SYSTEM_PROMPT = `你是三易的中译英译者。
 必须保留阿拉伯数字与四位年份，并使用随附术语和古文固定译文；专业术语首次出现时写「拼音（释义）」，之后可只写拼音；单字五行、八卦、干支在日常用语里按词义自然翻译。
 人名与字号保留汉字，后接拼音，如「书灵 (Shu Ling)」，不要只写拼音。
 古文、诗句、卦辞爻辞一律译成英文，不要在译文里保留汉字原文；原文由页面另外显示。
+读者是不懂易经的英文用户：用平实英文，避免生硬直译（不要写 "official ghost"、"top nine"）；
+爻位按位置译，如「初九」→ "the first line"，「九四」→ "the fourth line"，「上九」→ "the top line"；
+「体」「用」在梅花易数里译作 "the self trigram"、"the matter trigram"。
 名字及白名单汉字可原样保留并附拼音；其余译文不得含汉字。
 输出必须严格符合 JSON Schema，texts 与输入逐项对应。`;
 
 export function buildTranslationPrompt(unit: TranslationUnit): string {
   const text = unit.entries.map((entry) => entry.text).join("\n");
-  // 只列强制的专业术语与五行；其余单字（如「平」→ Mixed、「子」→ Zi）在日常用语里会误导模型。
+  // 列出两字以上的术语（含不强制的六亲，如官鬼 → Officer）与五行作参考；其余单字
+  // （如「平」→ Mixed、「子」→ Zi）在日常用语里会误导模型，不列。
   const glossary = glossaryRequirements(text, unit.allowedHan)
-    .filter((item) => item.enforced || item.source in ELEMENTS_EN)
+    .filter((item) => item.enforced || [...item.source].length >= 2 || item.source in ELEMENTS_EN)
     .map(({ source, display }) => ({ source, english: display }));
   const classics = unit.entries.flatMap((entry, index) => (
     findZhouyiEnglishReferences(entry.text).map((reference) => ({

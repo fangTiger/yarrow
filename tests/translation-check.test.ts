@@ -116,3 +116,23 @@ test("几成写成 4 in 10 或 40% 都算保留数字；术语写出英文释义
   assert.equal(checkTranslation(unit("凶 4 成"), { texts: ["Unfavorable, about 4 in 10."] }).ok, true);
   assert.equal(checkTranslation(unit("动爻在三爻"), { texts: ["The changing line is the third line."] }).ok, true);
 });
+
+test("以英文为主的译文里，原样引用本条中文原文的片段算引用，放行", () => {
+  const quoted = unit("取「美目清兮」中清字");
+  const ok = checkTranslation(quoted, { texts: ["Takes 清 from the line 美目清兮 (her beautiful eyes are clear)."] });
+  assert.equal(ok.acceptable, true, ok.hardErrors.join("；"));
+  // 原文里没有的汉字，或几乎没翻译，仍算硬性问题。
+  const lazy = checkTranslation(unit("事业旺盛"), { texts: ["事业旺盛"] });
+  assert.equal(lazy.acceptable, false);
+  const foreign = checkTranslation(unit("事业顺利"), { texts: ["Career is 旺盛 and smooth."] });
+  assert.equal(foreign.acceptable, false);
+});
+
+test("提示词列出两字以上的参考术语（如官鬼 → Officer），并写明爻位与可读性要求", async () => {
+  const { buildTranslationPrompt, TRANSLATION_SYSTEM_PROMPT } = await import("../src/sanyi/translation/prompt.js");
+  const prompt = buildTranslationPrompt(unit("官鬼伏藏，体卦受克，上九发动"));
+  assert.match(prompt, /Officer/u);
+  assert.match(prompt, /self trigram/u);
+  assert.match(TRANSLATION_SYSTEM_PROMPT, /the top line/u);
+  assert.match(TRANSLATION_SYSTEM_PROMPT, /不懂易经/u);
+});

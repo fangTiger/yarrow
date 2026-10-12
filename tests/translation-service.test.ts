@@ -323,7 +323,8 @@ test("连续失败三次后冷却十分钟", async () => {
     assert.equal(provider.requests.length, calls);
     f.setNow(new Date("2026-10-13T08:10:00.001Z"));
     await f.service.translate(ID);
-    assert.equal(provider.requests.length, calls + 2);
+    // 冷却结束后：首译、补译、整单元重试各一次。
+    assert.equal(provider.requests.length, calls + 3);
   } finally {
     await f.close();
   }

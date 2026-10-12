@@ -1,7 +1,7 @@
 // src/sanyi/i18n/glossary.ts
 // 中英术语表（设计 6）：纯数据，服务端翻译提示词与浏览器端共用，可进浏览器包。
 // 由主管审定；改动任何译名都要递增 GLOSSARY_VERSION，使缓存的译文失效。
-export const GLOSSARY_VERSION = 1;
+export const GLOSSARY_VERSION = 2;
 
 export const ELEMENTS_EN = { 木: "Wood", 火: "Fire", 土: "Earth", 金: "Metal", 水: "Water" } as const;
 
@@ -181,4 +181,10 @@ export const TERMS_EN = {
   日辰: { pinyin: "Ri Chen", gloss: "day ruler" },
   旬空: { pinyin: "Xun Kong", gloss: "void branches" },
   应期: { pinyin: "Ying Qi", gloss: "expected timing" },
+  本卦: { pinyin: "Ben Gua", gloss: "the primary hexagram" },
+  之卦: { pinyin: "Zhi Gua", gloss: "the resulting hexagram" },
+  变卦: { pinyin: "Bian Gua", gloss: "the resulting hexagram" },
+  互卦: { pinyin: "Hu Gua", gloss: "the nuclear hexagram" },
+  体卦: { pinyin: "Ti Gua", gloss: "the self trigram" },
+  用卦: { pinyin: "Yong Gua", gloss: "the matter trigram" },
 } as const;
