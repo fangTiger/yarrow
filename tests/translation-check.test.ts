@@ -97,3 +97,22 @@ test("提示词只列专业术语与五行，不列会误导的单字（如「�
   assert.match(TRANSLATION_SYSTEM_PROMPT, /书灵 \(Shu Ling\)/u);
   assert.match(TRANSLATION_SYSTEM_PROMPT, /古文、诗句/u);
 });
+
+test("硬性与软性问题分开：条数、汉字、四位年份为硬性；其他数字、术语、古文为软性", () => {
+  const soft = checkTranslation(unit("2026 年用神为木，凶 4 成"), {
+    texts: ["In 2026 the key factor is Wood; unfavorable."],
+  });
+  assert.equal(soft.ok, false);
+  assert.equal(soft.acceptable, true);
+  assert.ok(soft.warnings.some((item) => item.includes("4")));
+  const hard = checkTranslation(unit("2026 年用神为木"), { texts: ["The key factor is Wood 木."] });
+  assert.equal(hard.acceptable, false);
+  assert.ok(hard.hardErrors.some((item) => item.includes("汉字")));
+  assert.ok(hard.hardErrors.some((item) => item.includes("2026")));
+});
+
+test("几成写成 4 in 10 或 40% 都算保留数字；术语写出英文释义也算", () => {
+  assert.equal(checkTranslation(unit("凶 4 成"), { texts: ["Unfavorable, about 40%."] }).ok, true);
+  assert.equal(checkTranslation(unit("凶 4 成"), { texts: ["Unfavorable, about 4 in 10."] }).ok, true);
+  assert.equal(checkTranslation(unit("动爻在三爻"), { texts: ["The changing line is the third line."] }).ok, true);
+});

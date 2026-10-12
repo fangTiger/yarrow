@@ -10,6 +10,8 @@ export interface StoredTranslationUnit {
   status: TranslationStatus;
   sourceHash: string;
   texts?: string[];
+  /** 软性核对问题（术语、古文、数字一致性），仅供监控，不影响展示。 */
+  warnings?: string[];
   /** provider 调用总次数，补译也计一次。 */
   attempts: number;
   /** 连续整单元失败次数；成功后清零。 */

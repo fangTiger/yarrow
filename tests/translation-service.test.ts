@@ -352,3 +352,14 @@ test("每日单元额度耗尽后抛出 translation-budget", async () => {
     await f.close();
   }
 });
+
+test("补译后只剩软性问题时单元仍记为 done 并留警告；硬性问题才失败", async () => {
+  const { checkTranslation } = await import("../src/sanyi/translation/check.js");
+  const unitValue = {
+    key: "summary" as const, kind: "question" as const, allowedHan: [] as string[],
+    entries: [{ path: "summary.output.conclusion", text: "用神旺，凶 4 成" }],
+  };
+  const result = checkTranslation(unitValue, { texts: ["The key line is strong; unfavorable."] });
+  assert.equal(result.acceptable, true);
+  assert.ok(result.warnings.length > 0);
+});

@@ -6,7 +6,7 @@ import {
 } from "../i18n/glossary.js";
 import type { TranslationUnit } from "./units.js";
 
-export const PROMPT_VERSION = 3;
+export const PROMPT_VERSION = 4;
 
 export interface GlossaryRequirement {
   source: string;
@@ -15,10 +15,14 @@ export interface GlossaryRequirement {
   /** 只有两字以上的专业术语强制使用规定译名；单字（五行、八卦、干支）、六亲与吉凶在日常用词里
    * 太常见（金钱、孩子、平安、兄弟），只作提示词参考，不强制。 */
   enforced: boolean;
+  /** 也算合格的其他写法，如术语的英文释义、卦名的英文标题。 */
+  alternatives?: string[];
 }
 
-function pair(source: string, english: string, display = english, enforced = false): GlossaryRequirement {
-  return { source, english, display, enforced: enforced && [...source].length >= 2 };
+function pair(
+  source: string, english: string, display = english, enforced = false, alternatives: string[] = [],
+): GlossaryRequirement {
+  return { source, english, display, enforced: enforced && [...source].length >= 2, alternatives };
 }
 
 const GLOSSARY: readonly GlossaryRequirement[] = [
@@ -28,7 +32,7 @@ const GLOSSARY: readonly GlossaryRequirement[] = [
   )),
   ...ZHOUYI_CORPUS.map((value, index) => {
     const english = HEXAGRAMS_EN[index]!;
-    return pair(value.name, english.pinyin, `${english.pinyin} · ${english.title}`, true);
+    return pair(value.name, english.pinyin, `${english.pinyin} · ${english.title}`, true, [english.title]);
   }),
   ...Object.entries(STEMS_EN).map(([source, english]) => pair(source, english)),
   ...Object.entries(BRANCHES_EN).map(([source, value]) => (
@@ -39,7 +43,7 @@ const GLOSSARY: readonly GlossaryRequirement[] = [
   ...Object.entries(SIX_SPIRITS_EN).map(([source, english]) => pair(source, english, english, true)),
   ...Object.entries(VERDICTS_EN).map(([source, english]) => pair(source, english)),
   ...Object.entries(TERMS_EN).map(([source, value]) => (
-    pair(source, value.pinyin, `${value.pinyin} (${value.gloss})`, true)
+    pair(source, value.pinyin, `${value.pinyin} (${value.gloss})`, true, [value.gloss])
   )),
 ];
 

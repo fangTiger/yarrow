@@ -282,21 +282,25 @@ export class TranslationService {
         };
         const repair = await this.generate(repairUnit, true);
         attempts += 1;
-        if (checkTranslation(repairUnit, repair).ok) {
-          checked.invalidIndexes.forEach((originalIndex, repairIndex) => {
-            texts[originalIndex] = repair.texts[repairIndex]!;
-          });
-        }
+        const repairChecked = checkTranslation(repairUnit, repair);
+        // 逐条采用：补译后的某条没有硬性问题，就替换原译文。
+        checked.invalidIndexes.forEach((originalIndex, repairIndex) => {
+          const candidate = Array.isArray(repair.texts) ? repair.texts[repairIndex] : undefined;
+          if (typeof candidate === "string" && !repairChecked.hardIndexes.includes(repairIndex)) {
+            texts[originalIndex] = candidate;
+          }
+        });
         checked = checkTranslation(unit, { texts });
       }
-      if (!checked.ok) {
-        await this.failUnit(id, unit, state, attempts, checked.errors.join("；"));
+      if (!checked.acceptable) {
+        await this.failUnit(id, unit, state, attempts, checked.hardErrors.join("；"));
         return;
       }
       if (!await this.hashStillCurrent(id, unit)) return;
       await this.setState(id, unit.key, {
         status: "done", sourceHash: state.sourceHash, texts,
         attempts, failures: 0,
+        ...(checked.warnings.length ? { warnings: checked.warnings.slice(0, 20) } : {}),
       });
       await this.deps.logger.write("英文翻译单元完成", { readingId: id, unit: unit.key, attempts });
     } catch (error) {
