@@ -19,10 +19,13 @@ import { DEFAULT_NAMING_FORM } from "../web/lib/home-entry.js";
 import { metaMaskDeepLink } from "../web/lib/wallet-guide.js";
 import { walletErrorMessage } from "../web/lib/wallet-errors.js";
 import { walletSummary } from "../web/lib/wallet-summary.js";
+import { COMMON_SURNAMES } from "../web/lib/surnames.js";
 import { renderIn } from "./helpers/render-in.js";
 
 const placeholders = (value: string) => [...value.matchAll(/\{([^}]+)\}/gu)].map((match) => match[1]).sort();
-const EN_HAN_WHITELIST = new Set<keyof typeof zh>(["brand.seal", "lang.toggle"]);
+const EN_HAN_WHITELIST = new Set<keyof typeof zh>([
+  "brand.seal", "lang.toggle", "sample.banner",
+]);
 
 test("中英字典键和占位符完全一致，英文值不含汉字", () => {
   assert.deepEqual(Object.keys(en).sort(), Object.keys(zh).sort());
@@ -76,7 +79,10 @@ test("英文首页链路组件不泄漏中文，并使用首批用户措辞", as
   for (const label of ["Ask", "Fortune", "Destiny", "Naming", "History", "Birth time zone"]) {
     assert.match(html, new RegExp(label, "u"));
   }
-  assert.doesNotMatch(html, /[\u3400-\u9fff]/u);
+  const withoutSurnameOptions = COMMON_SURNAMES.reduce(
+    (text, { char }) => text.replaceAll(char, ""), html,
+  );
+  assert.doesNotMatch(withoutSurnameOptions, /[\u3400-\u9fff]/u);
 });
 
 test("钱包摘要、错误与 MetaMask 手机深链可本地化", () => {

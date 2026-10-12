@@ -1,7 +1,9 @@
 // tests/frontend-luopan.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BAGUA, MOUNTAINS } from "../web/components/Luopan.js";
+import { BAGUA, BAGUA_POSITIONS, Luopan, MOUNTAINS } from "../web/components/Luopan.js";
+import { renderIn } from "./helpers/render-in.js";
+import { readFileSync } from "node:fs";
 
 test("二十四山自午顺时针且恰为二十四个", () => {
   assert.equal(MOUNTAINS[0], "午");
@@ -11,6 +13,40 @@ test("二十四山自午顺时针且恰为二十四个", () => {
 
 test("后天八卦离南在上并按顺时针排列", () => {
   assert.deepEqual(BAGUA.map(([name]) => name), ["离", "坤", "兑", "乾", "坎", "艮", "震", "巽"]);
+});
+
+test("后天八卦八个方位逐一固定", () => {
+  assert.deepEqual(BAGUA_POSITIONS, {
+    离: "top", 坤: "top-right", 兑: "right", 乾: "bottom-right",
+    坎: "bottom", 艮: "bottom-left", 震: "left", 巽: "top-left",
+  });
+  const html = renderIn("zh", createElement(Luopan, { home: true }));
+  for (const [name, position] of Object.entries(BAGUA_POSITIONS)) {
+    assert.match(html, new RegExp(`data-position="${position}"[^>]*data-trigram="${name}"`, "u"));
+  }
+});
+
+test("只有外圈装饰环旋转，卦位与标签固定，reduced-motion 时静止", () => {
+  const html = renderIn("zh", createElement(Luopan, { home: true }));
+  assert.match(html, /class="luopan-outer-ring"/u);
+  assert.match(html, /class="luopan-fixed"/u);
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.match(css, /prefers-reduced-motion:\s*no-preference[\s\S]*\.luopan-outer-ring\s*\{[^}]*animation:/u);
+  assert.doesNotMatch(css, /\.luopan-fixed\s*\{[^}]*animation:/u);
+  assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*\.luopan-outer-ring\s*\{[^}]*animation:\s*none/u);
+});
+
+test("八卦标签中英切换，英文取术语表且中央保留问印", () => {
+  const zh = renderIn("zh", createElement(Luopan, { home: true }));
+  const en = renderIn("en", createElement(Luopan, { home: true }));
+  for (const label of ["离 · 火", "坤 · 地", "兑 · 泽", "乾 · 天", "坎 · 水", "艮 · 山", "震 · 雷", "巽 · 风"]) {
+    assert.match(zh, new RegExp(label, "u"));
+  }
+  for (const label of ["Li · Fire", "Kun · Earth", "Dui · Lake", "Qian · Heaven",
+    "Kan · Water", "Gen · Mountain", "Zhen · Thunder", "Xun · Wind"]) {
+    assert.match(en, new RegExp(label, "u"));
+  }
+  assert.match(en, /class="luopan-center-seal"[^>]*>问</u);
 });
 
 import React, { createElement } from "react";
@@ -80,4 +116,14 @@ test("六掷完成后提示正在排盘", () => {
   const throws = [1, 2, 3, 4, 5, 6].map((index) => ({ ...result, index }));
   const html = cast({ ...reading, throws, status: "charting" });
   assert.match(html, /六爻已成，正在排盘/);
+});
+
+test("英文自动起卦与铜钱记录不泄漏汉字", () => {
+  const html = renderIn("en", createElement(AutoCast, {
+    reading: { ...reading, question: "Will I get this job?", throws: [result] },
+    onReading: () => {},
+  }));
+  assert.match(html, /All six casts come from Arc block hashes/u);
+  assert.match(html, /First line.*1 back.*Young Yang/su);
+  assert.doesNotMatch(html, /[\p{Script=Han}]/u);
 });

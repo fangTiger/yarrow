@@ -11,6 +11,7 @@ import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
 import { BaziReading } from "../web/pages/BaziReading.js";
 import { NamingReading } from "../web/pages/NamingReading.js";
 import { QuestionResult } from "../web/pages/Reading.js";
+import { EnglishSummary } from "../web/components/EnglishReadingSections.js";
 import { applyReadingTranslation } from "../web/lib/reading-translation.js";
 import type { PublicReading } from "../web/lib/api.js";
 import { renderIn } from "./helpers/render-in.js";
@@ -32,6 +33,22 @@ test("结果页固定句式由中英字典提供", () => {
       assert.equal(typeof dictionary[key], "string", `${key} must be in the dictionary`);
     }
   }
+});
+
+test("英文结果写作期显示三家分析与白话总结进度", () => {
+  const base = {
+    kind: "question", status: "writing", question: "Will I get this job?",
+    schools: {
+      chengyi: { status: "done" }, jingfang: { status: "writing" },
+      shaoyong: { status: "pending" },
+    },
+  } as unknown as PublicReading;
+  const schools = renderIn("en", createElement(EnglishSummary, { reading: base }));
+  assert.match(schools, /Three classical schools are analyzing independently \(1\/3\)/u);
+  const summary = renderIn("en", createElement(EnglishSummary, {
+    reading: { ...base, summary: { status: "writing", basis: 3, retries: 0, attempts: 0 } },
+  }));
+  assert.match(summary, /Summarizing in plain language/u);
 });
 
 function completedTranslation(reading: StoredReading): StoredTranslation {
@@ -148,10 +165,18 @@ test("起名结果页中英渲染：保留姓名汉字，用结构化字段生�
     )).join("");
     const en = renderIn("en", createElement(NamingReading, { reading, onReading: noop }));
     assert.match(en, /Five Elements analysis/u);
+    assert.equal((en.match(/class="wuxing-track"/gu) ?? []).length, 5);
+    assert.equal((en.match(/class="wuxing-fill"/gu) ?? []).length, 5);
     assert.match(en, /Character analysis/u);
     assert.match(en, /Wood|Fire|Earth|Metal|Water/u);
     assert.match(en, /radical|sound classification/u);
     assertNoHan(en, names);
+
+    const writing = renderIn("en", createElement(NamingReading, {
+      reading: { ...reading, status: "writing",
+        summary: { status: "writing", basis: 3, retries: 0 } }, onReading: noop,
+    }));
+    assert.match(writing, /Summarizing in plain language/u);
 
     const zh = renderIn("zh", createElement(NamingReading, {
       reading: publicNamingReading(stored), onReading: noop,

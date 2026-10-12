@@ -5,6 +5,7 @@ import { WuxingPanel } from "../components/WuxingPanel.js";
 import { api } from "../lib/api.js";
 import { EnglishNamingReading } from "../components/EnglishNamingReading.js";
 import { useLang } from "../lib/i18n.js";
+import { useT } from "../lib/i18n.js";
 
 const FAMILY_META = {
   wuxing: { name: "五行补益", seal: "五" },
@@ -27,7 +28,9 @@ function subjectLine(reading: PublicNamingReading): string {
 function NamingSummary(props: {
   reading: PublicNamingReading;
   onReading(value: PublicNamingReading): void;
+  readonly?: boolean | undefined;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const { reading } = props;
@@ -37,14 +40,14 @@ function NamingSummary(props: {
     || (reading.status === "writing" && finished === 3 && !reading.summary)) {
     return (
       <section aria-live="polite" className="panel naming-summary pending">
-        <h2>三家合参</h2><p>正在写三家合参</p>
+        <h2>三家合参</h2><p>{t("wait.summary")}</p>
       </section>
     );
   }
   if (finished < 3) {
     return (
       <section aria-live="polite" className="panel naming-summary pending">
-        <h2>三家合参</h2><p>三家起名中（{finished}/3）</p>
+        <h2>三家合参</h2><p>{t("wait.schools", { finished })}</p>
       </section>
     );
   }
@@ -68,7 +71,7 @@ function NamingSummary(props: {
       <section className="panel naming-summary failed">
         <h2>三家合参</h2>
         <p>{summary?.error ?? "三家合参暂未生成，九个名字仍可查看。"}</p>
-        {canRetry ? (
+        {canRetry && !props.readonly ? (
           <button className="button" disabled={busy} onClick={() => void retry()} type="button">
             免费重试（还可 {remaining} 次）
           </button>
@@ -147,6 +150,7 @@ function NamingBasis({ reading }: { reading: PublicNamingReading }) {
 function ChineseNamingReading(props: {
   reading: PublicNamingReading;
   onReading(value: PublicNamingReading): void;
+  readonly?: boolean | undefined;
 }) {
   const [retrying, setRetrying] = useState<FamilyKey>();
   const [error, setError] = useState("");
@@ -169,7 +173,7 @@ function ChineseNamingReading(props: {
         {props.reading.question ? <p>{props.reading.question}</p> : null}
       </section>
       <WuxingPanel reading={props.reading} />
-      <NamingSummary reading={props.reading} onReading={props.onReading} />
+      <NamingSummary reading={props.reading} readonly={props.readonly} onReading={props.onReading} />
       <section aria-label="三家名字" className="naming-families">
         {(Object.keys(FAMILY_META) as FamilyKey[]).map((key) => {
           const meta = FAMILY_META[key];
@@ -194,7 +198,7 @@ function ChineseNamingReading(props: {
               {family.status === "failed" ? (
                 <div className="family-failed">
                   <p>{family.error ?? "本家暂未落笔"}</p>
-                  {remaining > 0 ? (
+                  {remaining > 0 && !props.readonly ? (
                     <button className="button" disabled={retrying === key}
                       onClick={() => void retry(key)} type="button">
                       免费重试（还可 {remaining} 次）
@@ -227,6 +231,7 @@ function ChineseNamingReading(props: {
 export function NamingReading(props: {
   reading: PublicNamingReading;
   onReading(value: PublicNamingReading): void;
+  readonly?: boolean | undefined;
 }) {
   const { lang } = useLang();
   return lang === "en" ? <EnglishNamingReading {...props} /> : <ChineseNamingReading {...props} />;

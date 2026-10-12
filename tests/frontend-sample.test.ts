@@ -1,0 +1,89 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import type { AnyPublicReading } from "../web/lib/api.js";
+import { createElement } from "react";
+import { renderIn } from "./helpers/render-in.js";
+import { chart, LINES } from "./helpers/sample-question.js";
+
+Object.assign(globalThis, {
+  __ARC_CHAIN_ID__: "5042002", __ARC_RPC_URL__: "https://rpc.testnet.arc.io",
+  __ARC_EXPLORER__: "https://testnet.arcscan.app", __WALLETCONNECT_PROJECT_ID__: "0".repeat(32),
+});
+const { route } = await import("../web/app.js");
+const { resolveBaziBirth } = await import("../web/pages/BaziReading.js");
+const { loadSampleReading, localizedSampleReading, sampleResult, SampleContent, SampleReading } =
+  await import("../web/pages/SampleReading.js");
+
+test("示例路由只接受问事、运势、起名", () => {
+  assert.deepEqual(route("#/sample/question"), { page: "sample", kind: "question" });
+  assert.deepEqual(route("#/sample/fortune"), { page: "sample", kind: "fortune" });
+  assert.deepEqual(route("#/sample/naming"), { page: "sample", kind: "naming" });
+  assert.deepEqual(route("#/sample/destiny"), { page: "home" });
+});
+
+test("示例文件缺失时返回空值，由页面显示示例准备中", async () => {
+  const missing = await loadSampleReading("question", async () => ({
+    ok: false, json: async () => ({}),
+  } as Response));
+  assert.equal(missing, null);
+  const pending = renderIn("zh", createElement(SampleContent, { reading: null, lang: "zh" }));
+  assert.match(pending, /示例准备中/u);
+  const loading = renderIn("en", createElement(SampleReading, { kind: "question" }));
+  assert.match(loading, /示例 · Sample reading/u);
+});
+
+test("英文示例叠加 JSON 自带译文", () => {
+  const reading = {
+    id: "abcdefghijklmnopqrstuvwxyz", kind: "question", createdAt: "2026-01-01T00:00:00Z",
+    question: "问题", status: "done", payment: { firstHash: "0x1" }, throws: [],
+    schools: {
+      chengyi: { status: "failed", retries: 2 }, jingfang: { status: "failed", retries: 2 },
+      shaoyong: { status: "failed", retries: 2 },
+    },
+    summary: { status: "done", basis: 0, retries: 0, output: {
+      conclusion: "中文结论", agreement: "", difference: "", explanation: [],
+      remedy: { principle: "", plan: [], avoid: [] },
+    } },
+    subject: { suggestedKey: "career", finalKey: "career", overridden: false, changes: 0 },
+    translation: { lang: "en", units: { summary: {
+      status: "done", sourceHash: "hash", attempts: 1, failures: 0,
+      texts: ["English conclusion"],
+    } } },
+  } as unknown as AnyPublicReading;
+  const english = localizedSampleReading(reading, "en");
+  const chinese = localizedSampleReading(reading, "zh");
+  assert.equal(english.kind === "question" ? english.summary?.output?.conclusion : "", "English conclusion");
+  assert.equal(chinese.kind === "question" ? chinese.summary?.output?.conclusion : "", "中文结论");
+});
+
+test("示例结果统一只读，八字明确传 birth=null，不读取本机生辰", () => {
+  const question = sampleResult({ kind: "question" } as never);
+  assert.equal(question.props.readonly, true);
+  const fortune = sampleResult({ kind: "fortune" } as never);
+  assert.equal(fortune.props.readonly, true);
+  assert.equal(fortune.props.birth, null);
+  let profileReads = 0;
+  assert.equal(resolveBaziBirth(null, () => {
+    profileReads += 1;
+    throw new Error("示例不得读取本机生辰");
+  }), null);
+  assert.equal(profileReads, 0);
+  const naming = sampleResult({ kind: "naming" } as never);
+  assert.equal(naming.props.readonly, true);
+});
+
+test("只读问事示例不渲染重试或改事项操作", () => {
+  const reading = {
+    id: "abcdefghijklmnopqrstuvwxyz", kind: "question", createdAt: "2026-01-01T00:00:00Z",
+    question: "这次面试能过吗？", status: "done", payment: { firstHash: `0x${"1".repeat(64)}` },
+    throws: [], lines: LINES, chart,
+    subject: { suggestedKey: "career", finalKey: "career", overridden: false, changes: 0 },
+    schools: {
+      chengyi: { status: "failed", retries: 0 }, jingfang: { status: "failed", retries: 0 },
+      shaoyong: { status: "failed", retries: 0 },
+    },
+    summary: { status: "failed", basis: 1, retries: 0, error: "暂未生成" },
+  } as unknown as AnyPublicReading;
+  const html = renderIn("zh", createElement(() => sampleResult(reading)));
+  assert.doesNotMatch(html, /<button|subject-change|免费重试|改事项/u);
+});

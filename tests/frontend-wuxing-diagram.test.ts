@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
 import { WuxingDiagram, wuxingRelations } from "../web/components/WuxingDiagram.js";
 
 const counts = { 木: 1, 火: 2, 土: 2, 金: 0, 水: 1 };
@@ -58,4 +59,9 @@ test("没有计数（商号未填店主生辰）时只标所用五行，不显�
   // 店铺没有八字可补，行业五行标「用」而不是「补」。
   assert.match(html, /<tspan class="bu"[^>]*>用<\/tspan>/u);
   assert.doesNotMatch(html, />补</u);
+});
+
+test("英文五行节点使用较小字号，长标签不会溢出圆圈", () => {
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.match(css, /html:lang\(en\)\s+\.wx-char\s*\{[^}]*font-size:\s*13px/su);
 });

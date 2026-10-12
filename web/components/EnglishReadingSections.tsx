@@ -2,12 +2,19 @@ import type { ReactNode } from "react";
 import type { AnyPublicReading } from "../lib/api.js";
 import { confidenceEn, schoolEn, verdictEn } from "../lib/result-format.js";
 import { useT } from "../lib/i18n.js";
+import { summaryStatus } from "../lib/reading-state.js";
 
 type InterpretedReading = Exclude<AnyPublicReading, { kind: "naming" }>;
 
 export function EnglishSummary({ reading }: { reading: InterpretedReading }) {
   const t = useT();
   const summary = reading.summary;
+  const status = summaryStatus(reading, t);
+  if (status.kind === "progress") {
+    return <section aria-live="polite" className="panel plain-summary pending">
+      <h2>{t("summary.title")}</h2><p>{status.text}</p>
+    </section>;
+  }
   if (!summary || summary.status !== "done" || !summary.output) return null;
   const output = summary.output;
   return (
@@ -60,6 +67,7 @@ export function EnglishSchoolArticle(props: {
   schoolKey: string;
   state: { status: string; retries: number; output?: Record<string, unknown> };
   onRetry(): void;
+  readonly?: boolean | undefined;
   children?: ReactNode;
 }) {
   const t = useT();
@@ -71,7 +79,7 @@ export function EnglishSchoolArticle(props: {
       <div><h3>{meta.name}<small>{meta.school}</small></h3>
         <p>{pending ? t("schools.pending") : props.state.status === "rejected"
           ? t("schools.rejected") : t("schools.failed")}</p>
-        {!pending ? <button className="button" disabled={remaining === 0}
+        {!pending && !props.readonly ? <button className="button" disabled={remaining === 0}
           onClick={props.onRetry} type="button">{remaining
             ? t("schools.retry", { count: remaining }) : t("schools.retryExhausted")}</button> : null}
       </div>

@@ -19,6 +19,7 @@ const SCHOOL_KEYS = ["chengyi", "jingfang", "shaoyong"] as const;
 export function EnglishQuestionResult(props: {
   reading: PublicReading;
   onReading(reading: PublicReading): void;
+  readonly?: boolean | undefined;
 }) {
   const t = useT();
   const [retryError, setRetryError] = useState("");
@@ -47,7 +48,7 @@ export function EnglishQuestionResult(props: {
       <span>{t("schools.questionIntro")}</span></summary>
       {retryError ? <p className="error" role="alert">{retryError}</p> : null}
       {SCHOOL_KEYS.map((key) => <EnglishSchoolArticle key={key} onRetry={() => void retry(key)}
-        schoolKey={key} state={reading.schools[key] as never} />)}
+        readonly={props.readonly} schoolKey={key} state={reading.schools[key] as never} />)}
     </details>
     <section aria-labelledby="hexagram-title" className="panel hexagram-panel">
       <div className="ask"><span className="label">{t("question.subject", {

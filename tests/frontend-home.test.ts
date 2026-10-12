@@ -37,6 +37,7 @@ import { classifyQuestion } from "../src/sanyi/classify.js";
 const { KindOptions } = await import("../web/components/KindOptions.js");
 const { BirthFields } = await import("../web/components/BirthFields.js");
 const { HorizonChips } = await import("../web/components/HorizonChips.js");
+const { SubjectSelect } = await import("../web/components/SubjectSelect.js");
 const { PLACEHOLDERS } = await import("../web/lib/home-entry.js");
 import { api } from "../web/lib/api.js";
 import { readFileSync } from "node:fs";
@@ -65,7 +66,11 @@ function formHarness(t?: TFunction) {
     useState(initial: unknown) {
       const index = stateIndex++;
       if (!(index in states)) states[index] = initial;
-      return [states[index], (next: unknown) => { states[index] = next; }];
+      return [states[index], (next: unknown) => {
+        states[index] = typeof next === "function"
+          ? (next as (current: unknown) => unknown)(states[index])
+          : next;
+      }];
     },
     useEffect(callback: () => (() => void) | undefined, deps: unknown[]) {
       const index = effectIndex++;
@@ -111,6 +116,11 @@ test("英文问题可从首页进入付款，直接可见文案不含汉字", as
   harness.render();
   t.mock.timers.tick(400);
   await Promise.resolve();
+  children = childrenOf(harness.render());
+  assert.ok(!children.some((child) => child.type === PaymentButton));
+  children.find((child) => child.type === KindOptions)!.props.onChange("question");
+  children = childrenOf(harness.render());
+  children.find((child) => child.type === SubjectSelect)!.props.onChange("career", "Career");
   children = childrenOf(harness.render());
   assert.ok(children.some((child) => child.type === PaymentButton));
   assert.match(textOf(children), /What do you seek\?/u);

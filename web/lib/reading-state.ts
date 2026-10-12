@@ -1,6 +1,7 @@
 // web/lib/reading-state.ts
 import type { AnyPublicReading, PublicReading } from "./api.js";
 import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
+import { type TFunction, zhT } from "./i18n.js";
 
 export type ReadingStage = "awaiting-throws" | "charting" | "writing" | "done" | "failed";
 type Schools = PublicReading["schools"];
@@ -79,7 +80,7 @@ export type SummaryStatus =
   | { kind: "none" };
 
 /** 白话总述面板的状态：起卦、排盘、三家落笔进度、写总述、完成或未生成；旧存档没有总述时为 none。 */
-export function summaryStatus(reading: AnyPublicReading): SummaryStatus {
+export function summaryStatus(reading: AnyPublicReading, t: TFunction = zhT): SummaryStatus {
   if (reading.status === "awaiting-throws") {
     return { kind: "progress", text: "起卦中" };
   }
@@ -88,13 +89,13 @@ export function summaryStatus(reading: AnyPublicReading): SummaryStatus {
   }
   const summary = reading.summary;
   if (summary?.status === "writing") {
-    return { kind: "progress", text: "正在写白话总述" };
+    return { kind: "progress", text: t("wait.summary") };
   }
   const states = (reading.kind === "naming" ? Object.values(reading.families) : Object.values(reading.schools))
     .map((school) => school.status);
   const finished = states.filter((status) => status !== "pending" && status !== "writing").length;
   if (finished < states.length) {
-    return { kind: "progress", text: `三家落笔中（${finished}/${states.length}）` };
+    return { kind: "progress", text: t("wait.schools", { finished }) };
   }
   if (!summary) {
     return { kind: "none" };

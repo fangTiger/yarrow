@@ -25,6 +25,12 @@ const output = {
   watch: { window: "下月中旬", condition: "若对方主动联系" },
 };
 const anchor = { title: "《象传》· 兑为泽", lines: ["丽泽，兑；君子以朋友讲习。"] };
+
+test("英文白话结论使用适合多行文本的字号与行高", () => {
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.match(css,
+    /html:lang\(en\)\s+\.summary-conclusion p\s*\{[^}]*font-size:\s*22px[^}]*line-height:\s*1\.4/su);
+});
 function reading(overrides: Record<string, unknown> = {}) {
   return {
     id: "abcdefghijklmnopqrstuvwxyz", kind: "question", question: "这次面试能过吗", status: "done",
@@ -48,9 +54,9 @@ test("总述状态：起卦中、排盘中、三家落笔进度、写作中、�
       chengyi: { status: "done", retries: 0 }, jingfang: { status: "writing", retries: 0 },
       shaoyong: { status: "failed", retries: 0 },
     },
-  })), { kind: "progress", text: "三家落笔中（2/3）" });
+  })), { kind: "progress", text: "三位古代流派正在各自分析（2/3）" });
   assert.deepEqual(summaryStatus(reading({ status: "writing", summary: { status: "writing", basis: 3 } })),
-    { kind: "progress", text: "正在写白话总述" });
+    { kind: "progress", text: "正在用白话总结" });
   assert.deepEqual(summaryStatus(reading()), { kind: "done" });
   assert.deepEqual(summaryStatus(reading({ summary: { status: "failed", basis: 2, retries: 0, error: "x" } })),
     { kind: "failed", text: "白话总述暂未生成", canRetry: true });
@@ -106,7 +112,7 @@ test("总述面板：未生成时给免费重试，写作中显示进度，运�
   const writing = renderToStaticMarkup(createElement(PlainSummaryPanel, {
     reading: reading({ status: "writing", summary: { status: "writing", basis: 3 } }), onReading: () => {},
   }));
-  assert.match(writing, /正在写白话总述/);
+  assert.match(writing, /正在用白话总结/);
   const fortune = renderToStaticMarkup(createElement(PlainSummaryPanel, {
     reading: reading({
       kind: "fortune",

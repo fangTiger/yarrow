@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createSanyiApi } from "../src/sanyi/api.js";
 import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
-import { publicNamingReading } from "../src/sanyi/naming/public.js";
+import { publicNamingReading, sanitizePublicNamingText } from "../src/sanyi/naming/public.js";
 import { statusForError } from "../src/sanyi/http-errors.js";
 import { namingBirth, namingFixture, namingProof } from "./helpers/naming-service.js";
 
@@ -15,6 +15,12 @@ const unusedQuestionService = {
   retrySummary: async () => { throw new Error("不应重试问事总述"); },
 };
 
+test("旧起名存档对外显示时移除内部候选编号", () => {
+  assert.equal(sanitizePublicNamingText("取 S01原句中暖、云二字"), "取 所引原句中暖、云二字");
+  assert.equal(sanitizePublicNamingText("参照 S02，兼顾 S03 的意境"),
+    "参照 所引诗句，兼顾 所引诗句 的意境");
+});
+
 test("公开视图补全全名、拼音、逐字信息、出处与合参所属家", async () => {
   const f = await namingFixture();
   try {
@@ -24,6 +30,11 @@ test("公开视图补全全名、拼音、逐字信息、出处与合参所属�
     });
     await f.naming.whenSettled(created.id);
     const stored = await f.naming.getReading(created.id);
+    const legacy = stored.families.shiwen.output;
+    assert.ok(legacy?.names[0]);
+    legacy.note = "取自 S01原句";
+    legacy.names[0].meaning = "S02 的意境";
+    legacy.names[0].why = "参照 S03";
     const view = publicNamingReading(stored);
     assert.equal(view.kind, "naming");
     assert.equal(view.basis.favorableNote, stored.basis.favorableNote);
@@ -45,6 +56,9 @@ test("公开视图补全全名、拼音、逐字信息、出处与合参所属�
     assert.ok(pick?.full.startsWith("张"));
     assert.ok(pick?.pinyin.includes(" "));
     assert.ok(["五行补益", "诗文出处", "音形字义"].includes(pick?.family ?? ""));
+    assert.match(view.families.shiwen.output?.note ?? "", /所引原句/u);
+    assert.match(view.families.shiwen.output?.names[0]?.meaning ?? "", /所引诗句/u);
+    assert.match(view.families.shiwen.output?.names[0]?.why ?? "", /所引诗句/u);
     assert.doesNotMatch(JSON.stringify(view), /1990-05-15|15:30/u);
   } finally {
     await f.close();

@@ -11,6 +11,7 @@ import type { ClassificationView } from "../lib/home-entry.js";
 import type { NamingRequest } from "../lib/home-entry.js";
 import { useT } from "../lib/i18n.js";
 import { paymentFailure } from "../lib/payment-error.js";
+import { WalletPaymentGuide } from "./WalletPaymentGuide.js";
 export function PaymentButton(props: {
   question: string;
   classification: ClassificationView;
@@ -61,7 +62,8 @@ export function PaymentButton(props: {
     ? t("payment.gasAfterConnect")
     : `${formatUnits(estimatedGasWei18, 18)} USDC`;
   return (
-    <div>
+    <div className="payment-area">
+      <WalletPaymentGuide />
       <details className="payment-details">
         <summary>{t("payment.details")}</summary>
         <p className="hint">

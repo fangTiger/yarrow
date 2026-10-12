@@ -1,5 +1,7 @@
 // web/components/Luopan.tsx
 import { createElement } from "react";
+import { TRIGRAMS_EN } from "../../src/sanyi/i18n/glossary.js";
+import { useLang } from "../lib/i18n.js";
 
 export const MOUNTAINS = [..."午丁未坤申庚酉辛戌乾亥壬子癸丑艮寅甲卯乙辰巽巳丙"] as const;
 export const BAGUA = [
@@ -13,11 +15,25 @@ export const BAGUA = [
   ["巽", "011"],
 ] as const;
 
+export const BAGUA_POSITIONS = {
+  离: "top", 坤: "top-right", 兑: "right", 乾: "bottom-right",
+  坎: "bottom", 艮: "bottom-left", 震: "left", 巽: "top-left",
+} as const;
+
+const TRIGRAM_IMAGES_ZH = {
+  离: "火", 坤: "地", 兑: "泽", 乾: "天", 坎: "水", 艮: "山", 震: "雷", 巽: "风",
+} as const;
+
 const CENTER = 160;
 
-function Trigram({ bits, index }: { bits: string; index: number }) {
+function roundCoordinate(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function Trigram({ bits, index, name }: { bits: string; index: number; name: keyof typeof BAGUA_POSITIONS }) {
   return (
-    <g transform={`rotate(${index * 45} ${CENTER} ${CENTER})`}>
+    <g data-position={BAGUA_POSITIONS[name]} data-trigram={name}
+      transform={`rotate(${index * 45} ${CENTER} ${CENTER})`}>
       {[...bits].map((bit, line) => {
         const y = CENTER - 108 - line * 6;
         return bit === "1" ? (
@@ -33,10 +49,11 @@ function Trigram({ bits, index }: { bits: string; index: number }) {
   );
 }
 
-export function Luopan() {
+export function Luopan({ home = false }: { home?: boolean }) {
+  const { lang } = useLang();
   return (
-    <svg aria-hidden="true" className="luopan" viewBox="0 0 320 320">
-      <g className="luopan-rotor">
+    <svg aria-hidden="true" className={`luopan${home ? " luopan-home" : ""}`} viewBox="0 0 320 320">
+      <g className="luopan-outer-ring">
         {[150, 126, 100].map((radius) => (
           <circle className="luopan-ring" cx={CENTER} cy={CENTER} key={radius} r={radius} />
         ))}
@@ -45,7 +62,7 @@ export function Luopan() {
           return createElement(
             "g",
             { key: `${mountain}-${index}` },
-            <text
+            lang === "zh" ? <text
               className={"子午卯酉".includes(mountain) ? "luopan-cardinal" : ""}
               dominantBaseline="central"
               textAnchor="middle"
@@ -54,7 +71,7 @@ export function Luopan() {
               y="22"
             >
               {mountain}
-            </text>,
+            </text> : null,
             <line
               className="luopan-tick"
               transform={`rotate(${rotation + 7.5} ${CENTER} ${CENTER})`}
@@ -65,9 +82,25 @@ export function Luopan() {
             />,
           );
         })}
+      </g>
+      <g className="luopan-fixed">
         {BAGUA.map(([name, bits], index) => (
-          <Trigram bits={bits} index={index} key={name} />
+          <Trigram bits={bits} index={index} key={name} name={name} />
         ))}
+        {home ? BAGUA.map(([name], index) => {
+          const angle = (-90 + index * 45) * Math.PI / 180;
+          const x = roundCoordinate(CENTER + 73 * Math.cos(angle));
+          const y = roundCoordinate(CENTER + 73 * Math.sin(angle));
+          const english = TRIGRAMS_EN[name];
+          const label = lang === "en"
+            ? `${english.pinyin} · ${english.image}`
+            : `${name} · ${TRIGRAM_IMAGES_ZH[name]}`;
+          return <text className="luopan-trigram-label" dominantBaseline="central" key={name}
+            textAnchor="middle" x={x} y={y}>{label}</text>;
+        }) : null}
+        {home ? <g className="luopan-center"><circle cx={CENTER} cy={CENTER} r="27" />
+          <text className="luopan-center-seal" dominantBaseline="central" textAnchor="middle"
+            x={CENTER} y={CENTER}>问</text></g> : null}
       </g>
     </svg>
   );

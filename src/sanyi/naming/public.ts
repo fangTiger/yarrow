@@ -12,6 +12,11 @@ const FAMILY_NAMES: Readonly<Record<NamingFamilyKey, string>> = {
   yinyi: "音形字义",
 };
 
+/** 旧存档可能把只供模型定位的 Sxx 候选编号写进公开文案，对外统一改成人话。 */
+export function sanitizePublicNamingText(value: string): string {
+  return value.replace(/S\d{2}原句/gu, "所引原句").replace(/S\d{2}/gu, "所引诗句");
+}
+
 function fullName(reading: StoredNamingReading, given: string): string {
   return reading.target === "person" ? `${reading.surname ?? ""}${given}` : given;
 }
@@ -82,6 +87,8 @@ function visibleName(reading: StoredNamingReading, key: NamingFamilyKey, value: 
   } as const;
   return {
     ...value,
+    meaning: sanitizePublicNamingText(value.meaning),
+    why: sanitizePublicNamingText(value.why),
     full,
     pinyin: pinyin(full),
     chars,
@@ -114,7 +121,11 @@ function visibleFamily(
   return {
     ...visible,
     ...(normalized ? {
-      output: { ...normalized, names: normalized.names.map((name) => visibleName(reading, key, name)) },
+      output: {
+        ...normalized,
+        note: sanitizePublicNamingText(normalized.note),
+        names: normalized.names.map((name) => visibleName(reading, key, name)),
+      },
     } : {}),
   };
 }

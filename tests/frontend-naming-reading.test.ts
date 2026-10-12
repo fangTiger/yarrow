@@ -334,13 +334,13 @@ test("写作进度、合参进度与单家免费重试分别可见", () => {
     },
   } as unknown as PublicNamingReading;
   assert.match(renderToStaticMarkup(createElement(NamingReading, { reading: writing, onReading: noop })),
-    /三家起名中（1\/3）/u);
+    /三位古代流派正在各自分析（1\/3）/u);
 
   const summaryWriting = {
     ...baseReading, status: "writing", summary: { status: "writing", basis: 3, retries: 0 },
   } as unknown as PublicNamingReading;
   assert.match(renderToStaticMarkup(createElement(NamingReading, { reading: summaryWriting, onReading: noop })),
-    /正在写三家合参/u);
+    /正在用白话总结/u);
 
   const failed = {
     ...baseReading,

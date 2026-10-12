@@ -191,4 +191,5 @@ test("诗文家要求名字自成词意，不机械截取原句相邻字", () =>
   const shiwen = NAMING_FAMILIES.find((family) => family.key === "shiwen");
   assert.match(shiwen?.systemPrompt ?? "", /自成词意/);
   assert.match(shiwen?.systemPrompt ?? "", /不得机械截取/);
+  assert.match(shiwen?.systemPrompt ?? "", /why.*不写候选编号.*原句或书名篇名/su);
 });

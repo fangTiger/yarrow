@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { NamingFormValues, NamingTarget } from "../lib/home-entry.js";
 import { BirthFields } from "./BirthFields.js";
 import { type TFunction, useT } from "../lib/i18n.js";
+import { filterSurnames } from "../lib/surnames.js";
 
 function targetLabel(target: NamingTarget, t: TFunction): string {
   return t(target === "person" ? "naming.person" : "naming.business");
@@ -15,6 +16,7 @@ export function NamingFields(props: {
   onChange(value: NamingFormValues): void;
 }) {
   const t = useT();
+  const [surnameInitial, setSurnameInitial] = useState("");
   const { value } = props;
   const update = (patch: Partial<NamingFormValues>) => props.onChange({ ...value, ...patch });
   const targetOptions = (["person", "business"] as const);
@@ -83,16 +85,31 @@ export function NamingFields(props: {
   return (
     <div className="naming-fields">
       {targetRow}
-      <label className="naming-surname">
-        <span>{t("naming.surname")}</span>
-        <input
-          aria-label={t("naming.surname")}
-          maxLength={2}
-          onChange={(event) => update({ surname: event.target.value })}
-          placeholder={t("naming.surnamePlaceholder")}
-          value={value.surname}
-        />
-      </label>
+      <div className="surname-picker">
+        <label className="naming-surname">
+          <span>{t("naming.surname")}</span>
+          <input
+            aria-label={t("naming.surname")}
+            maxLength={2}
+            onChange={(event) => update({ surname: event.target.value })}
+            placeholder={t("naming.surnamePlaceholder")}
+            value={value.surname}
+          />
+        </label>
+        <details className="surname-options">
+          <summary>{t("naming.surnameChoose")}</summary>
+          <label className="surname-filter"><span>{t("naming.surnameFilter")}</span>
+            <input aria-label={t("naming.surnameFilter")} maxLength={1}
+              onChange={(event) => setSurnameInitial(event.target.value)} type="search"
+              value={surnameInitial} /></label>
+          <div className="surname-grid">
+            {filterSurnames(surnameInitial).map((surname) => <button className="surname-option"
+              key={surname.char} onClick={() => update({ surname: surname.char })} type="button">
+              <b>{surname.char}</b> {surname.pinyin} · {surname.meaning}
+            </button>)}
+          </div>
+        </details>
+      </div>
       <div aria-label={t("naming.nameLengthGroup")} className="detail-row" role="group">
         <span className="detail-label">{t("naming.length")}</span>
         <div className="chips">

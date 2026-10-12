@@ -35,6 +35,7 @@ const SUBJECT_LABELS: Record<string, string> = Object.fromEntries(
 function ChineseQuestionResult(props: {
   reading: PublicReading;
   onReading: (reading: PublicReading) => void;
+  readonly?: boolean | undefined;
 }) {
   const { reading } = props;
   const [retryError, setRetryError] = useState("");
@@ -70,6 +71,7 @@ function ChineseQuestionResult(props: {
           }
         }}
         reading={reading}
+        readonly={props.readonly}
       />
       <RemedyPanel reading={reading} />
       <details className="panel schools-fold">
@@ -85,6 +87,7 @@ function ChineseQuestionResult(props: {
             onRetry={() => void retry(key)}
             school={reading.schools[key]}
             schoolKey={key}
+            readonly={props.readonly}
           />
         ))}
       </details>
@@ -95,7 +98,7 @@ function ChineseQuestionResult(props: {
             </span>
             <p>{reading.question}</p>
           </div>
-          <SubjectChange onReading={props.onReading} reading={reading} />
+          {!props.readonly ? <SubjectChange onReading={props.onReading} reading={reading} /> : null}
           <div className="hexagram-stage">
             <div className="luopan-wrap">
               <Luopan />
@@ -134,6 +137,7 @@ function ChineseQuestionResult(props: {
 export function QuestionResult(props: {
   reading: PublicReading;
   onReading: (reading: PublicReading) => void;
+  readonly?: boolean | undefined;
 }) {
   const { lang } = useLang();
   return lang === "en" ? <EnglishQuestionResult {...props} /> : <ChineseQuestionResult {...props} />;

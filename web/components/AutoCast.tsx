@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api, type PublicReading } from "../lib/api.js";
 import { HexagramFigure } from "./HexagramFigure.js";
 import { ThrowRecord } from "./ThrowRecord.js";
+import { useLang, useT } from "../lib/i18n.js";
 
 /** 付款后服务端自动连掷六次；页面只负责逐爻展示，Arc 长时间无响应时提供「继续起卦」。 */
 export function AutoCast(props: {
@@ -11,6 +12,8 @@ export function AutoCast(props: {
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const t = useT();
+  const { lang } = useLang();
   const throws = [...props.reading.throws].sort((left, right) => left.index - right.index);
   const count = throws.length;
   const lines = throws.map((item) => item.value % 2 === 1);
@@ -25,27 +28,29 @@ export function AutoCast(props: {
         props.onReading(value);
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "暂未能继续，请稍后再试");
+      setError(lang === "en" ? t("result.tryLater")
+        : caught instanceof Error ? caught.message : "暂未能继续，请稍后再试");
     } finally {
       setBusy(false);
     }
   };
-  let status = <p className="hint">正在等待 Arc 新区块 · 第 {count + 1} 掷</p>;
+  let status = <p className="hint">{t("wait.castProgress", { count: count + 1 })}</p>;
   if (paused) {
     status = (
       <div className="throw-pause">
-        <p className="error">Arc 网络暂不可用，恢复后自动继续。已成之爻不会改变。</p>
-        <button className="button" disabled={busy} onClick={() => void resume()} type="button">继续起卦</button>
+        <p className="error">{t("wait.castPaused")}</p>
+        <button className="button" disabled={busy} onClick={() => void resume()}
+          type="button">{t("wait.castResume")}</button>
         {error ? <p className="error">{error}</p> : null}
       </div>
     );
   } else if (count >= 6) {
-    status = <p className="good-text">六爻已成，正在排盘。</p>;
+    status = <p className="good-text">{t("wait.castComplete")}</p>;
   }
   return (
     <section aria-live="polite" className="panel coin-throw">
-      <h1>自动起卦</h1>
-      <p className="hint">付款已确认，铜钱自动连掷六次，卦从初爻向上长出。</p>
+      <h1>{t("wait.castTitle")}</h1>
+      <p className="hint">{t("wait.castProof")}</p>
       {count < 6 && !paused ? (
         <div aria-hidden="true" className="cast-coins" key={count}>
           <i className="cast-coin" />
@@ -53,7 +58,7 @@ export function AutoCast(props: {
           <i className="cast-coin" />
         </div>
       ) : null}
-      <HexagramFigure label={`已成${count}爻`} lines={lines} moving={moving} />
+      <HexagramFigure label={t("wait.castFigure", { count })} lines={lines} moving={moving} />
       {status}
       <ThrowRecord throws={throws} />
     </section>

@@ -30,6 +30,7 @@ function EnglishBaziSchool(props: {
   reading: PublicBaziReading;
   schoolKey: typeof BAZI_KEYS[number];
   onRetry(): void;
+  readonly?: boolean | undefined;
 }) {
   const t = useT();
   const state = props.reading.schools[props.schoolKey];
@@ -45,7 +46,7 @@ function EnglishBaziSchool(props: {
       output: sanitized as unknown as Record<string, unknown> }
     : { status: state.status, retries: state.retries };
   return <EnglishSchoolArticle schoolKey={props.schoolKey} onRetry={props.onRetry}
-    state={visibleState}>
+    readonly={props.readonly} state={visibleState}>
     {output ? <p className="use-god"><b>{t("bazi.yongShen", { value: output.useGod })}</b></p> : null}
   </EnglishSchoolArticle>;
 }
@@ -53,6 +54,7 @@ function EnglishBaziSchool(props: {
 export function EnglishBaziReading(props: {
   reading: PublicBaziReading;
   onReading(value: PublicBaziReading): void;
+  readonly?: boolean | undefined;
 }) {
   const t = useT();
   const [error, setError] = useState("");
@@ -76,7 +78,7 @@ export function EnglishBaziReading(props: {
       {reading.kind === "fortune" && reading.consensusTenths !== null
         ? <p>{t("bazi.consensus", { value: confidenceEn(reading.consensusTenths) })}</p> : null}
       {BAZI_KEYS.map((key) => <EnglishBaziSchool key={key} reading={reading} schoolKey={key}
-        onRetry={() => void retry(key)} />)}
+        onRetry={() => void retry(key)} readonly={props.readonly} />)}
     </details>
     <section className="panel"><div className="ask"><span className="label">
       {reading.kind === "fortune" ? t("bazi.kindFortune") : t("bazi.kindDestiny")} · {t("bazi.title")}

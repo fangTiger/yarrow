@@ -4,9 +4,10 @@ import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
 import { BAZI_KEYS, BAZI_NAMES } from "../lib/liunian-chart.js";
 import { repairNote } from "../lib/reading-state.js";
 const META = { shenxiaozhan: "格局派 · 子平真诠", yuchuntai: "调候派 · 穷通宝鉴", rentieqiao: "扶抑派 · 滴天髓阐微" };
-export function BaziSchools({ reading, onRetry }: {
+export function BaziSchools({ reading, onRetry, readonly: readOnly }: {
     reading: PublicBaziReading;
     onRetry(key: typeof BAZI_KEYS[number]): void;
+    readonly?: boolean | undefined;
 }) {
     const scores = BAZI_KEYS.flatMap(key => {
         const state = reading.schools[key];
@@ -33,7 +34,9 @@ export function BaziSchools({ reading, onRetry }: {
         {fortune?.timing ? <div className="watch"><span className="tag" title={fortune.timing.condition}>{fortune.timing.window}</span></div> : null}
         <details><summary>展开详断</summary>{output.sections.map((section) => <p key={section.title}><b>{section.title}：</b>{section.text}</p>)}<ul>{output.advice.map((advice) => <li key={advice}>{advice}</li>)}</ul><p>{output.evidence.map((item) => `${item.ref}：${item.claim}`).join("；")}</p></details>
       </> : <p>{state.status === "failed" ? "此家暂未落笔" : "正在落笔"}</p>}
-        {state.status === "failed" ? <button type="button" disabled={state.retries >= 2 || reading.status !== "done"} onClick={() => onRetry(key)}>免费重试 · 剩余 {Math.max(0, 2 - state.retries)} 次</button> : null}
+        {state.status === "failed" && !readOnly ? <button type="button"
+          disabled={state.retries >= 2 || reading.status !== "done"}
+          onClick={() => onRetry(key)}>免费重试 · 剩余 {Math.max(0, 2 - state.retries)} 次</button> : null}
       </article>;
         })}
   </section>;

@@ -6,8 +6,9 @@ import {
   type BirthFormValues,
 } from "../lib/birth-profile.js";
 import {
-  DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint, deriveEntry, entryGate,
-  fromClassification, namingBirthProblem, namingGate, namingRequest, paymentClassification,
+  DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint, classificationHint,
+  deriveEntry, entryGate, fromClassification, namingBirthProblem, namingGate, namingRequest,
+  paymentClassification,
   type ClassificationView, type EntryChoice, type NamingFormValues,
 } from "../lib/home-entry.js";
 import { BirthFields } from "./BirthFields.js";
@@ -16,7 +17,7 @@ import { KindOptions } from "./KindOptions.js";
 import { NamingFields } from "./NamingFields.js";
 import { PaymentButton } from "./PaymentButton.js";
 import { SubjectSelect } from "./SubjectSelect.js";
-import { useT } from "../lib/i18n.js";
+import { useLang, useT } from "../lib/i18n.js";
 
 function initialBirthValues(): BirthFormValues {
   const stored = loadBirthProfile();
@@ -26,6 +27,7 @@ function initialBirthValues(): BirthFormValues {
 /** 首页中间的问卦表单：类型选项、细项、问题框、生辰行与问卦按钮。 */
 export function QuestionForm() {
   const t = useT();
+  const { lang } = useLang();
   const [question, setQuestion] = useState("");
   const [view, setView] = useState<ClassificationView>();
   const [choice, setChoice] = useState<EntryChoice>({});
@@ -64,7 +66,7 @@ export function QuestionForm() {
       clearTimeout(timer);
     };
   }, [question, t, valid]);
-  const entry = deriveEntry(view, choice, t);
+  const entry = deriveEntry(view, choice, t, lang);
   const naming = { ...namingValues, target: entry.target };
   const problem = birthProblem(birthValues, t);
   const namingProblem = namingBirthProblem(naming.birth, naming.unborn, t);
@@ -75,13 +77,13 @@ export function QuestionForm() {
     ? namingGate({ questionLength: length, value: naming, birthProblem: namingProblem }, t)
     : entryGate({
         questionLength: length, classified: view !== undefined, entry, birthProblem: problem, birthShown,
-      }, t);
+      }, t, { requireManualKind: lang === "en", requireQuestionSubject: lang === "en" });
   // 分类结果一到就显示结果，不再停留在「识别中」。
   let status = "";
   if (entry.unsupported) {
     status = entry.unsupported;
   } else if (view) {
-    status = autoHint(entry, t) ?? "";
+    status = lang === "en" ? classificationHint(view, t) : autoHint(entry, t) ?? "";
   } else if (classifying) {
     status = t("status.classifying");
   }
@@ -107,23 +109,36 @@ export function QuestionForm() {
   return (
     <form className="home-form" onSubmit={(event) => event.preventDefault()}>
       <h1 className="ask-title">{t("home.title")}</h1>
-      <KindOptions onChange={(kind) => setChoice({ ...choice, kind })} value={entry.kind} />
+      <KindOptions onChange={(kind) => setChoice((current) => ({ ...current, kind }))}
+        onExample={(kind, example) => {
+          setQuestion(example);
+          setChoice((current) => ({ ...current, kind }));
+          setView(undefined);
+          setClassifying(false);
+          setError("");
+        }} value={entry.kind} />
       {entry.kind === "question" ? (
         <SubjectSelect
           detected={view?.subjectKey ?? ""}
-          onChange={(subjectKey, subject) => setChoice({ ...choice, subjectKey, subject })}
+          onChange={(subjectKey, subject) => setChoice((current) => ({
+            ...current, subjectKey, subject,
+          }))}
           value={choice.subjectKey ?? ""}
+          required={lang === "en"}
         />
       ) : null}
       {entry.kind === "fortune" ? (
-        <HorizonChips onChange={(horizon) => setChoice({ ...choice, horizon })} value={entry.horizon} />
+        <HorizonChips onChange={(horizon) => setChoice((current) => ({ ...current, horizon }))}
+          value={entry.horizon} />
       ) : null}
       {entry.kind === "naming" ? (
         <NamingFields
           birthProblem={namingProblem}
           onChange={(value) => {
             setNamingValues(value);
-            if (value.target !== entry.target) setChoice({ ...choice, target: value.target });
+            if (value.target !== entry.target) {
+              setChoice((current) => ({ ...current, target: value.target }));
+            }
           }}
           questionField={questionField}
           value={naming}
@@ -144,6 +159,12 @@ export function QuestionForm() {
         />
       ) : null}
       {error ? <p className="error">{error}</p> : null}
+      <aside className="sample-entry">
+        <strong>{t("sample.entry")}</strong>
+        <div><a href="#/sample/question">{t("sample.question")}</a>
+          <a href="#/sample/fortune">{t("sample.fortune")}</a>
+          <a href="#/sample/naming">{t("sample.naming")}</a></div>
+      </aside>
       {gate.ready ? (
         <PaymentButton
           birth={needsBirth ? toBirthInput(birthValues, t) : null}
@@ -158,6 +179,7 @@ export function QuestionForm() {
       {!gate.ready && gate.reason && gate.reason !== status ? (
         <p className="hint gate">{gate.reason}</p>
       ) : null}
+      <p className="payment-disclaimer">{t("home.disclaimer")}</p>
     </form>
   );
 }

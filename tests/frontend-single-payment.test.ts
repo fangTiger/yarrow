@@ -18,10 +18,11 @@ test("付款钩子使用服务器配置与单笔写合约并等待回执", async
   assert.match(source, /walletErrorMessage\(/u);
   assert.doesNotMatch(source, /sendCalls|forceAtomic|deposit|allowance|approve/u);
 });
-test("首页与结果页均放置钱包栏且收款说明来自配置", async () => {
-  const [home, reading, button, bar, styles] = await Promise.all([
+test("首页与结果页均放置钱包栏且付款区承载测试币引导", async () => {
+  const [home, reading, button, bar, guide, styles] = await Promise.all([
     readFile("web/pages/Home.tsx", "utf8"), readFile("web/pages/Reading.tsx", "utf8"),
     readFile("web/components/PaymentButton.tsx", "utf8"), readFile("web/components/WalletBar.tsx", "utf8"),
+    readFile("web/components/WalletPaymentGuide.tsx", "utf8"),
     readFile("web/styles/components.css", "utf8"),
   ]);
   assert.match(home, /<WalletBar/u);
@@ -31,6 +32,7 @@ test("首页与结果页均放置钱包栏且收款说明来自配置", async ()
   assert.match(bar, /ConnectButton\.Custom/u);
   assert.match(bar, /balanceOf/u);
   assert.match(bar, /openAccountModal/u);
-  assert.match(bar, /t\("wallet\.faucet"\)/u);
+  assert.doesNotMatch(bar, /wallet\.faucet/u);
+  assert.match(guide, /t\("wallet\.faucet"\)/u);
   assert.match(styles, /\.wallet-button[^}]*min-height: 44px/su);
 });

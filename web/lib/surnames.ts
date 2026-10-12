@@ -109,3 +109,13 @@ export const COMMON_SURNAMES: readonly SurnameOption[] = [
   { char: "向", pinyin: "Xiàng", meaning: "direction, toward" },
   { char: "汤", pinyin: "Tāng", meaning: "soup; Tang of Shang" },
 ];
+
+function plainInitial(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/gu, "").slice(0, 1).toLowerCase();
+}
+
+/** 姓氏选择器按拼音首字母筛选；空值返回全部 100 项。 */
+export function filterSurnames(initial: string): readonly SurnameOption[] {
+  const query = initial.trim().slice(0, 1).toLowerCase();
+  return query ? COMMON_SURNAMES.filter(({ pinyin }) => plainInitial(pinyin) === query) : COMMON_SURNAMES;
+}

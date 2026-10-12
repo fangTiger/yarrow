@@ -27,6 +27,7 @@ export function EnglishWuxingPanel({ reading }: { reading: PublicNamingReading }
   const t = useT();
   const { basis } = reading;
   const counts = basis.counts as Partial<Record<(typeof ELEMENTS)[number], number>> | undefined;
+  const max = counts ? Math.max(1, ...ELEMENTS.map((element) => counts[element] ?? 0)) : 1;
   const favorable = basis.favorable ?? [];
   const missing = basis.missing ?? [];
   const note = basis.favorableNote && !/\p{Script=Han}/u.test(basis.favorableNote)
@@ -41,7 +42,10 @@ export function EnglishWuxingPanel({ reading }: { reading: PublicNamingReading }
       missing={missing} {...(dayMaster ? { dayMaster } : {})} />
       <div className="wuxing-side">{counts ? <div className="wuxing-bars">{ELEMENTS.map((element) => <div
         className="wuxing-row" data-element={elementEn(element)} key={element}>
-        <span className="wuxing-name">{elementEn(element)}</span><strong>{counts[element] ?? 0}</strong>
+        <span className="wuxing-name">{elementEn(element)}</span>
+        <span aria-hidden="true" className="wuxing-track"><span className="wuxing-fill"
+          style={{ width: `${(counts[element] ?? 0) / max * 100}%` }} /></span>
+        <strong>{counts[element] ?? 0}</strong>
         <span className="wuxing-marks">{missing.includes(element) ? <em>{t("wuxing.missing")}</em> : null}
           {favorable.includes(element) ? <b>{t("wuxing.supplement")}</b> : null}</span></div>)}</div> : null}
         <p className="wuxing-conclusion">{note}</p><div className="wuxing-virtues">

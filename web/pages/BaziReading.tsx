@@ -22,10 +22,19 @@ type BaziReadingProps = {
     reading: PublicBaziReading;
     onReading(value: PublicBaziReading): void;
     birth?: BirthProfileInput | null;
+    readonly?: boolean | undefined;
 };
 
-function ChineseBaziReading({ reading, onReading, birth: supplied }: BaziReadingProps) {
-    const [birth] = useState(() => supplied === undefined ? loadBirthProfile() : supplied);
+/** 显式传 null 的示例页不得回退读取本机生辰；只有未传参数时才读取档案。 */
+export function resolveBaziBirth(
+    supplied: BirthProfileInput | null | undefined,
+    loader: () => BirthProfileInput | null = loadBirthProfile,
+): BirthProfileInput | null {
+    return supplied === undefined ? loader() : supplied;
+}
+
+function ChineseBaziReading({ reading, onReading, birth: supplied, readonly: readOnly }: BaziReadingProps) {
+    const [birth] = useState(() => resolveBaziBirth(supplied));
     const [error, setError] = useState("");
     const currentYear = resolveFortuneContext("year", () => new Date(reading.createdAt), reading.chart.sect).anchorYear;
     const currentDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(new Date(reading.createdAt));
@@ -41,7 +50,7 @@ function ChineseBaziReading({ reading, onReading, birth: supplied }: BaziReading
         }
     };
     return <div className="bazi" data-reading={reading.id}>
-    <PlainSummaryPanel reading={reading} onReading={(value) => {
+    <PlainSummaryPanel readonly={readOnly} reading={reading} onReading={(value) => {
             if (value.kind === "destiny" || value.kind === "fortune") {
                 onReading(value);
             }
@@ -49,9 +58,9 @@ function ChineseBaziReading({ reading, onReading, birth: supplied }: BaziReading
     <RemedyPanel reading={reading}/>
     <details className="panel schools-fold">
       <summary>看三家依据<span>沈孝瞻 · 余春台 · 任铁樵，三派各自取用神、各自下断</span></summary>
-      <BaziSchools reading={reading} onRetry={(key) => void retry(key)}/>
+      <BaziSchools reading={reading} readonly={readOnly} onRetry={(key) => void retry(key)}/>
     </details>
-    <div className="hero bazi-main"><section className="panel"><div className="ask"><span className="label">所问之事 · {reading.kind === "fortune" ? "运势" : "命理"}</span><p>{reading.question}</p></div><BirthCorrection reading={reading} birth={birth} boundary={<DayBoundaryChange reading={reading} birth={birth} onReading={onReading}/>}/><BaziTable chart={reading.chart} analysis={reading.analysis}/><div className="minor">{([["胎元", reading.chart.taiYuan], ["命宫", reading.chart.mingGong], ["身宫", reading.chart.shenGong]] as const).map(([label, value]) => <span key={label}><b>{label}</b> {value ?? "缺"}</span>)}<span><b>起运</b> {reading.chart.luck ? `${reading.chart.luck.start.years} 年 ${reading.chart.luck.start.months} 月 ${reading.chart.luck.start.days} 天（${reading.chart.luck.start.solarDate} 交运）${reading.chart.luck.approximate ? " · 正午估算" : ""}` : "需补时辰确认"}</span></div></section></div>
+    <div className="hero bazi-main"><section className="panel"><div className="ask"><span className="label">所问之事 · {reading.kind === "fortune" ? "运势" : "命理"}</span><p>{reading.question}</p></div><BirthCorrection reading={reading} birth={birth} boundary={readOnly ? null : <DayBoundaryChange reading={reading} birth={birth} onReading={onReading}/>}/><BaziTable chart={reading.chart} analysis={reading.analysis}/><div className="minor">{([["胎元", reading.chart.taiYuan], ["命宫", reading.chart.mingGong], ["身宫", reading.chart.shenGong]] as const).map(([label, value]) => <span key={label}><b>{label}</b> {value ?? "缺"}</span>)}<span><b>起运</b> {reading.chart.luck ? `${reading.chart.luck.start.years} 年 ${reading.chart.luck.start.months} 月 ${reading.chart.luck.start.days} 天（${reading.chart.luck.start.solarDate} 交运）${reading.chart.luck.approximate ? " · 正午估算" : ""}` : "需补时辰确认"}</span></div></section></div>
     {error ? <p className="error" role="alert">{error}</p> : null}
     <BaziLuck chart={reading.chart} currentYear={currentYear} currentDate={currentDate}/>
     {reading.kind === "fortune" ? <LiuNianPanel reading={reading} currentYear={currentYear}/> : null}
@@ -63,6 +72,7 @@ function ChineseBaziReading({ reading, onReading, birth: supplied }: BaziReading
 export function BaziReading(props: BaziReadingProps) {
     const { lang } = useLang();
     return lang === "en"
-        ? <EnglishBaziReading reading={props.reading} onReading={props.onReading} />
+        ? <EnglishBaziReading reading={props.reading} onReading={props.onReading}
+            readonly={props.readonly} />
         : <ChineseBaziReading {...props} />;
 }

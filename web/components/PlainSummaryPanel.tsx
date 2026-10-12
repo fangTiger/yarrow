@@ -8,6 +8,7 @@ import { useT } from "../lib/i18n.js";
 export function PlainSummaryPanel(props: {
   reading: AnyPublicReading;
   onReading: (reading: AnyPublicReading) => void;
+  readonly?: boolean | undefined;
 }) {
   const t = useT();
   const [busy, setBusy] = useState(false);
@@ -16,7 +17,7 @@ export function PlainSummaryPanel(props: {
   if (reading.kind === "naming") {
     return null;
   }
-  const status = summaryStatus(reading);
+  const status = summaryStatus(reading, t);
   if (status.kind === "none") {
     return null;
   }
@@ -52,7 +53,7 @@ export function PlainSummaryPanel(props: {
       <section className="panel plain-summary failed">
         {head}
         <p>{status.kind === "failed" ? status.text : t("summary.notReady")}</p>
-        {status.kind === "failed" && status.canRetry ? (
+        {status.kind === "failed" && status.canRetry && !props.readonly ? (
           <button className="button" disabled={busy} onClick={() => void retry()} type="button">
             {t("result.retryFree", { count: remaining })}
           </button>

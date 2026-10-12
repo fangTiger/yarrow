@@ -14,6 +14,7 @@ export function SchoolCard(props: {
   schoolKey: keyof typeof META;
   school: School;
   onRetry: () => void;
+  readonly?: boolean | undefined;
 }) {
   const t = useT();
   const meta = META[props.schoolKey];
@@ -36,9 +37,10 @@ export function SchoolCard(props: {
         <div>
           <h3>{meta.name}<small>{meta.school}</small></h3>
           <p>{message}</p>
-          <button className="button" disabled={remaining === 0} onClick={props.onRetry} type="button">
+          {!props.readonly ? <button className="button" disabled={remaining === 0}
+            onClick={props.onRetry} type="button">
             {remaining ? t("schools.retry", { count: remaining }) : t("schools.retryExhausted")}
-          </button>
+          </button> : null}
         </div>
       </article>
     );

@@ -18,6 +18,22 @@ const FAMILY_NAMES: Readonly<Record<NamingFamilyKey, string>> = {
   yinyi: "音形字义",
 };
 
+const INTERNAL_CANDIDATE_ID = /S\d{2}/gu;
+
+function candidateIdErrors(output: NamingFamilyOutput): string[] {
+  const texts = [
+    ["note", output.note],
+    ...output.names.flatMap((name) => [["meaning", name.meaning], ["why", name.why]] as const),
+  ] as const;
+  return texts.some(([, text]) => /S\d{2}/u.test(text))
+    ? ["note、meaning、why 不得包含内部候选编号，请重写"]
+    : [];
+}
+
+function repairCandidateReference(value: string): string {
+  return value.replace(/S\d{2}\s*原句/gu, "所引原句").replace(INTERNAL_CANDIDATE_ID, "所引原句");
+}
+
 /** element 仅用于商号五行家在行业未命中时声明自选五行。 */
 export function normalizeFamilyOutput(
   key: NamingFamilyKey,
@@ -188,6 +204,7 @@ export function auditFamily(
   ctx: NamingContext,
 ): string[] {
   const errors = namingFamilyLanguageErrors(output);
+  errors.push(...candidateIdErrors(output));
   errors.push(...forbiddenError("本家思路", [output.note]));
   const seen = new Set<string>();
   for (const name of output.names) {
@@ -265,13 +282,19 @@ export function repairFamily(
       continue;
     }
     seen.add(name.given);
-    names.push(common.repairable.length > 0 ? {
+    const visibleName = {
       ...name,
+      meaning: repairCandidateReference(name.meaning),
+      why: repairCandidateReference(name.why),
+    };
+    names.push(common.repairable.length > 0 ? {
+      ...visibleName,
       chars: repairedChars(name),
       tags: validTags(name.tags) ? name.tags : fallbackTags(name.given),
-    } : name);
+    } : visibleName);
   }
-  const note = forbiddenWords(output.note).length > 0 ? "本家按既定规则取名。" : output.note;
+  const note = forbiddenWords(output.note).length > 0
+    ? "本家按既定规则取名。" : repairCandidateReference(output.note);
   return {
     output: { ...output, note, names },
     removed: output.names.length - names.length,

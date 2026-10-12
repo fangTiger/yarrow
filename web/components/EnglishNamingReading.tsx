@@ -5,12 +5,14 @@ import { api } from "../lib/api.js";
 import { useT } from "../lib/i18n.js";
 import { EnglishNameCard } from "./EnglishNameCard.js";
 import { EnglishWuxingPanel } from "./EnglishWuxingPanel.js";
+import { summaryStatus } from "../lib/reading-state.js";
 
 const FAMILY_KEYS = ["wuxing", "shiwen", "yinyi"] as const;
 
 export function EnglishNamingReading(props: {
   reading: PublicNamingReading;
   onReading(value: PublicNamingReading): void;
+  readonly?: boolean | undefined;
 }) {
   const t = useT();
   const [error, setError] = useState("");
@@ -21,6 +23,7 @@ export function EnglishNamingReading(props: {
     ? t("naming.subjectBusiness", { length: reading.length })
     : t("naming.subjectPerson", { surname: reading.surname ?? "", length, gender,
       unborn: reading.unborn ? t("naming.unbornSuffix") : "" });
+  const summaryState = summaryStatus(reading, t);
   const retry = async (key: typeof FAMILY_KEYS[number]) => {
     try {
       const value = await api.retrySchool(reading.id, key);
@@ -33,7 +36,10 @@ export function EnglishNamingReading(props: {
     <section className="panel naming-hero"><span className="label">{subject}</span>
       <h1>{t("naming.request")}</h1><p>{reading.question}</p></section>
     <EnglishWuxingPanel reading={reading} />
-    {reading.summary?.status === "done" && reading.summary.output ? <section
+    {summaryState.kind === "progress" ? <section aria-live="polite"
+      className="panel naming-summary pending"><h2>{t("naming.summary")}</h2>
+      <p>{summaryState.text}</p></section>
+      : reading.summary?.status === "done" && reading.summary.output ? <section
       aria-label={t("naming.summary")} className="panel naming-summary">
       <header className="panel-head"><h2>{t("naming.summary")}</h2><p>{t("naming.summaryIntro")}</p></header>
       <div className="summary-names">{reading.summary.output.picks.map((pick) => <article
@@ -49,7 +55,8 @@ export function EnglishNamingReading(props: {
         <h2>{meta.name}</h2><p>{family.output?.note ?? (family.status === "writing"
           ? t("schools.pending") : t("schools.failed"))}</p></header>
         {family.output?.names.map((name) => <EnglishNameCard familyKey={key} key={name.given} name={name} />)}
-        {family.status === "failed" ? <button className="button" type="button" onClick={() => void retry(key)}>
+        {family.status === "failed" && !props.readonly ? <button className="button" type="button"
+          onClick={() => void retry(key)}>
           {t("schools.retry", { count: Math.max(0, 2 - family.retries) })}</button> : null}
       </section>;
     })}

@@ -127,6 +127,24 @@ test("诗文家核对候选编号及每个取名字", () => {
     .join("\n"), /清.*不在所引诗句中/);
 });
 
+test("核对拒绝对外文案中的内部候选编号，修补时改写为所引原句", () => {
+  const leaked = output(namingName("河洲", {
+    sourceId: "S01",
+    meaning: "取 S01 原句的水岸意象",
+    why: "取S01中河、洲二字",
+  }));
+  leaked.note = "依 S01 原句取名";
+  assert.match(auditFamily("shiwen", leaked, context).join("\n"), /候选编号.*重写/u);
+  const repaired = repairFamily("shiwen", leaked, context).output;
+  assert.doesNotMatch([
+    repaired.note,
+    ...repaired.names.flatMap((name) => [name.meaning, name.why]),
+  ].join("\n"), /S\d{2}/u);
+  assert.match(repaired.note, /所引原句/u);
+  assert.match(repaired.names[0]?.meaning ?? "", /所引原句/u);
+  assert.match(repaired.names[0]?.why ?? "", /所引原句/u);
+});
+
 test("音义家禁止全名同调，叠字除外", () => {
   assert.match(auditFamily("yinyi", output(namingName("思清")), context).join("\n"),
     /思清.*姓名声调全同/);
