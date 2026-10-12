@@ -2,7 +2,8 @@
 import { StructuredOutputError, validateStructuredOutput,
   type StructuredOutputProvider } from "../agent/provider.js";
 import { auditBaziOutput } from "./bazi-audit.js";
-import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA, checkBaziConsistency, type BaziSchoolOutput,
+import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA, baziLanguageErrors,
+  checkBaziConsistency, type BaziSchoolOutput,
   } from "./bazi-schema.js";
 import { repairBazi } from "./repair.js";
 import { schemaHints } from "./schema-hints.js";
@@ -66,10 +67,12 @@ export async function runBaziSchool(deps: {
     }
     if (lastValid) {
       const repaired = repairBazi(lastValid, facts, input.chart, input.horizon);
-      return {
-        status: "done", output: repaired.output, calls,
-        removed: repaired.removed, adjusted: repaired.adjusted,
-      };
+      if (baziLanguageErrors(repaired.output).length === 0) {
+        return {
+          status: "done", output: repaired.output, calls,
+          removed: repaired.removed, adjusted: repaired.adjusted,
+        };
+      }
     }
     return { status: "failed", error: "断语三次都不符合输出格式，请稍后重试", calls };
   } catch {

@@ -11,6 +11,8 @@ export interface BirthProfileInput {
   isLeapMonth: boolean;
   time: { hour: number; minute: number } | null;
   gender: "male" | "female";
+  /** IANA 出生地时区；旧数据缺省按 Asia/Shanghai。 */
+  timeZone?: string;
   city?: string;
   longitude?: number;
 }
@@ -21,6 +23,7 @@ export interface NormalizedBirthProfile {
   longitude: number | null;
   mainlandDst: boolean;
   birthplace: string | null;
+  timeZone: string;
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -59,6 +62,15 @@ export function normalizeBirthProfile(input: unknown): NormalizedBirthProfile {
   const time = timeKnown ? record(body.time) : null;
   const hour = time ? integer(time.hour, "小时", 0, 23) : 12;
   const minute = time ? integer(time.minute, "分钟", 0, 59) : 0;
+  const timeZone = body.timeZone === undefined ? "Asia/Shanghai" : body.timeZone;
+  if (typeof timeZone !== "string" || timeZone.trim() === "") {
+    throw new Error("出生地时区须为 IANA 时区名称");
+  }
+  try {
+    new Intl.DateTimeFormat("en", { timeZone }).format(0);
+  } catch {
+    throw new Error("出生地时区须为有效的 IANA 时区名称");
+  }
   if (calendar === "lunar") {
     try {
       if (body.isLeapMonth && lunarPkg.LunarYear.fromYear(year).getLeapMonth() !== month) {
@@ -100,5 +112,5 @@ export function normalizeBirthProfile(input: unknown): NormalizedBirthProfile {
   }
   return { civil, timeKnown, gender, longitude,
     mainlandDst: !["香港", "澳门", "台北"].includes(String(body.city)),
-    birthplace: typeof body.city === "string" ? body.city : null };
+    birthplace: typeof body.city === "string" ? body.city : null, timeZone };
 }

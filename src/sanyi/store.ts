@@ -101,6 +101,9 @@ export interface StoredBaziReading {
     solar: "applied" | "not-applied";
     timeKnown: boolean;
     sect: 1 | 2;
+    timeZone?: string;
+    localStandard?: string;
+    disambiguation?: import("../calendar/birth-instant.js").TimeDisambiguation;
   };
   context: import("./fortune-context.js").FortuneContext;
   almanac: AlmanacResult;

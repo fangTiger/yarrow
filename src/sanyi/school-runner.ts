@@ -7,6 +7,7 @@ import { schemaHints } from "./schema-hints.js";
 import {
   QUESTION_SCHOOL_SCHEMA,
   checkVerdictConsistency,
+  questionLanguageErrors,
   type QuestionSchoolOutput,
 } from "./schema.js";
 import type { QuestionSchool } from "./schools/shared.js";
@@ -90,10 +91,12 @@ export async function runSchool(
   }
   if (lastValid) {
     const repaired = repairQuestion(lastValid, input.facts);
-    return {
-      status: "done", output: repaired.output, calls,
-      removed: repaired.removed, adjusted: repaired.adjusted,
-    };
+    if (questionLanguageErrors(repaired.output).length === 0) {
+      return {
+        status: "done", output: repaired.output, calls,
+        removed: repaired.removed, adjusted: repaired.adjusted,
+      };
+    }
   }
   return { status: "failed", error: "断语三次都不符合输出格式，请稍后重试", calls };
 }

@@ -6,6 +6,8 @@ import {
 import {
   auditFamily,
   auditNamingSummary,
+  namingFamilyLanguageErrors,
+  namingSummaryLanguageErrors,
   normalizeFamilyOutput,
   repairFamily,
   repairNamingSummary,
@@ -83,7 +85,8 @@ export async function runNamingFamily(
   }
   if (lastValid) {
     const repaired = repairFamily(input.family.key, lastValid, input.ctx);
-    if (repaired.output.names.length > 0) {
+    if (repaired.output.names.length > 0
+      && namingFamilyLanguageErrors(repaired.output).length === 0) {
       return {
         status: "done",
         output: normalizeFamilyOutput(input.family.key, repaired.output, input.ctx),
@@ -118,6 +121,7 @@ export type NamingSummaryInput =
 
 export const NAMING_SUMMARY_SYSTEM_PROMPT = `你是「三易」起名的三家合参执笔人。
 你的任务是从程序给出的合格名字中推荐 2 至 3 个，概括已落笔各家思路，并给出实际挑选方法。
+- 问题可能是英文，请仍用中文作答。
 - picks 只能使用合格名字清单中的名字，不得另起新名；推荐不得重复，reason 不超过 60 字。
 - 优先推荐没有音律提示的名字；推荐带音律提示的名字时，理由必须如实说明该提示。
 - 优先推荐综合分高且补上所缺五行的名字，推荐理由写明补了什么。
@@ -232,7 +236,8 @@ export async function runNamingSummary(
       family?.names.map(({ given }) => given) ?? [],
     ])) as Partial<Record<NamingFamilyKey, string[]>>;
     const repaired = repairNamingSummary(lastValid, families, input.target, sameTone);
-    if (repaired.output.picks.length >= 2) {
+    if (repaired.output.picks.length >= 2
+      && namingSummaryLanguageErrors(repaired.output).length === 0) {
       return { status: "done", output: repaired.output, calls, removed: repaired.removed };
     }
   }

@@ -1,5 +1,6 @@
 // src/sanyi/schema.ts
 import type { JsonSchema } from "../agent/schemas.js";
+import { chineseBodyErrors } from "./language-guard.js";
 export type Verdict = "大吉" | "吉" | "平" | "凶" | "大凶";
 export interface QuestionSchoolOutput {
   verdict: Verdict;
@@ -59,18 +60,33 @@ export const QUESTION_SCHOOL_SCHEMA = {
     },
   },
 } as const satisfies JsonSchema;
-export function checkVerdictConsistency(
-  output: Pick<QuestionSchoolOutput, "verdict" | "confidenceTenths">,
+
+export function questionLanguageErrors(
+  output: Partial<Pick<QuestionSchoolOutput, "headline" | "reason" | "sections" | "timing" | "advice">>,
 ): string[] {
+  return output.headline === undefined ? [] : chineseBodyErrors([
+    output.headline,
+    output.reason ?? "",
+    ...(output.sections ?? []).flatMap((section) => [section.title, section.text]),
+    ...(output.timing ? [output.timing.window, output.timing.condition] : []),
+    ...(output.advice ?? []),
+  ]);
+}
+
+export function checkVerdictConsistency(
+  output: Pick<QuestionSchoolOutput, "verdict" | "confidenceTenths">
+    & Partial<Pick<QuestionSchoolOutput, "headline" | "reason" | "sections" | "timing" | "advice">>,
+): string[] {
+  const errors = questionLanguageErrors(output);
   const { verdict, confidenceTenths } = output;
   if ((verdict === "大吉" || verdict === "吉") && confidenceTenths < 6) {
-    return [`${verdict}对应的把握不得低于六成`];
+    errors.push(`${verdict}对应的把握不得低于六成`);
   }
   if (verdict === "平" && (confidenceTenths < 4 || confidenceTenths > 6)) {
-    return ["平对应的把握必须为四至六成"];
+    errors.push("平对应的把握必须为四至六成");
   }
   if ((verdict === "凶" || verdict === "大凶") && confidenceTenths > 4) {
-    return [`${verdict}对应的把握不得高于四成`];
+    errors.push(`${verdict}对应的把握不得高于四成`);
   }
-  return [];
+  return errors;
 }

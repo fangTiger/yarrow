@@ -1,5 +1,10 @@
 // web/components/BirthFields.tsx
-import { LUNAR_DAYS, LUNAR_MONTHS, type BirthFormValues } from "../lib/birth-profile.js";
+import {
+  COMMON_TIME_ZONES,
+  LUNAR_DAYS,
+  LUNAR_MONTHS,
+  type BirthFormValues,
+} from "../lib/birth-profile.js";
 
 type BirthFieldValues = Omit<BirthFormValues, "gender"> & {
   gender: BirthFormValues["gender"] | "any";
@@ -22,6 +27,7 @@ export function BirthFields<T extends BirthFieldValues>(props: BirthFieldsProps<
   const unborn = naming && props.unborn === true;
   const started = [values.year, values.month, values.day, values.time].some((value) => value !== "");
   const dated = [values.year, values.month, values.day].every((value) => value !== "");
+  const commonTimeZone = (COMMON_TIME_ZONES as readonly string[]).includes(values.timeZone);
   function update(patch: Partial<BirthFieldValues>): void {
     props.onChange({ ...values, ...patch } as T);
   }
@@ -126,6 +132,32 @@ export function BirthFields<T extends BirthFieldValues>(props: BirthFieldsProps<
             />
           </label>
         ) : null}
+        <label className="birth-time birth-zone">
+          <span>出生地时区</span>
+          <select
+            aria-label="出生地时区"
+            className="birth-input"
+            onChange={(event) => update({
+              timeZone: event.target.value === "__other__" ? "" : event.target.value,
+            })}
+            value={commonTimeZone ? values.timeZone : "__other__"}
+          >
+            {COMMON_TIME_ZONES.map((timeZone) => (
+              <option key={timeZone} value={timeZone}>{timeZone}</option>
+            ))}
+            <option value="__other__">其他</option>
+          </select>
+          {!commonTimeZone ? (
+            <input
+              aria-label="其他 IANA 出生地时区"
+              className="birth-input"
+              onChange={(event) => update({ timeZone: event.target.value })}
+              placeholder="如 Europe/London"
+              type="text"
+              value={values.timeZone}
+            />
+          ) : null}
+        </label>
         <div aria-label="性别" className="seg" role="group">
           {(["male", "female", ...(unborn ? ["any" as const] : [])] as const).map((gender) => (
             <button

@@ -1,11 +1,9 @@
 // src/sanyi/bazi-reading-service.ts
 import { almanacAt } from "../calendar/almanac.js";
-import { buildBaziChart } from "../calendar/bazi.js";
 import { analyzeBazi } from "../calendar/bazi-relations.js";
 import { lookupQiongtong } from "../calendar/qiongtong.js";
-import { correctBirthTime } from "../calendar/solar-time.js";
 import type { StructuredOutputProvider } from "../agent/provider.js";
-import { normalizeBirthProfile } from "./birth-profile.js";
+import { buildBirthChart } from "./birth-chart.js";
 import { buildBaziFacts } from "./bazi-facts.js";
 import { derivedChart, yearConsensus } from "./bazi-public.js";
 import { auditBaziSummaryProse } from "./bazi-audit.js";
@@ -40,20 +38,8 @@ function schools(previous?: StoredBaziReading["schools"]): StoredBaziReading["sc
 }
 function chartFrom(birth: unknown, sect: 1 | 2, targetYear: number) {
   try {
-    const profile = normalizeBirthProfile(birth);
-    const corrected = correctBirthTime(profile.civil, profile.timeKnown, profile.longitude,
-      { mainlandDst: profile.mainlandDst, birthplace: profile.birthplace });
-    const chart = derivedChart(buildBaziChart({ corrected: corrected.effective, gender: profile.gender,
-      timeKnown: profile.timeKnown, sect, targetYear }));
-    let dst: StoredBaziReading["correction"]["dst"] = "not-applied";
-    if (!profile.mainlandDst) {
-      dst = "skipped-region";
-    } else if (corrected.steps.some((step) => step.kind === "dst" && step.applied)) {
-      dst = "applied";
-    }
-    const solar = corrected.steps.some((step) => step.kind === "solar" && step.applied)
-      ? "applied" as const : "not-applied" as const;
-    return { chart, correction: { dst, solar, timeKnown: profile.timeKnown, sect } };
+    const result = buildBirthChart(birth, sect, targetYear);
+    return { chart: derivedChart(result.chart), correction: result.correction };
   } catch {
     // 校验或底层错误可能包含输入，不把异常原文传播到日志或存档。
     throw new SanyiInputError("生辰格式或排盘口径无效，请检查填写内容");

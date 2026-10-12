@@ -23,7 +23,7 @@ function fields(values: BirthFormValues, problem: string | null = null): string 
   }));
 }
 
-test("生辰行只收日期、时间（选填）、性别，没有勾选与告知，不出现城市与经纬度", () => {
+test("生辰行只收日期、时间（选填）、出生地时区与性别，不出现城市与经纬度", () => {
   const html = fields(filled);
   assert.match(html, /type="date"/);
   assert.match(html, /value="1990-05-15"/);
@@ -33,7 +33,8 @@ test("生辰行只收日期、时间（选填）、性别，没有勾选与告�
   assert.match(html, />女</);
   assert.doesNotMatch(html, /type="checkbox"/);
   assert.doesNotMatch(html, /不知道时辰|记住|仅存本机|只存本机|分享链接/);
-  assert.doesNotMatch(html, /城市|经度|经纬|出生地|港澳台|真太阳时/);
+  assert.match(html, /出生地时区/);
+  assert.doesNotMatch(html, /城市|经度|经纬|港澳台|真太阳时/);
   assert.doesNotMatch(html, forbidden);
 });
 

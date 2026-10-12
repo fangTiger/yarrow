@@ -7,6 +7,7 @@ import type {
   NamingName,
   NamingSummaryOutput,
 } from "./schema.js";
+import { chineseBodyErrors } from "../language-guard.js";
 
 export const NAMING_FORBIDDEN =
   /开光|法器|符咒|符箓|护身符|转运|化煞|吉祥物|摆件|放生|捐款|供奉|烧香|五格|三才|数理|天格|人格|地格|总格|外格|[\u3041-\u3096\u30a1-\u30fa\u30fb]/gu;
@@ -39,6 +40,23 @@ function forbiddenError(label: string, texts: readonly string[]): string[] {
 
 function nameTexts(name: NamingName): string[] {
   return [name.meaning, name.why, ...name.chars.map(({ gloss }) => gloss)];
+}
+
+export function namingFamilyLanguageErrors(output: NamingFamilyOutput): string[] {
+  return chineseBodyErrors([
+    output.note,
+    ...output.names.flatMap((name) => [
+      name.meaning, name.why,
+      ...name.chars.flatMap((char) => [char.gloss, char.sense]),
+      ...name.tags,
+    ]),
+  ]);
+}
+
+export function namingSummaryLanguageErrors(output: NamingSummaryOutput): string[] {
+  return chineseBodyErrors([
+    ...output.picks.map((pick) => pick.reason), output.overview, ...output.tips,
+  ]);
 }
 
 interface CommonNameAudit {
@@ -169,7 +187,8 @@ export function auditFamily(
   output: NamingFamilyOutput,
   ctx: NamingContext,
 ): string[] {
-  const errors = forbiddenError("本家思路", [output.note]);
+  const errors = namingFamilyLanguageErrors(output);
+  errors.push(...forbiddenError("本家思路", [output.note]));
   const seen = new Set<string>();
   for (const name of output.names) {
     const common = commonNameAudit(name, ctx);
@@ -297,7 +316,7 @@ export function auditNamingSummary(
     sameToneNames?: readonly string[];
   } = {},
 ): string[] {
-  const errors: string[] = [];
+  const errors: string[] = namingSummaryLanguageErrors(output);
   const allowed = new Set(valid);
   const sameTone = new Set(options.sameToneNames ?? []);
   const withoutSameTone = new Set(valid.filter((given) => !sameTone.has(given)));

@@ -2,6 +2,7 @@
 import type { JsonSchema } from "../agent/schemas.js";
 import type { BaziChart } from "../calendar/bazi.js";
 import type { FortuneHorizon } from "./classify.js";
+import { chineseBodyErrors } from "./language-guard.js";
 import { QUESTION_SCHOOL_SCHEMA, checkVerdictConsistency, type QuestionSchoolOutput,
   type Verdict } from "./schema.js";
 export interface DestinySchoolOutput {
@@ -63,12 +64,24 @@ export const FORTUNE_SCHOOL_SCHEMA = {
     },
   },
 } as const satisfies JsonSchema;
+
+export function baziLanguageErrors(output: BaziSchoolOutput): string[] {
+  return chineseBodyErrors([
+    output.useGod, output.headline, output.reason,
+    ...output.sections.flatMap((section) => [section.title, section.text]),
+    ...output.advice,
+    ...("timing" in output && output.timing ? [output.timing.window, output.timing.condition] : []),
+    ...("years" in output ? output.years.map((year) => year.note) : []),
+  ]);
+}
+
 export function checkBaziConsistency(output: BaziSchoolOutput, chart: BaziChart,
   horizon: FortuneHorizon): string[] {
+  const errors = baziLanguageErrors(output);
   if (!("years" in output)) {
-    return [];
+    return errors;
   }
-  const errors = checkVerdictConsistency(output);
+  errors.push(...checkVerdictConsistency(output));
   for (const item of output.years) {
     errors.push(...checkVerdictConsistency(item).map((error) => `${item.year} 年：${error}`));
   }

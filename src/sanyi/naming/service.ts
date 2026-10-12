@@ -1,9 +1,7 @@
-import { buildBaziChart } from "../../calendar/bazi.js";
 import { analyzeBazi } from "../../calendar/bazi-relations.js";
 import { lookupQiongtong } from "../../calendar/qiongtong.js";
-import { correctBirthTime } from "../../calendar/solar-time.js";
 import type { StructuredOutputProvider } from "../../agent/provider.js";
-import { normalizeBirthProfile } from "../birth-profile.js";
+import { buildBirthChart } from "../birth-chart.js";
 import { derivedChart } from "../bazi-public.js";
 import type { SanyiFeeProof, SanyiFeeVerifier } from "../fee.js";
 import { SanyiInputError } from "../http-errors.js";
@@ -111,16 +109,7 @@ function chartBasis(input: NamingCreateInput, targetYear: number): Pick<
     return { pillars: null, elements: [], tiaohou: null };
   }
   try {
-    const profile = normalizeBirthProfile(birthFor(input));
-    const corrected = correctBirthTime(profile.civil, profile.timeKnown, profile.longitude,
-      { mainlandDst: profile.mainlandDst, birthplace: profile.birthplace });
-    const chart = derivedChart(buildBaziChart({
-      corrected: corrected.effective,
-      gender: input.gender === "any" ? "male" : profile.gender,
-      timeKnown: profile.timeKnown,
-      sect: 1,
-      targetYear,
-    }));
+    const chart = derivedChart(buildBirthChart(birthFor(input), 1, targetYear).chart);
     const tiaohou = lookupQiongtong(chart.dayMaster, chart.pillars.month.branch);
     const pillars = {
         year: chart.pillars.year.ganZhi,

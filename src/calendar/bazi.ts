@@ -89,7 +89,10 @@ export interface BaziChart {
   warnings: readonly string[];
 }
 export interface BaziInput {
+  /** 日柱、时柱采用的当地标准时；旧路径仍是项目校正后的北京时间。 */
   corrected: CivilTime;
+  /** 海外路径的北京钟面 A；提供时由它决定年月、胎元、大运与起运。 */
+  yearMonth?: CivilTime;
   gender: "male" | "female";
   sect: 1 | 2;
   timeKnown: boolean;
@@ -119,6 +122,59 @@ function pillar(key: PillarKey, label: string, ganZhi: string, stemGod: string,
   return { key, label, ganZhi, stem: ganZhi.slice(0, 1), branch: ganZhi.slice(1),
     stemGod, hidden, diShi, naYin };
 }
+
+type ExtendedLunarUtil = typeof lunarPkg.LunarUtil & {
+  GAN: string[];
+  ZHI: string[];
+  MONTH_ZHI: string[];
+  CHANG_SHENG: string[];
+  CHANG_SHENG_OFFSET: Record<string, number>;
+  NAYIN: Record<string, string>;
+};
+
+function derivedPillar(key: PillarKey, label: string, ganZhi: string, dayStem: string): BaziPillar {
+  const util = lunarPkg.LunarUtil as ExtendedLunarUtil;
+  const branch = ganZhi.slice(1);
+  const stems = util.ZHI_HIDE_GAN[branch];
+  const naYin = util.NAYIN[ganZhi];
+  const dayIndex = util.GAN.indexOf(dayStem) - 1;
+  const branchIndex = util.ZHI.indexOf(branch) - 1;
+  const offset = util.CHANG_SHENG_OFFSET[dayStem];
+  if (!stems || !naYin || dayIndex < 0 || branchIndex < 0 || offset === undefined) {
+    throw new Error("LunarUtil 四柱表缺失");
+  }
+  const diShiIndex = (offset + (dayIndex % 2 === 0 ? branchIndex : -branchIndex) + 24) % 12;
+  return pillar(key, label, ganZhi, godFor(dayStem, ganZhi.slice(0, 1)), stems,
+    stems.map((stem) => godFor(dayStem, stem)), util.CHANG_SHENG[diShiIndex]!, naYin);
+}
+
+/** 年月来自 A、时支来自 B 时，按 LunarUtil 同一套表重算命宫与身宫。 */
+function hybridGong(yearGan: string, monthZhi: string, timeZhi: string): {
+  mingGong: string;
+  shenGong: string;
+} {
+  const util = lunarPkg.LunarUtil as ExtendedLunarUtil;
+  const yearGanIndex = util.GAN.indexOf(yearGan) - 1;
+  const monthZhiIndex = util.MONTH_ZHI.indexOf(monthZhi);
+  const mingTimeIndex = util.MONTH_ZHI.indexOf(timeZhi);
+  const shenTimeIndex = util.ZHI.indexOf(timeZhi);
+  if (yearGanIndex < 0 || monthZhiIndex < 0 || mingTimeIndex < 0 || shenTimeIndex < 0) {
+    throw new Error("LunarUtil 命身宫表缺失");
+  }
+  const ganZhi = (offset: number) => {
+    let ganIndex = (yearGanIndex + 1) * 2 + offset;
+    while (ganIndex > 10) ganIndex -= 10;
+    const stem = util.GAN[ganIndex];
+    const branch = util.MONTH_ZHI[offset];
+    if (!stem || !branch) throw new Error("LunarUtil 命身宫索引缺失");
+    return stem + branch;
+  };
+  const mingSum = monthZhiIndex + mingTimeIndex;
+  const mingOffset = (mingSum >= 14 ? 26 : 14) - mingSum;
+  let shenOffset = monthZhiIndex + shenTimeIndex;
+  if (shenOffset > 12) shenOffset -= 12;
+  return { mingGong: ganZhi(mingOffset), shenGong: ganZhi(shenOffset) };
+}
 function independentAnnual(year: number, birthYear: number, dayStem: string): AnnualLuck {
   const stems = "甲乙丙丁戊己庚辛壬癸";
   const branches = "寅卯辰巳午未申酉戌亥子丑";
@@ -141,6 +197,7 @@ function independentAnnual(year: number, birthYear: number, dayStem: string): An
 }
 export function buildBaziChart(input: BaziInput): BaziChart {
   assertCivilTime(input.corrected);
+  if (input.yearMonth) assertCivilTime(input.yearMonth);
   if (input.sect !== 1 && input.sect !== 2) {
     throw new Error("换日口径须为 1 或 2");
   }
@@ -151,21 +208,37 @@ export function buildBaziChart(input: BaziInput): BaziChart {
     throw new Error("所问年份仅支持 1900–2099 年");
   }
   const birth = input.timeKnown ? input.corrected : { ...input.corrected, hour: 12, minute: 0, second: 0 };
+  const yearMonthBirth = input.yearMonth
+    ? (input.timeKnown ? input.yearMonth : { ...input.yearMonth, hour: 12, minute: 0, second: 0 })
+    : birth;
   const eight = lunarPkg.Solar.fromYmdHms(birth.year, birth.month, birth.day, birth.hour,
     birth.minute, birth.second).getLunar().getEightChar();
   eight.setSect(input.sect);
-  const year = pillar("year", "年柱", eight.getYear(), eight.getYearShiShenGan(),
-    eight.getYearHideGan(), eight.getYearShiShenZhi(), eight.getYearDiShi(), eight.getYearNaYin());
-  const month = pillar("month", "月柱", eight.getMonth(), eight.getMonthShiShenGan(),
-    eight.getMonthHideGan(), eight.getMonthShiShenZhi(), eight.getMonthDiShi(), eight.getMonthNaYin());
+  const yearMonthEight = input.yearMonth
+    ? lunarPkg.Solar.fromYmdHms(yearMonthBirth.year, yearMonthBirth.month, yearMonthBirth.day,
+      yearMonthBirth.hour, yearMonthBirth.minute, yearMonthBirth.second).getLunar().getEightChar()
+    : eight;
+  yearMonthEight.setSect(input.sect);
+  const sameYearMonth = yearMonthEight.getYear() === eight.getYear()
+    && yearMonthEight.getMonth() === eight.getMonth();
+  const year = !input.yearMonth || sameYearMonth
+    ? pillar("year", "年柱", eight.getYear(), eight.getYearShiShenGan(),
+      eight.getYearHideGan(), eight.getYearShiShenZhi(), eight.getYearDiShi(), eight.getYearNaYin())
+    : derivedPillar("year", "年柱", yearMonthEight.getYear(), eight.getDay().slice(0, 1));
+  const month = !input.yearMonth || sameYearMonth
+    ? pillar("month", "月柱", eight.getMonth(), eight.getMonthShiShenGan(),
+      eight.getMonthHideGan(), eight.getMonthShiShenZhi(), eight.getMonthDiShi(), eight.getMonthNaYin())
+    : derivedPillar("month", "月柱", yearMonthEight.getMonth(), eight.getDay().slice(0, 1));
   const day = pillar("day", "日柱", eight.getDay(), "日主", eight.getDayHideGan(),
     eight.getDayShiShenZhi(), eight.getDayDiShi(), eight.getDayNaYin());
   const time = input.timeKnown ? pillar("time", "时柱", eight.getTime(), eight.getTimeShiShenGan(),
     eight.getTimeHideGan(), eight.getTimeShiShenZhi(), eight.getTimeDiShi(), eight.getTimeNaYin()) : null;
-  const midyear = lunarPkg.Solar.fromYmd(birth.year, 7, 1).getLunar().getEightChar().getYear();
-  const birthLiChunYear = eight.getYear() === midyear ? birth.year : birth.year - 1;
+  const midyear = lunarPkg.Solar.fromYmd(yearMonthBirth.year, 7, 1).getLunar().getEightChar().getYear();
+  const birthLiChunYear = yearMonthEight.getYear() === midyear
+    ? yearMonthBirth.year : yearMonthBirth.year - 1;
   const jie = input.timeKnown ? null
-    : lunarPkg.Solar.fromYmd(birth.year, birth.month, birth.day).getLunar().getCurrentJie();
+    : lunarPkg.Solar.fromYmd(yearMonthBirth.year, yearMonthBirth.month, yearMonthBirth.day)
+      .getLunar().getCurrentJie();
   const warnings: string[] = [];
   if (!input.timeKnown) {
     if (jie) {
@@ -174,7 +247,7 @@ export function buildBaziChart(input: BaziInput): BaziChart {
       warnings.push("时辰未知，起运按当日正午估算，交运日期可能前后相差约两个月");
     }
   }
-  const yun = jie ? null : eight.getYun(input.gender === "male" ? 1 : 0);
+  const yun = jie ? null : yearMonthEight.getYun(input.gender === "male" ? 1 : 0);
   const all = yun?.getDaYun(22) ?? [];
   const convert = (value: (typeof all)[number]): LuckCycle => ({
     index: value.getIndex(), ganZhi: value.getGanZhi(),
@@ -192,7 +265,7 @@ export function buildBaziChart(input: BaziInput): BaziChart {
   function entry(target: number): LiuNianEntry {
     const current = all.find((v) => v.getStartYear() <= target && target <= v.getEndYear());
     const raw = current?.getLiuNian().find((v) => v.getYear() === target);
-    const independent = independentAnnual(target, birth.year, day.stem);
+    const independent = independentAnnual(target, yearMonthBirth.year, day.stem);
     const ganZhi = raw?.getGanZhi() ?? independent.ganZhi;
     const branch = ganZhi.slice(1);
     const ranks = ["main", "middle", "residual"] as const;
@@ -229,16 +302,20 @@ export function buildBaziChart(input: BaziInput): BaziChart {
   const years = Array.from({ length: 10 }, (_, i) => input.targetYear - 3 + i)
     .filter((y) => y >= birthLiChunYear && y <= 2099).map(entry);
   let annual: AnnualLuck | null = input.targetYear < birthLiChunYear
-    ? null : independentAnnual(input.targetYear, birth.year, day.stem);
+    ? null : independentAnnual(input.targetYear, yearMonthBirth.year, day.stem);
   if (annual) {
     const selected = entry(input.targetYear);
     annual = { ...annual, age: selected.age, currentLuck: selected.luck };
   }
+  const gong = input.timeKnown && input.yearMonth && !sameYearMonth
+    ? hybridGong(year.stem, month.branch, time!.branch)
+    : null;
   return {
     sect: input.sect, dayBoundary: input.sect === 1 ? "23:00" : "00:00",
     timeKnown: input.timeKnown, dayMaster: day.stem, pillars: { year, month, day, time },
-    taiYuan: eight.getTaiYuan(), mingGong: input.timeKnown ? eight.getMingGong() : null,
-    shenGong: input.timeKnown ? eight.getShenGong() : null, luck, annual, warnings,
+    taiYuan: yearMonthEight.getTaiYuan(),
+    mingGong: input.timeKnown ? gong?.mingGong ?? eight.getMingGong() : null,
+    shenGong: input.timeKnown ? gong?.shenGong ?? eight.getShenGong() : null, luck, annual, warnings,
     birthLiChunYear, liunian: { anchorYear: input.targetYear, years },
   };
 }

@@ -6,6 +6,7 @@ import {
 } from "../agent/provider.js";
 import type { JsonSchema } from "../agent/schemas.js";
 import { splitSentences } from "./repair.js";
+import { chineseBodyErrors } from "./language-guard.js";
 import { schemaHints } from "./schema-hints.js";
 import type { SummaryState } from "./store.js";
 
@@ -131,6 +132,7 @@ export const SUMMARY_SCHEMA = {
 
 export const SUMMARY_SYSTEM_PROMPT = `你是「三易」的白话总述执笔人，不是三家中的任何一家。
 你的任务：把三家对同一问题的断语合起来，用普通人能读懂的现代汉语讲清楚，直接回答所问。
+- 问题可能是英文，请仍用中文作答。
 - 只依据下方三家断语与盘面要点，不得新增三家都没说过的结论，不得写出盘面中不存在的干支、卦名、十神或关系。
 - 术语第一次出现时用括号给白话解释，按所问类型选对含义：问事里「用神（代表所问之事的那一爻）」；命理、运势里「用神（对命局最有帮助的五行）」「大运（每十年一换的运程）」。
 - conclusion 一句话直接回答所问，不超过 40 字；tone 必须与「合议倾向」一致，结论的语气也要与之一致。
@@ -255,9 +257,13 @@ function summaryTexts(output: PlainSummary): string[] {
   return texts;
 }
 
+export function summaryLanguageErrors(output: PlainSummary): string[] {
+  return chineseBodyErrors(summaryTexts(output));
+}
+
 /** 总述的业务核对：倾向与合议一致、命理与运势的字段要求、正文不得编造盘面。 */
 export function checkSummary(output: PlainSummary, input: SummaryInput): string[] {
-  const errors: string[] = [];
+  const errors: string[] = summaryLanguageErrors(output);
   if (input.kind === "destiny") {
     if (output.tone !== undefined || output.outlook !== undefined) {
       errors.push("命理不写倾向（tone）与十年走势（outlook）");
@@ -401,10 +407,12 @@ export async function runSummary(
   }
   if (lastValid) {
     const repaired = repairSummary(lastValid, input);
-    return {
-      status: "done", output: repaired.output, calls,
-      removed: repaired.removed, adjusted: repaired.adjusted,
-    };
+    if (summaryLanguageErrors(repaired.output).length === 0) {
+      return {
+        status: "done", output: repaired.output, calls,
+        removed: repaired.removed, adjusted: repaired.adjusted,
+      };
+    }
   }
   return { status: "failed", error: "白话总述三次都不符合输出格式，请稍后重试", calls };
 }

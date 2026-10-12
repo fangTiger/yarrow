@@ -5,6 +5,7 @@ import type { NamingContext, NamingFamilyKey } from "./schema.js";
 export type { NamingContext } from "./schema.js";
 
 const COMMON_BOUNDARIES = `共同要求：
+- 问题可能是英文，请仍用中文作答。
 - 每个字须从程序认可的可用起名字中取，不用表外字或不宜入名的字。
 - 人名须按性别取字；性别为「不限」时只取中性字，避免明显偏男或偏女。
 - 取字须好读好写、寓意积极，避免谐音不雅，尽量不用三级生僻字。

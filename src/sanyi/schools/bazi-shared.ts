@@ -30,6 +30,7 @@ const ALLOWED: Record<BaziSchoolKey, readonly string[]> = {
   rentieqiao: ["pillar:", "hidden:", "structure:roots", "relation:", "elements", "luck:"],
 };
 export const BAZI_BOUNDARIES = `只能引用随请求提供的原文，不得补写或编造引文。
+问题可能是英文，请仍用中文作答。
 不得编造排盘数据，不得虚构外应；应期必须写明成立条件。
 不做医疗、法律、投资结论，健康问题建议就医。
 缺时柱时须说明判断限制，不得引用时柱、命宫或身宫事实。
