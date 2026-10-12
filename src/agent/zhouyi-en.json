@@ -3,7 +3,7 @@
   "hexagrams": [
     {
       "kingWen": 1,
-      "name": "Heavenly Power",
+      "name": "Creative Force",
       "judgement": "Great success; it is favorable to persist.",
       "image": "The movement of heaven is vigorous; the noble person strengthens themselves without rest.",
       "lines": [
@@ -52,7 +52,7 @@
     },
     {
       "kingWen": 4,
-      "name": "Youthful Folly",
+      "name": "Youthful Ignorance",
       "judgement": "Success. I do not seek the young fool; the young fool seeks me. At the first divination I answer; if he asks twice or three times, that is disrespectful, and disrespect gets no answer. Favorable to be steadfast.",
       "image": "Below the mountain a spring emerges: youthful folly. The noble person acts decisively and cultivates virtue.",
       "lines": [
@@ -157,7 +157,7 @@
     },
     {
       "kingWen": 11,
-      "name": "Peace and Flourishing",
+      "name": "Peace",
       "judgement": "Peace. The small departs, the great arrives. Good fortune and success.",
       "image": "Heaven and earth unite: Peace. The ruler accordingly shapes and completes the way of heaven and earth, assists and harmonizes the gifts of heaven and earth, and thus guides the people.",
       "lines": [
@@ -172,7 +172,7 @@
     },
     {
       "kingWen": 12,
-      "name": "Stagnation",
+      "name": "Standstill",
       "judgement": "Stagnation. It is not the right time for people. It does not benefit the noble person to persist. The great departs and the small arrives.",
       "image": "Heaven and Earth do not interact: stagnation. The noble person uses frugal virtue to avoid difficulties and cannot be honored with wealth and salary.",
       "lines": [
@@ -187,7 +187,7 @@
     },
     {
       "kingWen": 13,
-      "name": "Union with Others",
+      "name": "Fellowship",
       "judgement": "Union in the open fields brings success. It is favorable to cross the great river. It is favorable for the noble one to remain steadfast.",
       "image": "Heaven together with fire: union with others. The noble one sorts people into groups and distinguishes things.",
       "lines": [
@@ -217,7 +217,7 @@
     },
     {
       "kingWen": 15,
-      "name": "Modest Humility",
+      "name": "Modesty",
       "judgement": "Success. The noble person carries things through to the end.",
       "image": "Mountain within the earth: modesty. The noble person reduces excess to increase scarcity, weighing things and giving out evenly.",
       "lines": [
@@ -232,7 +232,7 @@
     },
     {
       "kingWen": 16,
-      "name": "Thunder Joy",
+      "name": "Enthusiasm",
       "judgement": "It is favorable to install feudal lords and to send out armies.",
       "image": "Thunder comes out of the earth and stirs: joy. The former kings accordingly made music to exalt virtue and presented it richly to the Supreme God, pairing it with their ancestors.",
       "lines": [
@@ -277,7 +277,7 @@
     },
     {
       "kingWen": 19,
-      "name": "Approaching Rule",
+      "name": "Approach",
       "judgement": "Great success. Favorable to be steadfast and correct.",
       "image": "The earth rests above the lake: approaching. The noble person teaches and thinks without end, and accepts and protects the people without bounds.",
       "lines": [
@@ -292,7 +292,7 @@
     },
     {
       "kingWen": 20,
-      "name": "Watching",
+      "name": "Contemplation",
       "judgement": "The washing of hands has been done, but the offering has not yet been presented. There is trust, and they look up with reverence.",
       "image": "Wind moves over the earth: watching. The ancient kings inspected the regions, observed the people, and established their teachings.",
       "lines": [
@@ -352,7 +352,7 @@
     },
     {
       "kingWen": 24,
-      "name": "Return of Thunder",
+      "name": "Return",
       "judgement": "Prosperous. Going out and coming in without harm; friends arrive, no blame.",
       "image": "Thunder within the earth: return. The former kings thus closed the passes on the winter solstice; merchants and travelers did not move, and the rulers did not inspect the regions.",
       "lines": [
@@ -382,7 +382,7 @@
     },
     {
       "kingWen": 26,
-      "name": "Great Taming",
+      "name": "Great Restraint",
       "judgement": "It is favorable to be steadfast. Not eating at home brings good fortune. It is favorable to cross the great river.",
       "image": "Heaven is within the mountain: great taming. The noble person learns many words and deeds of the past in order to cultivate their virtue.",
       "lines": [
@@ -427,7 +427,7 @@
     },
     {
       "kingWen": 29,
-      "name": "Water Repeated",
+      "name": "The Abyss",
       "judgement": "There is sincerity. Only the heart finds passage. Action brings honor.",
       "image": "Water flows on and on, repeated danger. The noble person keeps constant virtue and practices teaching.",
       "lines": [
@@ -442,7 +442,7 @@
     },
     {
       "kingWen": 30,
-      "name": "The Clinging Fire",
+      "name": "Radiance",
       "judgement": "It is favorable to be steadfast. Success. Raising a cow brings good fortune.",
       "image": "Light arises twice: this is the Clinging. The great person continues the light and shines over the four directions.",
       "lines": [
@@ -457,7 +457,7 @@
     },
     {
       "kingWen": 31,
-      "name": "Mutual Influence",
+      "name": "Mutual Attraction",
       "judgement": "Success. Favorable. Persevering. Taking a wife brings good fortune.",
       "image": "A lake on top of a mountain: mutual influence. The noble person accepts others with emptiness.",
       "lines": [
@@ -472,7 +472,7 @@
     },
     {
       "kingWen": 32,
-      "name": "Enduring Thunder and Wind",
+      "name": "Endurance",
       "judgement": "Success. No blame. Favorable to be steadfast. Favorable to have a goal to go toward.",
       "image": "Thunder and wind: endurance. The noble person stands firm and does not change their direction.",
       "lines": [
@@ -502,7 +502,7 @@
     },
     {
       "kingWen": 34,
-      "name": "Great Power",
+      "name": "Great Strength",
       "judgement": "Favorable. Perseverance brings good fortune.",
       "image": "Thunder above heaven: great power. The noble person does not tread on what is contrary to propriety.",
       "lines": [
@@ -517,7 +517,7 @@
     },
     {
       "kingWen": 35,
-      "name": "Bright Advance",
+      "name": "Advance",
       "judgement": "The prosperous marquis is given many horses and received three times in a single day.",
       "image": "Brightness comes forth over the earth: advance. The noble person thereby makes their bright virtue shine.",
       "lines": [
@@ -532,7 +532,7 @@
     },
     {
       "kingWen": 36,
-      "name": "Light Wounded",
+      "name": "Darkening of the Light",
       "judgement": "It is favorable to endure hardship and stay firm.",
       "image": "Light enters the earth: this represents Light Wounded. The noble person, when governing the people, uses dimness to achieve clarity.",
       "lines": [
@@ -577,7 +577,7 @@
     },
     {
       "kingWen": 39,
-      "name": "Water on Mountain",
+      "name": "Obstruction",
       "judgement": "The southwest is favorable; the northeast is not favorable. It is favorable to see the great man. Persistence brings good fortune.",
       "image": "Water sits on top of a mountain: obstruction. The noble person turns inward and cultivates virtue.",
       "lines": [
@@ -592,7 +592,7 @@
     },
     {
       "kingWen": 40,
-      "name": "Release from Trouble",
+      "name": "Release",
       "judgement": "It is favorable to go southwest. If there is nowhere to go, returning brings good fortune. If there is somewhere to go, going early brings good fortune.",
       "image": "Thunder and rain act together: release. The noble person pardons faults and forgives crimes.",
       "lines": [
@@ -637,7 +637,7 @@
     },
     {
       "kingWen": 43,
-      "name": "Resoluteness",
+      "name": "Breakthrough",
       "judgement": "Proclaimed in the royal court, sincerely calling out, there is danger.",
       "image": "The lake has risen above the sky: resoluteness. The noble one distributes rewards down to those below; dwelling in virtue, he avoids envy.",
       "lines": [
@@ -652,7 +652,7 @@
     },
     {
       "kingWen": 44,
-      "name": "Coming to Meet",
+      "name": "Encounter",
       "judgement": "The woman is strong. Do not marry such a woman.",
       "image": "Wind beneath heaven: coming to meet. The ruler spreads commands and proclaims them to the four directions.",
       "lines": [
@@ -667,7 +667,7 @@
     },
     {
       "kingWen": 45,
-      "name": "Gathering Together",
+      "name": "Gathering",
       "judgement": "Success. The king approaches his temple. It is favorable to see the great man. Success. It is favorable to be steadfast. Using a large sacrificial animal brings good fortune. It is favorable to have somewhere to go.",
       "image": "A lake rises above the earth: Gathering Together. The noble person thus sharpens weapons and guards against the unforeseen.",
       "lines": [
@@ -682,7 +682,7 @@
     },
     {
       "kingWen": 46,
-      "name": "Rising Earth",
+      "name": "Rising",
       "judgement": "Great success. It is favorable to see the great person. Do not worry. Going south brings good fortune.",
       "image": "Wood grows within the earth: rising. The noble person complies with virtue, accumulates small things to achieve height and greatness.",
       "lines": [
@@ -697,7 +697,7 @@
     },
     {
       "kingWen": 47,
-      "name": "Confined by Water",
+      "name": "Exhaustion",
       "judgement": "Success. Perseverance brings good fortune to the great person, no blame. Words are not believed.",
       "image": "The lake has no water: confinement. The noble person dedicates their life to fulfilling their will.",
       "lines": [
@@ -727,7 +727,7 @@
     },
     {
       "kingWen": 49,
-      "name": "Revolution and Change",
+      "name": "Revolution",
       "judgement": "When the day has fully come, there will be trust. Great success, beneficial to be steadfast. Regret disappears.",
       "image": "Fire within the lake: revolution. The noble person orders the calendar and clarifies the seasons.",
       "lines": [
@@ -757,7 +757,7 @@
     },
     {
       "kingWen": 51,
-      "name": "Thunder Repeated",
+      "name": "Thunder",
       "judgement": "Success. Thunder comes with terror, then laughter and talk. It shakes for a hundred miles, yet the sacrificial ladle and millet wine are not lost.",
       "image": "Repeated thunder: Thunder. The noble person, in fear, cultivates self-reflection.",
       "lines": [
@@ -787,7 +787,7 @@
     },
     {
       "kingWen": 53,
-      "name": "Gradual Advance",
+      "name": "Gradual Progress",
       "judgement": "The woman's marriage is auspicious. It is favorable to be steadfast.",
       "image": "Wood on the mountain: gradual advance. The noble person stays in worthy virtue and improves customs.",
       "lines": [
@@ -802,7 +802,7 @@
     },
     {
       "kingWen": 54,
-      "name": "Marrying Maiden",
+      "name": "The Marrying Maiden",
       "judgement": "The marrying maiden. Advancing brings misfortune; nothing is beneficial.",
       "image": "Thunder above the lake: the marrying maiden. The noble person, mindful of the end, understands what will decay.",
       "lines": [
@@ -817,7 +817,7 @@
     },
     {
       "kingWen": 55,
-      "name": "Abundance and Thunder",
+      "name": "Abundance",
       "judgement": "Success. The king arrives at it. Do not worry. Be like the sun at noon.",
       "image": "Thunder and lightning both arrive: abundance. The noble person uses this to decide lawsuits and carry out punishments.",
       "lines": [
@@ -832,7 +832,7 @@
     },
     {
       "kingWen": 56,
-      "name": "The Wanderer",
+      "name": "The Traveler",
       "judgement": "Small success. The wanderer who keeps steady will have good fortune.",
       "image": "Fire on the mountain: the wanderer. The noble person applies punishments with clarity and caution, and does not let cases drag on.",
       "lines": [
@@ -862,7 +862,7 @@
     },
     {
       "kingWen": 58,
-      "name": "Joyful Lake",
+      "name": "Joy",
       "judgement": "Success. Favorable to be steadfast and correct.",
       "image": "Lakes joined together: Joy. The noble person joins with friends for discussion and practice.",
       "lines": [
@@ -877,7 +877,7 @@
     },
     {
       "kingWen": 59,
-      "name": "Dispersing Flow",
+      "name": "Dispersal",
       "judgement": "Success. The king approaches the temple. It is favorable to cross the great river. It is favorable to be steadfast.",
       "image": "Wind moves over water, dispersing. The former kings, in accordance with this, sacrificed to the Lord and established temples.",
       "lines": [
@@ -892,7 +892,7 @@
     },
     {
       "kingWen": 60,
-      "name": "Water Over Lake",
+      "name": "Limitation",
       "judgement": "Success. Bitter restraint cannot be maintained.",
       "image": "Water above the lake: restraint. The noble person sets measures and standards, and discusses virtues and conduct.",
       "lines": [
@@ -952,7 +952,7 @@
     },
     {
       "kingWen": 64,
-      "name": "Not Yet Complete",
+      "name": "Before Completion",
       "judgement": "Success. A small fox, almost across, wets its tail; nothing is gained.",
       "image": "Fire above water: not yet complete. The noble person carefully distinguishes things and places each in its proper position.",
       "lines": [
