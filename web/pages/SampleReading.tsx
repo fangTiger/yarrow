@@ -6,6 +6,7 @@ import { LangToggle } from "../components/LangToggle.js";
 import { QuestionResult } from "./Reading.js";
 import { BaziReading } from "./BaziReading.js";
 import { NamingReading } from "./NamingReading.js";
+import { DisclaimerFooter } from "../components/DisclaimerFooter.js";
 
 export type SampleKind = "question" | "fortune" | "naming";
 
@@ -75,5 +76,6 @@ export function SampleReading({ kind }: { kind: SampleKind }) {
         <LangToggle /><a href="#/">{t("result.backHome")}</a></div></header>
     <div className="sample-banner">{t("sample.banner")}</div>
     <SampleContent lang={lang} reading={reading} />
+    <DisclaimerFooter />
   </main>;
 }

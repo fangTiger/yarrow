@@ -23,7 +23,6 @@ export function HomeContent() {
       </div>
     </section>
     <section aria-label={t("home.sectionLabel")} className="home-main"><QuestionForm /></section>
-    <footer className="home-footer">{t("home.disclaimer")}</footer>
   </>;
 }
 

@@ -5,6 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import { WuxingDiagram, wuxingRelations } from "../web/components/WuxingDiagram.js";
+import { renderIn } from "./helpers/render-in.js";
 
 const counts = { 木: 1, 火: 2, 土: 2, 金: 0, 水: 1 };
 
@@ -64,4 +65,14 @@ test("没有计数（商号未填店主生辰）时只标所用五行，不显�
 test("英文五行节点使用较小字号，长标签不会溢出圆圈", () => {
   const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
   assert.match(css, /html:lang\(en\)\s+\.wx-char\s*\{[^}]*font-size:\s*13px/su);
+});
+
+test("英文五行右侧标签向内对齐并留出面板边距", () => {
+  const html = renderIn("en", createElement(WuxingDiagram, {
+    counts, missing: ["土"], favorable: ["土"],
+  }));
+  assert.match(html,
+    /<text class="wx-tags" text-anchor="end" x="[\d.]+" y="[\d.]+"><tspan class="que">Missing/u);
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.doesNotMatch(css, /\.wx-tags\s*\{[^}]*text-anchor:/su);
 });

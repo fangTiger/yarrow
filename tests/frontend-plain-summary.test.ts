@@ -29,7 +29,7 @@ const anchor = { title: "《象传》· 兑为泽", lines: ["丽泽，兑；君�
 test("英文白话结论使用适合多行文本的字号与行高", () => {
   const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
   assert.match(css,
-    /html:lang\(en\)\s+\.summary-conclusion p\s*\{[^}]*font-size:\s*22px[^}]*line-height:\s*1\.4/su);
+    /html:lang\(en\)\s+\.summary-conclusion p\s*\{[^}]*font-size:\s*22px[^}]*line-height:\s*1\.4[^}]*letter-spacing:\s*0(?:;|\s)/su);
 });
 function reading(overrides: Record<string, unknown> = {}) {
   return {

@@ -25,6 +25,7 @@ import { SchoolCard } from "../components/SchoolCard.js";
 import { SubjectChange } from "../components/SubjectChange.js";
 import { VerifyPanel } from "../components/VerifyPanel.js";
 import { EnglishQuestionResult } from "../components/EnglishQuestionResult.js";
+import { DisclaimerFooter } from "../components/DisclaimerFooter.js";
 import { useLang, useT } from "../lib/i18n.js";
 import { applyReadingTranslation, translationViewState } from "../lib/reading-translation.js";
 import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
@@ -235,6 +236,7 @@ export function Reading({ id }: { id: string }) {
           <p className="error">{error}</p>
           <a className="button" href="#/">{t("result.backHome")}</a>
         </section>
+        <DisclaimerFooter />
       </main>
     );
   }
@@ -242,6 +244,7 @@ export function Reading({ id }: { id: string }) {
     return (
       <main className="page">
         <section aria-live="polite" className="panel">{t("result.opening")}</section>
+        <DisclaimerFooter />
       </main>
     );
   }
@@ -253,16 +256,31 @@ export function Reading({ id }: { id: string }) {
     return (
       <main className="page">
         <header className="topbar">
-          <span className="seal">{lang === "en" ? "Y" : "名"}</span><span className="brand">{t("brand.name")}</span>
+          <span className="seal">{lang === "en" ? "Y" : "名"}</span>
+          <span className="brand">{t("brand.name")}</span>
           <nav className="nav"><a href="#/">{t("result.backHome")}</a></nav><WalletBar />
         </header>
         {translationPanel}
         <NamingReading reading={visibleReading} onReading={setReading} />
+        <DisclaimerFooter />
       </main>
     );
   }
   if (visibleReading.kind !== "question") {
-    return <main className="page"><header className="topbar"><span className="seal">{lang === "en" ? "Y" : "问"}</span><span className="brand">{t("brand.name")}</span><nav className="nav"><a href="#/">{t("result.backHome")}</a></nav><WalletBar /></header>{lang === "zh" ? <ShikongBar data={toView(visibleReading.almanac)} /> : null}{translationPanel}<BaziReading reading={visibleReading} onReading={setReading} /></main>;
+    return (
+      <main className="page">
+        <header className="topbar">
+          <span className="seal">{lang === "en" ? "Y" : "问"}</span>
+          <span className="brand">{t("brand.name")}</span>
+          <nav className="nav"><a href="#/">{t("result.backHome")}</a></nav>
+          <WalletBar />
+        </header>
+        {lang === "zh" ? <ShikongBar data={toView(visibleReading.almanac)} /> : null}
+        {translationPanel}
+        <BaziReading reading={visibleReading} onReading={setReading} />
+        <DisclaimerFooter />
+      </main>
+    );
   }
   const stage = readingStage(visibleReading);
   const view = visibleReading.almanac ? toView(visibleReading.almanac) : undefined;
@@ -288,6 +306,7 @@ export function Reading({ id }: { id: string }) {
       ) : (
         <QuestionResult onReading={setReading} reading={visibleReading} />
       )}
+      <DisclaimerFooter />
     </main>
   );
 }

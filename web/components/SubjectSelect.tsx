@@ -1,8 +1,7 @@
 // web/components/SubjectSelect.tsx
 import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
 import { subjectLabel } from "../lib/home-entry.js";
-import { useT } from "../lib/i18n.js";
-import { useLang } from "../lib/i18n.js";
+import { useLang, useT } from "../lib/i18n.js";
 
 /** 问事的事项下拉：默认自动识别，也可手选；事项决定六爻用神。 */
 export function SubjectSelect(props: {
@@ -15,6 +14,8 @@ export function SubjectSelect(props: {
   const { lang } = useLang();
   const detected = props.detected ? subjectLabel(props.detected, t, props.detected) : "";
   const auto = detected ? t("subject.autoDetected", { subject: detected }) : t("subject.auto");
+  const showRelationshipNote = props.value === "relationship"
+    || (lang === "zh" && !props.value && props.detected === "relationship");
   return (
     <label className="detail-row">
       <span className="detail-label">{t("subject.field")}</span>
@@ -33,7 +34,9 @@ export function SubjectSelect(props: {
           <option key={key} value={key}>{subjectLabel(key, t, label)}</option>
         ))}
       </select>
-      {lang === "en" ? <small className="subject-note">{t("subject.relationshipNote")}</small> : null}
+      {showRelationshipNote
+        ? <small className="subject-note">{t("subject.relationshipNote")}</small>
+        : null}
     </label>
   );
 }

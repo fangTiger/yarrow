@@ -89,8 +89,8 @@ export function Luopan({ home = false }: { home?: boolean }) {
         ))}
         {home ? BAGUA.map(([name], index) => {
           const angle = (-90 + index * 45) * Math.PI / 180;
-          const x = roundCoordinate(CENTER + 73 * Math.cos(angle));
-          const y = roundCoordinate(CENTER + 73 * Math.sin(angle));
+          const x = roundCoordinate(CENTER + 62 * Math.cos(angle));
+          const y = roundCoordinate(CENTER + 62 * Math.sin(angle));
           const english = TRIGRAMS_EN[name];
           const label = lang === "en"
             ? `${english.pinyin} · ${english.image}`

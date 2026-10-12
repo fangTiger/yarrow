@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createElement } from "react";
 import { renderIn } from "./helpers/render-in.js";
@@ -28,18 +29,18 @@ const career: ClassificationView = {
   subjectKey: "career", subject: "工作／官职",
 };
 
-test("中英文首页渲染一句话、三步、示例入口与双处免责声明", () => {
+test("中英文首页渲染一句话、三步、示例入口且免责声明只出现一次", () => {
   const zh = renderIn("zh", createElement(HomeContent));
   assert.match(zh, /古法起卦与八字排盘，三位古代流派各自解读，约半分钟给出白话结论。/u);
   assert.match(zh, /Arc 测试网，不花真钱/u);
   assert.match(zh, /看看示例结果/u);
-  assert.equal((zh.match(/仅供参考与自我反思，不构成医疗、法律、投资建议/gu) ?? []).length, 2);
+  assert.equal((zh.match(/仅供参考与自我反思，不构成医疗、法律、投资建议/gu) ?? []).length, 1);
 
   const english = renderIn("en", createElement(HomeContent));
   assert.match(english, /Ancient Chinese divination — I Ching and BaZi/u);
   assert.match(english, /Arc testnet.*no real money/isu);
   assert.match(english, /See a sample reading/u);
-  assert.equal((english.match(/For reference and self-reflection only/gu) ?? []).length, 2);
+  assert.equal((english.match(/For reference and self-reflection only/gu) ?? []).length, 1);
   const visible = english.replace(/<[^>]+>/gu, " ").replaceAll("问", "");
   assert.doesNotMatch(visible, /[\p{Script=Han}]/u);
 });
@@ -54,6 +55,24 @@ test("四类卡各有说明与可点击示例问题", () => {
   }
   assert.match(html, /A specific decision or situation/u);
   assert.match(html, /Will I get this job\?/u);
+});
+
+test("手机类型卡保持 2×2 并只在卡片组下展示选中项详情", () => {
+  const html = renderIn("en", createElement(KindOptions, {
+    value: "fortune", onChange: () => {}, onExample: () => {},
+  }));
+  assert.match(html, /class="kind-selected-detail" data-selected-kind="fortune"/u);
+  assert.match(html, /The overall pattern for today/u);
+
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.match(css,
+    /@media\s*\(max-width:\s*560px\)[\s\S]*?\.kind-options\s*\{[^}]*grid-template-columns:\s*repeat\(2,/u);
+  assert.match(css,
+    /@media\s*\(max-width:\s*560px\)[\s\S]*?\.kind-card\s*>\s*p[^}]*display:\s*none/u);
+  assert.match(css,
+    /@media\s*\(max-width:\s*560px\)[\s\S]*?\.kind-card\s+\.kind-examples[^}]*display:\s*none/u);
+  assert.match(css,
+    /@media\s*\(max-width:\s*560px\)[\s\S]*?\.home-luopan[^}]*min\(140px,\s*40vw\)/u);
 });
 
 test("英文默认 Ask 但必须手选，分类关键词只提示而不自动改类型或事项", () => {
@@ -77,13 +96,46 @@ test("英文默认 Ask 但必须手选，分类关键词只提示而不自动改
   assert.equal(applyClassification(DEFAULT_ENTRY, fortune, t).kind, "fortune");
 });
 
-test("英文问事显示七项必选及感情事项口径", () => {
-  const html = renderIn("en", createElement(SubjectSelect, {
-    value: "", detected: "career", onChange: () => {}, required: true,
+test("中英文感情事项口径只在选中 relationship 时显示", () => {
+  const career = renderIn("en", createElement(SubjectSelect, {
+    value: "career", detected: "career", onChange: () => {}, required: true,
   }));
-  assert.equal((html.match(/<option/gu) ?? []).length, 8);
-  assert.match(html, /Suggested: Career.*choose one/u);
-  assert.match(html, /Traditionally the Officer line is read for a partner; to ask about a wife or girlfriend, choose Wealth/u);
+  assert.equal((career.match(/<option/gu) ?? []).length, 8);
+  assert.doesNotMatch(career, /Traditionally the Officer line is read for a partner/u);
+
+  const relationship = renderIn("en", createElement(SubjectSelect, {
+    value: "relationship", detected: "", onChange: () => {}, required: true,
+  }));
+  assert.match(relationship,
+    /Traditionally the Officer line is read for a partner; to ask about a wife or girlfriend, choose Wealth/u);
+
+  const zhCareer = renderIn("zh", createElement(SubjectSelect, {
+    value: "career", detected: "", onChange: () => {},
+  }));
+  const zhRelationship = renderIn("zh", createElement(SubjectSelect, {
+    value: "relationship", detected: "", onChange: () => {},
+  }));
+  const zhDetectedRelationship = renderIn("zh", createElement(SubjectSelect, {
+    value: "", detected: "relationship", onChange: () => {},
+  }));
+  const zhOverrideRelationship = renderIn("zh", createElement(SubjectSelect, {
+    value: "career", detected: "relationship", onChange: () => {},
+  }));
+  assert.doesNotMatch(zhCareer, /传统上以官鬼为用神/u);
+  assert.match(zhRelationship, /传统上以官鬼为用神；问妻子或女友请选择钱财/u);
+  assert.match(zhDetectedRelationship, /传统上以官鬼为用神；问妻子或女友请选择钱财/u);
+  assert.doesNotMatch(zhOverrideRelationship, /传统上以官鬼为用神/u);
+});
+
+test("首页移除页脚免责声明，正式与示例结果页保留页脚", () => {
+  const home = readFileSync(new URL("../web/pages/Home.tsx", import.meta.url), "utf8");
+  const form = readFileSync(new URL("../web/components/QuestionForm.tsx", import.meta.url), "utf8");
+  const reading = readFileSync(new URL("../web/pages/Reading.tsx", import.meta.url), "utf8");
+  const sample = readFileSync(new URL("../web/pages/SampleReading.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(home, /home-footer|home\.disclaimer/u);
+  assert.match(form, /payment-disclaimer[^\n]*home\.disclaimer/u);
+  assert.equal((reading.match(/<DisclaimerFooter/gu) ?? []).length, 5);
+  assert.equal((sample.match(/<DisclaimerFooter/gu) ?? []).length, 1);
 });
 
 test("姓氏选择器数据为 100 项，可按拼音首字母筛选并保留汉字直输", () => {

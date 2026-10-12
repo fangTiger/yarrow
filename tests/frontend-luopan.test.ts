@@ -49,6 +49,17 @@ test("八卦标签中英切换，英文取术语表且中央保留问印", () =>
   assert.match(en, /class="luopan-center-seal"[^>]*>问</u);
 });
 
+test("中英八卦标签向圆心收拢，与外侧卦符留出间距", () => {
+  const zh = renderIn("zh", createElement(Luopan, { home: true }));
+  const en = renderIn("en", createElement(Luopan, { home: true }));
+  const zhX = Number(zh.match(/<text class="luopan-trigram-label"[^>]*x="([\d.]+)"[^>]*>震 · 雷/u)?.[1]);
+  const enX = Number(en.match(/<text class="luopan-trigram-label"[^>]*x="([\d.]+)"[^>]*>Zhen · Thunder/u)?.[1]);
+  assert.ok(zhX >= 95, `中文震卦标签横坐标应向圆心收拢，实际 ${zhX}`);
+  assert.equal(enX, zhX);
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.match(css, /html:lang\(en\)\s+\.luopan-trigram-label\s*\{[^}]*font-size:\s*9px/su);
+});
+
 import React, { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { HexagramFigure } from "../web/components/HexagramFigure.js";

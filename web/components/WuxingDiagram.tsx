@@ -37,6 +37,13 @@ function round(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
+/** 环外标签从面板边缘向圆心展开，避免英文长标签贴住右边缘。 */
+function tagAnchor(x: number): "start" | "middle" | "end" {
+  if (x > CENTER + 1) return "end";
+  if (x < CENTER - 1) return "start";
+  return "middle";
+}
+
 function motherOf(element: Element): Element {
   return ORDER.find((item) => SHENG[item] === element)!;
 }
@@ -134,7 +141,8 @@ export function WuxingDiagram(props: {
                   ? `${count ?? 0}` : `${count ?? 0} 个`}</text>
               ) : null}
               {isMissing || isSupplement || isDayMaster ? (
-                <text className="wx-tags" x={round(tag.x)} y={round(tag.y)}>
+                <text className="wx-tags" textAnchor={tagAnchor(tag.x)}
+                  x={round(tag.x)} y={round(tag.y)}>
                   {isMissing ? <tspan className="que">{t("wuxing.missing")}</tspan> : null}
                   {isSupplement ? (
                     <tspan className="bu" dx={isMissing ? 4 : 0}>{counts
