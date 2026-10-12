@@ -86,3 +86,14 @@ test("核对器要求正文引用的古文使用离线固定译文", () => {
   });
   assert.ok(result.errors.some((error) => error.includes("A hidden dragon does not act.")));
 });
+
+test("提示词只列专业术语与五行，不列会误导的单字（如「平」→ Mixed）；写明名字与古文的译法", async () => {
+  const { buildTranslationPrompt, TRANSLATION_SYSTEM_PROMPT } = await import("../src/sanyi/translation/prompt.js");
+  const prompt = buildTranslationPrompt(unit("张姓阴平，用神为木，子时出生"));
+  assert.doesNotMatch(prompt, /Mixed/u);
+  assert.doesNotMatch(prompt, /"source":"子"/u);
+  assert.match(prompt, /Yong Shen/u);
+  assert.match(prompt, /Wood/u);
+  assert.match(TRANSLATION_SYSTEM_PROMPT, /书灵 \(Shu Ling\)/u);
+  assert.match(TRANSLATION_SYSTEM_PROMPT, /古文、诗句/u);
+});

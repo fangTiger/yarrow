@@ -6,7 +6,7 @@ import {
 } from "../i18n/glossary.js";
 import type { TranslationUnit } from "./units.js";
 
-export const PROMPT_VERSION = 2;
+export const PROMPT_VERSION = 3;
 
 export interface GlossaryRequirement {
   source: string;
@@ -62,14 +62,17 @@ export function glossaryRequirements(
 export const TRANSLATION_SYSTEM_PROMPT = `你是三易的中译英译者。
 只翻译给出的正文，不补充事实，不输出中文解释。
 必须保留阿拉伯数字与四位年份，并使用随附术语和古文固定译文；专业术语首次出现时写「拼音（释义）」，之后可只写拼音；单字五行、八卦、干支在日常用语里按词义自然翻译。
+人名与字号保留汉字，后接拼音，如「书灵 (Shu Ling)」，不要只写拼音。
+古文、诗句、卦辞爻辞一律译成英文，不要在译文里保留汉字原文；原文由页面另外显示。
 名字及白名单汉字可原样保留并附拼音；其余译文不得含汉字。
 输出必须严格符合 JSON Schema，texts 与输入逐项对应。`;
 
 export function buildTranslationPrompt(unit: TranslationUnit): string {
   const text = unit.entries.map((entry) => entry.text).join("\n");
-  const glossary = glossaryRequirements(text, unit.allowedHan).map(({ source, display }) => ({
-    source, english: display,
-  }));
+  // 只列强制的专业术语与五行；其余单字（如「平」→ Mixed、「子」→ Zi）在日常用语里会误导模型。
+  const glossary = glossaryRequirements(text, unit.allowedHan)
+    .filter((item) => item.enforced || item.source in ELEMENTS_EN)
+    .map(({ source, display }) => ({ source, english: display }));
   const classics = unit.entries.flatMap((entry, index) => (
     findZhouyiEnglishReferences(entry.text).map((reference) => ({
       index, chinese: reference.chinese, english: reference.english,
