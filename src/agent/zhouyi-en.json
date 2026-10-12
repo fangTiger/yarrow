@@ -1,0 +1,969 @@
+{
+  "source": "Translation by Yarrow (machine-assisted, reviewed); original text: Zhou Yi (public domain)",
+  "hexagrams": [
+    {
+      "kingWen": 1,
+      "name": "Heavenly Power",
+      "judgement": "Great success; it is favorable to persist.",
+      "image": "The movement of heaven is vigorous; the noble person strengthens themselves without rest.",
+      "lines": [
+        "A hidden dragon does not act.",
+        "A dragon appears in the field; it is favorable to see the great person.",
+        "The noble person is active all day and cautious at night, as if in danger; no blame.",
+        "Perhaps leaping in the abyss; no blame.",
+        "A flying dragon in the sky; it is favorable to see the great person.",
+        "An arrogant dragon will have regrets."
+      ],
+      "extras": [
+        "A group of dragons without a leader appears; good fortune."
+      ]
+    },
+    {
+      "kingWen": 2,
+      "name": "Receptive Earth",
+      "judgement": "Supreme success. Favorable is the steadfastness of a mare.",
+      "image": "The earth's condition is receptive devotion. A noble person carries all things with thick virtue.",
+      "lines": [
+        "Treading on frost; solid ice will come.",
+        "Straight, square, great. Without practice, nothing is unfavorable.",
+        "Hiding one's brilliance, one may be steadfast. Perhaps following the king's affairs: no completion, but a good end.",
+        "Tying up the bag. No blame, no praise.",
+        "Yellow lower garment. Supreme good fortune.",
+        "Dragons fight in the wild. Their blood is dark yellow."
+      ],
+      "extras": [
+        "Favorable for eternal steadfastness."
+      ]
+    },
+    {
+      "kingWen": 3,
+      "name": "Initial Difficulty",
+      "judgement": "Supreme success; it is favorable to persist. Do not set out on any venture now. It is favorable to appoint helpers.",
+      "image": "Clouds and thunder: the image of Initial Difficulty. Thus the noble one brings order out of confusion.",
+      "lines": [
+        "Hesitating and lingering. It is favorable to remain steadfast. It is favorable to establish feudal lords.",
+        "Difficult and halting. Riding a horse in a hesitant manner. They are not robbers; they come to seek marriage. The woman remains steadfast and does not consent. After ten years, she finally consents.",
+        "Hunting deer without a forester. Only entering into the forest. The noble one perceives the subtle signs and considers it better to let it go. Going forward brings regret.",
+        "Riding a horse in a hesitant manner. Seeking marriage. Going forward brings good fortune. Nothing is unfavorable.",
+        "Difficulty in dispensing favors. Small steadfastness brings good fortune. Great steadfastness brings misfortune.",
+        "Riding a horse in a hesitant manner. Weeping blood in a continuous stream."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 4,
+      "name": "Youthful Folly",
+      "judgement": "Success. I do not seek the young fool; the young fool seeks me. At the first divination I answer; if he asks twice or three times, that is disrespectful, and disrespect gets no answer. Favorable to be steadfast.",
+      "image": "Below the mountain a spring emerges: youthful folly. The noble person acts decisively and cultivates virtue.",
+      "lines": [
+        "Dispelling folly: favorable to use punishment on people, to remove shackles and fetters; to go on would bring regret.",
+        "Bearing with folly: good fortune. Taking a wife: good fortune. The son can manage the household.",
+        "Do not act. Taking a woman who sees a man of gold, she will not keep herself; nothing favorable.",
+        "Trapped in folly: regret.",
+        "Childlike folly: good fortune.",
+        "Striking folly: unfavorable to act as a robber; favorable to defend against robbers."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 5,
+      "name": "Waiting",
+      "judgement": "You have sincerity; great success comes through steadfastness and good fortune. It is favorable to cross the great river.",
+      "image": "Clouds rise up to heaven: Waiting. The noble person eats, drinks, and enjoys himself.",
+      "lines": [
+        "Waiting in the outskirts. It is favorable to keep to what is constant. No blame.",
+        "Waiting on the sand. There is a little talk, but in the end good fortune.",
+        "Waiting in the mud. This brings robbers.",
+        "Waiting in blood. Come out from the pit.",
+        "Waiting with wine and food. Steadfastness brings good fortune.",
+        "Entering the pit. Three uninvited guests arrive. Treat them with respect, and in the end good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 6,
+      "name": "Conflict",
+      "judgement": "You have sincerity, but are blocked and cautious. Midway brings good fortune; in the end, misfortune.",
+      "image": "Heaven and water move in opposite directions: conflict. The noble person plans the beginning when undertaking any task.",
+      "lines": [
+        "Do not prolong the dispute. There is a little talk, but in the end, good fortune.",
+        "You cannot win the dispute. Return and flee. For the three hundred households of your town, there is no disaster.",
+        "Live on old virtue. Perseverance brings danger, but in the end, good fortune. If you serve the king's affairs, you will achieve nothing.",
+        "You cannot win the dispute. Return to your destiny. Change and rest in steadfastness: good fortune.",
+        "The dispute is judged. Great good fortune.",
+        "Perhaps he is given a leather belt. By the end of the morning, it is stripped away three times."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 7,
+      "name": "The Army",
+      "judgement": "Perseverance brings good fortune. A seasoned leader brings good fortune and no blame.",
+      "image": "Water within the earth: the Army. Thus the noble one embraces the people and nourishes the multitude.",
+      "lines": [
+        "The army sets out with discipline; if order is not good, misfortune.",
+        "Being in the midst of the army brings good fortune and no blame; the king three times issues commands.",
+        "The army may cart corpses; misfortune.",
+        "The army camps on the left; no blame.",
+        "In the fields there are birds; it is favorable to seize and speak; no blame. The eldest son leads the army; the younger son carts corpses; perseverance brings misfortune.",
+        "The great ruler issues commands: establish states and make families; do not employ petty people."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 8,
+      "name": "Holding Together",
+      "judgement": "Good fortune. Consult the oracle again: if you are consistently upright and firm, there will be no blame. Unsettled people will come; those who come late meet misfortune.",
+      "image": "Water on the earth: holding together. The ancient kings used this to establish the many states and bring the feudal lords close.",
+      "lines": [
+        "There is trust. Holding together with it brings no blame. When trust fills a clay jar, in the end others will come; good fortune.",
+        "Holding together from within: uprightness brings good fortune.",
+        "Holding together with the wrong people.",
+        "Holding together with those outside: uprightness brings good fortune.",
+        "Manifest holding together. The king uses a three-sided drive, letting the game ahead escape. The people of the town do not fear him: good fortune.",
+        "Holding together without a head: misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 9,
+      "name": "Small Restraint",
+      "judgement": "Small restraint brings success. Dense clouds, no rain, coming from our western suburbs.",
+      "image": "Wind moves above heaven: small restraint. The noble person refines cultural virtue.",
+      "lines": [
+        "Returning by one's own path—what blame could there be? Good fortune.",
+        "Pulled back and returning—good fortune.",
+        "The carriage loses its wheel spokes; husband and wife turn their faces away from each other.",
+        "There is sincerity: blood departs, fear goes out—no blame.",
+        "There is sincerity, drawing others close; wealth shared with one's neighbors.",
+        "Now it has rained and settled; still the virtue is borne. A wife's steadfastness brings danger. When the moon is nearly full, the noble person's expedition brings misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 10,
+      "name": "Treading Carefully",
+      "judgement": "Treading on the tiger's tail; it does not bite, success.",
+      "image": "Heaven above, lake below: treading. The noble person distinguishes high and low, and settles the people's will.",
+      "lines": [
+        "With plain and simple treading, going forward brings no blame.",
+        "The path of treading is level and easy; a reclusive person, steadfast, brings good fortune.",
+        "One-eyed, yet able to see; lame, yet able to tread. Treading on the tiger's tail, it bites: misfortune. A warrior acts on behalf of the great ruler.",
+        "Treading on the tiger's tail, fearful and cautious; in the end, good fortune.",
+        "Decisive treading, steadfast; danger.",
+        "Observe the treading and examine the omens; when the cycle returns, great good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 11,
+      "name": "Peace and Flourishing",
+      "judgement": "Peace. The small departs, the great arrives. Good fortune and success.",
+      "image": "Heaven and earth unite: Peace. The ruler accordingly shapes and completes the way of heaven and earth, assists and harmonizes the gifts of heaven and earth, and thus guides the people.",
+      "lines": [
+        "Pulling up the cogongrass roots connects them in clumps. Setting out brings good fortune.",
+        "Bearing with the uncultivated, using one who can cross the river, not casting off the distant, and letting partisanship disappear: thus one wins esteem through central conduct.",
+        "There is no flat without a slope; there is no going without a return. Persisting through hardship brings no blame. Do not grieve over their trust; in food there is blessing.",
+        "Fluttering lightly, not wealthy, together with their neighbors; not on guard because of trust.",
+        "Emperor Yi gave his younger sister in marriage. This brings blessing and great good fortune.",
+        "The city wall falls back into the moat. Do not use troops. Proclaim the command from your own town. Persistence brings regret."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 12,
+      "name": "Stagnation",
+      "judgement": "Stagnation. It is not the right time for people. It does not benefit the noble person to persist. The great departs and the small arrives.",
+      "image": "Heaven and Earth do not interact: stagnation. The noble person uses frugal virtue to avoid difficulties and cannot be honored with wealth and salary.",
+      "lines": [
+        "Pulling up thatch grass, the whole clump comes with it. Persistence brings good fortune. Success.",
+        "Bearing and receiving. Small people have good fortune; the great person remains in stagnation. Success.",
+        "Bearing shame.",
+        "There is a command. No blame. Companions share in the blessing.",
+        "Resting from stagnation. The great person has good fortune. Its ruin, its ruin—tied to a bundle of mulberry shoots.",
+        "Overturning stagnation. First stagnation, then joy."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 13,
+      "name": "Union with Others",
+      "judgement": "Union in the open fields brings success. It is favorable to cross the great river. It is favorable for the noble one to remain steadfast.",
+      "image": "Heaven together with fire: union with others. The noble one sorts people into groups and distinguishes things.",
+      "lines": [
+        "Union with others at the gate: no blame.",
+        "Union with others only within one's clan: regret.",
+        "Hiding weapons in the thickets, he climbs the high mound; for three years he does not rise.",
+        "He mounts the city wall but cannot attack; good fortune.",
+        "Union with others: first wailing, then laughter; the great army conquers and meets together.",
+        "Union with others in the outskirts: no regret."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 14,
+      "name": "Great Possession",
+      "judgement": "Great success.",
+      "image": "Fire is above heaven: great possession. The noble person restrains evil and promotes good, and follows heaven's beneficial decree.",
+      "lines": [
+        "There is no harmful contact; it is not a fault. If one remains cautious of hardship, there will be no fault.",
+        "A large cart carries the load. There is somewhere to go; no fault.",
+        "A prince offers tribute to the Son of Heaven; a petty person cannot do this.",
+        "Not being ostentatious; no fault.",
+        "His sincerity is mutually shared, and he has dignity. Good fortune.",
+        "Heaven helps him. Good fortune, nothing is unfavorable."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 15,
+      "name": "Modest Humility",
+      "judgement": "Success. The noble person carries things through to the end.",
+      "image": "Mountain within the earth: modesty. The noble person reduces excess to increase scarcity, weighing things and giving out evenly.",
+      "lines": [
+        "A modest and humble noble person can cross great rivers. Good fortune.",
+        "Modesty that is heard. Persevering brings good fortune.",
+        "Modesty in labor. The noble person carries things through to the end. Good fortune.",
+        "Nothing is unfavorable. Modesty that yields.",
+        "Not wealthy, yet with neighbors. It is favorable to attack and punish. Nothing is unfavorable.",
+        "Modesty that is heard. It is favorable to send out troops and punish a city-state."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 16,
+      "name": "Thunder Joy",
+      "judgement": "It is favorable to install feudal lords and to send out armies.",
+      "image": "Thunder comes out of the earth and stirs: joy. The former kings accordingly made music to exalt virtue and presented it richly to the Supreme God, pairing it with their ancestors.",
+      "lines": [
+        "Crying out in joy: misfortune.",
+        "Firm as a rock; not waiting until the day's end. Persevering: good fortune.",
+        "Looking up with joy: regret. If one is slow, there will be regret.",
+        "Joy comes from him; great gain. Do not doubt; friends gather like a hairpin.",
+        "Persevering through illness; long without dying.",
+        "Dark joy; if completion brings change, no blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 17,
+      "name": "Following",
+      "judgement": "Great success. Favorable to be steadfast. No blame.",
+      "image": "Thunder is in the lake: Following. The noble person goes indoors to rest at nightfall.",
+      "lines": [
+        "The official has a change. Steadfastness brings good fortune. Going out to make contacts brings success.",
+        "Holding to the child, one loses the mature man.",
+        "Holding to the mature man, one loses the child. Following brings what one seeks. Favorable to remain steadfast.",
+        "Following brings gain. Steadfastness brings misfortune. With sincerity in the Way and clarity, what blame?",
+        "Sincerity in what is excellent brings good fortune.",
+        "Bound and tied, then led along and fastened. The king sacrifices at the western mountain."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 18,
+      "name": "Repairing Decay",
+      "judgement": "Great success. It is favorable to cross the great river.",
+      "image": "Below the mountain there is wind: decay. The noble person stirs up the people and cultivates their virtue.",
+      "lines": [
+        "Setting right a father's decayed affairs. There is a son, so the deceased father has no blame. Danger, but in the end good fortune.",
+        "Setting right a mother's decayed affairs. Do not persist in being firm.",
+        "Setting right a father's decayed affairs. There is a little regret, but no great blame.",
+        "Being lenient toward a father's decayed affairs. Going forward brings regret.",
+        "Setting right a father's decayed affairs. Use praise and reputation.",
+        "Not serving kings and nobles, setting one's affairs high."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 19,
+      "name": "Approaching Rule",
+      "judgement": "Great success. Favorable to be steadfast and correct.",
+      "image": "The earth rests above the lake: approaching. The noble person teaches and thinks without end, and accepts and protects the people without bounds.",
+      "lines": [
+        "Approaching with influence. Steadfastness brings good fortune.",
+        "Approaching with influence. Good fortune; nothing is unfavorable.",
+        "Approaching with sweetness. Nothing is favorable. If one becomes anxious about it, there will be no blame.",
+        "Approaching with utmost sincerity. No blame.",
+        "Approaching with wisdom. This is fitting for a great ruler. Good fortune.",
+        "Approaching with honesty and warmth. Good fortune. No blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 20,
+      "name": "Watching",
+      "judgement": "The washing of hands has been done, but the offering has not yet been presented. There is trust, and they look up with reverence.",
+      "image": "Wind moves over the earth: watching. The ancient kings inspected the regions, observed the people, and established their teachings.",
+      "lines": [
+        "A child's watching. For a petty person, no blame. For a noble person, regret.",
+        "Peeping through a crack to watch. Favorable for a woman's steadfastness.",
+        "Watching my own life, advancing or withdrawing.",
+        "Watching the light of the state. Favorable to be a guest of the king.",
+        "Watching my own life. A noble person has no blame.",
+        "Watching his life. A noble person has no blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 21,
+      "name": "Biting Through",
+      "judgement": "Success. It is favorable to apply the law.",
+      "image": "Thunder and lightning: Biting Through. The ancient kings used this to clarify punishments and set the laws in order.",
+      "lines": [
+        "His foot is locked in a wooden shackle, hiding his toes. No blame.",
+        "He bites through soft meat and his nose is hidden. No blame.",
+        "He bites dried meat and tastes poison. A small regret, but no blame.",
+        "He bites dried meat with bones and finds a metal arrow. It is favorable to be firm in hardship and steady. Good fortune.",
+        "He bites dried meat and finds yellow gold. Steadfastness brings danger, but no blame.",
+        "He wears a wooden collar that hides his ears. Misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 22,
+      "name": "Adornment",
+      "judgement": "Success. It is favorable to undertake something small.",
+      "image": "Fire at the foot of a mountain: Adornment. The gentleman uses this to clarify minor affairs, but does not dare to decide lawsuits.",
+      "lines": [
+        "He adorns his toes; he leaves the carriage and walks on foot.",
+        "He adorns his beard.",
+        "Adorned and glossy; persevering firmly brings good fortune.",
+        "Adorned and white-haired; a white horse gallops. They are not robbers but suitors.",
+        "Adorned in a hill garden; a bundle of silk, scanty and small. Regret, but in the end good fortune.",
+        "Plain adornment; no blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 23,
+      "name": "Stripping Away",
+      "judgement": "It is not favorable to have somewhere to go.",
+      "image": "The mountain rests on the earth: stripping away. Thus the superior person thickens the foundation below to make the home secure.",
+      "lines": [
+        "Stripping the bed at the feet. To disregard steadfastness brings misfortune.",
+        "Stripping the bed at the frame. To disregard steadfastness brings misfortune.",
+        "Stripping it away. No blame.",
+        "Stripping the bed down to the skin. Misfortune.",
+        "A string of fish. With the palace women receiving favor, nothing is unfavorable.",
+        "A large fruit is not eaten. The superior person gains a carriage; the petty person is stripped of their hut."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 24,
+      "name": "Return of Thunder",
+      "judgement": "Prosperous. Going out and coming in without harm; friends arrive, no blame.",
+      "image": "Thunder within the earth: return. The former kings thus closed the passes on the winter solstice; merchants and travelers did not move, and the rulers did not inspect the regions.",
+      "lines": [
+        "Not far then returning: no great regret, greatly auspicious.",
+        "A restful return: auspicious.",
+        "Repeated returning: danger, but no blame.",
+        "Walking the middle path, alone returning.",
+        "Sincere and earnest return: no regret.",
+        "Deluded return: misfortune, with disaster. If used to send troops, in the end there will be great defeat, bringing misfortune to the ruler of the state, so that for ten years one cannot launch a campaign."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 25,
+      "name": "Innocence",
+      "judgement": "Supreme success, favorable and upright. If one is not upright, there will be trouble; it is not favorable to have a destination.",
+      "image": "Thunder moves under heaven; all things are without falsehood. The former kings, in response to the times, nurtured all things.",
+      "lines": [
+        "Without falsehood, going brings good fortune.",
+        "Not plowing yet reaping, not clearing new land yet harvesting the old—then it is favorable to have a destination.",
+        "The disaster of innocence: someone ties up a cow; the traveler gains it, the townspeople suffer the disaster.",
+        "One may be upright; there is no blame.",
+        "The illness of no loss; do not take medicine, there will be joy.",
+        "Without falsehood, action brings trouble; nothing is favorable."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 26,
+      "name": "Great Taming",
+      "judgement": "It is favorable to be steadfast. Not eating at home brings good fortune. It is favorable to cross the great river.",
+      "image": "Heaven is within the mountain: great taming. The noble person learns many words and deeds of the past in order to cultivate their virtue.",
+      "lines": [
+        "There is danger; it is favorable to stop.",
+        "The carriage has lost its axle straps.",
+        "Fine horses pursue. It is favorable to be steadfast in hardship. Practice driving and guarding the carriage. It is favorable to have somewhere to go.",
+        "The wooden yoke on a young bull: great good fortune.",
+        "The tusks of a gelded boar: good fortune.",
+        "To bear the great thoroughfare of heaven: success."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 27,
+      "name": "Nourishment",
+      "judgement": "Perseverance brings good fortune. Observe how nourishment is provided, and seek your own food.",
+      "image": "Thunder beneath the mountain: Nourishment. Thus the noble one is careful in speech and moderate in eating and drinking.",
+      "lines": [
+        "You abandon your magical turtle and watch me with jaws agape. Misfortune.",
+        "Nourishment upside down. This goes against the norm. Seeking nourishment from a hill: going on brings misfortune.",
+        "Contrary nourishment. Persevering brings misfortune. For ten years do not act. Nothing is favorable.",
+        "Nourishment upside down. Good fortune. Glaring like a tiger, with intense desires. No blame.",
+        "Going against the norm. Remaining steadfast brings good fortune. Do not cross the great river.",
+        "The source of nourishment. Danger, but good fortune. Favorable to cross the great river."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 28,
+      "name": "Great Excess",
+      "judgement": "The ridgepole sags. It is favorable to have somewhere to go. Success.",
+      "image": "The lake submerges the tree: great excess. Thus the noble person stands alone without fear and withdraws from the world without distress.",
+      "lines": [
+        "Placing a mat of white cogongrass beneath: no blame.",
+        "A withered poplar puts forth sprouts; an old man gets a young wife. Nothing is unfavorable.",
+        "The ridgepole sags. Misfortune.",
+        "The ridgepole rises. Good fortune, but if there is something else, regret.",
+        "A withered poplar blooms; an old woman gets a young husband. No blame and no praise.",
+        "Crossing too far, the top of the head is submerged. Misfortune, but no blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 29,
+      "name": "Water Repeated",
+      "judgement": "There is sincerity. Only the heart finds passage. Action brings honor.",
+      "image": "Water flows on and on, repeated danger. The noble person keeps constant virtue and practices teaching.",
+      "lines": [
+        "Repeated danger: he falls into a pit within the pit. Misfortune.",
+        "The pit has danger; seek small gains.",
+        "Coming and going brings pit after pit. Danger and unease. He falls into a pit. Do not act.",
+        "A jug of wine, two bowls of grain, offered with a clay pot. He sends a message through the window. In the end, no blame.",
+        "The pit is not filled, only level. Once level, no blame.",
+        "Bound with cords, placed in a thicket of thorns. For three years he does not get out. Misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 30,
+      "name": "The Clinging Fire",
+      "judgement": "It is favorable to be steadfast. Success. Raising a cow brings good fortune.",
+      "image": "Light arises twice: this is the Clinging. The great person continues the light and shines over the four directions.",
+      "lines": [
+        "The footsteps are confused and tangled. Be respectful and careful, and there will be no blame.",
+        "Yellow light. Supreme good fortune.",
+        "The light of the setting sun. If one does not drum on the jug and sing, then great old age will bring lamentation. Misfortune.",
+        "Sudden, it comes; it burns; it dies; it is cast aside.",
+        "Tears flow in streams, with grief and lamentation. Good fortune.",
+        "The king goes out to punish. There is merit. He cuts off heads and captures those who are not his own kind. No blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 31,
+      "name": "Mutual Influence",
+      "judgement": "Success. Favorable. Persevering. Taking a wife brings good fortune.",
+      "image": "A lake on top of a mountain: mutual influence. The noble person accepts others with emptiness.",
+      "lines": [
+        "Influence reaches the big toe.",
+        "Influence reaches the calf. Misfortune. Staying put brings good fortune.",
+        "Influence reaches the thigh. Holding on to what one follows, going forward brings regret.",
+        "Persevering brings good fortune. Regret vanishes. Restless coming and going, friends follow your thoughts.",
+        "Influence reaches the back. No regret.",
+        "Influence reaches the jaw, cheeks, and tongue."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 32,
+      "name": "Enduring Thunder and Wind",
+      "judgement": "Success. No blame. Favorable to be steadfast. Favorable to have a goal to go toward.",
+      "image": "Thunder and wind: endurance. The noble person stands firm and does not change their direction.",
+      "lines": [
+        "Digging too deep for permanence: being steadfast brings misfortune. Nothing favorable.",
+        "Regret vanishes.",
+        "Not enduring in one's virtue: one may receive shame. Being steadfast brings difficulty.",
+        "The fields yield no game.",
+        "Enduring in one's virtue: being steadfast. For a woman, good fortune; for a man, misfortune.",
+        "Shaking permanence: misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 33,
+      "name": "Retreat",
+      "judgement": "Success. It is favorable to be steadfast in small matters.",
+      "image": "A mountain beneath heaven: the image of Retreat. Thus the noble person keeps a distance from petty people, not with hatred but with dignity.",
+      "lines": [
+        "Retreating at the tail end: danger. Do not undertake anything to go toward.",
+        "Held fast with the hide of a yellow ox: nothing can pull it away.",
+        "Tethered retreat: there is illness and danger. To rear servants and concubines: good fortune.",
+        "A willing retreat: good fortune for the noble person, not so for the petty person.",
+        "A fine retreat: steadfastness brings good fortune.",
+        "A ample retreat: nothing is unfavorable."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 34,
+      "name": "Great Power",
+      "judgement": "Favorable. Perseverance brings good fortune.",
+      "image": "Thunder above heaven: great power. The noble person does not tread on what is contrary to propriety.",
+      "lines": [
+        "Power in the toes. Advancing brings misfortune, but there is sincerity.",
+        "Perseverance brings good fortune.",
+        "A petty person uses force; a noble person does not. Perseverance brings danger. A ram butts a hedge and gets its horns tangled.",
+        "Perseverance brings good fortune; regret vanishes. The hedge opens and does not entangle. Power is in the axle of a great wagon.",
+        "Losing the sheep in ease. No regret.",
+        "A ram butts a hedge. It cannot retreat, cannot advance. Nothing is favorable. Difficulty brings good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 35,
+      "name": "Bright Advance",
+      "judgement": "The prosperous marquis is given many horses and received three times in a single day.",
+      "image": "Brightness comes forth over the earth: advance. The noble person thereby makes their bright virtue shine.",
+      "lines": [
+        "Advancing, then being pushed back; persistence brings good fortune. Without trust, be generous and there will be no blame.",
+        "Advancing with worry; persistence brings good fortune. One receives this great blessing from the royal grandmother.",
+        "The crowd agrees; regret vanishes.",
+        "Advancing like a field rat; persistence brings danger.",
+        "Regret vanishes; do not fret over loss and gain. Going forward brings good fortune, nothing is unfavorable.",
+        "Advancing to the horns; only fit for attacking one's own city. Danger, then good fortune; no blame, but persistence brings fault."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 36,
+      "name": "Light Wounded",
+      "judgement": "It is favorable to endure hardship and stay firm.",
+      "image": "Light enters the earth: this represents Light Wounded. The noble person, when governing the people, uses dimness to achieve clarity.",
+      "lines": [
+        "Light wounded in flight, it droops its wings. The noble person on a journey goes three days without food. There is somewhere to go, but the host will have words.",
+        "Light wounded, wounded in the left thigh. If one uses a strong horse to rescue, good fortune.",
+        "Light wounded in the southern hunt, one captures the great leader. Do not be hasty in being firm.",
+        "Entering the left belly, one obtains the heart of the Light Wounded, and goes out from the gate and courtyard.",
+        "The Light Wounded of Jizi: favorable to be firm.",
+        "Not bright but dark, at first it climbed to heaven, afterwards it entered the earth."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 37,
+      "name": "The Family",
+      "judgement": "It is favorable for the woman to be steadfast.",
+      "image": "Wind comes out from fire: this is the family. The noble person is substantial in speech and constant in conduct.",
+      "lines": [
+        "Guard the home at the start; regret disappears.",
+        "She has no independent undertakings; she manages the food and drink within. Steadfastness brings good fortune.",
+        "If the family is harshly disciplined, there may be regret and severity, but good fortune comes. If the wife and children are always giggling and frivolous, in the end there will be regret.",
+        "She enriches the family; great good fortune.",
+        "The king approaches the family with sincerity; do not worry; good fortune.",
+        "There is trustworthiness and dignity; in the end, good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 38,
+      "name": "Opposition",
+      "judgement": "Small matters bring good fortune.",
+      "image": "Fire above, marsh below: opposition. The noble person unites with others while remaining distinct.",
+      "lines": [
+        "Regret disappears. If a horse is lost, do not chase it; it returns on its own. Seeing an unpleasant person brings no blame.",
+        "Meeting the host in a lane brings no blame.",
+        "Seeing a cart dragged, its ox pulled back, the person branded and mutilated. No good beginning, but a good end.",
+        "Opposition and isolation. Meeting a great man, mutual trust. Danger, but no blame.",
+        "Regret disappears. One's clan bites through skin. Going brings what blame?",
+        "Isolated in opposition. Seeing a pig covered in mud, a cart full of ghosts. First draw the bow, then release it. They are not bandits but suitors. Going and meeting rain brings good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 39,
+      "name": "Water on Mountain",
+      "judgement": "The southwest is favorable; the northeast is not favorable. It is favorable to see the great man. Persistence brings good fortune.",
+      "image": "Water sits on top of a mountain: obstruction. The noble person turns inward and cultivates virtue.",
+      "lines": [
+        "Going brings obstruction; coming brings praise.",
+        "The king's servant faces obstruction upon obstruction, but not because of personal reasons.",
+        "Going brings obstruction; coming turns back.",
+        "Going brings obstruction; coming brings connection.",
+        "Great obstruction; friends come.",
+        "Going brings obstruction; coming brings abundance. Good fortune. It is favorable to see the great man."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 40,
+      "name": "Release from Trouble",
+      "judgement": "It is favorable to go southwest. If there is nowhere to go, returning brings good fortune. If there is somewhere to go, going early brings good fortune.",
+      "image": "Thunder and rain act together: release. The noble person pardons faults and forgives crimes.",
+      "lines": [
+        "No blame.",
+        "In the field one catches three foxes and obtains a yellow arrow. Persevering brings good fortune.",
+        "Carrying a burden on one's back and riding in a carriage invites robbers to arrive. Persevering brings regret.",
+        "Release your servant. Friends arrive, and then there is trust.",
+        "The noble person is released and untied. Good fortune. There is trust among small people.",
+        "The prince shoots a falcon on top of a high wall. He catches it. Nothing is unfavorable."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 41,
+      "name": "Decrease",
+      "judgement": "There is sincerity; great good fortune, no blame, and it is proper to persevere. It is favorable to have a goal. How should this be done? Two small bowls may be used for the offering.",
+      "image": "Below the mountain there is a lake: Decrease. The gentleman thus restrains anger and blocks desire.",
+      "lines": [
+        "When the work is done, go quickly. No blame; consider how much to decrease.",
+        "Favorable to persevere. Going on brings misfortune. Do not decrease; increase it.",
+        "When three people walk together, one is decreased. When one person walks, he gains a friend.",
+        "Reduce your illness; make haste and there will be joy. No blame.",
+        "Someone increases it with ten pairs of turtles; this cannot be refused. Great good fortune.",
+        "Do not decrease; increase it. No blame; perseverance brings good fortune. Favorable to have a goal; you gain servants without families."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 42,
+      "name": "Increase",
+      "judgement": "It is favorable to have a destination; it is favorable to cross the great river.",
+      "image": "Wind and thunder: Increase. The noble person, seeing good, moves toward it; having faults, corrects them.",
+      "lines": [
+        "It is favorable to undertake great work; great good fortune, no blame.",
+        "Someone increases it; ten pairs of tortoise shells cannot be refused. A lasting steadfastness brings good fortune. The king presents offerings to the supreme god; good fortune.",
+        "Increase is used in the matter of misfortune; no blame. There is sincerity and central conduct. Announce it to the duke with a jade tablet.",
+        "Central conduct. Announce it to the duke, and he follows. It is favorable to act as support and move the capital.",
+        "There is sincerity and a kind heart. Do not ask; great good fortune. There is sincerity; kindness benefits my virtue.",
+        "No one increases it; someone strikes it. If the mind is not constant, misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 43,
+      "name": "Resoluteness",
+      "judgement": "Proclaimed in the royal court, sincerely calling out, there is danger.",
+      "image": "The lake has risen above the sky: resoluteness. The noble one distributes rewards down to those below; dwelling in virtue, he avoids envy.",
+      "lines": [
+        "Strong in the advancing toes; going forward without victory brings blame.",
+        "Alert and calling out; though there are armed forces at night, do not worry.",
+        "Strong in the cheekbones; there is misfortune. The noble one is resolute and resolute, walking alone and meeting rain, getting soaked and resentful, but without blame.",
+        "The buttocks have no skin; his walking is hesitant and difficult. Leading a sheep, regret vanishes, but hearing words, he does not believe.",
+        "The purslane is resolute and resolute; walking the middle path, without blame.",
+        "No calling out; in the end there is misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 44,
+      "name": "Coming to Meet",
+      "judgement": "The woman is strong. Do not marry such a woman.",
+      "image": "Wind beneath heaven: coming to meet. The ruler spreads commands and proclaims them to the four directions.",
+      "lines": [
+        "Tied to a metal brake block. Persevering brings good fortune. To go somewhere brings misfortune; a lean pig tugs and struggles.",
+        "There is fish in the wrapping. No blame. It is not good for guests.",
+        "No skin on the buttocks; walking is hesitant and halting. Danger, but no great blame.",
+        "No fish in the wrapping. Trouble arises.",
+        "Wrap a melon with willow. Holding inner brilliance, there is loss sent from heaven.",
+        "Coming to meet at the horns. Regret, but no blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 45,
+      "name": "Gathering Together",
+      "judgement": "Success. The king approaches his temple. It is favorable to see the great man. Success. It is favorable to be steadfast. Using a large sacrificial animal brings good fortune. It is favorable to have somewhere to go.",
+      "image": "A lake rises above the earth: Gathering Together. The noble person thus sharpens weapons and guards against the unforeseen.",
+      "lines": [
+        "There is sincerity, but it does not last. Then there is disorder, then gathering. If you cry out, one grasp brings laughter. Do not worry; going brings no blame.",
+        "Drawing others brings good fortune, no blame. With sincerity, even a small sacrifice is favorable.",
+        "Gathering and hesitating brings no benefit. Going brings no blame, but there is a small regret.",
+        "Great good fortune, no blame.",
+        "Gathering with a position: no blame. If there is no sincerity, great steadfastness from the beginning will make regret vanish.",
+        "Sighing and weeping tears: no blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 46,
+      "name": "Rising Earth",
+      "judgement": "Great success. It is favorable to see the great person. Do not worry. Going south brings good fortune.",
+      "image": "Wood grows within the earth: rising. The noble person complies with virtue, accumulates small things to achieve height and greatness.",
+      "lines": [
+        "Trustworthy rising: great good fortune.",
+        "With sincerity, even a simple sacrifice is beneficial. No blame.",
+        "Rising into an empty city.",
+        "The king makes offerings at Mount Qi. Good fortune. No blame.",
+        "Perseverance brings good fortune. Rising by steps.",
+        "Dark rising. Favorable for unceasing perseverance."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 47,
+      "name": "Confined by Water",
+      "judgement": "Success. Perseverance brings good fortune to the great person, no blame. Words are not believed.",
+      "image": "The lake has no water: confinement. The noble person dedicates their life to fulfilling their will.",
+      "lines": [
+        "The buttocks are confined by a tree stump. Entering a dark valley, for three years one does not see anyone.",
+        "Confined by wine and food. The crimson knee covers are just coming. It is favorable to perform sacrifices. Going forward brings misfortune, but no blame.",
+        "Confined by stones, leaning on thorns. Entering one's palace, one does not see one's wife. Misfortune.",
+        "Coming slowly, confined by a metal chariot. Difficulty, but there is an end.",
+        "Nose cut off and feet cut off. Confined by crimson knee covers. Then slowly there is relief. It is favorable to perform sacrifices.",
+        "Confined by vines, on a shaky perch. One says moving brings regret. With regret, going forward brings good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 48,
+      "name": "The Well",
+      "judgement": "You may change the town, but not the well. Nothing is lost, nothing gained. People come and go, and the well remains the well.",
+      "image": "Wood over water: the well. The noble person labors with the people and encourages mutual help.",
+      "lines": [
+        "The well is muddy and its water undrinkable; an old well, no birds come to it.",
+        "The well is a valley where minnows dart; the jug is worn and leaks.",
+        "The well is cleaned but no one drinks from it. This grieves my heart. It could be drawn from. If the king were clear-sighted, all would receive its blessing.",
+        "The well is lined with brick. No blame.",
+        "The well is clear; its cold spring water is fit to drink.",
+        "The well is drawn from; do not cover it. With sincerity, great good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 49,
+      "name": "Revolution and Change",
+      "judgement": "When the day has fully come, there will be trust. Great success, beneficial to be steadfast. Regret disappears.",
+      "image": "Fire within the lake: revolution. The noble person orders the calendar and clarifies the seasons.",
+      "lines": [
+        "Wrapped in the hide of a yellow ox.",
+        "When the day has fully come, then make the change. Going forward brings good fortune; no blame.",
+        "Going forward brings misfortune; steadfastness brings danger. The words of change are agreed upon three times; there is trust.",
+        "Regret disappears. There is trust. Changing the mandate brings good fortune.",
+        "The great person transforms like a tiger. Before divination, there is trust.",
+        "The noble person transforms like a leopard; the petty person changes only their face. Going forward brings misfortune; staying steadfast brings good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 50,
+      "name": "The Cauldron",
+      "judgement": "Supreme good fortune. Success.",
+      "image": "Fire above wood: the cauldron. The noble person stabilizes their position and fulfills their destiny.",
+      "lines": [
+        "The cauldron is overturned, its legs pointing up. It is favorable to pour out the stale contents. Taking a concubine for the sake of having a son brings no blame.",
+        "The cauldron contains food. My rival is ill and cannot come near me. Good fortune.",
+        "The cauldron's ears are altered, so it cannot be moved. The pheasant fat is not eaten. Just as rain is about to fall, regret fades. In the end, good fortune.",
+        "The cauldron's legs break, spilling the duke's meal. His form is drenched. Misfortune.",
+        "The cauldron has yellow ears and golden carrying rings. Favorable to be steadfast.",
+        "The cauldron has jade carrying rings. Great good fortune. Nothing is unfavorable."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 51,
+      "name": "Thunder Repeated",
+      "judgement": "Success. Thunder comes with terror, then laughter and talk. It shakes for a hundred miles, yet the sacrificial ladle and millet wine are not lost.",
+      "image": "Repeated thunder: Thunder. The noble person, in fear, cultivates self-reflection.",
+      "lines": [
+        "Thunder comes with terror, then laughter and talk. Good fortune.",
+        "Thunder comes with danger. Losing wealth in abundance, climb to a high hill. Do not pursue; after seven days you will get it.",
+        "Thunder rouses anxiety. If you move with thunder, there will be no disaster.",
+        "Thunder sinks into mud.",
+        "Thunder comes and goes with danger. Do not lose anything in abundance; you have affairs.",
+        "Thunder brings trembling; look around in fear. Setting out brings misfortune. If thunder does not strike oneself but the neighbor, there is no blame. Marriage brings words."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 52,
+      "name": "Keeping Still",
+      "judgement": "Keeping still at the back, one does not obtain his body. Walking in his courtyard, he does not see the people. No blame.",
+      "image": "Mountains joined together: Keeping Still. Thus the noble one does not let his thoughts go beyond his position.",
+      "lines": [
+        "Keeping still at the toes. No blame. Favorable to remain steadfast for long.",
+        "Keeping still at the calves. He cannot rescue those he follows. His heart is not glad.",
+        "Keeping still at the waist. He splits his spine. Danger. It scorches the heart.",
+        "Keeping still at the body. No blame.",
+        "Keeping still at the jaws. Words are orderly. Regret vanishes.",
+        "Thick stillness. Good fortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 53,
+      "name": "Gradual Advance",
+      "judgement": "The woman's marriage is auspicious. It is favorable to be steadfast.",
+      "image": "Wood on the mountain: gradual advance. The noble person stays in worthy virtue and improves customs.",
+      "lines": [
+        "The wild goose gradually advances to the shore. The young son is in danger; there is talk, but no blame.",
+        "The wild goose gradually advances to the rock. Drinking and eating happily, auspicious.",
+        "The wild goose gradually advances to the high land. The husband goes and does not return; the wife is pregnant but does not give birth. Misfortune. It is favorable to resist robbers.",
+        "The wild goose gradually advances to the tree. Perhaps it finds a flat branch. No blame.",
+        "The wild goose gradually advances to the mound. The wife is three years pregnant but does not give birth. In the end nothing can overcome it. Auspicious.",
+        "The wild goose gradually advances to the high land. Its feathers can be used for ceremonial display. Auspicious."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 54,
+      "name": "Marrying Maiden",
+      "judgement": "The marrying maiden. Advancing brings misfortune; nothing is beneficial.",
+      "image": "Thunder above the lake: the marrying maiden. The noble person, mindful of the end, understands what will decay.",
+      "lines": [
+        "The marrying maiden as a younger sister. Though lame, one can still walk. Advancing brings good fortune.",
+        "Though one-eyed, one can still see. It is favorable for a secluded person to remain steadfast.",
+        "The marrying maiden is delayed and waits. She returns and goes as a younger sister.",
+        "The marrying maiden delays the wedding time. A late marriage has its proper time.",
+        "Emperor Yi married off his younger sister. The sleeve of the principal bride was not as fine as the sleeve of her younger sister. The moon is nearly full. Good fortune.",
+        "The woman holds a basket with no substance; the man stabs a sheep but there is no blood. Nothing is beneficial."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 55,
+      "name": "Abundance and Thunder",
+      "judgement": "Success. The king arrives at it. Do not worry. Be like the sun at noon.",
+      "image": "Thunder and lightning both arrive: abundance. The noble person uses this to decide lawsuits and carry out punishments.",
+      "lines": [
+        "Meeting your matching host. Even if it takes ten days, there is no blame. Going brings honor.",
+        "Abundance in your screening. At noon you see the Dipper. Going brings doubt and illness. If you have sincerity, it will emerge. Good fortune.",
+        "Abundance in your curtain. At noon you see small stars. You break your right arm. No blame.",
+        "Abundance in your screen. At noon you see the Dipper. Meeting your equal host. Good fortune.",
+        "Coming brilliance. There is celebration and praise. Good fortune.",
+        "Abundance in your house. You cover your home. Peering into its door, it is quiet and empty. For three years no one is seen. Misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 56,
+      "name": "The Wanderer",
+      "judgement": "Small success. The wanderer who keeps steady will have good fortune.",
+      "image": "Fire on the mountain: the wanderer. The noble person applies punishments with clarity and caution, and does not let cases drag on.",
+      "lines": [
+        "The wanderer is petty and fussy; this is what brings disaster on him.",
+        "The wanderer comes to an inn, carries his goods, and finds a faithful young servant.",
+        "The wanderer burns down his inn and loses his young servant. Persisting brings danger.",
+        "The wanderer stays in a place and obtains goods and an axe, but his heart is not glad.",
+        "He shoots a pheasant and loses one arrow, but in the end gains praise and appointment.",
+        "The bird burns its nest. The wanderer laughs first, then wails. He loses his cow at Yi. Misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 57,
+      "name": "Gentle Wind",
+      "judgement": "Small success. It is favorable to have somewhere to go. It is favorable to see the great person.",
+      "image": "Wind following wind: gentle. The noble person renews commands and carries out affairs.",
+      "lines": [
+        "Advance and retreat. It is favorable for a warrior's steadfastness.",
+        "Gentle beneath the bed. Using many scribes and shamans: auspicious, no blame.",
+        "Repeated gentleness: regret.",
+        "Regret vanishes. Hunting catches three kinds of game.",
+        "Steadfastness brings good fortune; regret vanishes, nothing is unfavorable. No beginning, but a good end. Three days before geng, three days after geng: good fortune.",
+        "Gentle beneath the bed, losing one's resources and axes. Steadfastness brings misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 58,
+      "name": "Joyful Lake",
+      "judgement": "Success. Favorable to be steadfast and correct.",
+      "image": "Lakes joined together: Joy. The noble person joins with friends for discussion and practice.",
+      "lines": [
+        "Harmonious joy: good fortune.",
+        "Joy through trust: good fortune; regret vanishes.",
+        "Coming to seek joy: misfortune.",
+        "Weighing joy, not yet at peace; if one stays firm against the ailment, there will be joy.",
+        "Trust placed in what is being stripped away: danger.",
+        "Leading joy."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 59,
+      "name": "Dispersing Flow",
+      "judgement": "Success. The king approaches the temple. It is favorable to cross the great river. It is favorable to be steadfast.",
+      "image": "Wind moves over water, dispersing. The former kings, in accordance with this, sacrificed to the Lord and established temples.",
+      "lines": [
+        "He uses a strong horse to rescue; good fortune.",
+        "He rushes to his support, regret vanishes.",
+        "He disperses himself; no regret.",
+        "He disperses his group; great good fortune. Dispersing brings a mound; it is not what ordinary people think.",
+        "He disperses his great command like sweat; he disperses the king's dwelling; no blame.",
+        "He disperses his blood; he departs far away; no blame."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 60,
+      "name": "Water Over Lake",
+      "judgement": "Success. Bitter restraint cannot be maintained.",
+      "image": "Water above the lake: restraint. The noble person sets measures and standards, and discusses virtues and conduct.",
+      "lines": [
+        "Not leaving the courtyard: no blame.",
+        "Not leaving the gate and courtyard: misfortune.",
+        "If one does not restrain oneself, one will lament. No blame.",
+        "Contented restraint: success.",
+        "Restraint: good fortune. Going forward brings esteem.",
+        "Bitter restraint: persistence brings misfortune, but regret disappears."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 61,
+      "name": "Inner Truth",
+      "judgement": "Even pigs and fish are fortunate. It is favorable to cross the great river. It is favorable to be steadfast.",
+      "image": "Wind over the lake: inner truth. The noble person discusses lawsuits and delays executions.",
+      "lines": [
+        "Hidden safety brings good fortune. If there is something else, there will be no peace.",
+        "A crane calls in the shade; its young respond. I have good wine; I will share it with you.",
+        "Meeting an opponent, some drum, some stop, some weep, some sing.",
+        "The moon is nearly full. The horse's mate is lost. No blame.",
+        "Having truth that binds, no blame.",
+        "The flying sound rises to heaven. Perseverance brings misfortune."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 62,
+      "name": "Small Excess",
+      "judgement": "Success. Favorable. Perseverance.",
+      "image": "Thunder on the mountain: Small Excess. Thus the noble person exceeds in courtesy, exceeds in mourning, exceeds in frugality.",
+      "lines": [
+        "A flying bird brings misfortune.",
+        "Surpassing one's grandfather, meeting one's grandmother; not reaching one's ruler, meeting one's minister. No blame.",
+        "If one does not exceed in guarding, following may bring harm. Misfortune.",
+        "No blame. Not exceeding, one meets it. Going brings danger; must be cautious. Do not persist in steadfastness.",
+        "Dense clouds, no rain, from my western outskirts. The duke shoots and takes that one in the cave.",
+        "Not meeting, surpassing it. The flying bird leaves it. Misfortune. This is called disaster."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 63,
+      "name": "After Completion",
+      "judgement": "Success in small matters. It is favorable to be steadfast. In the beginning good fortune, in the end disorder.",
+      "image": "Water is above fire: After Completion. The noble person thinks of trouble and takes preventive measures.",
+      "lines": [
+        "He drags his wheel and wets his tail. No blame.",
+        "The woman loses her hairpin. Do not chase it; after seven days she will get it.",
+        "Emperor Gaozong attacked the Guifang and conquered them in three years. Do not employ petty people.",
+        "There are tattered clothes. Be on guard all day.",
+        "The eastern neighbor slaughters an ox, but it is not as good as the western neighbor's simple spring sacrifice, who truly receives the blessing.",
+        "He wets his head. Danger."
+      ],
+      "extras": []
+    },
+    {
+      "kingWen": 64,
+      "name": "Not Yet Complete",
+      "judgement": "Success. A small fox, almost across, wets its tail; nothing is gained.",
+      "image": "Fire above water: not yet complete. The noble person carefully distinguishes things and places each in its proper position.",
+      "lines": [
+        "It wets its tail; trouble.",
+        "It drags its wheel; steadfastness brings good fortune.",
+        "Not yet complete; advancing brings misfortune, but it is favorable to cross the great river.",
+        "Steadfastness brings good fortune; regret disappears. Stirring up action to attack the Gui Fang; after three years, there is reward from the great state.",
+        "Steadfastness brings good fortune, no regret. The noble person's light; there is trust; good fortune.",
+        "There is trust while drinking wine; no blame. But if it wets its head, even trust goes astray."
+      ],
+      "extras": []
+    }
+  ]
+}
