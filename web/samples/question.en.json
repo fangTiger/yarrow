@@ -1,0 +1,951 @@
+{
+ "id": "izvprdgis2rg3o3olq7uqkmi4i",
+ "kind": "question",
+ "createdAt": "2026-10-12T19:19:29.058Z",
+ "question": "Will my new business partnership work out this year?",
+ "subject": {
+  "suggestedKey": "peers",
+  "finalKey": "career",
+  "overridden": true,
+  "changes": 0
+ },
+ "payment": {
+  "firstHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+ },
+ "throws": [
+  {
+   "index": 1,
+   "coins": [
+    0,
+    0,
+    0
+   ],
+   "backs": 0,
+   "value": 6,
+   "name": "交",
+   "moving": true,
+   "blockNumber": "66867148",
+   "blockHash": "0xb23e494f85168e3e0ab61746b40fddcb0d00af8b5cc0970d5cc55294397267fa",
+   "blockTimestamp": "1791832769"
+  },
+  {
+   "index": 2,
+   "coins": [
+    1,
+    0,
+    0
+   ],
+   "backs": 1,
+   "value": 7,
+   "name": "单",
+   "moving": false,
+   "blockNumber": "66867150",
+   "blockHash": "0x30bdfd69a6ef4106264ef6133252cacbb5ee5607cfa4110dd64e0f52dc9a406d",
+   "blockTimestamp": "1791832770"
+  },
+  {
+   "index": 3,
+   "coins": [
+    1,
+    1,
+    1
+   ],
+   "backs": 3,
+   "value": 9,
+   "name": "重",
+   "moving": true,
+   "blockNumber": "66867151",
+   "blockHash": "0x0c398b0a3f8906ed5a6ab171e23d778a166bd9d6571084d0c3162eedb5069f9d",
+   "blockTimestamp": "1791832771"
+  },
+  {
+   "index": 4,
+   "coins": [
+    1,
+    1,
+    1
+   ],
+   "backs": 3,
+   "value": 9,
+   "name": "重",
+   "moving": true,
+   "blockNumber": "66867152",
+   "blockHash": "0x54edb58e7418b6946189be445f9b7d730861fb71331876908d2116d1ba5137d5",
+   "blockTimestamp": "1791832771"
+  },
+  {
+   "index": 5,
+   "coins": [
+    0,
+    0,
+    0
+   ],
+   "backs": 0,
+   "value": 6,
+   "name": "交",
+   "moving": true,
+   "blockNumber": "66867153",
+   "blockHash": "0x026a646eefccab0b72b0b93ef453538cb858ff17ded570b9abe9a25e6ee1e847",
+   "blockTimestamp": "1791832772"
+  },
+  {
+   "index": 6,
+   "coins": [
+    1,
+    0,
+    0
+   ],
+   "backs": 1,
+   "value": 7,
+   "name": "单",
+   "moving": false,
+   "blockNumber": "66867154",
+   "blockHash": "0x957fbf20e56ee215cb155493b171e09264e4aaa702dedd003800cf5959d3e047",
+   "blockTimestamp": "1791832772"
+  }
+ ],
+ "schools": {
+  "chengyi": {
+   "status": "done",
+   "output": {
+    "verdict": "平",
+    "confidenceTenths": 5,
+    "headline": "鼎实相孚可成",
+    "reason": "鼎有实而中孚相应，然上九翰音戒过，故平。",
+    "sections": [
+     {
+      "title": "一、主占之辞与卦义",
+      "text": "主占之辞 九二：鸣鹤在阴，其子和之，我有好爵，吾与尔靡之。此辞见于本卦火风鼎九二，亦见于之卦风泽中孚九二。鹤鸣于阴而子和，好爵与尔共靡，是同类相感、诚信相与之义。本卦火风鼎卦辞：元吉、亨。鼎以烹饪为象，取新而养人，合作之事有可为之基。之卦风泽中孚卦辞：豚鱼吉，利涉大川，利贞。中孚以信为主，信及豚鱼则吉，利涉大川则险可济，然必以贞正为守。合主占与两卦辞观之，伙伴之合，以诚信相应为本，非仅以势利相结。"
+     },
+     {
+      "title": "二、卦时卦德与处境",
+      "text": "月建戌，火风鼎之九二为实腹之位。本卦九二：鼎有实，我仇有疾，不我能即，吉。有实而不即于仇，是内有所守而外无所争。然本卦九四：鼎折足，覆公𫗧，其形渥，凶。鼎足既折，则公食倾覆，其形沾湿，是任重而力不副、位高而措置失当之象。之卦中孚六三：得敌，或鼓或罢，或泣或歌。两相匹敌，则进退歌泣皆不能自主。九五：有孚孪如，无咎。信而相牵，则无咎。上九：翰音登于天，贞凶。鸡鸣之声上闻于天，非其分而声过其实，守此则凶。辅占之辞 上九：翰音登于天，贞凶。是戒虚声胜而实德衰。鼎实与中孚并见，是合作有可成之机；然折足、翰音二戒，则不可恃信而忘备，不可张声而失实。"
+     },
+     {
+      "title": "三、处世之道与行动",
+      "text": "以义理言，合作之成否，不在别人承诺之厚薄，而在己与彼之实与信。本卦九二既言“鼎有实”，则当先审己之所有、所任、所期，不可空言合而实不至。之卦中孚九二既言“我有好爵，吾与尔靡之”，则当以诚与共，不藏私、不独享。中孚初九：虞吉。有它，不燕。是始交之际当专一，若别有他属，则不安。本卦九三：鼎耳革，其行塞，雉膏不食，方雨亏悔，终吉。中途或有举步塞滞、美利不食之时，守待雨至，则悔亏而终吉。故不宜因一时不进即生猜嫌。本卦六五：鼎黄耳，金铉，利贞。居中而贞，则举鼎有其具。是合作当有明约、定分、各守其位，不可徒以情信。若情信虽笃而约不立、分不明，则近于九四折足之患。至若上九翰音之戒，更当省察：凡夸大其规模、先声后实者，不可从。"
+     }
+    ],
+    "timing": {
+     "window": "戌月之后，须待对方实应、文书既定，然后可望渐成。",
+     "condition": "于本卦九二、之卦九二之信已相孚，且本卦六五“利贞”之约已明、九四折足之患已避，则合作可成；若但闻上九翰音而未见实迹，则不成。"
+    },
+    "advice": [
+     "先审己之鼎实，量力任事，不虚张规模。",
+     "与伙伴以中孚九二相待，共利不私，但须立明约、定分守。",
+     "戒上九翰音之过，凡先声后实、有言无践者，缓之慎之。"
+    ],
+    "evidence": [
+     {
+      "ref": "main-text",
+      "claim": "九二：鸣鹤在阴，其子和之，我有好爵，吾与尔靡之。"
+     },
+     {
+      "ref": "hexagram:primary",
+      "claim": "火风鼎 卦辞：元吉、亨。"
+     },
+     {
+      "ref": "hexagram:primary",
+      "claim": "火风鼎 九二：鼎有实，我仇有疾，不我能即，吉。"
+     },
+     {
+      "ref": "hexagram:primary",
+      "claim": "火风鼎 九四：鼎折足，覆公𫗧，其形渥，凶。"
+     },
+     {
+      "ref": "hexagram:primary",
+      "claim": "火风鼎 六五：鼎黄耳，金铉，利贞。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "风泽中孚 卦辞：豚鱼吉，利涉大川，利贞。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "风泽中孚 九二：鸣鹤在阴，其子和之，我有好爵，吾与尔靡之。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "风泽中孚 初九：虞吉。有它，不燕。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "风泽中孚 六三：得敌，或鼓或罢，或泣或歌。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "风泽中孚 九五：有孚孪如，无咎。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "风泽中孚 上九：翰音登于天，贞凶。"
+     },
+     {
+      "ref": "month",
+      "claim": "月建戌。"
+     }
+    ]
+   },
+   "retries": 0
+  },
+  "jingfang": {
+   "status": "done",
+   "output": {
+    "verdict": "凶",
+    "confidenceTenths": 4,
+    "headline": "用神死空合作难成",
+    "reason": "官鬼持世临死且旬空，世应俱动化回头生而忌神两现，合作易生反复争端。",
+    "sections": [
+     {
+      "title": "一、用神旺衰空破",
+      "text": "用神官鬼临2爻，世爻即用神，原文标为「死」且落旬空；月建为戌，日辰庚申而旬空子丑，用神在月日无助，空而无力。鼎九二云「鼎有实，我仇有疾，不我能即，吉」，纵有实体，仇敌相阻，暂时难逼近成事。"
+     },
+     {
+      "title": "二、原神忌神",
+      "text": "3爻妻财、4爻妻财俱动，皆化子孙回头生，原文标为「原神」，说明利益与资源端可生助；但1爻子孙虽动化兄弟回头生，原文标为「忌神」，5爻子孙临应动化兄弟回头生，亦标为「忌神」，忌神两处发动，反夺原神之力。用神所忌者正是子孙，故合作中易被条件、分配、口头承诺反复牵制。"
+     },
+     {
+      "title": "三、世应与动变",
+      "text": "世在2爻官鬼，应为5爻子孙，世应俱动：世动则心念与角色易变，应动化兄弟回头生，对方立场易转。原文「我仇有疾，不我能即」正合当前世应相持；辅占上九「翰音登于天，贞凶」，虚声高张则凶，合作若只凭愿景与声势，反易败事。主占九二「鸣鹤在阴，其子和之，我有好爵，吾与尔靡之」提示先求同声相应、共享其利，方有转机。"
+     },
+     {
+      "title": "四、应期",
+      "text": "用神旬空，出空之期方见实质消息：旬空为子丑，故子、丑出空时是首个观察窗口；又官鬼在亥，亥月亦是应期之一。成立条件是：出空或亥月前后必须见到白纸黑字的权责与分配落实，且双方不再以兄弟爻所主的口舌争夺取代实际履约；若只闻其声、不见其行，上九「翰音登于天，贞凶」即应。"
+     }
+    ],
+    "timing": {
+     "window": "子、丑出空之时，或亥月前后",
+     "condition": "须见权责与分配书面落实，且双方停止口舌争夺、转为实际履约，方论有转机。"
+    },
+    "advice": [
+     "合作前先明确出资、分工、退出与分配条件，口头共识一律落为书面。",
+     "对5爻应位所代表的对方保持观察，勿因一时声势或承诺放松核查。",
+     "若至子丑出空仍未见实质落实，宜暂缓推进，不宜勉强绑定。"
+    ],
+    "evidence": [
+     {
+      "ref": "line:2",
+      "claim": "2爻官鬼持世，原文标为死、用神，又落旬空，用神无力。"
+     },
+     {
+      "ref": "line:1",
+      "claim": "1爻子孙虽动化兄弟回头生，但原文标为忌神，忌神发动不利用神。"
+     },
+     {
+      "ref": "line:5",
+      "claim": "5爻子孙临应而劲，原文标为忌神，应位立场偏忌。"
+     },
+     {
+      "ref": "line:3",
+      "claim": "3爻妻财动化子孙回头生，原文标为原神，资源端本可生助。"
+     },
+     {
+      "ref": "line:4",
+      "claim": "4爻妻财动化子孙回头生，原文标为原神，利益端亦有生机。"
+     },
+     {
+      "ref": "hexagram:primary",
+      "claim": "本卦火风鼎，卦辞及九二皆示得实、相应、共享其利为吉。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "之卦风泽中孚，上九原文「翰音登于天，贞凶」，虚声高张则凶。"
+     }
+    ]
+   },
+   "retries": 0
+  },
+  "shaoyong": {
+   "status": "done",
+   "output": {
+    "verdict": "平",
+    "confidenceTenths": 6,
+    "headline": "鼎中有实，中孚戒虚",
+    "reason": "体离用巽，体生用为泄；鼎九二主和合，中孚上九戒声过其实。",
+    "sections": [
+     {
+      "title": "一、体用生克",
+      "text": "体为离火，用为巽木。木生火，用生体，本属用助体。然本站取法以体用生克参月建戌，戌为土月，火生土而泄气，木亦受土耗。故生中有耗，合作可成而体易劳。主占之辞九二：鸣鹤在阴，其子和之，我有好爵，吾与尔靡之。此象彼此相应、利益可分，提示合伙之始有诚意。辅占之辞上九：翰音登于天，贞凶。高鸣而无实，则凶。故体用虽见生，仍须防虚声。"
+     },
+     {
+      "title": "二、互卦与变卦",
+      "text": "互卦泽天夬，变卦风泽中孚。夬者决也，中孚者信也。鼎变中孚，由器入信，事之成败不在鼎之大小，而在孚之有无。本卦九四：鼎折足，覆公𫗧，其形渥，凶。若分工不明、承载失衡，则如鼎折足而覆食。之卦六三：得敌，或鼓或罢，或泣或歌。合伙中易有进退不一之象，宜先定约。"
+     },
+     {
+      "title": "三、时令与行动",
+      "text": "月建戌，土旺。体离火生戌土，用巽木又克戌土，木土相战，事多反复。鼎卦辞：元吉、亨。本为通泰，但非指不劳而成。中孚卦辞：豚鱼吉，利涉大川，利贞。诚信及于微物，方可涉险。今岁合作可谈，可试，不可骤信。行动宜先小后大，先明后合。"
+     }
+    ],
+    "advice": [
+     "先立书面分工与退场条款，再谈投入。",
+     "对高调承诺保持核验，勿以声势代实据。",
+     "以中孚之信待人，但保留鼎足之稳。"
+    ],
+    "evidence": [
+     {
+      "ref": "month",
+      "claim": "月建戌，土旺，体离火生土而泄气。"
+     },
+     {
+      "ref": "body-use",
+      "claim": "离为体，巽为用，用生体，生中有耗。"
+     },
+     {
+      "ref": "hexagram:primary",
+      "claim": "本卦火风鼎，主占九二鸣鹤在阴，其子和之，我有好爵，吾与尔靡之。"
+     },
+     {
+      "ref": "hexagram:derived",
+      "claim": "之卦风泽中孚，辅占上九翰音登于天，贞凶。"
+     },
+     {
+      "ref": "hexagram:mutual",
+      "claim": "互卦泽天夬，决断之象。"
+     },
+     {
+      "ref": "hexagram:opposite",
+      "claim": "错卦水雷屯，草创多难。"
+     },
+     {
+      "ref": "hexagram:reversed",
+      "claim": "综卦泽火革，变革之象。"
+     }
+    ]
+   },
+   "retries": 0
+  }
+ },
+ "status": "done",
+ "castAfterBlock": "1",
+ "lines": [
+  6,
+  7,
+  9,
+  9,
+  6,
+  7
+ ],
+ "castTime": "1791832769",
+ "chart": {
+  "school": "京房纳甲·八宫世应·六甲旬空·节气月；旺相休囚死依《三命通会》五级表",
+  "dateRule": "区块时间戳按 UTC+8 民用日期、00:00 换日；月建按太阳视黄经节气月（不采用子初换日）",
+  "day": {
+   "timezone": "UTC+8",
+   "dayBoundary": "00:00",
+   "localDate": "2026-10-13",
+   "ganzhi": "庚申",
+   "stem": "庚",
+   "branch": "申",
+   "cycleIndex": 56,
+   "voidBranches": [
+    "子",
+    "丑"
+   ]
+  },
+  "month": {
+   "timezone": "UTC+8",
+   "basis": "节气月",
+   "branch": "戌",
+   "element": "土",
+   "range": "寒露—立冬",
+   "boundaryUncertain": false
+  },
+  "palace": {
+   "name": "离",
+   "element": "火",
+   "sequence": "二世"
+  },
+  "trigrams": {
+   "upper": {
+    "name": "离",
+    "element": "火"
+   },
+   "lower": {
+    "name": "巽",
+    "element": "木"
+   }
+  },
+  "shiPosition": 2,
+  "yingPosition": 5,
+  "nature": {
+   "primary": null,
+   "derived": null
+  },
+  "focus": {
+   "subjectKey": "career",
+   "subjectLabel": "工作／官职",
+   "useGod": "官鬼",
+   "overridden": true,
+   "useGodPositions": [
+    2
+   ],
+   "hiddenUseGodPositions": [],
+   "originalGod": "妻财",
+   "tabooGod": "子孙",
+   "enemyGod": "兄弟"
+  },
+  "rows": [
+   {
+    "position": 1,
+    "positionSymbol": "足／基层",
+    "value": 6,
+    "primaryYang": false,
+    "changedYang": true,
+    "changing": true,
+    "sixSpirit": "白虎",
+    "marker": null,
+    "primary": {
+     "stemBranch": "辛丑",
+     "branch": "丑",
+     "element": "土",
+     "relation": "子孙",
+     "isVoid": true,
+     "strength": "旺",
+     "isMonthBroken": false
+    },
+    "changed": {
+     "stemBranch": "丁巳",
+     "branch": "巳",
+     "element": "火",
+     "relation": "兄弟",
+     "isVoid": false,
+     "strength": "休",
+     "isMonthBroken": false
+    },
+    "hidden": {
+     "stemBranch": "己卯",
+     "element": "木",
+     "relation": "父母",
+     "isVoid": false
+    },
+    "isDayBroken": false,
+    "isHiddenMoving": false,
+    "advanceRetreat": null,
+    "returnEffect": "回头生"
+   },
+   {
+    "position": 2,
+    "positionSymbol": "腹／家宅",
+    "value": 7,
+    "primaryYang": true,
+    "changedYang": true,
+    "changing": false,
+    "sixSpirit": "玄武",
+    "marker": "世",
+    "primary": {
+     "stemBranch": "辛亥",
+     "branch": "亥",
+     "element": "水",
+     "relation": "官鬼",
+     "isVoid": false,
+     "strength": "死",
+     "isMonthBroken": false
+    },
+    "changed": {
+     "stemBranch": "丁卯",
+     "branch": "卯",
+     "element": "木",
+     "relation": "父母",
+     "isVoid": false,
+     "strength": "囚",
+     "isMonthBroken": false
+    },
+    "hidden": null,
+    "isDayBroken": false,
+    "isHiddenMoving": false,
+    "advanceRetreat": null,
+    "returnEffect": null
+   },
+   {
+    "position": 3,
+    "positionSymbol": "股／门户",
+    "value": 9,
+    "primaryYang": true,
+    "changedYang": false,
+    "changing": true,
+    "sixSpirit": "青龙",
+    "marker": null,
+    "primary": {
+     "stemBranch": "辛酉",
+     "branch": "酉",
+     "element": "金",
+     "relation": "妻财",
+     "isVoid": false,
+     "strength": "相",
+     "isMonthBroken": false
+    },
+    "changed": {
+     "stemBranch": "丁丑",
+     "branch": "丑",
+     "element": "土",
+     "relation": "子孙",
+     "isVoid": true,
+     "strength": "旺",
+     "isMonthBroken": false
+    },
+    "hidden": null,
+    "isDayBroken": false,
+    "isHiddenMoving": false,
+    "advanceRetreat": null,
+    "returnEffect": "回头生"
+   },
+   {
+    "position": 4,
+    "positionSymbol": "胸／门外",
+    "value": 9,
+    "primaryYang": true,
+    "changedYang": false,
+    "changing": true,
+    "sixSpirit": "朱雀",
+    "marker": null,
+    "primary": {
+     "stemBranch": "己酉",
+     "branch": "酉",
+     "element": "金",
+     "relation": "妻财",
+     "isVoid": false,
+     "strength": "相",
+     "isMonthBroken": false
+    },
+    "changed": {
+     "stemBranch": "辛未",
+     "branch": "未",
+     "element": "土",
+     "relation": "子孙",
+     "isVoid": false,
+     "strength": "旺",
+     "isMonthBroken": false
+    },
+    "hidden": null,
+    "isDayBroken": false,
+    "isHiddenMoving": false,
+    "advanceRetreat": null,
+    "returnEffect": "回头生"
+   },
+   {
+    "position": 5,
+    "positionSymbol": "君位",
+    "value": 6,
+    "primaryYang": false,
+    "changedYang": true,
+    "changing": true,
+    "sixSpirit": "勾陈",
+    "marker": "应",
+    "primary": {
+     "stemBranch": "己未",
+     "branch": "未",
+     "element": "土",
+     "relation": "子孙",
+     "isVoid": false,
+     "strength": "旺",
+     "isMonthBroken": false
+    },
+    "changed": {
+     "stemBranch": "辛巳",
+     "branch": "巳",
+     "element": "火",
+     "relation": "兄弟",
+     "isVoid": false,
+     "strength": "休",
+     "isMonthBroken": false
+    },
+    "hidden": null,
+    "isDayBroken": false,
+    "isHiddenMoving": false,
+    "advanceRetreat": null,
+    "returnEffect": "回头生"
+   },
+   {
+    "position": 6,
+    "positionSymbol": "首／宗庙",
+    "value": 7,
+    "primaryYang": true,
+    "changedYang": true,
+    "changing": false,
+    "sixSpirit": "螣蛇",
+    "marker": null,
+    "primary": {
+     "stemBranch": "己巳",
+     "branch": "巳",
+     "element": "火",
+     "relation": "兄弟",
+     "isVoid": false,
+     "strength": "休",
+     "isMonthBroken": false
+    },
+    "changed": {
+     "stemBranch": "辛卯",
+     "branch": "卯",
+     "element": "木",
+     "relation": "父母",
+     "isVoid": false,
+     "strength": "囚",
+     "isMonthBroken": false
+    },
+    "hidden": null,
+    "isDayBroken": false,
+    "isHiddenMoving": false,
+    "advanceRetreat": null,
+    "returnEffect": null
+   }
+  ]
+ },
+ "meihua": {
+  "body": {
+   "position": "upper",
+   "name": "离",
+   "element": "火",
+   "strength": "休"
+  },
+  "use": {
+   "position": "lower",
+   "name": "巽",
+   "element": "木"
+  },
+  "bodyUseRelation": "用生体",
+  "mutual": {
+   "name": "泽天夬",
+   "lower": "乾",
+   "upper": "兑"
+  },
+  "changed": {
+   "name": "风泽中孚",
+   "changedUse": {
+    "name": "兑",
+    "element": "金"
+   },
+   "relationToBody": "体克变卦"
+  },
+  "rule": "按本站体用取法；本站不采集外应"
+ },
+ "bianzhan": {
+  "rule": "之卦两不动爻辞",
+  "primary": {
+   "label": "九二",
+   "text": "鸣鹤在阴，其子和之，我有好爵，吾与尔靡之。"
+  },
+  "secondary": [
+   {
+    "label": "上九",
+    "text": "翰音登于天，贞凶。"
+   }
+  ]
+ },
+ "almanac": {
+  "timestamp": "1791832769",
+  "solar": {
+   "timezone": "UTC+8",
+   "text": "2026-10-13 03:19:29"
+  },
+  "lunar": {
+   "date": "二〇二六年九月初四",
+   "timeBranch": "寅",
+   "moonPhase": "蛾眉新"
+  },
+  "pillars": [
+   "丙午",
+   "戊戌",
+   "庚申",
+   "戊寅"
+  ],
+  "naYin": [
+   "天河水",
+   "平地木",
+   "石榴木",
+   "城头土"
+  ],
+  "solarTerms": {
+   "current": "寒露",
+   "hou": "寒露 二候",
+   "wuHou": "雀入大水为蛤",
+   "previousAt": "2026-10-08 14:29:17",
+   "next": "霜降",
+   "nextAt": "2026-10-23 17:37:57"
+  },
+  "cycle": {
+   "monthBranch": "戌",
+   "day": "庚申",
+   "xun": "甲寅",
+   "voidBranches": [
+    "子",
+    "丑"
+   ]
+  },
+  "month": {
+   "timezone": "UTC+8",
+   "basis": "节气月",
+   "branch": "戌",
+   "element": "土",
+   "range": "寒露—立冬",
+   "boundaryUncertain": false
+  },
+  "dayOfficers": {
+   "officer": "开",
+   "deity": "金匮",
+   "path": "黄道"
+  },
+  "mansion": {
+   "name": "翼火蛇",
+   "palace": "南",
+   "guardian": "朱雀"
+  },
+  "clash": {
+   "description": "(甲寅)虎",
+   "direction": "南"
+  },
+  "almanac": {
+   "nineStar": "一白水天枢",
+   "joy": "西北",
+   "wealth": "正东",
+   "fortune": "西南",
+   "suitable": [
+    "嫁娶",
+    "祭祀",
+    "祈福",
+    "求嗣",
+    "开光",
+    "出行",
+    "解除",
+    "出火",
+    "进人口",
+    "开市",
+    "交易",
+    "立券",
+    "挂匾",
+    "纳财",
+    "入宅",
+    "移徙",
+    "栽种",
+    "破土",
+    "谢土"
+   ],
+   "avoid": [
+    "安床",
+    "安葬"
+   ],
+   "pengZu": [
+    "庚不经络织机虚张",
+    "申不安床鬼祟入房"
+   ]
+  }
+ },
+ "qimen": {
+  "localTime": "2026-10-13 03:19:29",
+  "method": "时家转盘拆补法",
+  "dayPillar": "庚申",
+  "hourPillar": "戊寅",
+  "solarTerm": "寒露",
+  "layout": "阴遁三局下元",
+  "xunHead": "甲戌",
+  "chiefStem": "己",
+  "chiefStar": "天芮",
+  "chiefStarPalace": "震三",
+  "chiefDoor": "死门",
+  "chiefDoorPalace": "兑七",
+  "dayVoid": "子丑",
+  "hourVoid": "申酉",
+  "horse": "申",
+  "palaces": {
+   "坎一": {
+    "earthStem": "庚",
+    "star": "天辅",
+    "heavenStem": "乙",
+    "door": "开门",
+    "god": "太阴"
+   },
+   "坤二": {
+    "earthStem": "己",
+    "star": "天蓬",
+    "heavenStem": "庚",
+    "door": "景门",
+    "god": "玄武"
+   },
+   "震三": {
+    "earthStem": "戊",
+    "star": "天芮",
+    "heavenStem": "己",
+    "door": "生门",
+    "god": "值符"
+   },
+   "巽四": {
+    "earthStem": "乙",
+    "star": "天柱",
+    "heavenStem": "癸",
+    "door": "伤门",
+    "god": "九天"
+   },
+   "中五": {
+    "earthStem": "丙",
+    "heavenStem": "丙"
+   },
+   "乾六": {
+    "earthStem": "丁",
+    "star": "天冲",
+    "heavenStem": "戊",
+    "door": "惊门",
+    "god": "六合"
+   },
+   "兑七": {
+    "earthStem": "癸",
+    "star": "天任",
+    "heavenStem": "壬",
+    "door": "死门",
+    "god": "白虎"
+   },
+   "艮八": {
+    "earthStem": "壬",
+    "star": "天英",
+    "heavenStem": "辛",
+    "door": "休门",
+    "god": "腾蛇"
+   },
+   "离九": {
+    "earthStem": "辛",
+    "star": "天心",
+    "heavenStem": "丁",
+    "door": "杜门",
+    "god": "九地"
+   }
+  }
+ },
+ "summary": {
+  "status": "done",
+  "output": {
+   "tone": "中",
+   "conclusion": "合作有可成之机，但须先落实书面分工与分配，否则只闻声不见实。",
+   "agreement": "三家都认为鼎卦有实、中孚主信，合作有可谈之基，但都提醒不可只凭承诺与声势，须防虚声与承载失衡。",
+   "difference": "义理派与梅花易数偏平中带可成，纳甲六爻则直断用神死空、忌神两现，偏凶难成。",
+   "explanation": [
+    "本卦火风鼎，鼎是煮食养人的器，象征合作有可为之基；之卦风泽中孚，中孚是诚信相应，说明合伙靠的是彼此实打实的信任，不是单靠利害相结。所以三家都认这个合作可以谈。",
+    "但鼎卦九四有『鼎折足，覆公𫗧』之戒，意思是鼎足断了、公食倾覆，比喻任重而力不副、分工不明就会翻车；上九『翰音登于天，贞凶』则戒虚声高张。三家共同提示：若只凭口头承诺、夸大愿景，合作易生反复。",
+    "纳甲六爻看得更实：所问之事取官鬼为用神（代表所问合作这件事的那一爻），此用神月日无助又落旬空，即当前实质条件没到位；加上忌神两处发动，说明利益、分配与条件容易被反复牵制，这是三家分歧所在。",
+    "梅花易数指出体生用有泄、木土相战，事多反复，合作可成而己方容易劳累。综合看，成败关键不在对方承诺多厚，而在双方能否把权责、出资、分配、退出白纸黑字定下来。"
+   ],
+   "remedy": {
+    "principle": "先审自己有多少实力，再与伙伴诚心共利，但一切约定必须落成文字，不靠口头情分。",
+    "plan": [
+     {
+      "action": "合作前把出资、分工、分配、退出条件写成书面条款",
+      "basis": "本卦六五『鼎黄耳，金铉，利贞』，鼎要有举鼎之具；九四折足之戒，分工不明则覆食",
+      "timing": "在正式投入之前完成"
+     },
+     {
+      "action": "对伙伴的承诺和高调宣传逐项核验实据",
+      "basis": "上九『翰音登于天，贞凶』，戒声过其实；纳甲六爻应位动化兄弟，对方立场易转",
+      "timing": "子、丑出空时或亥月前后重点观察"
+     },
+     {
+      "action": "先小规模试合作，再逐步扩大投入",
+      "basis": "梅花易数体生用有泄、木土相战，事多反复，宜先小后大、先明后合",
+      "timing": "初期试探阶段"
+     }
+    ],
+    "avoid": [
+     "只凭口头共识就提前投入资金或资源",
+     "因对方声势大、场面大就放松核查"
+    ]
+   },
+   "watch": {
+    "window": "子、丑出空之时，或亥月前后",
+    "condition": "若届时见到白纸黑字的权责与分配落实、双方转为实际履约，合作可望渐成；若仍只闻其声不见其行，则不宜勉强绑定。"
+   }
+  },
+  "basis": 3,
+  "retries": 0,
+  "anchor": {
+   "title": "《象传》· 火风鼎",
+   "lines": [
+    "木上有火，鼎；君子以正位凝命。"
+   ]
+  }
+ },
+ "translation": {
+  "lang": "en",
+  "units": {
+   "summary": {
+    "status": "done",
+    "texts": [
+     "There is a chance for the cooperation to succeed, but written division of labor and profit sharing must be settled first; otherwise there will be only talk and no substance.",
+     "All three schools agree that Ding suggests real substance and Zhong Fu centers on trust, so the partnership has a basis for discussion, but all warn against relying only on promises and momentum, and against the risk of empty show and imbalance in what can actually be carried.",
+     "The philosophical school and Plum Blossom Numerology lean toward a balanced reading with some prospect of success, while Najia Six-Line divination directly judges that the Yong Shen (the key element for the question) is dead and void, and the Ji Shen (unfavorable element) appears twice, making the outcome unfavorable and hard to achieve.",
+     "The primary hexagram is Ding · The Cauldron. The cauldron is a vessel for cooking food and nourishing people, symbolizing that cooperation has a workable foundation. The resulting hexagram is Zhong Fu · Inner Truth. Inner truth means sincere mutual response, showing that partnership depends on solid mutual trust, not merely an alliance of interests. So all three schools agree this cooperation can be discussed.",
+     "But the fourth line of Ding warns that the cauldron's leg breaks and the duke's food is overturned, meaning that when the burden is heavy but strength is insufficient and duties are unclear, things will collapse. The top line says the flying sound rises to heaven. Perseverance brings misfortune, warning against empty reputation being spread too high. All three schools jointly remind that if there is only verbal promise and exaggerated vision, the cooperation is prone to repeated reversals.",
+     "Najia Liuyao sees it more concretely: for the matter asked about, the Officer is taken as the key element for the question, representing the line for this cooperation. This key element has no support from month or day and falls into Xun Kong (void branches), meaning the actual conditions are not yet in place. In addition, the unfavorable element activates in two places, showing that interests, distribution, and conditions are easily pulled back and forth. This is where the three schools differ.",
+     "Meihua Yishu points out that the self trigram generates the matter trigram, which drains it, and Wood and Earth contend, so matters will repeat and reverse. The cooperation may succeed, but one's own side is likely to be worn out. Taken together, the key to success or failure is not how generous the other side's promises are, but whether both sides can put authority, responsibility, capital contribution, distribution, and exit terms down in writing.",
+     "First assess how much strength you really have, then sincerely pursue shared benefit with partners, but all agreements must be put in writing and not rest on verbal goodwill.",
+     "Before cooperating, write capital contribution, division of labor, distribution, and exit conditions into written terms.",
+     "The fifth line of the primary hexagram says: The cauldron has yellow ears and golden carrying rings. Favorable to be steadfast. The cauldron must have the means to be lifted. The fourth line's warning of the broken leg means that if duties are unclear, the food will be overturned.",
+     "Complete this before formally investing.",
+     "Verify each promise and all high-profile publicity from the partner with concrete evidence.",
+     "The top line says: The flying sound rises to heaven. Perseverance brings misfortune. This warns against reputation exceeding reality. In Najia Liuyao, the response position moves and transforms into Siblings, meaning the other side's stance can easily change.",
+     "Observe closely when Zi and Chou exit void, or around the month of Hai.",
+     "Start with a small-scale trial cooperation, then gradually expand investment.",
+     "In Meihua Yishu, the self trigram generates the matter trigram, which drains it, and Wood and Earth contend, so matters will repeat and reverse. It is best to start small and then go big, and to clarify first before joining.",
+     "The initial trial stage.",
+     "Investing funds or resources in advance based only on verbal consensus.",
+     "Relaxing verification because the other side has great momentum and a grand appearance.",
+     "When Zi and Chou exit void, or around the month of Hai.",
+     "If by then written authority, responsibility, and distribution are in place and both sides shift to actual performance, the cooperation can be expected to gradually succeed; if there is still only sound and no action, then it is not advisable to force a binding partnership."
+    ],
+    "failures": 0
+   },
+   "chengyi": {
+    "status": "done",
+    "texts": [
+     "When the cauldron has substance and mutual truthfulness, success is possible.",
+     "The cauldron has substance, and Inner Truth responds. But the top line warns against the crowing of a rooster that exceeds reality, so the reading is balanced.",
+     "I. The Main Divination Text and the Meaning of the Hexagrams",
+     "The main divination text, the second line: A crane calls in the shade; its young respond. I have good wine; I will share it with you. This text appears in the primary hexagram, Ding · The Cauldron, at the second line, and also in the resulting hexagram, Zhong Fu · Inner Truth, at the second line. The crane calls in the shade and its young respond; good wine is shared with you. This is the meaning of like responding to like, and of sincerity meeting sincerity. The primary hexagram, Ding · The Cauldron, says: Great good fortune. Success. The cauldron takes cooking as its image: it brings renewal and nourishes people. There is a foundation on which cooperative affairs can be built. The resulting hexagram, Zhong Fu · Inner Truth, says: Even pigs and fish are fortunate. It is favorable to cross the great river. It is favorable to be steadfast. Inner Truth takes trust as its main point. When trust extends even to pigs and fish, there is good fortune. It is favorable to cross the great river, so danger can be crossed. But one must hold to upright steadfastness. Looking at the main divination text and the two hexagram texts together, the union of partners is based on sincere mutual response, not merely on being bound by power and profit.",
+     "II. The Time, Virtue, and Situation of the Hexagrams",
+     "Yue Jian (month ruler) is Xu, and the second line of Ding · The Cauldron is the place of a full belly. The primary hexagram, second line: The cauldron contains food. My rival is ill and cannot come near me. Good fortune. Having substance and not approaching the rival means there is something kept within and nothing contended without. But the primary hexagram, fourth line: The cauldron's legs break, spilling the duke's meal. His form is drenched. Misfortune. When the cauldron's legs have broken, the duke's meal is overturned and his form is soaked. This is the image of bearing a heavy burden without matching strength, and of holding a high position while handling matters improperly. The resulting hexagram, Inner Truth, third line: Meeting an equal, one may drum or stop, weep or sing. When two are evenly matched, advance and retreat, weeping and singing, cannot be controlled by oneself. Fifth line: Truthfulness links them. No blame. When trust links one to another, there is no blame. Top line: The crowing sound rises to heaven. Steadfastness brings misfortune. The sound of a rooster crowing is heard in heaven. It exceeds its proper place and its sound surpasses reality. To hold to this brings misfortune. Supporting divination text: The top line: The crowing sound rises to heaven. Steadfastness brings misfortune. This warns against empty reputation prevailing while true virtue declines. The cauldron's substance and Inner Truth appear together, so there is an opportunity for cooperation to succeed. But the two warnings of broken legs and crowing sound mean one must not rely on trust and forget preparation, and must not make a show of sound while losing substance.",
+     "III. The Way of Conduct and Action",
+     "In terms of principle, whether cooperation succeeds does not depend on how thick the other side's promises are, but on the substance and trust between oneself and the other. Since the primary hexagram's second line says, \\\"The cauldron contains food,\\\" one should first examine what one has, what one can bear, and what one expects. One must not speak emptily of union while substance does not arrive. Since the resulting hexagram's Inner Truth, second line, says, \\\"I have good wine; I will share it with you,\\\" one should share sincerely and jointly, not hiding private gain and not enjoying alone. Inner Truth, first line: Hidden safety brings good fortune. If there is something else, there will be no peace. At the beginning of association, one should be single-minded. If there is another attachment, there will be no peace. The primary hexagram, third line: The cauldron's ears are altered, so it cannot be moved. The pheasant fat is not eaten. Just as rain is about to fall, regret fades. In the end, good fortune. Midway there may be a time when steps are blocked, when fine benefits are not eaten. If one waits for the rain to come, regret fades and the end is good fortune. Therefore one should not become suspicious just because there is temporarily no progress. The primary hexagram, fifth line: The cauldron has yellow ears and golden carrying rings. Favorable to be steadfast. Being centered and steadfast, one has the tools to lift the cauldron. This means cooperation should have clear agreements, settled roles, and each keeping their place. One must not rely only on feeling and trust. If feeling and trust are deep but agreements are not established and roles are not clear, then it comes close to the trouble of the fourth line's broken legs. As for the warning of the top line's crowing sound, one should examine even more: anyone who exaggerates their scale, with sound first and substance afterward, should not be followed.",
+     "After the month of Xu, one must wait for the other party's actual response and for documents to be settled. Only then can gradual success be expected.",
+     "If the trust of the primary hexagram's second line and the resulting hexagram's second line has already become mutual, and the primary hexagram's fifth line, \\\"favorable to be steadfast,\\\" has been made clear in agreement, and the trouble of the fourth line's broken legs has been avoided, then cooperation can succeed. If one merely hears the top line's crowing sound and sees no actual trace, then it will not succeed.",
+     "First examine one's own cauldron substance, act according to capacity, and do not falsely exaggerate scale.",
+     "Treat partners as in Inner Truth, second line: share benefits without private gain, but establish clear agreements and settled roles.",
+     "Guard against the excess of the top line's crowing sound. Toward anyone who puts sound before substance and speaks without practicing, slow down and be cautious."
+    ],
+    "failures": 0
+   },
+   "jingfang": {
+    "status": "done",
+    "texts": [
+     "When Yong Shen (the key element for the question) is dead and void, cooperation is hard to achieve.",
+     "The Officer holds the Shi Yao (the self line), is in a dead state, and falls under Xun Kong (void branches). Both the Shi and Ying lines move and transform into supportive generation, while Ji Shen (unfavorable element) appears twice, so cooperation is prone to repeated disputes.",
+     "1. The strength, weakness, voidness, and damage of Yong Shen",
+     "The Yong Shen (the key element for the question) is the Officer, sitting on the second line. The Shi Yao (the self line) is itself the Yong Shen. The original text marks it as \"dead\" and it falls into Xun Kong (void branches). The Yue Jian (month ruler) is Xu, the Ri Chen (day ruler) is Gengshen, and the void branches are Zi and Chou. The Yong Shen receives no support from the month or the day, being void and without strength. The second line of the Ding hexagram says, \"The cauldron contains food. My rival is ill and cannot come near me. Good fortune.\" Even though there is substance, the rival blocks the way, and for now it is hard to press forward and succeed.",
+     "2. Yuan Shen and Ji Shen",
+     "The third line's Wealth and the fourth line's Wealth both move, each turning into Offspring that generates them in return. The original text marks these as \"Yuan Shen (the source element),\" meaning the profit and resource side can give support. But although the first line's Offspring moves and turns into Siblings that generate it in return, the original text marks it as \"Ji Shen (unfavorable element).\" The fifth line's Offspring, on the responding position, moves and turns into Siblings that generate it in return, and is also marked as \"Ji Shen.\" With the Ji Shen activated in two places, they instead seize the strength of the Yuan Shen. What the Yong Shen fears is precisely the Offspring, so in this cooperation one is easily held back repeatedly by conditions, distribution, and verbal promises.",
+     "3. Shi and Ying, movement and transformation",
+     "The self line is the Officer on the second line, and the responding line is the Offspring on the fifth line. Both the self and responding lines move: when the self line moves, one's intentions and role easily change; when the responding line moves and turns into Siblings that generate it in return, the other side's stance easily shifts. The original text's line \"My rival is ill and cannot come near me\" exactly matches the current standoff between self and responding. The auxiliary divination's top line says, \"The flying sound rises to heaven. Perseverance brings misfortune.\" When empty reputation is loudly proclaimed, misfortune follows. If the cooperation relies only on vision and momentum, it easily fails. The main divination's second line says, \"A crane calls in the shade; its young respond. I have good wine; I will share it with you.\" This hints that one should first seek shared understanding and share the benefits, and only then will there be a turning point.",
+     "4. Ying Qi (expected timing)",
+     "The Yong Shen is in Xun Kong; only when it emerges from the void will substantive news appear. The void branches are Zi and Chou, so when Zi and Chou emerge from the void is the first observation window. Also, the Officer is at Hai, so the Hai month is one of the Ying Qi (expected timing). The conditions for success are: around the time of emerging from the void or the Hai month, there must be written, concrete implementation of authority, responsibility, and distribution, and both sides must no longer replace actual performance with the quarrels represented by the Siblings line. If one hears only words and sees no action, then the top line's \"The flying sound rises to heaven. Perseverance brings misfortune\" will come true.",
+     "When Zi and Chou exit voidness, or around the Hai month",
+     "Written clarification of authority, responsibility, and distribution must be seen, and both sides must stop verbal disputes and turn to actual performance; only then can a turning point be discussed.",
+     "Before cooperating, first clarify capital contribution, division of labor, exit terms, and distribution conditions; all verbal consensus must be put in writing.",
+     "Keep observing the other party represented by the responding position on the fifth line, and do not relax your checks because of a moment's momentum or promises.",
+     "If no substantive implementation is seen by the time Zi and Chou exit voidness, it is advisable to pause progress and not force a binding commitment."
+    ],
+    "failures": 0
+   },
+   "shaoyong": {
+    "status": "done",
+    "texts": [
+     "The Ding (cauldron) holds substance within; Zhong Fu warns against emptiness.",
+     "The self trigram is Li (Fire), the matter trigram is Xun (Wood). Wood generates Fire, so the matter trigram generates the self trigram, which originally means the matter supports the self. However, this site's method uses the generating and overcoming relations of self and matter together with Yue Jian (month ruler) Xu. Xu is an Earth month: Fire generates Earth and thus leaks its energy, and Wood is also drained by Earth. So within generation there is drain; cooperation can succeed but the self is prone to toil. The main divination text, the second line: A crane calls in the shade; its young respond. I have good wine; I will share it with you. This image shows mutual response and shared benefit, hinting that the beginning of partnership has sincerity. The supporting divination text, the top line: The flying sound rises to heaven. Perseverance brings misfortune. Loud calling without substance brings misfortune. Therefore, although the self and matter trigrams show generation, one must still guard against empty reputation.",
+     "1. Generation and Overcoming of Self and Matter",
+     "The self trigram is Li (Fire), the matter trigram is Xun (Wood). Wood generates Fire, the matter generates the self; originally this is the matter helping the self. But this site's method takes the generating and overcoming of self and matter together with Yue Jian (month ruler) Xu. Xu is an Earth month; Fire generates Earth and drains its energy, and Wood is also consumed by Earth. Thus within generation there is drain; cooperation can succeed but the self easily becomes weary. The main divination text, the second line: A crane calls in the shade; its young respond. I have good wine; I will share it with you. This image shows mutual response and divisible benefit, hinting that the beginning of partnership has sincerity. The supporting divination text, the top line: The flying sound rises to heaven. Perseverance brings misfortune. High calling without substance brings misfortune. So although the self and matter trigrams show generation, one must still guard against empty reputation.",
+     "2. The Nuclear Hexagram and the Resulting Hexagram",
+     "The Hu Gua (nuclear hexagram) is Guai · Breakthrough; the Bian Gua (resulting hexagram) is Zhong Fu · Inner Truth. Guai means breakthrough; Zhong Fu means trust. The Ding changing to Zhong Fu goes from vessel to trust; success or failure lies not in the size of the Ding but in whether there is trust. The primary hexagram, the fourth line: The Ding breaks its legs, overturning the duke's food; its appearance is soaked. Misfortune. If division of labor is unclear and support is unbalanced, it is like the Ding breaking its legs and spilling the food. The resulting hexagram, the third line: Meeting an opponent, some drum, some stop, some weep, some sing. In partnership, there is easily a sign of differing advance and retreat; it is best to set terms first.",
+     "3. Timing and Action",
+     "Yue Jian (month ruler) is Xu, Earth is strong. The self trigram Li (Fire) generates Xu Earth; the matter trigram Xun (Wood) overcomes Xu Earth. Wood and Earth fight, and matters are often repeated. The Ding hexagram statement: Great fortune. Success. This is originally smooth, but it does not mean success without effort. The Zhong Fu hexagram statement: Even pigs and fish are fortunate. It is favorable to cross the great river. It is favorable to be steadfast. Only when sincerity reaches even small creatures can one cross danger. This year's cooperation can be discussed and tested, but not trusted suddenly. Action should be small first and large later, clear first and joined later.",
+     "First establish written division of labor and exit clauses, then discuss investment.",
+     "Keep verifying high-profile promises; do not let show replace evidence.",
+     "Treat others with the trust of Zhong Fu, but keep the stability of the Ding's legs."
+    ],
+    "failures": 0
+   }
+  }
+ }
+}

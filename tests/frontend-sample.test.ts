@@ -87,3 +87,20 @@ test("只读问事示例不渲染重试或改事项操作", () => {
   const html = renderIn("zh", createElement(() => sampleResult(reading)));
   assert.doesNotMatch(html, /<button|subject-change|免费重试|改事项/u);
 });
+
+test("示例按语言优先加载 <kind>.<lang>.json，缺失时退回 <kind>.json", async () => {
+  const requested: string[] = [];
+  const fetcher = async (url: string) => {
+    requested.push(url);
+    return url.endsWith("question.en.json")
+      ? { ok: true, json: async () => ({ kind: "question", id: "en" }) }
+      : { ok: false, json: async () => ({}) };
+  };
+  const en = await loadSampleReading("question", fetcher as never, "en");
+  assert.equal((en as { id: string } | null)?.id, "en");
+  assert.deepEqual(requested, ["/samples/question.en.json"]);
+  requested.length = 0;
+  const zh = await loadSampleReading("question", fetcher as never, "zh");
+  assert.equal(zh, null);
+  assert.deepEqual(requested, ["/samples/question.zh.json", "/samples/question.json"]);
+});

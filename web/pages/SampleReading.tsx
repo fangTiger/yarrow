@@ -9,18 +9,24 @@ import { NamingReading } from "./NamingReading.js";
 
 export type SampleKind = "question" | "fortune" | "naming";
 
+/** 先按语言加载 `<kind>.<lang>.json`（中英各用一卦更贴切的示例），缺失时退回 `<kind>.json`。 */
 export async function loadSampleReading(
   kind: SampleKind,
   fetcher: typeof fetch = fetch,
+  lang?: Lang,
 ): Promise<AnyPublicReading | null> {
-  try {
-    const response = await fetcher(`/samples/${kind}.json`);
-    if (!response.ok) return null;
-    const value = await response.json() as AnyPublicReading;
-    return value && typeof value === "object" ? value : null;
-  } catch {
-    return null;
+  const paths = [...(lang ? [`/samples/${kind}.${lang}.json`] : []), `/samples/${kind}.json`];
+  for (const path of paths) {
+    try {
+      const response = await fetcher(path);
+      if (!response.ok) continue;
+      const value = await response.json() as AnyPublicReading;
+      if (value && typeof value === "object") return value;
+    } catch {
+      // 网络或解析失败时试下一个路径。
+    }
   }
+  return null;
 }
 
 export function localizedSampleReading<T extends AnyPublicReading>(reading: T, lang: Lang): T {
@@ -58,11 +64,11 @@ export function SampleReading({ kind }: { kind: SampleKind }) {
   useEffect(() => {
     let active = true;
     setReading(undefined);
-    void loadSampleReading(kind).then((value) => {
+    void loadSampleReading(kind, fetch, lang).then((value) => {
       if (active) setReading(value);
     });
     return () => { active = false; };
-  }, [kind]);
+  }, [kind, lang]);
   return <main className="page sample-page">
     <header className="topbar"><span className="seal">{t("brand.seal")}</span>
       <span className="brand">{t("brand.name")}</span><div className="topbar-actions">

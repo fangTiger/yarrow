@@ -1,0 +1,1102 @@
+{
+ "id": "kjdap3poylrp6leyrlzatmc3h4",
+ "kind": "naming",
+ "createdAt": "2026-10-12T19:19:29.048Z",
+ "target": "person",
+ "question": "希望温和有书卷气",
+ "surname": "张",
+ "gender": "female",
+ "length": 2,
+ "unborn": false,
+ "status": "done",
+ "payment": {
+  "firstHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+ },
+ "basis": {
+  "pillars": {
+   "year": "乙巳",
+   "month": "己卯",
+   "day": "丙戌",
+   "time": "癸巳"
+  },
+  "elements": [
+   {
+    "element": "木",
+    "stem": 1,
+    "main": 1,
+    "middle": 0,
+    "residual": 0,
+    "total": 2
+   },
+   {
+    "element": "火",
+    "stem": 1,
+    "main": 2,
+    "middle": 0,
+    "residual": 1,
+    "total": 4
+   },
+   {
+    "element": "土",
+    "stem": 1,
+    "main": 1,
+    "middle": 0,
+    "residual": 2,
+    "total": 4
+   },
+   {
+    "element": "金",
+    "stem": 0,
+    "main": 0,
+    "middle": 3,
+    "residual": 0,
+    "total": 3
+   },
+   {
+    "element": "水",
+    "stem": 1,
+    "main": 0,
+    "middle": 0,
+    "residual": 0,
+    "total": 1
+   }
+  ],
+  "tiaohou": {
+   "dayStem": "丙",
+   "monthBranch": "卯",
+   "monthName": "二月",
+   "useStems": [
+    "壬"
+   ],
+   "section": "三春丙火",
+   "quote": "'''二月丙火'''，阳气舒升，耑用壬水。壬透天干，不见丁化，加以庚辛己亦透，壬水有根，定主科甲。"
+  },
+  "counts": {
+   "木": 2,
+   "火": 3,
+   "土": 2,
+   "金": 0,
+   "水": 1
+  },
+  "favorable": [
+   "金",
+   "水"
+  ],
+  "favorableSource": "missing",
+  "missing": [
+   "金"
+  ],
+  "favorableNote": "八字缺金，宜补金；调候喜水，兼补水",
+  "unborn": false,
+  "hiddenCounts": {
+   "木": 2,
+   "火": 4,
+   "土": 4,
+   "金": 3,
+   "水": 1
+  }
+ },
+ "families": {
+  "wuxing": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "note": "依金水相生取字，取清、书、诗、淑等温润字眼，求温和书卷气，不用生僻字。",
+    "names": [
+     {
+      "given": "清书",
+      "meaning": "清雅如水，书卷自华，温和知礼。",
+      "why": "清属水、书属金，正合喜用金水；清润配书香，贴合温和书卷之愿。",
+      "chars": [
+       {
+        "char": "清",
+        "pinyin": "qīng",
+        "tone": 1,
+        "wuxing": "水",
+        "wuxingBasis": "部首·水",
+        "kangxi": 12,
+        "meaning": "清澈纯净",
+        "sense": "用作名字意指性情清朗、心地明净",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "书",
+        "pinyin": "shū",
+        "tone": 1,
+        "wuxing": "金",
+        "wuxingBasis": "读音·齿音",
+        "kangxi": 10,
+        "meaning": "书册文墨",
+        "sense": "用作名字意指知书达理、有文墨气",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "温婉",
+       "知性",
+       "清雅",
+       "沉静"
+      ],
+      "full": "张清书",
+      "pinyin": "zhāng qīng shū",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [
+       {
+        "code": "same-tone",
+        "params": {}
+       }
+      ],
+      "scores": {
+       "overall": 91,
+       "sound": 78,
+       "form": 96,
+       "wuxing": 98,
+       "poetry": 92
+      },
+      "supplements": [
+       {
+        "element": "金",
+        "chars": [
+         "书"
+        ]
+       },
+       {
+        "element": "水",
+        "chars": [
+         "清"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "清",
+        "wuxing": "水",
+        "basisCode": "radical-water",
+        "relationCode": "favorable"
+       },
+       {
+        "char": "书",
+        "wuxing": "金",
+        "basisCode": "sound-dental",
+        "relationCode": "missing"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "ts-0014-16",
+        "book": "唐诗三百首",
+        "title": "李商隐《韩碑》",
+        "text": "文成破体书在纸，清晨再拜铺丹墀"
+       },
+       {
+        "id": "sc-0171-01",
+        "book": "宋词三百首",
+        "title": "欧阳修《诉衷情》",
+        "text": "清晨帘幕卷轻霜"
+       },
+       {
+        "id": "ts-0201-02",
+        "book": "唐诗三百首",
+        "title": "柳宗元《晨诣超师院读禅经》",
+        "text": "闲持贝叶书，步出东斋读"
+       }
+      ]
+     },
+     {
+      "given": "诗淑",
+      "meaning": "诗心温婉，淑善和顺，文雅有度。",
+      "why": "诗属金、淑属水，金水相济；诗意与淑气并用，温润而含书卷。",
+      "chars": [
+       {
+        "char": "诗",
+        "pinyin": "shī",
+        "tone": 1,
+        "wuxing": "金",
+        "wuxingBasis": "读音·齿音",
+        "kangxi": 13,
+        "meaning": "诗文情思",
+        "sense": "用作名字意指富有文思、气质风雅",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "淑",
+        "pinyin": "shū",
+        "tone": 1,
+        "wuxing": "水",
+        "wuxingBasis": "部首·水",
+        "kangxi": 12,
+        "meaning": "温良美好",
+        "sense": "用作名字意指温和善良、品性端好",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "文雅",
+       "温柔",
+       "善美",
+       "端庄"
+      ],
+      "full": "张诗淑",
+      "pinyin": "zhāng shī shū",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [
+       {
+        "code": "same-tone",
+        "params": {}
+       }
+      ],
+      "scores": {
+       "overall": 89,
+       "sound": 78,
+       "form": 96,
+       "wuxing": 98,
+       "poetry": 84
+      },
+      "supplements": [
+       {
+        "element": "金",
+        "chars": [
+         "诗"
+        ]
+       },
+       {
+        "element": "水",
+        "chars": [
+         "淑"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "诗",
+        "wuxing": "金",
+        "basisCode": "sound-dental",
+        "relationCode": "missing"
+       },
+       {
+        "char": "淑",
+        "wuxing": "水",
+        "basisCode": "radical-water",
+        "relationCode": "favorable"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0022-05",
+        "book": "宋词三百首",
+        "title": "晏几道《蝶恋花》",
+        "text": "衣上酒痕诗里字"
+       },
+       {
+        "id": "ts-0238-03",
+        "book": "唐诗三百首",
+        "title": "杜审言《和晋陵陆丞早春游望》",
+        "text": "淑气催黄鸟，晴光转绿苹"
+       }
+      ]
+     },
+     {
+      "given": "玉溪",
+      "meaning": "如玉温润，如溪清长，慧心文静。",
+      "why": "玉属金、溪属水，合喜用金水；玉润溪清，音形皆美，温雅有书卷气。",
+      "chars": [
+       {
+        "char": "玉",
+        "pinyin": "yù",
+        "tone": 4,
+        "wuxing": "金",
+        "wuxingBasis": "部首·玉",
+        "kangxi": 5,
+        "meaning": "美玉温润",
+        "sense": "用作名字意指品格温润、光洁有涵养",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "溪",
+        "pinyin": "xī",
+        "tone": 1,
+        "wuxing": "水",
+        "wuxingBasis": "部首·水",
+        "kangxi": 14,
+        "meaning": "清溪长流",
+        "sense": "用作名字意指心境清朗、从容从容自适",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "温润",
+       "清灵",
+       "文静",
+       "聪慧"
+      ],
+      "full": "张玉溪",
+      "pinyin": "zhāng yù xī",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 96,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 98,
+       "poetry": 92
+      },
+      "supplements": [
+       {
+        "element": "金",
+        "chars": [
+         "玉"
+        ]
+       },
+       {
+        "element": "水",
+        "chars": [
+         "溪"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "玉",
+        "wuxing": "金",
+        "basisCode": "radical-jade",
+        "relationCode": "missing"
+       },
+       {
+        "char": "溪",
+        "wuxing": "水",
+        "basisCode": "radical-water",
+        "relationCode": "favorable"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0109-05",
+        "book": "宋词三百首",
+        "title": "李邴《汉宫春》",
+        "text": "清浅小溪如练，问玉堂何似，茅舍疏篱"
+       },
+       {
+        "id": "sc-0103-03",
+        "book": "宋词三百首",
+        "title": "贺铸《减字浣溪沙·浣溪沙》",
+        "text": "玉人和月摘梅花"
+       },
+       {
+        "id": "ts-0303-04",
+        "book": "唐诗三百首",
+        "title": "李白《行路难三首 一》",
+        "text": "闲来垂钓碧溪上，忽复乘舟梦日边"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "shiwen": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "note": "从候选诗句中取字，兼顾温和书卷气，每个名字两字同出一句，读来通顺，寓意积极。",
+    "names": [
+     {
+      "given": "温玉",
+      "meaning": "温和如玉，温润有礼，书卷气自生。",
+      "why": "取自所引诗句「言念君子，温其如玉」，温、玉二字同句，合于温和书卷之愿。",
+      "sourceId": "S12",
+      "chars": [
+       {
+        "char": "温",
+        "pinyin": "wēn",
+        "tone": 1,
+        "wuxing": "水",
+        "wuxingBasis": "部首·水",
+        "kangxi": 13,
+        "meaning": "温和温润",
+        "sense": "用作名字意指性情柔和、待人温暖。",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "玉",
+        "pinyin": "yù",
+        "tone": 4,
+        "wuxing": "金",
+        "wuxingBasis": "部首·玉",
+        "kangxi": 5,
+        "meaning": "美玉美德",
+        "sense": "用作名字意指品质如玉石般温润美好。",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "温婉",
+       "端雅",
+       "谦和",
+       "清正"
+      ],
+      "full": "张温玉",
+      "pinyin": "zhāng wēn yù",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 97,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 98,
+       "poetry": 96
+      },
+      "supplements": [
+       {
+        "element": "金",
+        "chars": [
+         "玉"
+        ]
+       },
+       {
+        "element": "水",
+        "chars": [
+         "温"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "温",
+        "wuxing": "水",
+        "basisCode": "radical-water",
+        "relationCode": "favorable"
+       },
+       {
+        "char": "玉",
+        "wuxing": "金",
+        "basisCode": "radical-jade",
+        "relationCode": "missing"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0083-02",
+        "book": "宋词三百首",
+        "title": "吴文英《夜合花》",
+        "text": "当时夜泊，温柔便入深乡"
+       },
+       {
+        "id": "sc-0103-03",
+        "book": "宋词三百首",
+        "title": "贺铸《减字浣溪沙·浣溪沙》",
+        "text": "玉人和月摘梅花"
+       }
+      ],
+      "source": {
+       "book": "诗经",
+       "title": "秦风·小戎",
+       "text": "言念君子，温其如玉"
+      }
+     },
+     {
+      "given": "清灵",
+      "meaning": "清明灵动，心思澄澈而富有灵气。",
+      "why": "取自所引诗句「惟昊天兮昭灵，阳气发兮清明」，清、灵二字同句，合书卷清雅之气。",
+      "sourceId": "S07",
+      "chars": [
+       {
+        "char": "清",
+        "pinyin": "qīng",
+        "tone": 1,
+        "wuxing": "水",
+        "wuxingBasis": "部首·水",
+        "kangxi": 12,
+        "meaning": "清明澄澈",
+        "sense": "用作名字意指心地澄明、气质清雅。",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "灵",
+        "pinyin": "líng",
+        "tone": 2,
+        "wuxing": "水",
+        "wuxingBasis": "部首·雨",
+        "kangxi": 24,
+        "meaning": "灵秀聪慧",
+        "sense": "用作名字意指聪慧敏捷、富有灵气。",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "清雅",
+       "聪慧",
+       "灵动",
+       "纯澈"
+      ],
+      "full": "张清灵",
+      "pinyin": "zhāng qīng líng",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 96,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 95,
+       "poetry": 96
+      },
+      "supplements": [
+       {
+        "element": "水",
+        "chars": [
+         "清",
+         "灵"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "清",
+        "wuxing": "水",
+        "basisCode": "radical-water",
+        "relationCode": "favorable"
+       },
+       {
+        "char": "灵",
+        "wuxing": "水",
+        "basisCode": "radical-other",
+        "relationCode": "favorable"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "cc-0051-10",
+        "book": "楚辞",
+        "title": "远逝",
+        "text": "游清灵之飒戾兮，服云衣之披披"
+       },
+       {
+        "id": "sc-0171-01",
+        "book": "宋词三百首",
+        "title": "欧阳修《诉衷情》",
+        "text": "清晨帘幕卷轻霜"
+       },
+       {
+        "id": "ts-0195-01",
+        "book": "唐诗三百首",
+        "title": "张祜《集灵台二首 一》",
+        "text": "日光斜照集灵台，红树花迎晓露开"
+       }
+      ],
+      "source": {
+       "book": "楚辞",
+       "title": "伤时",
+       "text": "惟昊天兮昭灵，阳气发兮清明"
+      }
+     },
+     {
+      "given": "琴宜",
+      "meaning": "琴心相许，宜室宜人，温和而有书卷雅趣。",
+      "why": "取自所引诗句「便认得、琴心相许，与写宜男双带」，琴、宜二字同句，合温婉才情。",
+      "sourceId": "S51",
+      "chars": [
+       {
+        "char": "琴",
+        "pinyin": "qín",
+        "tone": 2,
+        "wuxing": "金",
+        "wuxingBasis": "部首·玉",
+        "kangxi": 13,
+        "meaning": "琴心雅趣",
+        "sense": "用作名字意指有艺术修养、心境高雅。",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "宜",
+        "pinyin": "yí",
+        "tone": 2,
+        "wuxing": "土",
+        "wuxingBasis": "读音·喉音",
+        "kangxi": 8,
+        "meaning": "适宜和顺",
+        "sense": "用作名字意指性情和顺、处事合宜。",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "文雅",
+       "温婉",
+       "和顺",
+       "才情"
+      ],
+      "full": "张琴宜",
+      "pinyin": "zhāng qín yí",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 94,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 86,
+       "poetry": 96
+      },
+      "supplements": [
+       {
+        "element": "金",
+        "chars": [
+         "琴"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "琴",
+        "wuxing": "金",
+        "basisCode": "radical-jade",
+        "relationCode": "missing"
+       },
+       {
+        "char": "宜",
+        "wuxing": "土",
+        "basisCode": "sound-guttural",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0164-04",
+        "book": "宋词三百首",
+        "title": "晏殊《木兰花·玉楼春》",
+        "text": "闻琴解佩神仙侣"
+       },
+       {
+        "id": "sj-0173-09",
+        "book": "诗经",
+        "title": "南有嘉鱼之什·蓼萧",
+        "text": "宜兄宜弟，令德寿岂"
+       }
+      ],
+      "source": {
+       "book": "宋词三百首",
+       "title": "贺铸《薄幸》",
+       "text": "便认得、琴心相许，与写宜男双带"
+      }
+     }
+    ]
+   }
+  },
+  "yinyi": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "note": "姓张一声，双名取温和书卷气，重音律顺口与字形简繁相配。",
+    "names": [
+     {
+      "given": "若萱",
+      "meaning": "如萱草般温和从容，清雅有书卷气。",
+      "why": "张一声接若四声再萱一声，声调起伏不拗口；若字简、萱字繁，疏密相衬。",
+      "chars": [
+       {
+        "char": "若",
+        "pinyin": "ruò",
+        "tone": 4,
+        "wuxing": "木",
+        "wuxingBasis": "部首·艸",
+        "kangxi": 11,
+        "meaning": "如、像，温和从容",
+        "sense": "用作名字意指温婉谦和、从容有度",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "萱",
+        "pinyin": "xuān",
+        "tone": 1,
+        "wuxing": "木",
+        "wuxingBasis": "部首·艸",
+        "kangxi": 15,
+        "meaning": "萱草，忘忧清雅",
+        "sense": "用作名字意指安静柔美、才情清雅",
+        "level": 2,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "温婉",
+       "清雅",
+       "从容",
+       "聪慧"
+      ],
+      "full": "张若萱",
+      "pinyin": "zhāng ruò xuān",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 84,
+       "sound": 96,
+       "form": 94,
+       "wuxing": 70,
+       "poetry": 76
+      },
+      "supplements": [],
+      "analysis": [
+       {
+        "char": "若",
+        "wuxing": "木",
+        "basisCode": "radical-grass",
+        "relationCode": "neutral"
+       },
+       {
+        "char": "萱",
+        "wuxing": "木",
+        "basisCode": "radical-grass",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0047-03",
+        "book": "宋词三百首",
+        "title": "苏轼《青玉案》",
+        "text": "若到松江呼小渡"
+       }
+      ]
+     },
+     {
+      "given": "语薇",
+      "meaning": "言谈有书卷气，如蔷薇般清丽柔和。",
+      "why": "张一声接语三声再薇一声，声调有抑扬；语字左右、薇字上下，字形错落好写。",
+      "chars": [
+       {
+        "char": "语",
+        "pinyin": "yǔ",
+        "tone": 3,
+        "wuxing": "土",
+        "wuxingBasis": "读音·喉音",
+        "kangxi": 14,
+        "meaning": "言语，谈吐文雅",
+        "sense": "用作名字意指谈吐温和、有文采",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "薇",
+        "pinyin": "wēi",
+        "tone": 1,
+        "wuxing": "木",
+        "wuxingBasis": "部首·艸",
+        "kangxi": 19,
+        "meaning": "蔷薇，清丽柔美",
+        "sense": "用作名字意指清秀柔美、气质娴雅",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "文雅",
+       "柔美",
+       "灵秀",
+       "亲和"
+      ],
+      "full": "张语薇",
+      "pinyin": "zhāng yǔ wēi",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 87,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 70,
+       "poetry": 84
+      },
+      "supplements": [],
+      "analysis": [
+       {
+        "char": "语",
+        "wuxing": "土",
+        "basisCode": "sound-guttural",
+        "relationCode": "neutral"
+       },
+       {
+        "char": "薇",
+        "wuxing": "木",
+        "basisCode": "radical-grass",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0065-08",
+        "book": "宋词三百首",
+        "title": "朱服《渔家傲》",
+        "text": "寄语东城沽酒市"
+       },
+       {
+        "id": "sc-0200-02",
+        "book": "宋词三百首",
+        "title": "廖世美《烛影摇红》",
+        "text": "紫薇登览最关情，绝妙夸能赋"
+       }
+      ]
+     },
+     {
+      "given": "芷宁",
+      "meaning": "如白芷芬芳，内心安宁温润有书香。",
+      "why": "张一声接芷三声再宁二声，读来先扬后稳；芷草字头、宁宝盖头，搭配匀称。",
+      "chars": [
+       {
+        "char": "芷",
+        "pinyin": "zhǐ",
+        "tone": 3,
+        "wuxing": "木",
+        "wuxingBasis": "部首·艸",
+        "kangxi": 10,
+        "meaning": "白芷，香草，芬芳高洁",
+        "sense": "用作名字意指品性高洁、气质清芬",
+        "level": 2,
+        "polyphonic": false
+       },
+       {
+        "char": "宁",
+        "pinyin": "níng",
+        "tone": 2,
+        "wuxing": "火",
+        "wuxingBasis": "读音·舌音",
+        "kangxi": 5,
+        "meaning": "安宁，平和恬静",
+        "sense": "用作名字意指内心安宁、温和从容",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "高洁",
+       "宁静",
+       "温和",
+       "雅致"
+      ],
+      "full": "张芷宁",
+      "pinyin": "zhāng zhǐ níng",
+      "surnameChars": [
+       {
+        "char": "张",
+        "pinyin": "zhāng",
+        "tone": 1,
+        "wuxing": "金",
+        "kangxi": 11
+       }
+      ],
+      "hints": [
+       {
+        "code": "same-initial",
+        "params": {
+         "surname": "张",
+         "char": "芷"
+        }
+       }
+      ],
+      "scores": {
+       "overall": 85,
+       "sound": 90,
+       "form": 94,
+       "wuxing": 70,
+       "poetry": 84
+      },
+      "supplements": [],
+      "analysis": [
+       {
+        "char": "芷",
+        "wuxing": "木",
+        "basisCode": "radical-grass",
+        "relationCode": "neutral"
+       },
+       {
+        "char": "宁",
+        "wuxing": "火",
+        "basisCode": "sound-lingual",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0075-01",
+        "book": "宋词三百首",
+        "title": "贺铸《人南渡·感皇恩》",
+        "text": "兰芷满芳洲，游思横路"
+       },
+       {
+        "id": "ts-0058-01",
+        "book": "唐诗三百首",
+        "title": "王维《西施咏》",
+        "text": "艳色天下重，西施宁久微"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ "summary": {
+  "status": "done",
+  "basis": 3,
+  "retries": 0,
+  "output": {
+   "picks": [
+    {
+     "given": "温玉",
+     "reason": "出自诗文，综合97分最高，补金补水，温和书卷气，无音律提示。",
+     "full": "张温玉",
+     "pinyin": "zhāng wēn yù",
+     "family": "诗文出处",
+     "scores": {
+      "overall": 97,
+      "sound": 96,
+      "form": 96,
+      "wuxing": 98,
+      "poetry": 96
+     },
+     "supplements": [
+      {
+       "element": "金",
+       "chars": [
+        "玉"
+       ]
+      },
+      {
+       "element": "水",
+       "chars": [
+        "温"
+       ]
+      }
+     ]
+    },
+    {
+     "given": "玉溪",
+     "reason": "综合96分，补金补水，金水相生，声调有变，连读顺口。",
+     "full": "张玉溪",
+     "pinyin": "zhāng yù xī",
+     "family": "五行补益",
+     "scores": {
+      "overall": 96,
+      "sound": 96,
+      "form": 96,
+      "wuxing": 98,
+      "poetry": 92
+     },
+     "supplements": [
+      {
+       "element": "金",
+       "chars": [
+        "玉"
+       ]
+      },
+      {
+       "element": "水",
+       "chars": [
+        "溪"
+       ]
+      }
+     ]
+    },
+    {
+     "given": "清灵",
+     "reason": "综合96分，补水旺，清雅灵动，声调有变，读来通畅。",
+     "full": "张清灵",
+     "pinyin": "zhāng qīng líng",
+     "family": "诗文出处",
+     "scores": {
+      "overall": 96,
+      "sound": 96,
+      "form": 96,
+      "wuxing": 95,
+      "poetry": 96
+     },
+     "supplements": [
+      {
+       "element": "水",
+       "chars": [
+        "清",
+        "灵"
+       ]
+      }
+     ]
+    }
+   ],
+   "overview": "三家均围绕温和书卷气选字，五行补益重金水相生，诗文出处求成句通顺。不同处：五行派偏温润字与补益分，诗文派重出处寓意，音形派更重声母声调与字形搭配。",
+   "tips": [
+    "先读全名声调，避免连续同调拗口。",
+    "优先选补足所缺五行且综合分高的字。",
+    "确认字形简繁匀称，书写方便即可。"
+   ]
+  }
+ }
+}

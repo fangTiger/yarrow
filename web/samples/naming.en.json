@@ -1,0 +1,1257 @@
+{
+ "id": "3towrcae7o2tydcnbxb6c5mruu",
+ "kind": "naming",
+ "createdAt": "2026-10-12T19:19:29.027Z",
+ "target": "person",
+ "question": "Graceful, wise and kind",
+ "surname": "林",
+ "gender": "female",
+ "length": 2,
+ "unborn": false,
+ "status": "done",
+ "payment": {
+  "firstHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+ },
+ "basis": {
+  "pillars": {
+   "year": "乙亥",
+   "month": "庚辰",
+   "day": "辛未",
+   "time": "壬辰"
+  },
+  "elements": [
+   {
+    "element": "木",
+    "stem": 1,
+    "main": 0,
+    "middle": 3,
+    "residual": 1,
+    "total": 5
+   },
+   {
+    "element": "火",
+    "stem": 0,
+    "main": 0,
+    "middle": 1,
+    "residual": 0,
+    "total": 1
+   },
+   {
+    "element": "土",
+    "stem": 0,
+    "main": 3,
+    "middle": 0,
+    "residual": 0,
+    "total": 3
+   },
+   {
+    "element": "金",
+    "stem": 2,
+    "main": 0,
+    "middle": 0,
+    "residual": 0,
+    "total": 2
+   },
+   {
+    "element": "水",
+    "stem": 1,
+    "main": 1,
+    "middle": 0,
+    "residual": 2,
+    "total": 4
+   }
+  ],
+  "tiaohou": {
+   "dayStem": "辛",
+   "monthBranch": "辰",
+   "monthName": "三月",
+   "useStems": [
+    "壬",
+    "甲"
+   ],
+   "section": "三春辛金",
+   "quote": "'''三月辛金'''，戊土司令，辛承正气，母旺子相，先壬后甲。壬甲两透，富贵必然。壬透甲藏，廪贡不失。甲透壬藏，富则可云。壬甲皆无，平常之格。"
+  },
+  "counts": {
+   "木": 1,
+   "火": 0,
+   "土": 3,
+   "金": 2,
+   "水": 2
+  },
+  "favorable": [
+   "火",
+   "水"
+  ],
+  "favorableSource": "missing",
+  "missing": [
+   "火"
+  ],
+  "favorableNote": "八字缺火，宜补火；调候喜水，兼补水",
+  "unborn": false,
+  "hiddenCounts": {
+   "木": 5,
+   "火": 1,
+   "土": 3,
+   "金": 2,
+   "水": 4
+  }
+ },
+ "families": {
+  "wuxing": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "note": "据八字缺火宜补火、调候喜水兼补水，从喜用字中取火水相配，兼顾女名之温婉、Graceful Wise Kind 之意，读音清亮，书写简易。",
+    "names": [
+     {
+      "given": "昭淑",
+      "meaning": "光明磊落而贤淑温良，智慧与仁厚并存。",
+      "why": "昭属火补火，淑属水补水，火水相济，字义温雅，贴合格调与贤善之愿。",
+      "chars": [
+       {
+        "char": "昭",
+        "pinyin": "zhāo",
+        "tone": 1,
+        "wuxing": "火",
+        "wuxingBasis": "部首·日",
+        "kangxi": 9,
+        "meaning": "光明昭著",
+        "sense": "用作名字意指聪慧明朗、心怀坦荡",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "淑",
+        "pinyin": "shū",
+        "tone": 1,
+        "wuxing": "水",
+        "wuxingBasis": "部首·水",
+        "kangxi": 12,
+        "meaning": "贤淑善良",
+        "sense": "用作名字意指温婉仁厚、品性纯良",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "温婉",
+       "聪慧",
+       "善良",
+       "端庄"
+      ],
+      "full": "林昭淑",
+      "pinyin": "lín zhāo shū",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 94,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 98,
+       "poetry": 84
+      },
+      "supplements": [
+       {
+        "element": "火",
+        "chars": [
+         "昭"
+        ]
+       },
+       {
+        "element": "水",
+        "chars": [
+         "淑"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "昭",
+        "wuxing": "火",
+        "basisCode": "radical-sun",
+        "relationCode": "missing"
+       },
+       {
+        "char": "淑",
+        "wuxing": "水",
+        "basisCode": "radical-water",
+        "relationCode": "favorable"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "ts-0245-04",
+        "book": "唐诗三百首",
+        "title": "杜甫《哀江头》",
+        "text": "昭阳殿里第一人，同辇随君侍君侧"
+       },
+       {
+        "id": "ts-0238-03",
+        "book": "唐诗三百首",
+        "title": "杜审言《和晋陵陆丞早春游望》",
+        "text": "淑气催黄鸟，晴光转绿苹"
+       }
+      ]
+     },
+     {
+      "given": "映雪",
+      "meaning": "明净照人如雪，寓意灵秀聪敏、心地纯洁善良。",
+      "why": "映属火补火，雪属水补水，取火水既济之意，意象清雅而不失明亮。",
+      "chars": [
+       {
+        "char": "映",
+        "pinyin": "yìng",
+        "tone": 4,
+        "wuxing": "火",
+        "wuxingBasis": "部首·日",
+        "kangxi": 9,
+        "meaning": "辉映明亮",
+        "sense": "用作名字意指光彩照人、心思澄明",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "雪",
+        "pinyin": "xuě",
+        "tone": 3,
+        "wuxing": "水",
+        "wuxingBasis": "部首·雨",
+        "kangxi": 11,
+        "meaning": "洁白纯净",
+        "sense": "用作名字意指纯洁清雅、灵秀柔善",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "清雅",
+       "灵秀",
+       "纯洁",
+       "温柔"
+      ],
+      "full": "林映雪",
+      "pinyin": "lín yìng xuě",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 96,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 98,
+       "poetry": 92
+      },
+      "supplements": [
+       {
+        "element": "火",
+        "chars": [
+         "映"
+        ]
+       },
+       {
+        "element": "水",
+        "chars": [
+         "雪"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "映",
+        "wuxing": "火",
+        "basisCode": "radical-sun",
+        "relationCode": "missing"
+       },
+       {
+        "char": "雪",
+        "wuxing": "水",
+        "basisCode": "radical-other",
+        "relationCode": "favorable"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0105-03",
+        "book": "宋词三百首",
+        "title": "贺铸《石州引·石州慢》",
+        "text": "烟横水际，映带几点归鸦，东风销尽龙沙雪"
+       },
+       {
+        "id": "sc-0140-03",
+        "book": "宋词三百首",
+        "title": "范仲淹《苏幕遮》",
+        "text": "山映斜阳天接水"
+       },
+       {
+        "id": "sc-0215-05",
+        "book": "宋词三百首",
+        "title": "辛弃疾《青玉案》",
+        "text": "蛾儿雪柳黄金缕"
+       }
+      ]
+     },
+     {
+      "given": "晓凝",
+      "meaning": "晨光初晓而沉静凝练，寓意聪慧笃定、优雅仁善。",
+      "why": "晓属火补火，凝属水补水，火水相调，音韵从容，契合优雅智慧与善念。",
+      "chars": [
+       {
+        "char": "晓",
+        "pinyin": "xiǎo",
+        "tone": 3,
+        "wuxing": "火",
+        "wuxingBasis": "部首·日",
+        "kangxi": 16,
+        "meaning": "晨光通晓",
+        "sense": "用作名字意指明达智慧、朝气清新",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "凝",
+        "pinyin": "níng",
+        "tone": 2,
+        "wuxing": "水",
+        "wuxingBasis": "部首·冫",
+        "kangxi": 16,
+        "meaning": "沉静凝练",
+        "sense": "用作名字意指专注沉静、气质端雅",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "优雅",
+       "智慧",
+       "沉静",
+       "坚定"
+      ],
+      "full": "林晓凝",
+      "pinyin": "lín xiǎo níng",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 96,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 98,
+       "poetry": 92
+      },
+      "supplements": [
+       {
+        "element": "火",
+        "chars": [
+         "晓"
+        ]
+       },
+       {
+        "element": "水",
+        "chars": [
+         "凝"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "晓",
+        "wuxing": "火",
+        "basisCode": "radical-sun",
+        "relationCode": "missing"
+       },
+       {
+        "char": "凝",
+        "wuxing": "水",
+        "basisCode": "radical-other",
+        "relationCode": "favorable"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "ts-0010-02",
+        "book": "唐诗三百首",
+        "title": "李商隐《锦瑟》",
+        "text": "庄生晓梦迷蝴蝶，望帝春心托杜鹃"
+       },
+       {
+        "id": "sc-0079-01",
+        "book": "宋词三百首",
+        "title": "吴文英《高阳台》",
+        "text": "修竹凝妆，垂杨驻马，凭阑浅画成图"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "shiwen": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "note": "从指定原句取字，兼顾诗意与女性气质，字字有据。",
+    "names": [
+     {
+      "given": "淑君",
+      "meaning": "贤淑而有君子之风，温婉善良。",
+      "why": "所引诗句句有『淑人君子』，取淑、君二字，合于Graceful与Kind。",
+      "sourceId": "S57",
+      "chars": [
+       {
+        "char": "淑",
+        "pinyin": "shū",
+        "tone": 1,
+        "wuxing": "水",
+        "wuxingBasis": "部首·水",
+        "kangxi": 12,
+        "meaning": "贤淑温良",
+        "sense": "用作名字意指温婉善良、品行美好",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "君",
+        "pinyin": "jūn",
+        "tone": 1,
+        "wuxing": "木",
+        "wuxingBasis": "读音·牙音",
+        "kangxi": 7,
+        "meaning": "君子风范",
+        "sense": "用作名字意指有修养、有德行的君子气质",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "温婉",
+       "善良",
+       "贤淑",
+       "端方"
+      ],
+      "full": "林淑君",
+      "pinyin": "lín shū jūn",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 93,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 83,
+       "poetry": 96
+      },
+      "supplements": [
+       {
+        "element": "水",
+        "chars": [
+         "淑"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "淑",
+        "wuxing": "水",
+        "basisCode": "radical-water",
+        "relationCode": "favorable"
+       },
+       {
+        "char": "君",
+        "wuxing": "木",
+        "basisCode": "sound-molar",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sj-0001-02",
+        "book": "诗经",
+        "title": "周南·关雎",
+        "text": "窈窕淑女，君子好逑"
+       },
+       {
+        "id": "ts-0238-03",
+        "book": "唐诗三百首",
+        "title": "杜审言《和晋陵陆丞早春游望》",
+        "text": "淑气催黄鸟，晴光转绿苹"
+       },
+       {
+        "id": "ts-0038-01",
+        "book": "唐诗三百首",
+        "title": "薛逢《宫词》",
+        "text": "十二楼中尽晓妆，望仙楼上望君王"
+       }
+      ],
+      "source": {
+       "book": "诗经",
+       "title": "曹风·鳲鸠",
+       "text": "淑人君子，正是国人，正是国人"
+      }
+     },
+     {
+      "given": "德音",
+      "meaning": "美好的品德与声誉，智慧温良。",
+      "why": "所引诗句句有『德音无良』，反取其德音二字，寓意女子德行美好、声名温和。",
+      "sourceId": "S60",
+      "chars": [
+       {
+        "char": "德",
+        "pinyin": "dé",
+        "tone": 2,
+        "wuxing": "火",
+        "wuxingBasis": "读音·舌音",
+        "kangxi": 15,
+        "meaning": "品德美好",
+        "sense": "用作名字意指德行端正、内心善良",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "音",
+        "pinyin": "yīn",
+        "tone": 1,
+        "wuxing": "土",
+        "wuxingBasis": "读音·喉音",
+        "kangxi": 9,
+        "meaning": "美誉佳音",
+        "sense": "用作名字意指言语温和、声名美好",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "智慧",
+       "善良",
+       "温雅",
+       "美誉"
+      ],
+      "full": "林德音",
+      "pinyin": "lín dé yīn",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 94,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 86,
+       "poetry": 96
+      },
+      "supplements": [
+       {
+        "element": "火",
+        "chars": [
+         "德"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "德",
+        "wuxing": "火",
+        "basisCode": "sound-lingual",
+        "relationCode": "missing"
+       },
+       {
+        "char": "音",
+        "wuxing": "土",
+        "basisCode": "sound-guttural",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sj-0128-16",
+        "book": "诗经",
+        "title": "秦风·小戎",
+        "text": "厌厌良人，秩秩德音"
+       },
+       {
+        "id": "sj-0173-09",
+        "book": "诗经",
+        "title": "南有嘉鱼之什·蓼萧",
+        "text": "宜兄宜弟，令德寿岂"
+       },
+       {
+        "id": "ts-0163-11",
+        "book": "唐诗三百首",
+        "title": "李颀《听董大弹胡笳声兼寄语弄房给事》",
+        "text": "幽音变调忽飘洒，长风吹林雨堕瓦"
+       }
+      ],
+      "source": {
+       "book": "诗经",
+       "title": "邶风·日月",
+       "text": "乃如之人兮，德音无良"
+      }
+     },
+     {
+      "given": "嘉肴",
+      "meaning": "美好如嘉肴，珍贵而令人喜爱。",
+      "why": "所引诗句句有『尔肴既嘉』，取嘉、肴二字，虽原指酒肴，入名取美好珍贵之意。",
+      "sourceId": "S19",
+      "chars": [
+       {
+        "char": "嘉",
+        "pinyin": "jiā",
+        "tone": 1,
+        "wuxing": "木",
+        "wuxingBasis": "读音·牙音",
+        "kangxi": 14,
+        "meaning": "美好嘉善",
+        "sense": "用作名字意指美好善良、受人喜爱",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "肴",
+        "pinyin": "yáo",
+        "tone": 2,
+        "wuxing": "土",
+        "wuxingBasis": "读音·喉音",
+        "kangxi": 10,
+        "meaning": "珍美之味",
+        "sense": "用作名字意指珍贵美好、生活丰盈",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "美好",
+       "珍贵",
+       "温良",
+       "丰盈"
+      ],
+      "full": "林嘉肴",
+      "pinyin": "lín jiā yáo",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 90,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 70,
+       "poetry": 96
+      },
+      "supplements": [],
+      "analysis": [
+       {
+        "char": "嘉",
+        "wuxing": "木",
+        "basisCode": "sound-molar",
+        "relationCode": "neutral"
+       },
+       {
+        "char": "肴",
+        "wuxing": "土",
+        "basisCode": "sound-guttural",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sj-0248-05",
+        "book": "诗经",
+        "title": "生民之什·凫鹥",
+        "text": "尔酒既多，尔肴既嘉"
+       },
+       {
+        "id": "sc-0061-05",
+        "book": "宋词三百首",
+        "title": "辛弃疾《永遇乐》",
+        "text": "元嘉草草，封狼居胥，赢得仓皇北顾"
+       },
+       {
+        "id": "cc-0002-01",
+        "book": "楚辞",
+        "title": "东皇太一",
+        "text": "吉日兮辰良，穆将愉兮上皇抚长剑兮玉珥，璆锵鸣兮琳琅瑶席兮玉瑱，盍将把兮琼芳蕙肴蒸兮兰藉，奠桂酒兮椒浆扬枹兮拊鼓，疏缓节兮安歌陈竽瑟兮浩倡灵偃蹇兮姣服，芳菲菲兮满堂五音纷兮繁会，君欣欣兮乐康"
+       }
+      ],
+      "source": {
+       "book": "诗经",
+       "title": "甫田之什·頍弁",
+       "text": "尔酒既旨，尔肴既嘉"
+      }
+     }
+    ]
+   }
+  },
+  "yinyi": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "note": "林姓二声，取名避全同声调，重音律清亮、字形匀称；选字温雅积极。",
+    "names": [
+     {
+      "given": "芷宁",
+      "meaning": "如香草清雅，心境安宁，仁善和悦",
+      "why": "林芷宁声调2-3-2，起伏顺口；木木搭配字形匀称，意取清雅安宁",
+      "chars": [
+       {
+        "char": "芷",
+        "pinyin": "zhǐ",
+        "tone": 3,
+        "wuxing": "木",
+        "wuxingBasis": "部首·艸",
+        "kangxi": 10,
+        "meaning": "香草清雅",
+        "sense": "用作名字意指品格芬芳、温婉高雅",
+        "level": 2,
+        "polyphonic": false
+       },
+       {
+        "char": "宁",
+        "pinyin": "níng",
+        "tone": 2,
+        "wuxing": "火",
+        "wuxingBasis": "读音·舌音",
+        "kangxi": 5,
+        "meaning": "安宁和善",
+        "sense": "用作名字意指心境平和、待人宽厚",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "温婉",
+       "高雅",
+       "仁善",
+       "安宁"
+      ],
+      "full": "林芷宁",
+      "pinyin": "lín zhǐ níng",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 90,
+       "sound": 96,
+       "form": 94,
+       "wuxing": 86,
+       "poetry": 84
+      },
+      "supplements": [
+       {
+        "element": "火",
+        "chars": [
+         "宁"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "芷",
+        "wuxing": "木",
+        "basisCode": "radical-grass",
+        "relationCode": "neutral"
+       },
+       {
+        "char": "宁",
+        "wuxing": "火",
+        "basisCode": "sound-lingual",
+        "relationCode": "missing"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0075-01",
+        "book": "宋词三百首",
+        "title": "贺铸《人南渡·感皇恩》",
+        "text": "兰芷满芳洲，游思横路"
+       },
+       {
+        "id": "ts-0058-01",
+        "book": "唐诗三百首",
+        "title": "王维《西施咏》",
+        "text": "艳色天下重，西施宁久微"
+       }
+      ]
+     },
+     {
+      "given": "若晴",
+      "meaning": "温润娴雅，明朗聪慧，心怀善意",
+      "why": "林若晴声调2-4-2，去声提亮全名；字形简繁适中，意取柔和开朗",
+      "chars": [
+       {
+        "char": "若",
+        "pinyin": "ruò",
+        "tone": 4,
+        "wuxing": "木",
+        "wuxingBasis": "部首·艸",
+        "kangxi": 11,
+        "meaning": "温润柔和",
+        "sense": "用作名字意指姿态娴雅、待人亲和",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "晴",
+        "pinyin": "qíng",
+        "tone": 2,
+        "wuxing": "火",
+        "wuxingBasis": "部首·日",
+        "kangxi": 12,
+        "meaning": "明朗晴朗",
+        "sense": "用作名字意指心境明亮、聪慧豁达",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "柔雅",
+       "明朗",
+       "聪慧",
+       "亲和"
+      ],
+      "full": "林若晴",
+      "pinyin": "lín ruò qíng",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 91,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 86,
+       "poetry": 84
+      },
+      "supplements": [
+       {
+        "element": "火",
+        "chars": [
+         "晴"
+        ]
+       }
+      ],
+      "analysis": [
+       {
+        "char": "若",
+        "wuxing": "木",
+        "basisCode": "radical-grass",
+        "relationCode": "neutral"
+       },
+       {
+        "char": "晴",
+        "wuxing": "火",
+        "basisCode": "radical-sun",
+        "relationCode": "missing"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "sc-0047-03",
+        "book": "宋词三百首",
+        "title": "苏轼《青玉案》",
+        "text": "若到松江呼小渡"
+       },
+       {
+        "id": "sc-0114-05",
+        "book": "宋词三百首",
+        "title": "陈与义《临江仙》",
+        "text": "闲登小阁看新晴"
+       }
+      ]
+     },
+     {
+      "given": "慧恩",
+      "meaning": "聪慧明理，心怀仁恩，宽厚待人",
+      "why": "林慧恩声调2-4-1，收尾平声稳而清；字形匀稳，意取智善兼备",
+      "chars": [
+       {
+        "char": "慧",
+        "pinyin": "huì",
+        "tone": 4,
+        "wuxing": "土",
+        "wuxingBasis": "读音·喉音",
+        "kangxi": 15,
+        "meaning": "聪慧明理",
+        "sense": "用作名字意指心思明敏、通达事理",
+        "level": 1,
+        "polyphonic": false
+       },
+       {
+        "char": "恩",
+        "pinyin": "ēn",
+        "tone": 1,
+        "wuxing": "土",
+        "wuxingBasis": "读音·喉音",
+        "kangxi": 10,
+        "meaning": "仁恩善念",
+        "sense": "用作名字意指心存善念、宽厚待人",
+        "level": 1,
+        "polyphonic": false
+       }
+      ],
+      "tags": [
+       "聪慧",
+       "善良",
+       "宽厚",
+       "明理"
+      ],
+      "full": "林慧恩",
+      "pinyin": "lín huì ēn",
+      "surnameChars": [
+       {
+        "char": "林",
+        "pinyin": "lín",
+        "tone": 2,
+        "wuxing": "木",
+        "kangxi": 8
+       }
+      ],
+      "hints": [],
+      "scores": {
+       "overall": 85,
+       "sound": 96,
+       "form": 96,
+       "wuxing": 70,
+       "poetry": 76
+      },
+      "supplements": [],
+      "analysis": [
+       {
+        "char": "慧",
+        "wuxing": "土",
+        "basisCode": "sound-guttural",
+        "relationCode": "neutral"
+       },
+       {
+        "char": "恩",
+        "wuxing": "土",
+        "basisCode": "sound-guttural",
+        "relationCode": "neutral"
+       }
+      ],
+      "echoes": [
+       {
+        "id": "ly-0015-39",
+        "book": "论语",
+        "title": "卫灵公篇",
+        "text": "子曰：群居终日，言不及义，好行小慧，难矣哉"
+       },
+       {
+        "id": "ts-0196-01",
+        "book": "唐诗三百首",
+        "title": "张祜《集灵台二首 二》",
+        "text": "虢国夫人承主恩，平明骑马入宫门"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ "summary": {
+  "status": "done",
+  "basis": 3,
+  "retries": 0,
+  "output": {
+   "picks": [
+    {
+     "given": "映雪",
+     "reason": "综合96分最高，补火映、补水雪，火水相济；音律无提示，清亮好写。",
+     "full": "林映雪",
+     "pinyin": "lín yìng xuě",
+     "family": "五行补益",
+     "scores": {
+      "overall": 96,
+      "sound": 96,
+      "form": 96,
+      "wuxing": 98,
+      "poetry": 92
+     },
+     "supplements": [
+      {
+       "element": "火",
+       "chars": [
+        "映"
+       ]
+      },
+      {
+       "element": "水",
+       "chars": [
+        "雪"
+       ]
+      }
+     ]
+    },
+    {
+     "given": "晓凝",
+     "reason": "综合96分，补火晓、补水凝，贴合缺火喜水；未附音律提示，温婉雅致。",
+     "full": "林晓凝",
+     "pinyin": "lín xiǎo níng",
+     "family": "五行补益",
+     "scores": {
+      "overall": 96,
+      "sound": 96,
+      "form": 96,
+      "wuxing": 98,
+      "poetry": 92
+     },
+     "supplements": [
+      {
+       "element": "火",
+       "chars": [
+        "晓"
+       ]
+      },
+      {
+       "element": "水",
+       "chars": [
+        "凝"
+       ]
+      }
+     ]
+    },
+    {
+     "given": "昭淑",
+     "reason": "综合94分，补火昭、补水淑，火水相配；音律无提示，端雅易写。",
+     "full": "林昭淑",
+     "pinyin": "lín zhāo shū",
+     "family": "五行补益",
+     "scores": {
+      "overall": 94,
+      "sound": 96,
+      "form": 96,
+      "wuxing": 98,
+      "poetry": 84
+     },
+     "supplements": [
+      {
+       "element": "火",
+       "chars": [
+        "昭"
+       ]
+      },
+      {
+       "element": "水",
+       "chars": [
+        "淑"
+       ]
+      }
+     ]
+    }
+   ],
+   "overview": "三家已落笔：五行补益主张火水相配、读音清亮、书写简易；诗文出处强调取字有据、兼含诗意与女性气质；音形字义着意避开同声调、重音律与字形匀称。相同处在走温婉积极、有出处的路线；不同处在取字来源与侧重面。",
+   "tips": [
+    "先看缺火喜水，优先挑火水相配且综合分高者。",
+    "诵读三遍，确认与林姓连读顺口、无拗口谐音。",
+    "写下姓名看字形是否匀称，笔画繁简搭配舒服。"
+   ]
+  }
+ },
+ "translation": {
+  "lang": "en",
+  "units": {
+   "summary": {
+    "status": "done",
+    "texts": [
+     "The BaZi (Four Pillars of Destiny) chart lacks Fire, so Fire should be supplemented; for Tiao Hou (climate balance of the chart), Water is favored, so Water should also be supplemented.",
+     "With the highest overall score of 96, it supplements Fire with Ying and supplements Water with Xue, so Fire and Water balance each other; there is no sound or rhythm note, and it is clear and easy to write.",
+     "With an overall score of 96, it supplements Fire with Xiao and supplements Water with Ning, which fits the lack of Fire and preference for Water; no sound or rhythm note is attached, and it is gentle and elegant.",
+     "With an overall score of 94, it supplements Fire with Zhao and supplements Water with Shu, so Fire and Water match; there is no sound or rhythm note, and it is dignified and easy to write.",
+     "All three contributors have already put their ideas on paper: the Five Elements supplementation approach favors a match of Fire and Water, clear pronunciation, and easy writing; the poetic source approach emphasizes that the chosen characters have textual basis and combine poetic quality with feminine temperament; the sound, form, and meaning approach deliberately avoids the same tone, emphasizes rhythm, and seeks balance in character shape. The shared direction is gentle, positive, and source-based; the differences lie in the source of the chosen characters and the aspect emphasized.",
+     "First look at the lack of Fire and preference for Water, and give priority to those that match Fire and Water and have a high overall score.",
+     "Read it aloud three times to confirm that it flows smoothly with the surname Lin and has no awkward homophones.",
+     "Write down the full name and see whether the character shapes are balanced, with a comfortable mix of complex and simple strokes."
+    ],
+    "failures": 0
+   },
+   "wuxing": {
+    "status": "done",
+    "texts": [
+     "According to the BaZi (Four Pillars of Destiny), the chart lacks Fire and should be supplemented with Fire; for Tiao Hou (climate balance of the chart), Water is favored and should also be supplemented. From the Xi Yong (favorable elements) characters, pair Fire with Water, while also considering the gentle and graceful quality of a girl's name, the meaning of Graceful Wise Kind, a clear and bright sound, and simple writing.",
+     "Bright and open-hearted, virtuous and gentle, with both wisdom and kindness.",
+     "Zhao (昭) belongs to Fire and supplements Fire; Shu (淑) belongs to Water and supplements Water. Fire and Water assist each other, the meaning of the characters is gentle and elegant, fitting the style and the wish for goodness.",
+     "bright and illustrious",
+     "Used as a name, it means intelligent and bright, with an open and upright heart",
+     "virtuous and kind",
+     "Used as a name, it means gentle and kind, with a pure and good character",
+     "Gentle",
+     "Intelligent",
+     "Kind",
+     "Dignified",
+     "The first lady in the Zhaoyang Palace, riding in the same carriage and attending the emperor's side",
+     "The gentle air urges the yellow birds, the clear light turns the green duckweed",
+     "Bright and pure as snow, symbolizing elegance and cleverness, a pure and kind heart.",
+     "Ying (映) belongs to Fire and supplements Fire; Xue (雪) belongs to Water and supplements Water, taking the meaning of Fire and Water in harmony, with a clear and elegant image that is still bright.",
+     "shining brightly",
+     "Used as a name, it means radiant and clear-minded",
+     "white and pure",
+     "Used as a name, it means pure and elegant, delicate and kind",
+     "Elegant",
+     "Delicate",
+     "Pure",
+     "Gentle",
+     "Mist stretches across the water's edge, reflecting a few returning crows; the east wind melts away all the snow of Longsha",
+     "Mountains reflect the setting sun, the sky meets the water",
+     "The morning light at dawn is calm and focused, symbolizing wisdom, steadiness, elegance, and kindness.",
+     "Xiao (晓) belongs to Fire and supplements Fire; Ning (凝) belongs to Water and supplements Water. Fire and Water are balanced, the sound and rhythm are calm, fitting elegance, wisdom, and good thoughts.",
+     "dawn light and understanding",
+     "Used as a name, it means clear wisdom and fresh vitality",
+     "calm and focused",
+     "Used as a name, it means focused and calm, with an elegant bearing",
+     "Elegant",
+     "Wisdom",
+     "Calm",
+     "Resolute",
+     "Zhuangzi dreamed at dawn, confused by butterflies; Emperor Wang entrusted his spring heart to the cuckoo",
+     "Slender bamboos gather like makeup, weeping willows halt the horse; leaning on the railing, a light sketch becomes a painting",
+     "Slender bamboos in gathered adornment, drooping willows where horses halt, leaning on the rail, a light sketch becomes a painting"
+    ],
+    "failures": 0
+   },
+   "shiwen": {
+    "status": "done",
+    "texts": [
+     "Characters are drawn from the designated source lines, balancing poetic quality with feminine grace, with every character well grounded.",
+     "Virtuous and graceful with the bearing of a noble person, gentle and kind.",
+     "Line S57 contains \"a virtuous person, a noble one\"; the characters Shu and Jun are taken from it, matching Graceful and Kind.",
+     "Virtuous, gentle, and good",
+     "Used in a name to mean gentle and kind, with fine character",
+     "The bearing of a noble person",
+     "Used in a name to mean a cultivated, virtuous, noble temperament",
+     "Gentle",
+     "Kind",
+     "Virtuous",
+     "Dignified",
+     "A modest and virtuous maiden, a fine match for a noble man",
+     "Gentle breezes urge on the orioles, clear light shifts across the green duckweed",
+     "By the twelfth tower all are made up at dawn, gazing from the immortal-viewing tower toward the sovereign",
+     "A virtuous person, a noble one, truly the model for the people of the state, truly the model for the people of the state",
+     "Fine virtue and reputation, wise and gentle.",
+     "Line S60 contains \"fine reputation without goodness\"; its two characters Deyin are taken in reverse sense, implying a woman of fine virtue and gentle reputation.",
+     "Fine virtue",
+     "Used in a name to mean upright virtue and a kind heart",
+     "Good repute and fair words",
+     "Used in a name to mean gentle speech and a fine reputation",
+     "Wisdom",
+     "Kindness",
+     "Gentle and refined",
+     "Good repute",
+     "Content and good is the fine person, ordered and clear is the fine reputation",
+     "Harmonious with elder and younger brothers, with fine virtue and long life",
+     "The hidden notes shift their tune and suddenly drift and scatter; long winds blow through the woods as rain falls on the tiles",
+     "Now such a one as this, of fine reputation but without goodness",
+     "Fine as a choice dish, precious and beloved.",
+     "Line S19 contains \"your dishes are indeed fine\"; the characters Jia and Yao are taken from it. Though they originally refer to food and drink, in a name they carry the sense of something fine and precious.",
+     "Fine and excellent",
+     "Used in a name to mean fine, kind, and well loved",
+     "Delicacies and fine flavors",
+     "Used in a name to mean precious and fine, with an abundant life",
+     "Fine",
+     "Precious",
+     "Gentle and good",
+     "Abundant",
+     "Your wine is already plentiful, your dishes are already fine",
+     "In the Yuanjia era all was haste, sealing Mount Wolf as a monument, only to win a panicked glance back north",
+     "A lucky day and a fine hour, reverently bringing joy to the High Lord, grasping the long sword with jade earrings, tinkling and ringing like fine jade; on the jade mat with jade ear-stoppers, why not hold the blossoms of jasper? Orchid dishes are steamed with thoroughwort spread beneath, and cassia wine is offered with pepper broth; raising the drumstick and striking the drum, with slow, relaxed rhythm and peaceful song; setting out the yu and se, with grand and soaring voices; the spirits dance with bent and swaying grace in lovely robes, their fragrance swirling and filling the hall; the five notes mingle in rich confluence, and the lord rejoices in joy and health",
+     "Your wine is already sweet, your dishes are already fine"
+    ],
+    "failures": 0
+   },
+   "yinyi": {
+    "status": "done",
+    "texts": [
+     "The surname Lin has a rising second tone, so the given names avoid using the same tone throughout; the sound pattern is clear and bright, and the characters are even in shape. The chosen characters are gentle, elegant, and positive.",
+     "Elegant like a fragrant herb, peaceful in mind, kind and gentle.",
+     "The tones of Lin Zhining are 2-3-2, flowing and easy to say; Wood paired with Wood makes a balanced visual form, and the meaning is elegance and peace.",
+     "Fragrant herb, elegant and refined",
+     "Used in a name, it suggests fragrant character, gentle and refined grace.",
+     "Peaceful and kind",
+     "Used in a name, it suggests a calm mind and generosity toward others.",
+     "gentle and refined",
+     "elegant",
+     "kind and good",
+     "peaceful",
+     "Orchids and angelicas fill the fragrant isle, wandering thoughts cross the road.",
+     "Beauty is valued throughout the world; how could Xi Shi remain obscure for long?",
+     "Warm and refined, bright and intelligent, with kindness in the heart.",
+     "The tones of Lin Ruoqing are 2-4-2, with the departing tone brightening the whole name; the characters are moderate in complexity, and the meaning is gentleness and openness.",
+     "Warm and gentle",
+     "Used in a name, it suggests graceful bearing and an approachable manner.",
+     "Bright and clear",
+     "Used in a name, it suggests a bright mind, intelligence, and openness.",
+     "soft and elegant",
+     "bright",
+     "intelligent",
+     "approachable",
+     "If you reach Songjiang, call for a small ferry.",
+     "At leisure I climb the little pavilion to watch the newly cleared sky.",
+     "Intelligent and understanding, with kindness in the heart, treating others generously.",
+     "The tones of Lin Huien are 2-4-1, ending in a level tone that is steady and clear; the characters are even and stable, and the meaning is both wisdom and goodness.",
+     "Intelligent and understanding",
+     "Used in a name, it suggests a keen mind and a clear grasp of what is reasonable.",
+     "Kindness and good intent",
+     "Used in a name, it suggests holding good thoughts and treating others generously.",
+     "intelligent",
+     "kind",
+     "generous",
+     "understanding",
+     "The Master said: To gather all day long and never talk about what is right, but only practice petty cleverness, is difficult indeed.",
+     "Lady of Guo State received the sovereign’s favor, and at dawn rode her horse through the palace gate."
+    ],
+    "failures": 0
+   }
+  }
+ }
+}
