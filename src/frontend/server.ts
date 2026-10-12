@@ -11,6 +11,7 @@ import {
   ForbiddenOrigin,
   PayloadTooLarge,
   SanyiInputError,
+  errorCodeForError,
   statusForError,
   UnsupportedMediaType,
 } from "../sanyi/http-errors.js";
@@ -92,12 +93,14 @@ async function readJsonBody(request: IncomingMessage): Promise<unknown> {
     throw new SanyiInputError("请求体不是合法 JSON");
   }
 }
-function errorPayload(error: unknown): { error: string; readingId?: string } {
+function errorPayload(error: unknown): { error: string; code?: string; readingId?: string } {
   const message = statusForError(error) === 500
     ? "服务暂时不可用"
     : error instanceof Error ? error.message : "服务暂时不可用";
+  const code = errorCodeForError(error);
   return {
     error: message,
+    ...(code ? { code } : {}),
     ...(error instanceof PaymentAlreadyUsedError ? { readingId: error.readingId } : {}),
   };
 }

@@ -26,11 +26,11 @@ test("首页与结果页均放置钱包栏且收款说明来自配置", async ()
   ]);
   assert.match(home, /<WalletBar/u);
   assert.match(reading, /<WalletBar/u);
-  assert.match(button, /三易收款地址/u);
+  assert.match(button, /t\("payment\.recipient"/u);
   assert.match(button, /payment\.recipient/u);
   assert.match(bar, /ConnectButton\.Custom/u);
   assert.match(bar, /balanceOf/u);
   assert.match(bar, /openAccountModal/u);
-  assert.match(bar, /领取测试币/u);
+  assert.match(bar, /t\("wallet\.faucet"\)/u);
   assert.match(styles, /\.wallet-button[^}]*min-height: 44px/su);
 });

@@ -4,6 +4,7 @@ import {
   EMPTY_BIRTH, birthProblem, toBirthInput, type BirthFormValues, type BirthProfileInput,
 } from "./birth-profile.js";
 import { entryHorizon } from "./birth-entry.js";
+import { type TFunction, zhT } from "./i18n.js";
 
 export type EntryKind = "question" | "fortune" | "destiny" | "naming";
 export type NamingTarget = "person" | "business";
@@ -43,15 +44,15 @@ export const KIND_OPTIONS = [
 ] as const;
 
 export const PLACEHOLDERS: Record<EntryKind, string> = {
-  question: "例如：这次面试能过吗？",
-  fortune: "例如：我今年运势如何？",
-  destiny: "例如：我适合做什么工作？",
-  naming: "对名字的期望（选填）：如温和有书卷气、第二个字用『子』字辈",
+  question: zhT("question.placeholder.question"),
+  fortune: zhT("question.placeholder.fortune"),
+  destiny: zhT("question.placeholder.destiny"),
+  naming: zhT("question.placeholder.naming"),
 };
 
 export const NAMING_PLACEHOLDERS: Record<NamingTarget, string> = {
-  person: "对名字的期望（选填）：如温和有书卷气、第二个字用『子』字辈",
-  business: "做什么生意、想要什么感觉？例：社区咖啡馆，想要温暖安静",
+  person: zhT("question.placeholder.naming"),
+  business: zhT("question.placeholder.business"),
 };
 
 export const HORIZON_OPTIONS = [
@@ -61,13 +62,13 @@ export const HORIZON_OPTIONS = [
   ["next-year", "明年"],
 ] as const;
 
-export function horizonLabel(horizon: string): string {
-  const option = HORIZON_OPTIONS.find(([value]) => value === horizon);
-  if (option) {
-    return option[1];
-  }
+export function horizonLabel(horizon: string, t: TFunction = zhT): string {
+  const keys: Record<string, Parameters<TFunction>[0]> = {
+    today: "horizon.today", month: "horizon.month", year: "horizon.year", "next-year": "horizon.nextYear",
+  };
+  if (keys[horizon]) return t(keys[horizon]!);
   const year = horizon.match(/^year:(\d{4})$/);
-  return year ? `${year[1]} 年` : "今年";
+  return year ? t("horizon.specificYear", { year: year[1]! }) : t("horizon.year");
 }
 
 const ENTRY_KINDS: readonly string[] = ["question", "fortune", "destiny", "naming"];
@@ -87,7 +88,11 @@ export function fromClassification(value: Classification): ClassificationView {
 }
 
 /** 套用规则分类：自动模式下切换类型与细项；手动点选过类型时只补细项。 */
-export function applyClassification(state: EntryState, view: ClassificationView): EntryState {
+export function applyClassification(
+  state: EntryState,
+  view: ClassificationView,
+  t: TFunction = zhT,
+): EntryState {
   const next: EntryState = { ...state };
   delete next.unsupported;
   if (view.subjectKey && view.subject) {
@@ -104,7 +109,7 @@ export function applyClassification(state: EntryState, view: ClassificationView)
     return next;
   }
   if (!view.supported || !ENTRY_KINDS.includes(view.kind)) {
-    next.unsupported = view.suggestion ?? "这类问题即将开放，可点选「问事」照常起卦";
+    next.unsupported = t === zhT && view.suggestion ? view.suggestion : t("unsupported.default");
     return next;
   }
   next.kind = view.kind as EntryKind;
@@ -119,20 +124,32 @@ export function chooseKind(state: EntryState, kind: EntryKind): EntryState {
 }
 
 /** 自动识别成功时给出的小字提示；手动模式或未开放时不提示。 */
-export function autoHint(state: EntryState): string | null {
+export function subjectLabel(key: string, t: TFunction = zhT, fallback = ""): string {
+  const translationKey = `subject.${key}` as Parameters<TFunction>[0];
+  return ["career", "wealth", "documents", "wellbeing", "illness", "peers", "relationship"].includes(key)
+    ? t(translationKey)
+    : fallback;
+}
+
+export function autoHint(state: EntryState, t: TFunction = zhT): string | null {
   if (state.manual || state.unsupported) {
     return null;
   }
   if (state.kind === "question") {
-    return state.subject ? `已自动识别为问事 · ${state.subject}` : "已自动识别为问事";
+    const subject = t === zhT && state.subject
+      ? state.subject
+      : subjectLabel(state.subjectKey, t, state.subject);
+    return subject ? t("status.detected.subject", { subject }) : t("status.detected.question");
   }
   if (state.kind === "fortune") {
-    return `已自动识别为运势 · ${horizonLabel(state.horizon)}`;
+    return t("status.detected.fortune", { horizon: horizonLabel(state.horizon, t) });
   }
   if (state.kind === "naming") {
-    return `已自动识别为起名 · ${state.target === "business" ? "商号" : "人名"}`;
+    return t("status.detected.naming", {
+      target: t(state.target === "business" ? "naming.business" : "naming.person"),
+    });
   }
-  return "已自动识别为命理";
+  return t("status.detected.destiny");
 }
 
 export interface GateInput {
@@ -145,18 +162,18 @@ export interface GateInput {
 }
 
 /** 问卦按钮是否可用，不可用时给出就地说明。 */
-export function entryGate(input: GateInput): { ready: boolean; reason: string } {
+export function entryGate(input: GateInput, t: TFunction = zhT): { ready: boolean; reason: string } {
   if (input.questionLength < 4) {
-    return { ready: false, reason: "先写下想问的事（至少 4 个字）" };
+    return { ready: false, reason: t("gate.questionLength") };
   }
   if (!input.classified && !input.entry.manual) {
-    return { ready: false, reason: "识别中" };
+    return { ready: false, reason: t("status.classifying") };
   }
   if (input.entry.unsupported) {
     return { ready: false, reason: input.entry.unsupported };
   }
   if (input.entry.kind !== "question" && input.birthProblem) {
-    return { ready: false, reason: input.birthShown ? "" : `请先填好生辰：${input.birthProblem}` };
+    return { ready: false, reason: input.birthShown ? "" : t("gate.birth", { problem: input.birthProblem }) };
   }
   return { ready: true, reason: "" };
 }
@@ -183,13 +200,17 @@ export interface EntryChoice {
 }
 
 /** 渲染时由分类结果与手动选择合成入口状态，避免异步分类覆盖用户手选。 */
-export function deriveEntry(view: ClassificationView | undefined, choice: EntryChoice): EntryState {
+export function deriveEntry(
+  view: ClassificationView | undefined,
+  choice: EntryChoice,
+  t: TFunction = zhT,
+): EntryState {
   let state = DEFAULT_ENTRY;
   if (choice.kind) {
     state = chooseKind(state, choice.kind);
   }
   if (view) {
-    state = applyClassification(state, view);
+    state = applyClassification(state, view, t);
   }
   if (choice.subjectKey !== undefined) {
     state = { ...state, subjectKey: choice.subjectKey, subject: choice.subject ?? "" };
@@ -223,34 +244,38 @@ export const DEFAULT_NAMING_FORM: NamingFormValues = {
 };
 
 /** 起名生辰单独校验；「不限」只影响取名用字，排盘按男命传入。 */
-export function namingBirthProblem(value: NamingBirthValues, unborn: boolean): string | null {
+export function namingBirthProblem(
+  value: NamingBirthValues,
+  unborn: boolean,
+  t: TFunction = zhT,
+): string | null {
   return birthProblem({
     ...value,
     time: unborn ? "" : value.time,
     gender: value.gender === "any" ? "male" : value.gender,
-  });
+  }, t);
 }
 
 export function namingGate(input: {
   questionLength: number;
   value: NamingFormValues;
   birthProblem: string | null;
-}): { ready: boolean; reason: string } {
+}, t: TFunction = zhT): { ready: boolean; reason: string } {
   const { value } = input;
   if (value.target === "person") {
     if (!/^[一-鿿]{1,2}$/u.test(value.surname.trim())) {
-      return { ready: false, reason: "请填写 1–2 个汉字的姓氏" };
+      return { ready: false, reason: t("gate.surname") };
     }
     if (input.birthProblem) {
-      return { ready: false, reason: `请先填好起名生辰：${input.birthProblem}` };
+      return { ready: false, reason: t("gate.namingBirth", { problem: input.birthProblem }) };
     }
     return { ready: true, reason: "" };
   }
   if (input.questionLength < 2) {
-    return { ready: false, reason: "请写下行业与期望（至少 2 个字）" };
+    return { ready: false, reason: t("gate.namingLength") };
   }
   if (value.ownerBirthEnabled && input.birthProblem) {
-    return { ready: false, reason: `请填好店主生辰：${input.birthProblem}` };
+    return { ready: false, reason: t("gate.ownerBirth", { problem: input.birthProblem }) };
   }
   return { ready: true, reason: "" };
 }

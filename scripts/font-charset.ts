@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ZHOUYI_CORPUS } from "../src/agent/zhouyi-corpus.js";
+import { zh } from "../web/i18n/zh.js";
 const EIGHT_GATES = "休生伤杜景死惊开";
 const NINE_STARS = "天蓬天任天冲天辅天英天芮天柱天心天禽";
 const EIGHT_SPIRITS = "值符腾蛇螣蛇太阴六合白虎玄武九地九天勾陈朱雀";
@@ -23,6 +24,7 @@ const FIXED_COPY = [
   "起名依据", "五行分析", "五", "诗", "音",
   "0123456789",
 ] as const;
+const BRUSH_KEYS = ["brand.name", "brand.seal", "home.title", "history.title"] as const;
 export function buildFontCharset(): string {
   const source = [
     ...ZHOUYI_CORPUS.map((item) => item.name),
@@ -33,6 +35,8 @@ export function buildFontCharset(): string {
     SIX_RELATIONS,
     STEMS_BRANCHES,
     SHI_YING,
+    // 毛笔字只用于品牌、印章与标题：只取这几个字典键，免得整部字典撑大子集。
+    ...BRUSH_KEYS.map((key) => zh[key]),
     ...FIXED_COPY,
   ].join("");
   return [...new Set(source)].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join("");

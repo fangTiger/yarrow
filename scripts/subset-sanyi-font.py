@@ -13,7 +13,8 @@ FONT_URL = (
 LICENSE_URL = "https://raw.githubusercontent.com/google/fonts/main/ofl/mashanzheng/OFL.txt"
 EXPECTED_SHA256 = "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb"
 EXPECTED_SIZE = 5_857_936
-KNOWN_MISSING = {"夬", "姤", "螣"}
+# 「·」「→」是界面标点，毛笔字体不含，浏览器回落到后续字体即可。
+KNOWN_MISSING = {"夬", "姤", "螣", "·", "→"}
 ROOT = Path(__file__).resolve().parents[1]
 FONT_DIR = ROOT / "web" / "fonts"
 

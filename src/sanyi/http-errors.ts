@@ -7,28 +7,30 @@ import {
 } from "./reading-service.js";
 import { ArcUnavailableError } from "./throws.js";
 class HttpError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(message: string, readonly status: number, readonly code?: string) {
     super(message);
     this.name = new.target.name;
   }
 }
 export class SanyiInputError extends HttpError {
-  constructor(message: string) { super(message, 400); }
+  constructor(message: string, code = "invalid-input") { super(message, 400, code); }
 }
 export class NotFoundError extends HttpError {
-  constructor(message = "未找到解读") { super(message, 404); }
+  constructor(message = "未找到解读") { super(message, 404, "reading-not-found"); }
 }
 export class NotOpenYetError extends HttpError {
-  constructor(message: string) { super(message, 501); }
+  constructor(message: string) { super(message, 501, "feature-not-open"); }
 }
 export class UnsupportedMediaType extends HttpError {
-  constructor(message = "写接口只接受 application/json") { super(message, 415); }
+  constructor(message = "写接口只接受 application/json") {
+    super(message, 415, "unsupported-media-type");
+  }
 }
 export class ForbiddenOrigin extends HttpError {
-  constructor(message = "拒绝跨源操作") { super(message, 403); }
+  constructor(message = "拒绝跨源操作") { super(message, 403, "invalid-origin"); }
 }
 export class PayloadTooLarge extends HttpError {
-  constructor(message = "请求体超过 8 KiB 限制") { super(message, 413); }
+  constructor(message = "请求体超过 8 KiB 限制") { super(message, 413, "payload-too-large"); }
 }
 export function statusForError(error: unknown): number {
   if (
@@ -55,4 +57,12 @@ export function statusForError(error: unknown): number {
     return 503;
   }
   return 500;
+}
+
+/** 给浏览器的稳定错误码；消息保留中文供旧客户端显示。 */
+export function errorCodeForError(error: unknown): string | undefined {
+  if (error instanceof HttpError) return error.code;
+  if (error instanceof PaymentAlreadyUsedError) return "payment-already-used";
+  if (error instanceof FeePaymentError) return "payment-invalid";
+  return undefined;
 }

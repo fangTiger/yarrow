@@ -1,15 +1,18 @@
 // web/components/HorizonChips.tsx
 import { HORIZON_OPTIONS, horizonLabel } from "../lib/home-entry.js";
+import { useT } from "../lib/i18n.js";
 
 /** 运势的时间范围：今天、本月、今年、明年；识别到指定年份时另列一项。 */
 export function HorizonChips(props: { value: string; onChange(horizon: string): void }) {
-  const options: (readonly [string, string])[] = [...HORIZON_OPTIONS];
+  const t = useT();
+  const options: (readonly [string, string])[] = HORIZON_OPTIONS
+    .map(([value]) => [value, horizonLabel(value, t)]);
   if (props.value.startsWith("year:")) {
-    options.push([props.value, horizonLabel(props.value)]);
+    options.push([props.value, horizonLabel(props.value, t)]);
   }
   return (
-    <div aria-label="时间范围" className="detail-row" role="group">
-      <span className="detail-label">时间</span>
+    <div aria-label={t("horizon.group")} className="detail-row" role="group">
+      <span className="detail-label">{t("horizon.field")}</span>
       <div className="chips">
         {options.map(([value, label]) => (
           <button

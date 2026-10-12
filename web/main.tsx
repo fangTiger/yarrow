@@ -9,6 +9,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app.js";
 import { Providers } from "./providers/Providers.js";
+import { detectLang, LangProvider } from "./lib/i18n.js";
 
 const root = document.querySelector<HTMLDivElement>("#root");
 if (!root) {
@@ -16,8 +17,10 @@ if (!root) {
 }
 createRoot(root).render(
   <StrictMode>
-    <Providers>
-      <App />
-    </Providers>
+    <LangProvider initialLang={detectLang()}>
+      <Providers>
+        <App />
+      </Providers>
+    </LangProvider>
   </StrictMode>,
 );

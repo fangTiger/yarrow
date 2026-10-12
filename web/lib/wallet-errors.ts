@@ -1,4 +1,9 @@
-export function walletErrorMessage(error: unknown): string {
+import { I18nError, type TFunction, zhT } from "./i18n.js";
+import { ApiError, apiErrorMessage } from "./api.js";
+
+export function walletErrorMessage(error: unknown, t: TFunction = zhT): string {
+  if (error instanceof I18nError) return t(error.key, error.params);
+  if (error instanceof ApiError) return apiErrorMessage(error, t);
   const messages: string[] = [];
   const seen = new Set<unknown>();
   let current = error;
@@ -21,14 +26,15 @@ export function walletErrorMessage(error: unknown): string {
   }
   const reason = messages.join(" · ").replace(/\s+/gu, " ");
   if (rejected || /rejected|denied/iu.test(reason)) {
-    return "你已取消付款，资金没有变动";
+    return t("errors.paymentCancelled");
   }
   if (/insufficient|余额不足/iu.test(reason)) {
-    return "余额不足，请先领取 Arc Testnet 测试币";
+    return t("errors.walletBalance");
   }
   if (/chain|network mismatch|wrong network|网络不符|切换.*网络|切换.*Arc/iu.test(reason)) {
-    return "请把钱包切换到 Arc Testnet 后重试";
+    return t("errors.walletNetwork");
   }
   const detail = reason.length > 100 ? `${reason.slice(0, 100)}…` : reason;
-  return `付款没有完成，请稍后重试${detail ? `（原因：${detail}）` : ""}`;
+  if (t !== zhT) return t("errors.paymentGeneric");
+  return detail ? t("errors.paymentReason", { reason: detail }) : t("errors.paymentGeneric");
 }

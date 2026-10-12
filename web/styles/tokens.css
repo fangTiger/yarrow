@@ -27,6 +27,11 @@
   --dynamic: "Kaiti SC", "STKaiti", "KaiTi", serif;
   --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
+html:lang(en) {
+  --serif: Georgia, "Times New Roman", "Songti SC", "STSong", serif;
+  --brush: Georgia, "Times New Roman", "Ma Shan Zheng Subset", "Kaiti SC", serif;
+}
+html:lang(en) body { letter-spacing: -0.01em; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

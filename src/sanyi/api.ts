@@ -51,19 +51,19 @@ export interface SanyiApi {
 }
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new SanyiInputError("请求体必须是 JSON 对象");
+    throw new SanyiInputError("请求体必须是 JSON 对象", "invalid-body");
   }
   return value as Record<string, unknown>;
 }
 function questionFrom(input: unknown): string {
   const question = record(input).question;
   if (typeof question !== "string") {
-    throw new SanyiInputError("问题必须是字符串");
+    throw new SanyiInputError("问题必须是字符串", "invalid-question");
   }
   try {
     return classifyQuestion(question).question;
   } catch (error) {
-    throw new SanyiInputError(error instanceof Error ? error.message : "问题无效");
+    throw new SanyiInputError(error instanceof Error ? error.message : "问题无效", "invalid-question");
   }
 }
 function subjectFrom(value: unknown): SubjectKey | undefined {
@@ -72,20 +72,20 @@ function subjectFrom(value: unknown): SubjectKey | undefined {
   }
   const option = QUESTION_SUBJECTS.find((item) => item.key === value);
   if (!option) {
-    throw new SanyiInputError("事项类型无效");
+    throw new SanyiInputError("事项类型无效", "invalid-subject");
   }
   return option.key;
 }
 function feeProofFrom(value: unknown): SanyiFeeProof {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new SanyiInputError("缺少卦金付款凭证");
+    throw new SanyiInputError("缺少卦金付款凭证", "payment-proof-required");
   }
   const proof = value as Record<string, unknown>;
   if (typeof proof.payer !== "string" || !isAddress(proof.payer)) {
-    throw new SanyiInputError("付款人地址无效");
+    throw new SanyiInputError("付款人地址无效", "payment-proof-invalid");
   }
   if (typeof proof.transactionHash !== "string" || !/^0x[0-9a-fA-F]{64}$/u.test(proof.transactionHash)) {
-    throw new SanyiInputError("付款交易哈希无效");
+    throw new SanyiInputError("付款交易哈希无效", "payment-proof-invalid");
   }
   return { payer: getAddress(proof.payer), transactionHash: proof.transactionHash as `0x${string}` };
 }
@@ -164,7 +164,7 @@ export function createSanyiApi(
             throw new SanyiInputError("人名须选择单名或双名");
           }
           if (body.birth === undefined || body.birth === null) {
-            throw new SanyiInputError("请先填写生辰");
+            throw new SanyiInputError("请先填写生辰", "birth-required");
           }
         } else {
           if (body.length !== 2 && body.length !== 3 && body.length !== 4) {
@@ -179,7 +179,7 @@ export function createSanyiApi(
           try {
             normalizeBirthProfile(body.birth);
           } catch {
-            throw new SanyiInputError("生辰格式无效，请检查填写内容");
+            throw new SanyiInputError("生辰格式无效，请检查填写内容", "birth-invalid");
           }
         }
         const length = body.length as 1 | 2 | 3 | 4;
@@ -203,17 +203,17 @@ export function createSanyiApi(
           ...(body.horizon === undefined ? {} : { horizon: body.horizon as FortuneHorizon }),
         });
       } catch {
-        throw new SanyiInputError("问题类型或时间范围无效");
+        throw new SanyiInputError("问题类型或时间范围无效", "invalid-question-kind");
       }
       if (classification.kind === "naming") return createNaming(classification.target);
       if (classification.kind === "destiny" || classification.kind === "fortune") {
         if (body.birth === undefined || body.birth === null) {
-          throw new SanyiInputError("请先填写生辰");
+          throw new SanyiInputError("请先填写生辰", "birth-required");
         }
         try {
           normalizeBirthProfile(body.birth);
         } catch {
-          throw new SanyiInputError("生辰格式无效，请检查填写内容");
+          throw new SanyiInputError("生辰格式无效，请检查填写内容", "birth-invalid");
         }
         const sect = body.sect ?? 1;
         if (sect !== 1 && sect !== 2) {
@@ -286,7 +286,7 @@ export function createSanyiApi(
     async changeDayBoundary(id, input) {
       const body = record(input);
       if (body.birth === undefined || body.birth === null) {
-        throw new SanyiInputError("请先填写生辰");
+        throw new SanyiInputError("请先填写生辰", "birth-required");
       }
       if (body.sect !== 1 && body.sect !== 2) {
         throw new SanyiInputError("换日口径须为 1 或 2");

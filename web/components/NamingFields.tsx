@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import type { NamingFormValues, NamingTarget } from "../lib/home-entry.js";
 import { BirthFields } from "./BirthFields.js";
+import { type TFunction, useT } from "../lib/i18n.js";
 
-function targetLabel(target: NamingTarget): string {
-  return target === "person" ? "人名" : "商号";
+function targetLabel(target: NamingTarget, t: TFunction): string {
+  return t(target === "person" ? "naming.person" : "naming.business");
 }
 
 /** 起名专用细项；生辰完全由父组件独立持有，不读写本人档案。 */
@@ -13,12 +14,13 @@ export function NamingFields(props: {
   questionField?: ReactNode;
   onChange(value: NamingFormValues): void;
 }) {
+  const t = useT();
   const { value } = props;
   const update = (patch: Partial<NamingFormValues>) => props.onChange({ ...value, ...patch });
   const targetOptions = (["person", "business"] as const);
   const targetRow = (
-    <div aria-label="起名对象" className="detail-row" role="group">
-      <span className="detail-label">对象</span>
+    <div aria-label={t("naming.targetGroup")} className="detail-row" role="group">
+      <span className="detail-label">{t("naming.target")}</span>
       <div className="chips">
         {targetOptions.map((target) => (
           <button
@@ -35,7 +37,7 @@ export function NamingFields(props: {
             })}
             type="button"
           >
-            {targetLabel(target)}
+            {targetLabel(target, t)}
           </button>
         ))}
       </div>
@@ -46,12 +48,19 @@ export function NamingFields(props: {
       <div className="naming-fields">
         {targetRow}
         {props.questionField}
-        <div aria-label="字号字数" className="detail-row" role="group">
-          <span className="detail-label">字数</span>
+        <div aria-label={t("naming.businessLengthGroup")} className="detail-row" role="group">
+          <span className="detail-label">{t("naming.length")}</span>
           <div className="chips">
             {([2, 3, 4] as const).map((length) => (
-              <button aria-pressed={value.length === length} className="chip" key={length}
-                onClick={() => update({ length })} type="button">{length} 字</button>
+              <button
+                aria-pressed={value.length === length}
+                className="chip"
+                key={length}
+                onClick={() => update({ length })}
+                type="button"
+              >
+                {t("naming.characters", { count: length })}
+              </button>
             ))}
           </div>
         </div>
@@ -60,14 +69,14 @@ export function NamingFields(props: {
           onToggle={(event) => update({ ownerBirthEnabled: event.currentTarget.open })}
           open={value.ownerBirthEnabled}
         >
-          <summary>加上店主生辰（选填，用于五行补益）</summary>
+          <summary>{t("naming.ownerBirth")}</summary>
           <BirthFields
             onChange={(birth) => update({ birth })}
             problem={props.birthProblem}
             values={value.birth}
           />
         </details>
-        <p className="hint business-note">字号请自行查询商标与工商登记是否可用。</p>
+        <p className="hint business-note">{t("naming.businessNote")}</p>
       </div>
     );
   }
@@ -75,21 +84,21 @@ export function NamingFields(props: {
     <div className="naming-fields">
       {targetRow}
       <label className="naming-surname">
-        <span>姓氏</span>
+        <span>{t("naming.surname")}</span>
         <input
-          aria-label="姓氏"
+          aria-label={t("naming.surname")}
           maxLength={2}
           onChange={(event) => update({ surname: event.target.value })}
-          placeholder="支持复姓"
+          placeholder={t("naming.surnamePlaceholder")}
           value={value.surname}
         />
       </label>
-      <div aria-label="名字字数" className="detail-row" role="group">
-        <span className="detail-label">字数</span>
+      <div aria-label={t("naming.nameLengthGroup")} className="detail-row" role="group">
+        <span className="detail-label">{t("naming.length")}</span>
         <div className="chips">
-          {([[1, "单名"], [2, "双名"]] as const).map(([length, label]) => (
+          {([[1, "naming.singleName"], [2, "naming.doubleName"]] as const).map(([length, key]) => (
             <button aria-pressed={value.length === length} className="chip" key={length}
-              onClick={() => update({ length })} type="button">{label}</button>
+              onClick={() => update({ length })} type="button">{t(key)}</button>
           ))}
         </div>
       </div>

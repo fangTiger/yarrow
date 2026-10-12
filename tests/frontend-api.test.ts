@@ -2,15 +2,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { ApiError, createApiClient } from "../web/lib/api.js";
-test("非 2xx 保留中文错误、状态与冲突 readingId", async () => {
+test("非 2xx 保留中文错误、状态、code 与冲突 readingId", async () => {
   const fakeFetch: typeof fetch = async () => new Response(
-    JSON.stringify({ error: "付款凭证已用于这一卦", readingId: "reading-1" }),
+    JSON.stringify({
+      error: "付款凭证已用于这一卦",
+      code: "payment-already-used",
+      readingId: "reading-1",
+    }),
     { status: 409, headers: { "content-type": "application/json" } },
   );
   const api = createApiClient(fakeFetch);
   await assert.rejects(api.createReading({} as never), (error: unknown) => {
     return error instanceof ApiError
       && error.status === 409
+      && error.code === "payment-already-used"
       && error.message === "付款凭证已用于这一卦"
       && error.readingId === "reading-1";
   });

@@ -1,11 +1,13 @@
 // web/components/KindOptions.tsx
 import { KIND_OPTIONS, type EntryKind } from "../lib/home-entry.js";
+import { useT } from "../lib/i18n.js";
 
 /** 问事 / 运势 / 命理 / 起名四个类型选项（单选组）。 */
 export function KindOptions(props: { value: EntryKind; onChange(kind: EntryKind): void }) {
+  const t = useT();
   return (
-    <div aria-label="问题类型" className="kind-options" role="radiogroup">
-      {KIND_OPTIONS.map(([kind, label]) => (
+    <div aria-label={t("kind.label")} className="kind-options" role="radiogroup">
+      {KIND_OPTIONS.map(([kind]) => (
         <button
           aria-checked={props.value === kind}
           className="kind-option"
@@ -14,7 +16,7 @@ export function KindOptions(props: { value: EntryKind; onChange(kind: EntryKind)
           role="radio"
           type="button"
         >
-          {label}
+          {t(`kind.${kind}`)}
         </button>
       ))}
     </div>

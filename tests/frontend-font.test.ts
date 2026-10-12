@@ -35,6 +35,7 @@ test("入口使用水墨夜样式且构建保留站内字体 URL", async () => {
   assert.match(main, /styles\/tokens\.css/u);
   assert.doesNotMatch(main, /\.\/styles\.css/u);
   assert.match(build, /external:\s*\["\/fonts\/\*"\]/u);
-  assert.match(html, /<title>三易<\/title>/u);
+  assert.match(html, /<html lang="en">/u);
+  assert.match(html, /<title>Yarrow<\/title>/u);
   assert.match(html, /name="theme-color" content="#0F1110"/u);
 });

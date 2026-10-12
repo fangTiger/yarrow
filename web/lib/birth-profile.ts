@@ -1,5 +1,6 @@
 // web/lib/birth-profile.ts
 import { normalizeBirthProfile, type BirthProfileInput } from "../../src/sanyi/birth-profile.js";
+import { I18nError, type TFunction, zhT } from "./i18n.js";
 export type { BirthProfileInput };
 
 /** 首页内嵌生辰行的表单值：只收日期、时间（选填）、出生地时区与性别。 */
@@ -63,16 +64,16 @@ export const LUNAR_DAYS = Array.from({ length: 30 }, (_, index) => {
 });
 
 /** 表单值转为服务端生辰输入；不合法时抛出中文原因。 */
-export function toBirthInput(values: BirthFormValues): BirthProfileInput {
+export function toBirthInput(values: BirthFormValues, _t: TFunction = zhT): BirthProfileInput {
   if (!values.year.trim() || !values.month.trim() || !values.day.trim()) {
-    throw new Error("请填写出生日期");
+    throw new I18nError("errors.birthRequired", { field: "date" });
   }
   const time = values.time.trim();
   if (time !== "" && !/^\d{1,2}:\d{2}$/.test(time)) {
-    throw new Error("出生时间格式不对，也可以留空");
+    throw new I18nError("errors.birthTimeInvalid");
   }
   if (values.gender === "") {
-    throw new Error("请选择性别（用于排大运顺逆）");
+    throw new I18nError("errors.birthGenderRequired");
   }
   const parts = time.split(":");
   const input: BirthProfileInput = {
@@ -85,17 +86,27 @@ export function toBirthInput(values: BirthFormValues): BirthProfileInput {
     timeZone: values.timeZone || "Asia/Shanghai",
     gender: values.gender,
   };
-  normalizeBirthProfile(input);
+  try {
+    normalizeBirthProfile(input);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (/闰月不存在/u.test(message)) throw new I18nError("errors.birthLeapInvalid");
+    if (/时区|IANA/u.test(message)) throw new I18nError("errors.birthTimeZoneInvalid");
+    if (/日期|月份|年份/u.test(message)) throw new I18nError("errors.birthDateInvalid");
+    throw new I18nError("errors.birthInvalid");
+  }
   return input;
 }
 
 /** 生辰是否可用：可用返回 null，否则返回第一条中文原因。 */
-export function birthProblem(values: BirthFormValues): string | null {
+export function birthProblem(values: BirthFormValues, t: TFunction = zhT): string | null {
   try {
     toBirthInput(values);
     return null;
   } catch (caught) {
-    return caught instanceof Error ? caught.message : "请核对生辰";
+    return caught instanceof I18nError
+      ? t(caught.key, caught.params)
+      : caught instanceof Error ? caught.message : t("errors.birthCheck");
   }
 }
 
@@ -163,10 +174,10 @@ export function saveBirthProfile(input: BirthProfileInput, storage?: BirthStorag
   return input;
 }
 
-export function birthSummary(input: BirthProfileInput): string {
-  const time = input.time ? `${pad(input.time.hour)}:${pad(input.time.minute)}` : "未填时间";
-  const leap = input.isLeapMonth ? "闰" : "";
-  const calendar = input.calendar === "solar" ? "公历" : "农历";
-  const gender = input.gender === "male" ? "男" : "女";
+export function birthSummary(input: BirthProfileInput, t: TFunction = zhT): string {
+  const time = input.time ? `${pad(input.time.hour)}:${pad(input.time.minute)}` : t("birth.unknownTime");
+  const leap = input.isLeapMonth ? t("birth.leapPrefix") : "";
+  const calendar = t(input.calendar === "solar" ? "birth.solar" : "birth.lunar");
+  const gender = t(input.gender === "male" ? "birth.male" : "birth.female");
   return `${calendar} ${input.year}-${leap}${pad(input.month)}-${pad(input.day)} ${time} · ${gender}`;
 }

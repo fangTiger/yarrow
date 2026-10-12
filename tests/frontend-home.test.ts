@@ -40,9 +40,11 @@ const { HorizonChips } = await import("../web/components/HorizonChips.js");
 const { PLACEHOLDERS } = await import("../web/lib/home-entry.js");
 import { api } from "../web/lib/api.js";
 import { readFileSync } from "node:fs";
+import { en } from "../web/i18n/en.js";
+import { createT, type TFunction } from "../web/lib/i18n.js";
 
 // 无 DOM 环境下驱动组件状态和副作用，支付钱包流程不在这里执行。
-function formHarness() {
+function formHarness(t?: TFunction) {
   const internals = (React as unknown as {
     __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
       ReactCurrentDispatcher: { current: unknown };
@@ -54,6 +56,12 @@ function formHarness() {
   let effectIndex = 0;
   let pending: (() => void)[] = [];
   const dispatcher = {
+    useContext(context: { _currentValue?: unknown }) {
+      const value = context._currentValue;
+      return t && value && typeof value === "object" && "t" in value
+        ? { ...value, lang: "en", t }
+        : value;
+    },
     useState(initial: unknown) {
       const index = stateIndex++;
       if (!(index in states)) states[index] = initial;
@@ -85,6 +93,29 @@ function formHarness() {
     dispose() { effects.forEach((effect) => effect.cleanup?.()); },
   };
 }
+
+test("英文问题可从首页进入付款，直接可见文案不含汉字", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  t.mock.method(api, "classify", async (question: string) => ({
+    question,
+    kind: "question",
+    supported: true,
+    subject: { key: "career", label: "工作／官职" },
+  }));
+  const harness = formHarness(createT(en));
+  t.after(() => harness.dispose());
+  let children = childrenOf(harness.render());
+  const input = children.find((child) => child.type === "textarea")!;
+  assert.equal(input.props.placeholder, "e.g. Will I get this job?");
+  input.props.onChange({ target: { value: "Will I get this job?" } });
+  harness.render();
+  t.mock.timers.tick(400);
+  await Promise.resolve();
+  children = childrenOf(harness.render());
+  assert.ok(children.some((child) => child.type === PaymentButton));
+  assert.match(textOf(children), /What do you seek\?/u);
+  assert.doesNotMatch(textOf(children), /[\u3400-\u9fff]/u);
+});
 function childrenOf(node: ReturnType<typeof QuestionForm>) {
   return React.Children.toArray(node.props.children).filter(React.isValidElement) as React.ReactElement<any>[];
 }

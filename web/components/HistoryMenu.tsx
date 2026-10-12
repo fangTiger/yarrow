@@ -1,10 +1,7 @@
 // web/components/HistoryMenu.tsx
 import { useEffect, useState } from "react";
 import type { RecentReading } from "../lib/recent-readings.js";
-
-const KIND_LABELS: Record<string, string> = {
-  question: "问事", fortune: "运势", destiny: "命理", naming: "起名",
-};
+import { useT } from "../lib/i18n.js";
 
 function shortTime(value: string): string {
   const date = new Date(value);
@@ -18,6 +15,7 @@ function shortTime(value: string): string {
 
 /** 右上角「卦历」小图标：点开以浮层列出本机最近记录。 */
 export function HistoryMenu(props: { readings: readonly RecentReading[]; defaultOpen?: boolean }) {
+  const t = useT();
   const [open, setOpen] = useState(props.defaultOpen ?? false);
   useEffect(() => {
     if (!open) {
@@ -47,10 +45,10 @@ export function HistoryMenu(props: { readings: readonly RecentReading[]; default
       <button
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label={`卦历（${count} 条）`}
+        aria-label={t("history.label", { count })}
         className="history-button"
         onClick={() => setOpen(!open)}
-        title="卦历"
+        title={t("history.title")}
         type="button"
       >
         <svg aria-hidden="true" height="20" viewBox="0 0 24 24" width="20">
@@ -66,14 +64,18 @@ export function HistoryMenu(props: { readings: readonly RecentReading[]; default
         {count > 0 ? <span className="history-count">{count}</span> : null}
       </button>
       {open ? (
-        <div aria-label="卦历" className="history-pop">
-          <p className="history-title">卦历</p>
+        <div aria-label={t("history.title")} className="history-pop">
+          <p className="history-title">{t("history.title")}</p>
           {count > 0 ? (
             <ul className="history-list">
               {props.readings.map((item) => (
                 <li key={item.id}>
                   <a href={`#/r/${item.id}`}>
-                    <span className="history-kind">{KIND_LABELS[item.kind] ?? "问事"}</span>
+                    <span className="history-kind">{
+                      t(`kind.${["question", "fortune", "destiny", "naming"].includes(item.kind)
+                        ? item.kind as "question" | "fortune" | "destiny" | "naming"
+                        : "question"}`)
+                    }</span>
                     <span className="history-question">{item.question}</span>
                     <time>{shortTime(item.createdAt)}</time>
                   </a>
@@ -81,7 +83,7 @@ export function HistoryMenu(props: { readings: readonly RecentReading[]; default
               ))}
             </ul>
           ) : (
-            <p className="hint">本机还没有留下卦历。</p>
+            <p className="hint">{t("history.empty")}</p>
           )}
         </div>
       ) : null}

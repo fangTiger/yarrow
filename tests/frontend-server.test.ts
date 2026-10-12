@@ -135,6 +135,7 @@ test("已知领域错误按错误类映射", async () => {
     assert.equal(response.status, 409);
     assert.deepEqual(await response.json(), {
       error: `付款凭证已用于 reading：${id}`,
+      code: "payment-already-used",
       readingId: id,
     });
   } finally {
@@ -233,7 +234,7 @@ test("换日与八字重试中文错误沿用 400 与 409 映射", async () => {
     const base = "/api/readings/abcdefghijklmnopqrstuvwxyz";
     const wrong = await post(item.base, `${base}/day-boundary`, {});
     assert.equal(wrong.status, 400);
-    assert.deepEqual(await wrong.json(), { error: "生辰与本卦命盘不符" });
+    assert.deepEqual(await wrong.json(), { error: "生辰与本卦命盘不符", code: "invalid-input" });
     const limit = await post(item.base, `${base}/schools/yuchuntai/retry`, {});
     assert.equal(limit.status, 409);
     assert.deepEqual(await limit.json(), { error: "此家重试次数已用尽" });

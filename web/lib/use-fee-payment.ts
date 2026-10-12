@@ -9,8 +9,10 @@ import { api, type PaymentConfiguration } from "./api.js";
 import { planFeePayment, PREFLIGHT_GAS_UNITS } from "./fee-plan.js";
 import { walletErrorMessage } from "./wallet-errors.js";
 import { ARC_CHAIN_ID, arcTestnet } from "./wagmi.js";
+import { useT } from "./i18n.js";
 
 export function useFeePayment() {
+  const t = useT();
   const config = useConfig();
   const { openConnectModal } = useConnectModal();
   const { switchChainAsync } = useSwitchChain();
@@ -41,14 +43,14 @@ export function useFeePayment() {
       let payer = getAccount(config).address;
       if (!payer) {
         if (!openConnectModal) {
-          throw new Error("钱包连接界面尚未准备好");
+          throw new Error(t("payment.walletNotReady"));
         }
-        setConnectionMessage("请连接钱包，连接后将继续付款");
+        setConnectionMessage(t("payment.connectContinue"));
         // 订阅连接结果，继续本次问卦，避免要求用户再点击付款。
         payer = await new Promise<Address>((resolve, reject) => {
           const timeout = setTimeout(() => {
             unsubscribe();
-            reject(new Error("钱包连接超时，请重试"));
+            reject(new Error(t("payment.connectTimeout")));
           }, 60_000);
           const unsubscribe = watchAccount(config, {
             onChange(account) {
@@ -67,7 +69,7 @@ export function useFeePayment() {
         await switchChainAsync({ chainId: ARC_CHAIN_ID });
       }
       if (!publicClient) {
-        throw new Error("钱包尚未准备好，请稍后重试");
+        throw new Error(t("payment.walletNotReady"));
       }
       const info = await api.getPayment();
       setPayment(info);
@@ -80,7 +82,7 @@ export function useFeePayment() {
       setEstimatedGasWei18(gasPrice * PREFLIGHT_GAS_UNITS);
       const planned = planFeePayment({ erc20Balance, nativeBalance, gasPrice });
       if (planned.shortfall.missingErc20Usdc6 || planned.shortfall.missingNativeWei18) {
-        throw new Error("余额不足");
+        throw new Error(t("errors.walletBalance"));
       }
       // 切网和连接完成后重新取得钱包，避免使用旧网络的客户端。
       const walletClient = await getWalletClient(config, { chainId: ARC_CHAIN_ID });
@@ -92,13 +94,13 @@ export function useFeePayment() {
         hash: transactionHash, timeout: 60_000,
       });
       if (receipt.status !== "success") {
-        throw new Error("卦金交易失败");
+        throw new Error(t("payment.transactionFailed"));
       }
       return { payer, transactionHash: receipt.transactionHash };
     } catch (error) {
       setConnectionMessage("");
-      throw new Error(walletErrorMessage(error), { cause: error });
+      throw new Error(walletErrorMessage(error, t), { cause: error });
     }
-  }, [config, openConnectModal, publicClient, switchChainAsync]);
+  }, [config, openConnectModal, publicClient, switchChainAsync, t]);
   return { pay, payment, estimatedGasWei18, connectionMessage };
 }

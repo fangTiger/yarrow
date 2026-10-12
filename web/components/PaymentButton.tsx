@@ -1,15 +1,16 @@
 // web/components/PaymentButton.tsx
 import { truncateAddress } from "../lib/wallet-summary.js";
 import type { BirthProfileInput } from "../lib/birth-profile.js";
-import { isMissingBirth } from "../lib/birth-entry.js";
 import type { SanyiFeeProof } from "../../src/sanyi/fee.js";
 import { useState } from "react";
 import { formatUnits } from "viem";
-import { api, ApiError } from "../lib/api.js";
+import { api } from "../lib/api.js";
 import { saveRecentReading } from "../lib/recent-readings.js";
 import { useFeePayment } from "../lib/use-fee-payment.js";
 import type { ClassificationView } from "../lib/home-entry.js";
 import type { NamingRequest } from "../lib/home-entry.js";
+import { useT } from "../lib/i18n.js";
+import { paymentFailure } from "../lib/payment-error.js";
 export function PaymentButton(props: {
   question: string;
   classification: ClassificationView;
@@ -17,13 +18,16 @@ export function PaymentButton(props: {
   naming?: NamingRequest;
   onMissingBirth?(): void;
 }) {
+  const t = useT();
   const { pay, payment, estimatedGasWei18, connectionMessage } = useFeePayment();
   const [paidProof, setPaidProof] = useState<SanyiFeeProof>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [existingReadingId, setExistingReadingId] = useState<string>();
   const submit = async () => {
     setBusy(true);
     setError("");
+    setExistingReadingId(undefined);
     try {
       const feeProof = paidProof ?? await pay();
       setPaidProof(feeProof);
@@ -45,34 +49,40 @@ export function PaymentButton(props: {
       });
       location.hash = `/r/${reading.id}`;
     } catch (caught) {
-      if (caught instanceof ApiError && caught.status === 409 && caught.readingId) {
-        location.hash = `/r/${caught.readingId}`;
-        return;
-      }
-      if (isMissingBirth(caught)) {
+      const failure = paymentFailure(caught, t);
+      if (failure.missingBirth) {
         props.onMissingBirth?.();
       }
-      setError(caught instanceof Error ? caught.message : "付款未完成，本次没有扣款");
+      setError(failure.message);
+      setExistingReadingId(failure.readingId);
     } finally { setBusy(false); }
   };
   const gas = estimatedGasWei18 === undefined
-    ? "连接钱包后计算"
+    ? t("payment.gasAfterConnect")
     : `${formatUnits(estimatedGasWei18, 18)} USDC`;
   return (
     <div>
-      <p className="hint">
-        0.05 USDC → 三易收款地址 {payment ? truncateAddress(payment.recipient) : "正在读取"} · 预估 gas {gas}
-      </p>
+      <details className="payment-details">
+        <summary>{t("payment.details")}</summary>
+        <p className="hint">
+          {t("payment.recipient", {
+            recipient: payment ? truncateAddress(payment.recipient) : t("payment.recipientLoading"),
+          })} · {t("payment.gas", { gas })}
+        </p>
+      </details>
       <button
         className="button button-primary"
         disabled={busy}
         onClick={submit}
         type="button"
       >
-        {busy ? "正在确认" : "问卦 · 0.05 USDC"}
+        {busy ? t("payment.busy") : t("payment.button")}
       </button>
       {connectionMessage ? <p aria-live="polite" className="hint">{connectionMessage}</p> : null}
       {error ? <p className="error">{error}</p> : null}
+      {existingReadingId ? (
+        <a className="hint" href={`#/r/${existingReadingId}`}>{t("payment.openExisting")}</a>
+      ) : null}
     </div>
   );
 }

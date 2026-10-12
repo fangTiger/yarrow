@@ -16,6 +16,7 @@ import { KindOptions } from "./KindOptions.js";
 import { NamingFields } from "./NamingFields.js";
 import { PaymentButton } from "./PaymentButton.js";
 import { SubjectSelect } from "./SubjectSelect.js";
+import { useT } from "../lib/i18n.js";
 
 function initialBirthValues(): BirthFormValues {
   const stored = loadBirthProfile();
@@ -24,6 +25,7 @@ function initialBirthValues(): BirthFormValues {
 
 /** 首页中间的问卦表单：类型选项、细项、问题框、生辰行与问卦按钮。 */
 export function QuestionForm() {
+  const t = useT();
   const [question, setQuestion] = useState("");
   const [view, setView] = useState<ClassificationView>();
   const [choice, setChoice] = useState<EntryChoice>({});
@@ -49,7 +51,7 @@ export function QuestionForm() {
         }
       }).catch((caught: unknown) => {
         if (active) {
-          setError(caught instanceof Error ? caught.message : "识别暂不可用，可直接点选类型");
+          setError(t("errors.classifyUnavailable"));
         }
       }).finally(() => {
         if (active) {
@@ -61,32 +63,32 @@ export function QuestionForm() {
       active = false;
       clearTimeout(timer);
     };
-  }, [question, valid]);
-  const entry = deriveEntry(view, choice);
+  }, [question, t, valid]);
+  const entry = deriveEntry(view, choice, t);
   const naming = { ...namingValues, target: entry.target };
-  const problem = birthProblem(birthValues);
-  const namingProblem = namingBirthProblem(naming.birth, naming.unborn);
+  const problem = birthProblem(birthValues, t);
+  const namingProblem = namingBirthProblem(naming.birth, naming.unborn, t);
   // 生辰行开始填后会就地报错，按钮下不再重复。
   const birthShown = [birthValues.year, birthValues.month, birthValues.day, birthValues.time]
     .some((value) => value !== "");
   const gate = entry.kind === "naming"
-    ? namingGate({ questionLength: length, value: naming, birthProblem: namingProblem })
+    ? namingGate({ questionLength: length, value: naming, birthProblem: namingProblem }, t)
     : entryGate({
         questionLength: length, classified: view !== undefined, entry, birthProblem: problem, birthShown,
-      });
+      }, t);
   // 分类结果一到就显示结果，不再停留在「识别中」。
   let status = "";
   if (entry.unsupported) {
     status = entry.unsupported;
   } else if (view) {
-    status = autoHint(entry) ?? "";
+    status = autoHint(entry, t) ?? "";
   } else if (classifying) {
-    status = "识别中";
+    status = t("status.classifying");
   }
   const needsBirth = entry.kind === "fortune" || entry.kind === "destiny";
   const questionField = (
     <textarea
-      aria-label="所问之事"
+      aria-label={t("question.label")}
       className="question-input"
       maxLength={280}
       {...(entry.kind === "naming" ? {} : { minLength: 4 })}
@@ -96,17 +98,19 @@ export function QuestionForm() {
         setClassifying(false);
         setError("");
       }}
-      placeholder={entry.kind === "naming" ? NAMING_PLACEHOLDERS[naming.target] : PLACEHOLDERS[entry.kind]}
+      placeholder={entry.kind === "naming"
+        ? t(naming.target === "business" ? "question.placeholder.business" : "question.placeholder.naming")
+        : t(`question.placeholder.${entry.kind}`)}
       value={question}
     />
   );
   return (
     <form className="home-form" onSubmit={(event) => event.preventDefault()}>
-      <h1 className="ask-title">想问什么？</h1>
+      <h1 className="ask-title">{t("home.title")}</h1>
       <KindOptions onChange={(kind) => setChoice({ ...choice, kind })} value={entry.kind} />
       {entry.kind === "question" ? (
         <SubjectSelect
-          detected={view?.subject ?? ""}
+          detected={view?.subjectKey ?? ""}
           onChange={(subjectKey, subject) => setChoice({ ...choice, subjectKey, subject })}
           value={choice.subjectKey ?? ""}
         />
@@ -131,8 +135,8 @@ export function QuestionForm() {
           onChange={(values) => {
             setBirthValues(values);
             // 生辰填完整即存入本机，下次自动带出。
-            if (entry.kind !== "naming" && birthProblem(values) === null) {
-              saveBirthProfile(toBirthInput(values));
+            if (entry.kind !== "naming" && birthProblem(values, t) === null) {
+              saveBirthProfile(toBirthInput(values, t));
             }
           }}
           problem={problem}
@@ -142,14 +146,14 @@ export function QuestionForm() {
       {error ? <p className="error">{error}</p> : null}
       {gate.ready ? (
         <PaymentButton
-          birth={needsBirth ? toBirthInput(birthValues) : null}
+          birth={needsBirth ? toBirthInput(birthValues, t) : null}
           classification={paymentClassification(entry, question)}
           {...(entry.kind === "naming" ? { naming: namingRequest(question, naming) } : {})}
-          onMissingBirth={() => setError("请先填好生辰")}
+          onMissingBirth={() => setError(t("errors.birthRequired"))}
           question={question}
         />
       ) : (
-        <button className="button button-primary" disabled type="button">问卦 · 0.05 USDC</button>
+        <button className="button button-primary" disabled type="button">{t("payment.button")}</button>
       )}
       {!gate.ready && gate.reason && gate.reason !== status ? (
         <p className="hint gate">{gate.reason}</p>
