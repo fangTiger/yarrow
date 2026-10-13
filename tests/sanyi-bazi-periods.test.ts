@@ -78,7 +78,8 @@ test("命理 Schema 必填逐运列表，并限制逐项字段与长度", () => 
   assert.doesNotThrow(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, { ...base, periods }));
   assert.doesNotThrow(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, { ...base, periods: [] }));
   assert.doesNotThrow(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, {
-    ...base, periods: [{ ...periods[0]!, note: "甲".repeat(24) }],
+    // 提示词要求二十四字以内，Schema 留到三十字的余量，免得一句略长就整份重写。
+    ...base, periods: [{ ...periods[0]!, note: "甲".repeat(30) }],
   }));
   const { periods: _periods, ...missing } = base;
   assert.throws(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, missing));
@@ -90,7 +91,7 @@ test("命理 Schema 必填逐运列表，并限制逐项字段与长度", () => 
     { ...periods[0]!, confidenceTenths: 0 },
     { ...periods[0]!, confidenceTenths: 10 },
     { ...periods[0]!, note: "" },
-    { ...periods[0]!, note: "甲".repeat(25) },
+    { ...periods[0]!, note: "甲".repeat(31) },
   ]) {
     assert.throws(() => validateStructuredOutput(DESTINY_SCHOOL_SCHEMA, {
       ...base, periods: [item],

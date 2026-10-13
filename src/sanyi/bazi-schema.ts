@@ -59,7 +59,8 @@ export const DESTINY_SCHOOL_SCHEMA = {
         properties: {
           index: { type: "integer", minimum: 1, maximum: 12 },
           verdict: properties.verdict, confidenceTenths: properties.confidenceTenths,
-          note: { type: "string", minLength: 1, maxLength: 24 },
+          // 提示词要求二十四字以内；这里留到三十字的余量，免得八步中一句略长就整份重写。
+          note: { type: "string", minLength: 1, maxLength: 30 },
         },
       },
     },
