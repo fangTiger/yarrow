@@ -118,7 +118,8 @@ test("服务端抽取与前端回填在命理、运势夹具上路径和顺序�
     const unitsTranslation = Object.fromEntries(units.map((unit) => [unit.key, {
       status: "done" as const,
       sourceHash: `${unit.key}-hash`, attempts: 1, failures: 0,
-      texts: [...unit.entries.map((entry) => `EN:${entry.path}`), "__EXTRA_PATH__"],
+      // 条数与服务端完全相同：前端路径多或少都会因条数防护整单元跳过，顺序不同则填错位置，下面逐条断言即可发现。
+      texts: unit.entries.map((entry) => `EN:${entry.path}`),
     }]));
     const translated = applyReadingTranslation({
       ...reading, translation: { lang: "en", units: unitsTranslation },
@@ -128,9 +129,6 @@ test("服务端抽取与前端回填在命理、运势夹具上路径和顺序�
         assert.equal(valueAt(translated, entry.path), `EN:${entry.path}`, `${kind} ${entry.path}`);
       }
     }
-    const { translation: _translation, ...translatedReading } = translated as Record<string, unknown>;
-    assert.doesNotMatch(JSON.stringify(translatedReading), /__EXTRA_PATH__/u,
-      `${kind} 前端多出翻译路径`);
   }
 });
 
@@ -219,4 +217,19 @@ test("结果页英文数据流自动触发翻译并在翻译期间轮询", () =>
   assert.match(source, /api\.translateReading\(id\)/u);
   assert.match(source, /shouldPollTranslation\(reading\.translation\)/u);
   assert.match(source, /applyReadingTranslation\(reading\)/u);
+});
+
+test("译文条数与当前路径对不上时整单元跳过，保留中文，绝不错位", () => {
+  // 旧译文缺了后来加入翻译范围的应期两条：按位置回填会把建议译文填进应期。
+  const reading = JSON.parse(readFileSync(new URL("../web/samples/fortune.en.json", import.meta.url), "utf8"));
+  const school = reading.schools.shenxiaozhan.output;
+  const original = { timing: school.timing.window, advice: school.advice[0] };
+  const unit = reading.translation.units.shenxiaozhan;
+  const shortened = { ...reading, translation: { ...reading.translation, units: {
+    ...reading.translation.units, shenxiaozhan: { ...unit, texts: unit.texts.slice(0, -2) },
+  } } };
+  const applied = applyReadingTranslation(shortened);
+  const output = applied.schools.shenxiaozhan.output;
+  assert.equal(output.timing.window, original.timing);
+  assert.equal(output.advice[0], original.advice);
 });

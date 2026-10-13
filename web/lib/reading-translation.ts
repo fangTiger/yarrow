@@ -202,6 +202,8 @@ function unitPaths(reading: MutableRecord): Record<string, string[]> {
 
 function applyUnit(root: MutableRecord, unit: StoredTranslationUnit | undefined, paths: string[]): void {
   if (unit?.status !== "done" || !unit.texts) return;
+  // 译文按位置对应路径：条数不符（如旧译文早于翻译范围调整）时整单元跳过，宁可显示中文也不错位。
+  if (unit.texts.length !== paths.length) return;
   paths.forEach((path, index) => {
     const text = unit.texts?.[index];
     if (text !== undefined) setPath(root, path, text);
