@@ -1,3 +1,4 @@
+import { keepAlive } from "../background.js";
 import { analyzeBazi } from "../../calendar/bazi-relations.js";
 import { lookupQiongtong } from "../../calendar/qiongtong.js";
 import type { StructuredOutputProvider } from "../../agent/provider.js";
@@ -418,6 +419,7 @@ export class NamingReadingService {
       }
     });
     this.background.set(id, task);
+    keepAlive(task);
     void task.then(() => {
       if (this.background.get(id) === task) this.background.delete(id);
     });

@@ -124,6 +124,8 @@ export function createSanyiApi(
   options: {
     now?: () => Date;
     recipient?: Address;
+    /** 收费所在链；缺省测试网。 */
+    chainId?: number;
     bazi?: BaziReadingService;
     naming?: NamingReadingService;
     translation?: Pick<TranslationService, "trigger" | "read">;
@@ -134,7 +136,7 @@ export function createSanyiApi(
   return {
     async payment() {
       return { recipient: options.recipient ?? feeRecipientFromEnv({}), amountUsdc6: FEE_USDC6.toString(),
-        token: USDC_TOKEN_ADDRESS, chainId: ARC_CHAIN_ID };
+        token: USDC_TOKEN_ADDRESS, chainId: options.chainId ?? ARC_CHAIN_ID };
     },
     async now() {
       const milliseconds = clock().getTime();

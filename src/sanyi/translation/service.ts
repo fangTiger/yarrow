@@ -1,3 +1,4 @@
+import { keepAlive } from "../background.js";
 import { createHash } from "node:crypto";
 import type { JsonSchema } from "../../agent/schemas.js";
 import type { StructuredOutputProvider } from "../../agent/provider.js";
@@ -179,6 +180,7 @@ export class TranslationService {
     this.reserveBudget(count);
     const job = this.process(id, units);
     this.readingJobs.set(id, job);
+    keepAlive(job);
     void job.catch(async () => {
       await this.deps.logger.write("英文翻译后台任务异常", { readingId: id });
     }).finally(() => {

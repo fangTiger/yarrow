@@ -8,7 +8,7 @@ import type { SanyiFeeProof } from "../../src/sanyi/fee.js";
 import { api, type PaymentConfiguration } from "./api.js";
 import { planFeePayment, PREFLIGHT_GAS_UNITS } from "./fee-plan.js";
 import { walletErrorMessage } from "./wallet-errors.js";
-import { ARC_CHAIN_ID, arcTestnet } from "./wagmi.js";
+import { ARC_CHAIN_ID, arcChain } from "./wagmi.js";
 import { useT } from "./i18n.js";
 
 export function useFeePayment() {
@@ -87,7 +87,7 @@ export function useFeePayment() {
       // 切网和连接完成后重新取得钱包，避免使用旧网络的客户端。
       const walletClient = await getWalletClient(config, { chainId: ARC_CHAIN_ID });
       const transactionHash = await walletClient.writeContract({
-        account: payer, chain: arcTestnet, address: info.token, abi: erc20WalletAbi,
+        account: payer, chain: arcChain, address: info.token, abi: erc20WalletAbi,
         functionName: "transfer", args: [info.recipient, BigInt(info.amountUsdc6)],
       });
       const receipt = await publicClient.waitForTransactionReceipt({

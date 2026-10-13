@@ -9,13 +9,13 @@ for (const value of [{ name: "UserRejectedRequestError" }, { code: 4001 },
   });
 }
 test("余额不足中文化", () => {
-  assert.equal(walletErrorMessage(new Error("insufficient funds")), "余额不足，请先领取 Arc Testnet 测试币");
+  assert.equal(walletErrorMessage(new Error("insufficient funds")), "余额不足：每卦 0.05 USDC，另需少量 USDC 作手续费");
 });
 for (const message of ["chain mismatch", "Switch chain failed", "钱包网络不符", "network mismatch", "wrong network",
   "This Wallet does not support the requested chain ID ... "
     + "Details: Not supported batch request on chain: 0x4cef52"]) {
   test(`网络错误：${message}`, () => {
-    assert.equal(walletErrorMessage(new Error(message)), "请把钱包切换到 Arc Testnet 后重试");
+    assert.equal(walletErrorMessage(new Error(message)), "请把钱包切换到 Arc 网络后重试");
   });
 }
 test("其它错误附截断原因", () => {

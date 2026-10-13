@@ -2,29 +2,28 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
+import { resolveArcNetwork } from "../src/arc-network.js";
 
 const rootDir = process.cwd();
 const outputDir = resolve(rootDir, "web/dist");
 await mkdir(outputDir, { recursive: true });
 
-const PUBLIC_DEFAULTS = {
-  ARC_RPC_URL: "https://rpc.testnet.arc.io",
-  ARC_CHAIN_ID: "5042002",
-  ARC_EXPLORER: "https://testnet.arcscan.app",
-} as const;
 const walletConnectProjectId = process.env.WALLETCONNECT_PROJECT_ID ?? "";
 if (!/^[0-9a-fA-F]{32}$/.test(walletConnectProjectId)) {
   throw new Error("WALLETCONNECT_PROJECT_ID 必须是 32 位十六进制公开项目标识");
 }
+// ARC_CHAIN_ID 决定主网或测试网；ARC_RPC_URL、ARC_EXPLORER 缺省取该网络的预设。
+const network = resolveArcNetwork({
+  ARC_CHAIN_ID: process.env.ARC_CHAIN_ID,
+  ARC_RPC_URL: process.env.ARC_RPC_URL,
+  ARC_EXPLORER: process.env.ARC_EXPLORER,
+});
 const publicConfig = {
   walletConnectProjectId,
-  arcRpcUrl: process.env.ARC_RPC_URL ?? PUBLIC_DEFAULTS.ARC_RPC_URL,
-  arcChainId: process.env.ARC_CHAIN_ID ?? PUBLIC_DEFAULTS.ARC_CHAIN_ID,
-  arcExplorer: process.env.ARC_EXPLORER ?? PUBLIC_DEFAULTS.ARC_EXPLORER,
+  arcRpcUrl: network.rpcUrl,
+  arcChainId: String(network.chainId),
+  arcExplorer: network.explorerUrl,
 };
-if (!/^\d+$/.test(publicConfig.arcChainId)) {
-  throw new Error("ARC_CHAIN_ID 必须是十进制整数");
-}
 await build({
   entryPoints: [resolve(rootDir, "web/main.tsx")],
   outfile: resolve(outputDir, "app.js"),
@@ -67,4 +66,4 @@ await build({
     __ARC_EXPLORER__: JSON.stringify(publicConfig.arcExplorer),
   },
 });
-console.log("前端构建完成：web/dist/app.js");
+console.log(`前端构建完成：web/dist/app.js（${network.name}）`);

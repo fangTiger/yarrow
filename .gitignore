@@ -21,3 +21,6 @@ web/fonts/MaShanZheng-Regular.ttf
 # 起名字库与诗文的原始下载数据（由 tools/naming 构建脚本读取，不入库）
 tools/naming/raw/
 __pycache__/
+
+# Vercel 构建产物与本地链接信息
+.vercel/

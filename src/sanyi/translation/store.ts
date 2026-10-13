@@ -1,6 +1,4 @@
-import { randomBytes } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { FileBackend, updateDocument, type DocumentBackend } from "../storage.js";
 import { isReadingId } from "../store.js";
 import type { TranslationUnitKey } from "./units.js";
 
@@ -27,30 +25,34 @@ export interface StoredTranslation {
 
 export class TranslationStore {
   private readonly queues = new Map<string, Promise<void>>();
+  private readonly backend: DocumentBackend;
 
-  constructor(private readonly root = "data") {}
-
-  private path(id: string): string {
-    if (!isReadingId(id)) throw new Error("reading id 无效");
-    return join(this.root, "translations", `${id}.en.json`);
+  /** 传目录则用本地文件存储；传后端则用该后端（如 Upstash Redis）。 */
+  constructor(storage: string | DocumentBackend = "data") {
+    this.backend = typeof storage === "string" ? new FileBackend(storage) : storage;
   }
 
-  async read(id: string): Promise<StoredTranslation | undefined> {
+  private key(id: string): string {
+    if (!isReadingId(id)) throw new Error("reading id 无效");
+    return `translations/${id}.en`;
+  }
+
+  private async readRaw(id: string): Promise<{ raw: string; value: StoredTranslation } | undefined> {
     try {
-      return JSON.parse(await readFile(this.path(id), "utf8")) as StoredTranslation;
+      const raw = await this.backend.get(this.key(id));
+      return { raw, value: JSON.parse(raw) as StoredTranslation };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
       throw error;
     }
   }
 
+  async read(id: string): Promise<StoredTranslation | undefined> {
+    return (await this.readRaw(id))?.value;
+  }
+
   async write(id: string, value: StoredTranslation): Promise<void> {
-    const directory = join(this.root, "translations");
-    await mkdir(directory, { recursive: true });
-    const target = this.path(id);
-    const temporary = `${target}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
-    await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-    await rename(temporary, target);
+    await this.backend.set(this.key(id), serializeTranslation(value));
   }
 
   async update(
@@ -59,9 +61,10 @@ export class TranslationStore {
   ): Promise<StoredTranslation> {
     let result: StoredTranslation | undefined;
     const previous = this.queues.get(id) ?? Promise.resolve();
+    // 同一实例内排队；跨实例由比较后写入兜底，冲突时重读重试。
     const next = previous.catch(() => {}).then(async () => {
-      result = change(await this.read(id) ?? { lang: "en", units: {} });
-      await this.write(id, result);
+      result = await updateDocument(this.backend, this.key(id), () => this.readRaw(id),
+        (current) => change(current ?? { lang: "en", units: {} }), serializeTranslation);
     });
     this.queues.set(id, next);
     try {
@@ -72,6 +75,10 @@ export class TranslationStore {
     if (!result) throw new Error("译文存档更新未产生结果");
     return result;
   }
+}
+
+function serializeTranslation(value: StoredTranslation): string {
+  return `${JSON.stringify(value, null, 2)}\n`;
 }
 
 export type TranslationUnits = Partial<Record<TranslationUnitKey, StoredTranslationUnit>>;

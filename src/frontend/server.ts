@@ -3,9 +3,6 @@ import { readFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { isAbsolute, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { createArcPublicClient } from "../arc.js";
-import { createDefaultProvider } from "../agent/default-provider.js";
-import { ArcFeeVerifier, feeRecipientFromEnv } from "../sanyi/fee.js";
 import { createSanyiApi, type SanyiApi } from "../sanyi/api.js";
 import {
   ForbiddenOrigin,
@@ -16,15 +13,13 @@ import {
   UnsupportedMediaType,
 } from "../sanyi/http-errors.js";
 import { createSanyiLogger } from "../sanyi/log.js";
-import { ReadingService, PaymentAlreadyUsedError } from "../sanyi/reading-service.js";
-import { BaziReadingService } from "../sanyi/bazi-reading-service.js";
+import { PaymentAlreadyUsedError } from "../sanyi/reading-service.js";
 import type { BaziSchoolKey } from "../sanyi/schools/bazi-shared.js";
 import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
-import { NamingReadingService } from "../sanyi/naming/service.js";
 import type { NamingFamilyKey } from "../sanyi/naming/schema.js";
-import { isReadingId, ReadingStore } from "../sanyi/store.js";
-import { TranslationService } from "../sanyi/translation/service.js";
-import { TranslationStore } from "../sanyi/translation/store.js";
+import { backendFromEnv } from "../sanyi/storage.js";
+import { isReadingId } from "../sanyi/store.js";
+import { createSanyiRuntime } from "./runtime.js";
 interface FrontendServerOptions {
   publicDir?: string;
   api?: SanyiApi;
@@ -68,7 +63,10 @@ function json(response: ServerResponse, status: number, payload: unknown): void 
 }
 function requireSameOrigin(request: IncomingMessage): void {
   const host = request.headers.host;
-  if (!host || request.headers.origin !== `http://${host}`) {
+  // HTTPS 由 Vercel 等反向代理终止，按其转发的协议核对；浏览器无法伪造该请求头。
+  const forwarded = request.headers["x-forwarded-proto"];
+  const protocol = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",", 1)[0]?.trim() || "http";
+  if (!host || request.headers.origin !== `${protocol}://${host}`) {
     throw new ForbiddenOrigin();
   }
 }
@@ -108,10 +106,13 @@ function errorPayload(error: unknown): { error: string; code?: string; readingId
     ...(error instanceof PaymentAlreadyUsedError ? { readingId: error.readingId } : {}),
   };
 }
-export function createFrontendServer(options: FrontendServerOptions = {}): Server {
+export type FrontendRequestHandler = (request: IncomingMessage, response: ServerResponse) => Promise<void>;
+
+/** 请求处理函数：常驻服务与 Vercel 函数共用。 */
+export function createFrontendHandler(options: FrontendServerOptions = {}): FrontendRequestHandler {
   const publicDir = resolve(options.publicDir ?? resolve(process.cwd(), "web"));
   const api = options.api;
-  return createServer(async (request, response) => {
+  return async (request, response) => {
     const rawPath = (request.url ?? "/").split("?", 1)[0] ?? "/";
     const url = new URL(request.url ?? "/", "http://localhost");
     try {
@@ -215,48 +216,23 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
     } catch (error) {
       json(response, statusForError(error), errorPayload(error));
     }
-  });
+  };
+}
+
+export function createFrontendServer(options: FrontendServerOptions = {}): Server {
+  return createServer(createFrontendHandler(options));
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const publicClient = createArcPublicClient();
-  const recipient = feeRecipientFromEnv(process.env);
-  const store = new ReadingStore("data");
   const clock = () => new Date();
-  const logger = createSanyiLogger("log", clock);
-  const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
-  const longProvider = createDefaultProvider({ maxTokens: 8_192, timeoutMilliseconds: 90_000 });
-  const translation = new TranslationService({
-    store,
-    translationStore: new TranslationStore("data"),
-    provider: longProvider,
-    logger,
+  const { api, service, network, recipient } = createSanyiRuntime({
+    backend: backendFromEnv(process.env),
+    logger: createSanyiLogger("log", clock),
     clock,
   });
-  const bazi = new BaziReadingService({ store, logger, feeVerifier,
-    // 八字运势含十年逐年断语，输出较长，放宽输出上限与单次超时。
-    provider: longProvider, clock });
-  const naming = new NamingReadingService({ store, logger, feeVerifier,
-    provider: longProvider, clock });
-  const service = new ReadingService({
-    feeVerifier,
-    blockSource: {
-      latest: async () => {
-        const block = await publicClient.getBlock({ blockTag: "latest" });
-        if (!block.hash) {
-          throw new Error("最新区块没有可复算哈希");
-        }
-        return { number: block.number, hash: block.hash, timestamp: block.timestamp };
-      },
-    },
-    // 白话总述同次写解法，输出较长，放宽上限以免截断。
-    provider: createDefaultProvider({ maxTokens: 4_096 }),
-    store,
-    logger,
-  });
   const port = Number(process.env.FRONTEND_PORT ?? "4173");
-  const api = createSanyiApi(service, { recipient, bazi, naming, translation });
-  createFrontendServer({ api }).listen(port, "127.0.0.1", () => {
-    console.log(`三易服务已启动：http://127.0.0.1:${port}`);
+  const host = process.env.FRONTEND_HOST ?? "127.0.0.1";
+  createFrontendServer({ api }).listen(port, host, () => {
+    console.log(`三易服务已启动：http://${host}:${port}（${network.name}）`);
     console.log(`三易收款地址：${recipient}`);
     console.log("问事卦金：0.05 USDC；付款后自动六掷，三家依同一卦独立落笔");
     console.log("复算材料：付款首笔交易与六个 Arc 区块会随解读存档");

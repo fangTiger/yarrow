@@ -1,4 +1,5 @@
 // src/sanyi/bazi-reading-service.ts
+import { keepAlive } from "./background.js";
 import { almanacAt } from "../calendar/almanac.js";
 import { analyzeBazi } from "../calendar/bazi-relations.js";
 import { lookupQiongtong } from "../calendar/qiongtong.js";
@@ -348,6 +349,7 @@ export class BaziReadingService {
       }
     });
     this.background.set(id, task);
+    keepAlive(task);
     void task.then(() => {
       if (this.background.get(id) === task) {
         this.background.delete(id);

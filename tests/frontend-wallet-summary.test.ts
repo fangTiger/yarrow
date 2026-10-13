@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { ARC_MAINNET } from "../src/arc-network.js";
 import { walletSummary } from "../web/lib/wallet-summary.js";
 const address = "0x737301a6A40ea453A877627c409EF5756a395DB9";
 test("未连接显示连接钱包", () => {
@@ -18,4 +19,12 @@ test("已连接截断地址并格式化六位精度余额", () => {
 test("零余额显示领取测试币且未知余额不误报零", () => {
   assert.equal(walletSummary({ address, chainId: 5042002, balanceUsdc6: 0n }).showFaucet, true);
   assert.equal(walletSummary({ address, chainId: 5042002 }).showFaucet, false);
+});
+test("主网：切网指向主网，零余额提示充值而不是领测试币", () => {
+  assert.equal(walletSummary({ address, chainId: 5042002 }, undefined, ARC_MAINNET).label, "切换到 Arc 主网");
+  const empty = walletSummary({ address, chainId: 5042, balanceUsdc6: 0n }, undefined, ARC_MAINNET);
+  assert.equal(empty.network, "Arc 主网");
+  assert.equal(empty.showFaucet, false);
+  assert.equal(empty.showFunding, true);
+  assert.equal(walletSummary({ address, chainId: 5042, balanceUsdc6: 1n }, undefined, ARC_MAINNET).showFunding, false);
 });

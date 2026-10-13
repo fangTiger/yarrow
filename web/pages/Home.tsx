@@ -7,6 +7,7 @@ import { loadRecentReadings } from "../lib/recent-readings.js";
 import { LangToggle } from "../components/LangToggle.js";
 import { TopbarBrand } from "../components/TopbarBrand.js";
 import { useT } from "../lib/i18n.js";
+import { ARC_NETWORK } from "../lib/wagmi.js";
 import { Luopan } from "../components/Luopan.js";
 
 export function HomeContent() {
@@ -18,7 +19,7 @@ export function HomeContent() {
         <p className="home-description">{t("home.description")}</p>
         <ol className="home-steps">
           <li><span>1</span>{t("home.step1")}</li>
-          <li><span>2</span>{t("home.step2")}</li>
+          <li><span>2</span>{t(ARC_NETWORK.mainnet ? "home.step2Mainnet" : "home.step2")}</li>
           <li><span>3</span>{t("home.step3")}</li>
         </ol>
       </div>

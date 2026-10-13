@@ -1,4 +1,5 @@
 // src/sanyi/reading-service.ts
+import { keepAlive } from "./background.js";
 import { getDaxiang } from "../agent/daxiang-corpus.js";
 import { almanacAt } from "../calendar/almanac.js";
 import { selectPrimaryOracleText } from "../calendar/bianzhan.js";
@@ -403,6 +404,7 @@ export class ReadingService {
     const previous = this.background.get(id) ?? Promise.resolve();
     const combined = Promise.all([previous, current]).then(() => {});
     this.background.set(id, combined);
+    keepAlive(combined);
     void combined.finally(() => {
       if (this.background.get(id) === combined) {
         this.background.delete(id);

@@ -1,7 +1,8 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useReadContract, useSwitchChain } from "wagmi";
 import { erc20WalletAbi } from "../../src/frontend/abis.js";
-import { ARC_CHAIN_ID, USDC_TOKEN_ADDRESS } from "../../src/frontend/wallet.js";
+import { USDC_TOKEN_ADDRESS } from "../../src/frontend/wallet.js";
+import { ARC_CHAIN_ID, ARC_NETWORK } from "../lib/wagmi.js";
 import { walletSummary } from "../lib/wallet-summary.js";
 import { useT } from "../lib/i18n.js";
 
@@ -33,7 +34,7 @@ export function WalletBar() {
           ...(mounted && account ? { address: account.address } : {}),
           ...(chain ? { chainId: chain.id } : {}),
           ...(balance === undefined ? {} : { balanceUsdc6: balance }),
-        }, t);
+        }, t, ARC_NETWORK);
         const action = summary.state === "disconnected" ? openConnectModal
           : summary.state === "wrong-chain" ? () => switchChain({ chainId: ARC_CHAIN_ID }) : openAccountModal;
         return (

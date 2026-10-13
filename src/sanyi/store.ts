@@ -1,7 +1,6 @@
 // src/sanyi/store.ts
 import { createHash, randomBytes } from "node:crypto";
-import { mkdir, open, readFile, readdir, rename, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { FileBackend, updateDocument, type DocumentBackend } from "./storage.js";
 import type { Address, Hex } from "viem";
 import type { LiuyaoChart } from "../oracle/liuyao-chart.js";
 import type { AlmanacResult } from "../calendar/almanac.js";
@@ -195,38 +194,32 @@ export function isReadingId(value: string): boolean {
 
 export class ReadingStore {
   private readonly queues = new Map<string, Promise<void>>();
+  private readonly backend: DocumentBackend;
 
-  constructor(private readonly root = "data") {}
+  /** 传目录则用本地文件存储；传后端则用该后端（如 Upstash Redis）。 */
+  constructor(storage: string | DocumentBackend = "data") {
+    this.backend = typeof storage === "string" ? new FileBackend(storage) : storage;
+  }
 
-  private readingPath(id: string): string {
+  private readingKey(id: string): string {
     if (!isReadingId(id)) {
       throw new Error("reading id 无效");
     }
-    return join(this.root, "readings", `${id}.json`);
+    return `readings/${id}`;
   }
 
   async read<T extends StoredReading = StoredQuestionReading>(id: string): Promise<T> {
-    const text = await readFile(this.readingPath(id), "utf8");
+    const text = await this.backend.get(this.readingKey(id));
     return JSON.parse(text) as T;
   }
 
   /** 列出全部存档 id，供服务重启后续掷未完成的卦。 */
   async listIds(): Promise<string[]> {
-    try {
-      const names = await readdir(join(this.root, "readings"));
-      return names.filter((name) => name.endsWith(".json")).map((name) => name.slice(0, -5)).filter(isReadingId);
-    } catch {
-      return [];
-    }
+    return (await this.backend.list("readings")).filter(isReadingId);
   }
 
   async write(reading: StoredReading): Promise<void> {
-    const directory = join(this.root, "readings");
-    await mkdir(directory, { recursive: true });
-    const target = this.readingPath(reading.id);
-    const temporary = `${target}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
-    await writeFile(temporary, `${JSON.stringify(reading, null, 2)}\n`, "utf8");
-    await rename(temporary, target);
+    await this.backend.set(this.readingKey(reading.id), serializeReading(reading));
   }
 
   async update<T extends StoredReading = StoredQuestionReading>(
@@ -234,10 +227,14 @@ export class ReadingStore {
     change: (reading: T) => T,
   ): Promise<T> {
     let result: T | undefined;
+    const key = this.readingKey(id);
     const previous = this.queues.get(id) ?? Promise.resolve();
+    // 同一实例内排队；跨实例由比较后写入兜底，冲突时重读重试。
     const next = previous.catch(() => {}).then(async () => {
-      result = change(await this.read<T>(id));
-      await this.write(result);
+      result = await updateDocument<T>(this.backend, key, async () => {
+        const raw = await this.backend.get(key);
+        return { raw, value: JSON.parse(raw) as T };
+      }, (current) => change(current as T), serializeReading);
     });
     this.queues.set(id, next);
     try {
@@ -254,26 +251,18 @@ export class ReadingStore {
   }
 
   async claimPayment(claimKey: string, readingId: string): Promise<string | null> {
-    const directory = join(this.root, "payment-claims");
-    await mkdir(directory, { recursive: true });
     const digest = createHash("sha256").update(claimKey).digest("hex");
-    const path = join(directory, `${digest}.json`);
-    try {
-      const handle = await open(path, "wx");
-      try {
-        await handle.writeFile(JSON.stringify({ readingId }), "utf8");
-      } finally {
-        await handle.close();
-      }
+    const key = `payment-claims/${digest}`;
+    if (await this.backend.setIfAbsent(key, JSON.stringify({ readingId }))) {
       return null;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-        throw error;
-      }
-      const stored = JSON.parse(await readFile(path, "utf8")) as {
-        readingId: string;
-      };
-      return stored.readingId;
     }
+    const stored = JSON.parse(await this.backend.get(key)) as {
+      readingId: string;
+    };
+    return stored.readingId;
   }
+}
+
+function serializeReading(reading: StoredReading): string {
+  return `${JSON.stringify(reading, null, 2)}\n`;
 }

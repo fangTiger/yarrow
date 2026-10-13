@@ -95,6 +95,22 @@ test("写接口拒绝缺失或错误 Origin", async () => {
     await close(item);
   }
 });
+test("HTTPS 反向代理后按转发协议核对 Origin", async () => {
+  const item = await fixture();
+  try {
+    const httpsOrigin = item.base.replace("http://", "https://");
+    const proxied = await post(item.base, "/api/classify", {},
+      { origin: httpsOrigin, "x-forwarded-proto": "https" });
+    const downgraded = await post(item.base, "/api/classify", {},
+      { origin: item.base, "x-forwarded-proto": "https" });
+    const unproxied = await post(item.base, "/api/classify", {}, { origin: httpsOrigin });
+    assert.equal(proxied.status, 200);
+    assert.equal(downgraded.status, 403);
+    assert.equal(unproxied.status, 403);
+  } finally {
+    await close(item);
+  }
+});
 test("写接口拒绝非 JSON 与超过 8 KiB 的请求体", async () => {
   const item = await fixture();
   try {
