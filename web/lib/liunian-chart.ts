@@ -45,7 +45,8 @@ export function yearGroups(years: readonly number[], currentYear: number) {
     }
     return groups;
 }
-export function chartGeometry(years: readonly (YearConsensus | null)[], dates: readonly (string | null)[]) {
+type ConsensusValue = Pick<YearConsensus, "average" | "min" | "max">;
+export function chartGeometry(years: readonly (ConsensusValue | null)[], dates: readonly (string | null)[]) {
     const points = years.map((item, index) => {
         if (item === null) {
             return null;

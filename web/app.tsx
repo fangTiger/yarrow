@@ -7,7 +7,8 @@ export function route(hash: string): { page: "home" } | { page: "reading"; id: s
   | { page: "sample"; kind: SampleKind } {
   const match = hash.match(/^#\/r\/([a-z2-7]{26})$/u);
   if (match?.[1]) return { page: "reading", id: match[1] };
-  const sample = hash.match(/^#\/sample\/(question|fortune|naming)$/u)?.[1] as SampleKind | undefined;
+  const sample = hash.match(/^#\/sample\/(destiny|question|fortune|naming)$/u)?.[1] as
+    SampleKind | undefined;
   return sample ? { page: "sample", kind: sample } : { page: "home" };
 }
 export function App() {

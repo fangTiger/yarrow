@@ -111,7 +111,7 @@ test("英文问题可从首页进入付款，直接可见文案不含汉字", as
   t.after(() => harness.dispose());
   let children = childrenOf(harness.render());
   const input = children.find((child) => child.type === "textarea")!;
-  assert.equal(input.props.placeholder, "e.g. Will I get this job?");
+  assert.equal(input.props.placeholder, "Optional, e.g. How will my life unfold?");
   input.props.onChange({ target: { value: "Will I get this job?" } });
   harness.render();
   t.mock.timers.tick(400);
@@ -150,7 +150,7 @@ test("首页自动分类：未分类禁用、400ms 防抖、问事可用、起�
   assert.equal(initialButton.props.children, "问卦 · 0.05 USDC");
   assert.equal(initialButton.props.disabled, true);
   const input = children.find((child) => child.type === "textarea")!;
-  assert.equal(input.props.placeholder, PLACEHOLDERS.question);
+  assert.equal(input.props.placeholder, PLACEHOLDERS.destiny);
   input.props.onChange({ target: { value: "这次面试能过吗" } });
   harness.render();
   t.mock.timers.tick(399);

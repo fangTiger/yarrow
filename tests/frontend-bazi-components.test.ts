@@ -28,7 +28,7 @@ test("命理无流年合议，分享不显示原始时刻，无档案切换禁�
         await f.bazi.whenSettled(value.id);
         const reading = publicBaziReading(await f.bazi.getReading(value.id));
         const html = renderToStaticMarkup(createElement(BaziReading, { reading, birth: null, onReading: noop }));
-        assert.doesNotMatch(html, /流年运势|三家合议|合议：|15:30|14:30/);
+        assert.doesNotMatch(html, /流年运势|合议：|15:30|14:30/);
         assert.match(html, /校正摘要/);
         const local = renderToStaticMarkup(createElement(BaziReading, { reading, birth, onReading: noop }));
         assert.match(local, /15:30/);

@@ -33,13 +33,13 @@ export interface EntryState {
 }
 
 export const DEFAULT_ENTRY: EntryState = {
-  kind: "question", manual: false, subjectKey: "", subject: "", horizon: "year", target: "person",
+  kind: "destiny", manual: false, subjectKey: "", subject: "", horizon: "year", target: "person",
 };
 
 export const KIND_OPTIONS = [
+  ["destiny", "命理"],
   ["question", "问事"],
   ["fortune", "运势"],
-  ["destiny", "命理"],
   ["naming", "起名"],
 ] as const;
 
@@ -184,16 +184,17 @@ export function entryGate(
   t: TFunction = zhT,
   options: { requireManualKind?: boolean; requireQuestionSubject?: boolean } = {},
 ): { ready: boolean; reason: string } {
-  if (input.questionLength < 4) {
+  const emptyDestiny = input.entry.kind === "destiny" && input.questionLength === 0;
+  if (!emptyDestiny && input.questionLength < 4) {
     return { ready: false, reason: t("gate.questionLength") };
   }
-  if (options.requireManualKind && !input.entry.manual) {
+  if (!emptyDestiny && options.requireManualKind && !input.entry.manual) {
     return { ready: false, reason: t("gate.kindRequired") };
   }
   if (options.requireQuestionSubject && input.entry.kind === "question" && !input.entry.subjectKey) {
     return { ready: false, reason: t("gate.subjectRequired") };
   }
-  if (!input.classified && !input.entry.manual) {
+  if (!emptyDestiny && !input.classified && !input.entry.manual) {
     return { ready: false, reason: t("status.classifying") };
   }
   if (input.entry.unsupported) {
@@ -203,6 +204,16 @@ export function entryGate(
     return { ready: false, reason: input.birthShown ? "" : t("gate.birth", { problem: input.birthProblem }) };
   }
   return { ready: true, reason: "" };
+}
+
+/** 命理空问题在付款前补成固定问题；非空输入仍使用用户原话。 */
+export function submissionQuestion(
+  state: EntryState,
+  question: string,
+  t: TFunction = zhT,
+): string {
+  const value = question.trim();
+  return state.kind === "destiny" && value === "" ? t("destiny.defaultQuestion") : value;
 }
 
 /** 付款时带给服务端的分类：只带所选类型需要的字段。 */

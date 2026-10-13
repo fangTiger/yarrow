@@ -2,7 +2,7 @@
 import { KIND_OPTIONS, type EntryKind } from "../lib/home-entry.js";
 import { useT } from "../lib/i18n.js";
 
-/** 问事 / 运势 / 命理 / 起名四个类型选项（单选组）。 */
+/** 命理 / 问事 / 运势 / 起名四个类型选项（单选组）。 */
 export function KindOptions(props: {
   value: EntryKind;
   onChange(kind: EntryKind): void;

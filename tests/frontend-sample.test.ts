@@ -15,11 +15,11 @@ const { resolveBaziBirth } = await import("../web/pages/BaziReading.js");
 const { loadSampleReading, localizedSampleReading, sampleResult, SampleContent, SampleReading } =
   await import("../web/pages/SampleReading.js");
 
-test("示例路由只接受问事、运势、起名", () => {
+test("示例路由接受命理、问事、运势、起名", () => {
+  assert.deepEqual(route("#/sample/destiny"), { page: "sample", kind: "destiny" });
   assert.deepEqual(route("#/sample/question"), { page: "sample", kind: "question" });
   assert.deepEqual(route("#/sample/fortune"), { page: "sample", kind: "fortune" });
   assert.deepEqual(route("#/sample/naming"), { page: "sample", kind: "naming" });
-  assert.deepEqual(route("#/sample/destiny"), { page: "home" });
 });
 
 test("示例文件缺失时返回空值，由页面显示示例准备中", async () => {

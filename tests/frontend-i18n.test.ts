@@ -75,7 +75,7 @@ test("英文首页链路组件不泄漏中文，并使用首批用户措辞", as
   ];
   const html = fragments.join("\n");
   assert.match(html, /What do you seek\?/u);
-  assert.match(html, /e\.g\. Will I get this job\?/u);
+  assert.match(html, /Optional, e\.g\. How will my life unfold\?/u);
   for (const label of ["Ask", "Fortune", "Destiny", "Naming", "History", "Birth time zone"]) {
     assert.match(html, new RegExp(label, "u"));
   }

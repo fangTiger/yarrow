@@ -9,7 +9,7 @@ import { BaziReading } from "./BaziReading.js";
 import { NamingReading } from "./NamingReading.js";
 import { DisclaimerFooter } from "../components/DisclaimerFooter.js";
 
-export type SampleKind = "question" | "fortune" | "naming";
+export type SampleKind = "destiny" | "question" | "fortune" | "naming";
 
 /** 先按语言加载 `<kind>.<lang>.json`（中英各用一卦更贴切的示例），缺失时退回 `<kind>.json`。 */
 export async function loadSampleReading(

@@ -16,13 +16,13 @@ const career: ClassificationView = {
   question: "这次面试能过吗", kind: "question", supported: true, subjectKey: "career", subject: "工作官职",
 };
 
-test("四个选项固定为问事、运势、命理、起名，默认问事；占位文字随类型变化", () => {
-  assert.deepEqual(KIND_OPTIONS.map(([, label]) => label), ["问事", "运势", "命理", "起名"]);
-  assert.equal(DEFAULT_ENTRY.kind, "question");
+test("四个选项固定为命理、问事、运势、起名，默认命理；占位文字随类型变化", () => {
+  assert.deepEqual(KIND_OPTIONS.map(([, label]) => label), ["命理", "问事", "运势", "起名"]);
+  assert.equal(DEFAULT_ENTRY.kind, "destiny");
   assert.equal(DEFAULT_ENTRY.manual, false);
   assert.match(PLACEHOLDERS.question, /面试/);
   assert.match(PLACEHOLDERS.fortune, /运势/);
-  assert.match(PLACEHOLDERS.destiny, /适合/);
+  assert.match(PLACEHOLDERS.destiny, /选填/);
 });
 
 test("自动识别切换类型与细项，并给出小字提示", () => {
@@ -95,7 +95,7 @@ test("付款分类只带所选类型需要的字段", () => {
 
 test("分类结果与手选分开存，渲染时合成：防抖期间手点的类型不会被晚到的识别覆盖", async () => {
   const { deriveEntry } = await import("../web/lib/home-entry.js");
-  assert.equal(deriveEntry(undefined, {}).kind, "question");
+  assert.equal(deriveEntry(undefined, {}).kind, "destiny");
   assert.equal(deriveEntry(fortune, {}).kind, "fortune");
   const manual = deriveEntry(fortune, { kind: "destiny" });
   assert.equal(manual.kind, "destiny");

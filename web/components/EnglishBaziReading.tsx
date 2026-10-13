@@ -12,6 +12,9 @@ import { BaziRelations } from "./BaziRelations.js";
 import { BaziTable } from "./BaziTable.js";
 import { LiuNianPanel } from "./LiuNianPanel.js";
 import { EnglishRemedy, EnglishSchoolArticle, EnglishSummary } from "./EnglishReadingSections.js";
+import { DestinyPortrait } from "./DestinyPortrait.js";
+import { LifeLuckPanel } from "./LifeLuckPanel.js";
+import { hasPeriodData } from "../lib/life-luck.js";
 
 const PILLARS = ["year", "month", "day", "time"] as const;
 const SECTION_TITLE_KEYS = {
@@ -61,6 +64,9 @@ export function EnglishBaziReading(props: {
   const [error, setError] = useState("");
   const { reading } = props;
   const { currentYear, currentDate } = readingNow(reading);
+  const destiny = reading.kind === "destiny" ? reading : null;
+  const portrait = destiny?.summary?.status === "done" ? destiny.summary.output?.portrait : undefined;
+  const showLifeLuck = Boolean(destiny?.chart.luck && destiny && hasPeriodData(destiny));
   const retry = async (key: typeof BAZI_KEYS[number]) => {
     try {
       const value = await api.retrySchool(reading.id, key);
@@ -73,6 +79,9 @@ export function EnglishBaziReading(props: {
     year: t("bazi.year"), month: t("bazi.month"), day: t("bazi.day"), time: t("bazi.time"),
   };
   return <div className="bazi" data-reading={reading.id}>
+    {/* 命理：性格画像与一生运势置顶；旧存档缺哪块就跳过哪块。 */}
+    {portrait ? <DestinyPortrait portrait={portrait} /> : null}
+    {showLifeLuck && destiny ? <LifeLuckPanel reading={destiny} currentDate={currentDate} /> : null}
     <EnglishSummary reading={reading} />
     <EnglishRemedy reading={reading} />
     <details className="panel schools-fold"><summary>{t("schools.title")}
@@ -104,7 +113,8 @@ export function EnglishBaziReading(props: {
       </tbody></table></div>
     </section>
     {/* 图表与中文页共用同一套组件，英文只换文字。 */}
-    <BaziLuck chart={reading.chart} currentYear={currentYear} currentDate={currentDate} />
+    {/* 一生运势已含大运；没有一生运势时（运势页、旧命理存档）大运时间轴留在原位。 */}
+    {showLifeLuck ? null : <BaziLuck chart={reading.chart} currentYear={currentYear} currentDate={currentDate} />}
     {reading.kind === "fortune" ? <LiuNianPanel reading={reading} currentYear={currentYear} /> : null}
     <div className="row2"><BaziRelations analysis={reading.analysis} />
       <BaziElements elements={reading.analysis.elements} /></div>

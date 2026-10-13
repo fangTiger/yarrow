@@ -8,7 +8,7 @@ import {
 import {
   DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint, classificationHint,
   deriveEntry, entryGate, fromClassification, namingBirthProblem, namingGate, namingRequest,
-  paymentClassification,
+  paymentClassification, submissionQuestion,
   type ClassificationView, type EntryChoice, type NamingFormValues,
 } from "../lib/home-entry.js";
 import { BirthFields } from "./BirthFields.js";
@@ -88,6 +88,7 @@ export function QuestionForm() {
     status = t("status.classifying");
   }
   const needsBirth = entry.kind === "fortune" || entry.kind === "destiny";
+  const submittedQuestion = submissionQuestion(entry, question, t);
   const questionField = (
     <textarea
       aria-label={t("question.label")}
@@ -161,17 +162,18 @@ export function QuestionForm() {
       {error ? <p className="error">{error}</p> : null}
       <aside className="sample-entry">
         <strong>{t("sample.entry")}</strong>
-        <div><a href="#/sample/question">{t("sample.question")}</a>
+        <div><a href="#/sample/destiny">{t("sample.destiny")}</a>
+          <a href="#/sample/question">{t("sample.question")}</a>
           <a href="#/sample/fortune">{t("sample.fortune")}</a>
           <a href="#/sample/naming">{t("sample.naming")}</a></div>
       </aside>
       {gate.ready ? (
         <PaymentButton
           birth={needsBirth ? toBirthInput(birthValues, t) : null}
-          classification={paymentClassification(entry, question)}
+          classification={paymentClassification(entry, submittedQuestion)}
           {...(entry.kind === "naming" ? { naming: namingRequest(question, naming) } : {})}
           onMissingBirth={() => setError(t("errors.birthRequired"))}
-          question={question}
+          question={submittedQuestion}
         />
       ) : (
         <button className="button button-primary" disabled type="button">{t("payment.button")}</button>

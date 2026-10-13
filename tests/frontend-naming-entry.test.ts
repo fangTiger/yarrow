@@ -17,7 +17,7 @@ const filled: BirthFormValues = {
 };
 
 test("首页开放第四个类型起名，并显示人名或商号的自动识别", () => {
-  assert.deepEqual(KIND_OPTIONS.map(([, label]) => label), ["问事", "运势", "命理", "起名"]);
+  assert.deepEqual(KIND_OPTIONS.map(([, label]) => label), ["命理", "问事", "运势", "起名"]);
   const person: ClassificationView = {
     question: "给孩子起个名字", kind: "naming", supported: true, target: "person",
   };

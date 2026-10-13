@@ -173,6 +173,20 @@
 .bazi .ln-yun span { font-size: 10.5px; left: 4px; }
 }
 .bazi .ln-table tbody th, .bazi .ln-table thead th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); }
+.bazi .portrait-traits { display: flex; flex-wrap: wrap; gap: 8px; }
+.bazi .portrait-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.bazi .portrait-columns section { padding: 14px 16px; border: 1px solid var(--line); }
+.bazi .portrait-columns h3 { margin: 0 0 8px; color: var(--gold); font-size: 15px; }
+.bazi .portrait-columns ul { display: grid; gap: 6px; margin: 0; padding-left: 1.2em; color: var(--muted); }
+.bazi .portrait-summary { margin: 0; font-size: 17px; line-height: 1.8; }
+.bazi .life-luck-panel .ln-x { display: grid; }
+.bazi .life-luck-panel .ln-x > span { min-width: 0; }
+.bazi .life-luck-panel .ln-x > span:not(.now) { color: var(--muted); }
+.bazi .life-luck-panel .ln-lab > span { display: block; }
+@media (max-width: 620px) {
+.bazi .portrait-columns { grid-template-columns: minmax(0, 1fr); }
+.bazi .life-luck-panel .ln-x { font-size: 10px; }
+}
 
 .bazi .hero > *, .bazi .row2 > *, .bazi .panel {min-width:0;}
 .bazi .panel {background:var(--panel);border:1px solid var(--line);padding:22px clamp(16px,2.2vw,26px);display:grid;gap:16px;align-content:start;}

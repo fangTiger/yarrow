@@ -34,7 +34,8 @@ export function EnglishSummary({ reading }: { reading: InterpretedReading }) {
         <ol>{output.advice.map((item) => <li key={item}>{item}</li>)}</ol></div> : null}
       {output.watch ? <p className="summary-watch"><b>{t("summary.watch")}</b>
         {output.watch.window} ({output.watch.condition})</p> : null}
-      {output.outlook ? <p className="summary-outlook"><b>{t("summary.outlook")}</b>
+      {output.outlook ? <p className="summary-outlook"><b>{t(reading.kind === "destiny"
+        ? "summary.lifeOutlook" : "summary.outlook")}</b>
         {output.outlook}</p> : null}
       <p className="hint">{t("summary.basis", { count: summary.basis })}</p>
     </section>

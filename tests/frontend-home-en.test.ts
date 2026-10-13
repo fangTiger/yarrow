@@ -31,13 +31,13 @@ const career: ClassificationView = {
 
 test("中英文首页渲染一句话、三步、示例入口且免责声明只出现一次", () => {
   const zh = renderIn("zh", createElement(HomeContent));
-  assert.match(zh, /古法起卦与八字排盘，三位古代流派各自解读，约半分钟给出白话结论。/u);
+  assert.match(zh, /输入生辰，看你一生的大运起伏与性格底色/u);
   assert.match(zh, /Arc 测试网，不花真钱/u);
   assert.match(zh, /看看示例结果/u);
   assert.equal((zh.match(/仅供参考与自我反思，不构成医疗、法律、投资建议/gu) ?? []).length, 1);
 
   const english = renderIn("en", createElement(HomeContent));
-  assert.match(english, /Ancient Chinese divination — I Ching and BaZi/u);
+  assert.match(english, /Enter your birth date to see the ten-year luck cycles of your life/u);
   assert.match(english, /Arc testnet.*no real money/isu);
   assert.match(english, /See a sample reading/u);
   assert.equal((english.match(/For reference and self-reflection only/gu) ?? []).length, 1);
@@ -75,9 +75,9 @@ test("手机类型卡保持 2×2 并只在卡片组下展示选中项详情", ()
     /@media\s*\(max-width:\s*560px\)[\s\S]*?\.home-luopan[^}]*min\(140px,\s*40vw\)/u);
 });
 
-test("英文默认 Ask 但必须手选，分类关键词只提示而不自动改类型或事项", () => {
+test("英文默认 Destiny；写问题后仍必须手选，分类关键词只提示而不自动改类型或事项", () => {
   const t = createT(en);
-  assert.equal(deriveEntry(fortune, {}, t, "en").kind, "question");
+  assert.equal(deriveEntry(fortune, {}, t, "en").kind, "destiny");
   assert.equal(deriveEntry(fortune, {}, t, "en").manual, false);
   assert.equal(deriveEntry(career, { kind: "question" }, t, "en").subjectKey, "");
   assert.deepEqual(entryGate({
