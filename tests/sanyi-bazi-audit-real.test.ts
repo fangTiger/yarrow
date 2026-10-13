@@ -64,7 +64,7 @@ test("原局四柱不含易误分字时，日常词正文仍通过", () => {
   for (const fact of facts.values()) {
     fact.tokens = new Set([...fact.tokens].filter((token) => !forbidden.test(token)));
   }
-  const result = auditBaziOutput({ ...output, useGod: "审慎", evidence: [],
+  const result = auditBaziOutput({ ...output, useGod: "审慎", evidence: [], periods: [],
     reason: "自己照顾子女，未来仍需辛苦，申请下午办理，生辰、人丁与甲方资料备齐" }, facts);
   assert.deepEqual(result.errors, []);
 });

@@ -244,7 +244,7 @@ test("旧问事存档原样读出，公开响应按类型区分并附此刻黄�
     assert.equal(d.kind, "destiny");
     assert.ok("almanac" in d && d.almanac);
     assert.ok(!("years" in d) && !("consensusTenths" in d) && !("verdict" in d));
-    assert.ok(!JSON.stringify(d).includes('"verdict"'));
+    assert.equal(d.periods.length, d.chart.luck?.cycles.length ?? 0);
     const fortune = await f.api.createReading({ question: "我今年运势如何", birth, feeProof: proof(3) });
     await f.bazi.whenSettled(fortune.id);
     const r = await f.api.getReading(fortune.id);

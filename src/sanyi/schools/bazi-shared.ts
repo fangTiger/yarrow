@@ -1,8 +1,9 @@
 // src/sanyi/schools/bazi-shared.ts
+import lunarPkg from "lunar-javascript";
 import type { BaziChart } from "../../calendar/bazi.js";
 import type { QiongtongEntry } from "../../calendar/qiongtong.js";
 import type { FortuneHorizon } from "../classify.js";
-import type { FactTable } from "../facts.js";
+import type { Fact, FactTable } from "../facts.js";
 export type BaziSchoolKey = "shenxiaozhan" | "yuchuntai" | "rentieqiao";
 export interface BaziSchoolInput {
   kind: "destiny" | "fortune";
@@ -48,6 +49,53 @@ useGod 只写一句本派所取用神与喜忌，不超过二十字，例如「�
 吉与大吉为六至九成，平为四至六成，凶与大凶为一至四成，总断和逐年均遵守。
 需要留意的月份或日子写入 timing.window，成立条件写入 timing.condition。
 输出必须严格符合给定 JSON Schema。`;
+
+const LEGACY_DESTINY_RULE =
+  "命理不得输出吉凶、把握、逐年列表或 timing，"
+  + "五分项依次为性格、事业、财运、感情、健康。";
+const DESTINY_PERIOD_RULES = [
+  "命理不得输出总断吉凶、把握、逐年列表或 timing，但须输出 periods。",
+  "命理五分项依次为性格、事业、财运、感情、健康。",
+  "periods 按大运列表顺序每步一项，index 与列表编号一致；盘面无大运时输出空数组。",
+  "逐运吉凶须依据本派用神喜忌，判断该步大运干支（含藏干）对命局的作用。",
+  "喜忌明确要给吉或凶，不要一律写平。",
+  "逐运吉与大吉为六至九成，平为四至六成，凶与大凶为一至四成。",
+  "逐运短评不超过二十四字（含标点），须点出依据。",
+  "逐运短评只用该步大运事实（luck:<index>）与原局事实。",
+].join("\n");
+
+/** fortune 沿用原系统提示；只有命理请求把旧边界替换为逐运规则。 */
+export function baziSystemPrompt(school: BaziSchool, kind: BaziSchoolInput["kind"]): string {
+  if (kind === "fortune") {
+    return school.systemPrompt;
+  }
+  if (!school.systemPrompt.includes(LEGACY_DESTINY_RULE)) {
+    throw new Error("命理系统提示缺少既定边界");
+  }
+  return school.systemPrompt.replace(LEGACY_DESTINY_RULE, DESTINY_PERIOD_RULES);
+}
+
+function destinyLuckFact(input: BaziSchoolInput, id: string, fact: Fact): Fact {
+  const index = Number(id.slice(5));
+  const cycle = input.chart.luck?.cycles.find((item) => item.index === index);
+  if (!cycle) {
+    throw new Error(`第 ${index} 步大运事实与命盘不符`);
+  }
+  const branch = cycle.ganZhi.slice(1);
+  const stems = lunarPkg.LunarUtil.ZHI_HIDE_GAN[branch];
+  if (!stems) {
+    throw new Error(`第 ${index} 步大运藏干缺失`);
+  }
+  const hidden = stems.flatMap((stem) => {
+    const god = lunarPkg.LunarUtil.SHI_SHEN[input.chart.dayMaster + stem];
+    if (!god) {
+      throw new Error(`第 ${index} 步大运十神缺失`);
+    }
+    return [stem, god];
+  });
+  return { ...fact, label: `${fact.label} 藏干 ${hidden.join(" ")}`,
+    tokens: new Set([...fact.tokens, ...hidden]) };
+}
 export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): FactTable {
   const facts: FactTable = new Map();
   for (const [id, fact] of input.facts) {
@@ -59,7 +107,9 @@ export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): Fac
         continue;
       }
       // 余家逐年只收运年干支、十神与藏干，不追加格局派使用的关系和神煞。
-      if (key === "yuchuntai" && yearFact) {
+      if (input.kind === "destiny" && /^luck:\d+$/u.test(id)) {
+        facts.set(id, destinyLuckFact(input, id, fact));
+      } else if (key === "yuchuntai" && yearFact) {
         const match = fact.label.match(/^(\d{4}) 年/u);
         const entry = input.chart.liunian.years.find((year) => String(year.year) === match?.[1]);
         if (!entry) {
@@ -107,6 +157,16 @@ export function buildBaziPrompt(key: BaziSchoolKey, input: BaziSchoolInput): str
     prompt.push(`所问范围：${input.horizon} ${input.period.label}`,
       `锚年：${input.chart.liunian.anchorYear}`,
       `逐年窗口：${input.chart.liunian.years.map((year) => year.year).join("、")}`);
+  } else {
+    const cycles = input.chart.luck?.cycles ?? [];
+    if (cycles.length === 0) {
+      prompt.push("盘面无大运，periods 输出空数组");
+    } else {
+      prompt.push("大运列表：", ...cycles.map((cycle) => {
+        return `第 ${cycle.index} 步 luck:${cycle.index} ${cycle.ganZhi} `
+          + `${cycle.startAge}–${cycle.endAge} 岁 ${cycle.startYear}–${cycle.endYear}`;
+      }));
+    }
   }
   if (key === "yuchuntai") {
     prompt.push(`调候条目：${JSON.stringify(input.tiaohou)}`, `可直接引用的原文：${input.tiaohou.quote}`);

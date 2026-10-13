@@ -144,6 +144,17 @@ export function auditBaziNote(item: { year: number; note: string }, facts: FactT
   return textErrors(item.note, new Set([...union(natal), ...year.tokens]), `${item.year} 年短评`);
 }
 
+/** 核对一步大运短评：只认该步大运事实与原局事实。 */
+export function auditBaziPeriodNote(item: { index: number; note: string }, facts: FactTable): string[] {
+  const period = facts.get(`luck:${item.index}`);
+  if (!period) {
+    return [`第 ${item.index} 步大运事实不存在`];
+  }
+  const natal = new Map([...facts].filter(([id, fact]) => isNatalFact(id, fact.label)));
+  return textErrors(item.note, new Set([...union(natal), ...period.tokens]),
+    `第 ${item.index} 步大运短评`);
+}
+
 /** 各家正文（直断、理由、详断、建议、应期）汇成一段，供核对与修补共用。 */
 export function baziProse(output: BaziSchoolOutput): string[] {
   const prose = [output.useGod, output.headline, output.reason,
@@ -170,6 +181,10 @@ export function auditBaziOutput(output: BaziSchoolOutput, facts: FactTable): {
   if ("years" in output) {
     for (const item of output.years) {
       errors.push(...auditBaziNote(item, facts));
+    }
+  } else {
+    for (const item of output.periods ?? []) {
+      errors.push(...auditBaziPeriodNote(item, facts));
     }
   }
   return { ok: errors.length === 0, errors };

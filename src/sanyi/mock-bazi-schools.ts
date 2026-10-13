@@ -46,7 +46,26 @@ export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable, kind:
         advice: ["保留调整余地"], evidence: [{ ref: useGod.ref, claim: useGod.word }],
     };
     if (kind === "destiny") {
-        return base;
+        const offset = { shenxiaozhan: 0, yuchuntai: 1, rentieqiao: 2 }[key];
+        const periods = [...facts.values()].filter(fact => /^luck:\d+$/u.test(fact.id))
+            .sort((left, right) => Number(left.id.slice(5)) - Number(right.id.slice(5))).map(fact => {
+            const index = Number(fact.id.slice(5));
+            const ganZhi = [...fact.tokens].find(token =>
+                /^[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]$/u.test(token));
+            const gods = ["比肩", "劫财", "食神", "伤官", "偏财", "正财", "七杀", "正官",
+                "偏印", "正印"];
+            const god = [...fact.tokens].find(token => gods.includes(token));
+            if (!ganZhi || !god) {
+                throw new Error("逐运 mock 缺少大运干支或十神事实");
+            }
+            const favorable = (index + offset) % 2 === 0;
+            return {
+                index, verdict: favorable ? "吉" as const : "凶" as const,
+                confidenceTenths: favorable ? 7 : 3,
+                note: `${ganZhi}${god}，${favorable ? "宜进取" : "宜守成"}`,
+            };
+        });
+        return { ...base, periods };
     }
     // 家与年份共同决定分数；各家偏移保证锚年总断不同。
     const offset = { shenxiaozhan: 0, yuchuntai: 1, rentieqiao: 2 }[key];

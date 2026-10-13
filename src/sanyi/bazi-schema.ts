@@ -12,6 +12,14 @@ export interface DestinySchoolOutput {
   sections: QuestionSchoolOutput["sections"];
   advice: readonly string[];
   evidence: QuestionSchoolOutput["evidence"];
+  /** 旧存档没有逐运断语，读取时按缺失处理。 */
+  periods?: DestinyPeriodOutput[];
+}
+export interface DestinyPeriodOutput {
+  index: number;
+  verdict: Verdict;
+  confidenceTenths: number;
+  note: string;
 }
 export interface FortuneYearOutput {
   year: number;
@@ -33,7 +41,7 @@ const section = properties.sections.items;
 export const DESTINY_SCHOOL_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["useGod", "headline", "reason", "sections", "advice", "evidence"],
+  required: ["useGod", "headline", "reason", "sections", "advice", "evidence", "periods"],
   properties: {
     useGod, headline: properties.headline, reason: properties.reason,
     advice: properties.advice, evidence: properties.evidence,
@@ -42,6 +50,18 @@ export const DESTINY_SCHOOL_SCHEMA = {
       items: DESTINY_TITLES.map((title) => ({
         ...section, properties: { ...section.properties, title: { type: "string", const: title } },
       })),
+    },
+    periods: {
+      type: "array", maxItems: 12,
+      items: {
+        type: "object", additionalProperties: false,
+        required: ["index", "verdict", "confidenceTenths", "note"],
+        properties: {
+          index: { type: "integer", minimum: 1, maximum: 12 },
+          verdict: properties.verdict, confidenceTenths: properties.confidenceTenths,
+          note: { type: "string", minLength: 1, maxLength: 24 },
+        },
+      },
     },
   },
 } as const satisfies JsonSchema;
@@ -72,6 +92,7 @@ export function baziLanguageErrors(output: BaziSchoolOutput): string[] {
     ...output.advice,
     ...("timing" in output && output.timing ? [output.timing.window, output.timing.condition] : []),
     ...("years" in output ? output.years.map((year) => year.note) : []),
+    ...("periods" in output ? output.periods?.map((period) => period.note) ?? [] : []),
   ]);
 }
 
@@ -79,6 +100,17 @@ export function checkBaziConsistency(output: BaziSchoolOutput, chart: BaziChart,
   horizon: FortuneHorizon): string[] {
   const errors = baziLanguageErrors(output);
   if (!("years" in output)) {
+    const periods = output.periods ?? [];
+    for (const item of periods) {
+      errors.push(...checkVerdictConsistency(item).map((error) => `第 ${item.index} 步大运：${error}`));
+    }
+    const expected = chart.luck?.cycles.map((item) => item.index) ?? [];
+    const actual = periods.map((item) => item.index);
+    if (expected.length !== actual.length
+      || expected.some((index, position) => actual[position] !== index)) {
+      errors.push("逐运大运编号序列必须与命盘大运完全一致，按顺序且不多不少；"
+        + "盘面无大运时须为空");
+    }
     return errors;
   }
   errors.push(...checkVerdictConsistency(output));

@@ -7,7 +7,8 @@ import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA, baziLanguageErrors,
   } from "./bazi-schema.js";
 import { repairBazi } from "./repair.js";
 import { schemaHints } from "./schema-hints.js";
-import { selectBaziFacts, type BaziSchool, type BaziSchoolInput } from "./schools/bazi-shared.js";
+import { baziSystemPrompt, selectBaziFacts, type BaziSchool,
+  type BaziSchoolInput } from "./schools/bazi-shared.js";
 
 /** 每家最多三次调用：首次加两次带错误说明的重写。 */
 const MAX_CALLS = 3;
@@ -36,6 +37,7 @@ export async function runBaziSchool(deps: {
   try {
     const facts = selectBaziFacts(input.school.key, input);
     const basePrompt = input.school.buildUserPrompt(input);
+    const systemPrompt = baziSystemPrompt(input.school, input.kind);
     let userPrompt = basePrompt;
     let errors: string[] = [];
     // 最后一次结构合格的输出：三次都不过核对时据此删错留对。
@@ -45,7 +47,7 @@ export async function runBaziSchool(deps: {
       try {
         const raw = await deps.provider.generateStructured<unknown>({
           taskId: `sanyi/${input.kind}/${input.school.key}`,
-          systemPrompt: input.school.systemPrompt, cacheSystemPrompt: true,
+          systemPrompt, cacheSystemPrompt: true,
           userPrompt, schema, effort: "medium",
         });
         // 不假设 provider 一定做过校验；Schema 失败也进入重写。

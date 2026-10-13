@@ -3,7 +3,8 @@
 // 句子级检查复用核对器本身，修补后的输出因此必然通过核对。
 import type { BaziChart } from "../calendar/bazi.js";
 import { auditQuestionEvidence, auditQuestionProse } from "./audit.js";
-import { auditBaziEvidence, auditBaziNote, auditBaziProse, baziProse } from "./bazi-audit.js";
+import { auditBaziEvidence, auditBaziNote, auditBaziPeriodNote, auditBaziProse,
+  baziProse } from "./bazi-audit.js";
 import type { BaziSchoolOutput } from "./bazi-schema.js";
 import type { FortuneHorizon } from "./classify.js";
 import type { FactTable } from "./facts.js";
@@ -113,7 +114,33 @@ export function repairBazi(
     advice: advice.length > 0 ? advice : ["结合实际情况审慎判断。"],
   };
   if (!("verdict" in output)) {
-    const repaired = { ...base, headline: headline || `取${useGod}` } as BaziSchoolOutput;
+    const allowed = new Set(chart.luck?.cycles.map((item) => item.index) ?? []);
+    const unique = new Map<number, NonNullable<typeof output.periods>[number]>();
+    for (const item of output.periods ?? []) {
+      if (!allowed.has(item.index) || unique.has(item.index)) {
+        removed += 1;
+      } else {
+        unique.set(item.index, item);
+      }
+    }
+    const periods = (chart.luck?.cycles ?? []).flatMap((cycle) => {
+      const item = unique.get(cycle.index);
+      if (!item) {
+        return [];
+      }
+      let next = { ...item };
+      if (auditBaziPeriodNote(item, facts).length > 0) {
+        removed += 1;
+        next = { ...next, note: "" };
+      }
+      const clamped = clampConfidence(next.verdict, next.confidenceTenths);
+      if (clamped !== next.confidenceTenths) {
+        adjusted += 1;
+        next = { ...next, confidenceTenths: clamped };
+      }
+      return [next];
+    });
+    const repaired = { ...base, headline: headline || `取${useGod}`, periods } as BaziSchoolOutput;
     return finishLimit(repaired, facts, removed, adjusted);
   }
   const confidenceTenths = clampConfidence(output.verdict, output.confidenceTenths);

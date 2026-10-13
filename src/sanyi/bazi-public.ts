@@ -1,9 +1,16 @@
 // src/sanyi/bazi-public.ts
 import type { BaziChart } from "../calendar/bazi.js";
 import type { BaziSchoolState, StoredBaziReading } from "./store.js";
-import type { FortuneSchoolOutput } from "./bazi-schema.js";
+import type { DestinySchoolOutput, FortuneSchoolOutput } from "./bazi-schema.js";
 export interface YearConsensus {
   year: number;
+  average: number;
+  min: number;
+  max: number;
+  count: number;
+}
+export interface PeriodConsensus {
+  index: number;
   average: number;
   min: number;
   max: number;
@@ -42,6 +49,29 @@ export function yearConsensus(reading: StoredBaziReading): (YearConsensus | null
     return { year, average, min: Math.min(...values), max: Math.max(...values), count: values.length };
   });
 }
+function donePeriodOutputs(reading: StoredBaziReading): DestinySchoolOutput[] {
+  return Object.values(reading.schools).flatMap((state) => {
+    if (state.status === "done" && state.output && !("years" in state.output)
+      && state.output.periods) {
+      return [state.output];
+    }
+    return [];
+  });
+}
+export function periodConsensus(reading: StoredBaziReading): (PeriodConsensus | null)[] {
+  const outputs = donePeriodOutputs(reading);
+  return (reading.chart.luck?.cycles ?? []).map(({ index }) => {
+    const values = outputs.flatMap((output) => {
+      const entry = output.periods?.find((item) => item.index === index);
+      return entry ? [entry.confidenceTenths] : [];
+    });
+    if (values.length === 0) {
+      return null;
+    }
+    const average = Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1));
+    return { index, average, min: Math.min(...values), max: Math.max(...values), count: values.length };
+  });
+}
 function visibleSchool(state: BaziSchoolState): Omit<BaziSchoolState, "attempts"> {
   const { attempts: _attempts, ...visible } = state;
   return visible;
@@ -60,7 +90,7 @@ function common(reading: StoredBaziReading) {
 export function publicBaziReading(reading: StoredBaziReading) {
   const value = common(reading);
   if (reading.kind === "destiny") {
-    return { ...value, kind: "destiny" as const };
+    return { ...value, kind: "destiny" as const, periods: periodConsensus(reading) };
   }
   const outputs = doneOutputs(reading);
   let consensusTenths: number | null = null;
