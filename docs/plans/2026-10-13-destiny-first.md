@@ -147,6 +147,7 @@
   - 性格画像（有 portrait 时）→ 一生运势（有大运且任一家有 periods 时）→ 白话总述 → 解法 → 三家依据 → 盘面（四柱与校正）→ 合冲刑害、五行；
   - 显示一生运势时不再显示 `BaziLuck`；否则照旧显示 `BaziLuck`（含无大运的补时辰提示）；
   - 运势页顺序不变。
+  - 总述面板：命理的 outlook 标为「一生走势」/「Life outlook」，运势仍为原标签。
 - [ ] 首页：
   - `KIND_OPTIONS` 顺序：destiny、question、fortune、naming；`DEFAULT_ENTRY.kind = "destiny"`；
   - 命理问题选填：命理且问题为空时，`entryGate` 不检查问题长度、手选类型与分类，提交时用默认问题（词条 `destiny.defaultQuestion`）；写了问题则按现有规则；
