@@ -253,6 +253,16 @@ class Fake implements StructuredOutputProvider {
   }
 }
 
+test("命理总述多写的倾向直接去掉，不为此重写", async () => {
+  const { tone: _tone, ...base } = good;
+  const destiny: SummaryInput = { ...input, kind: "destiny", consensus: null };
+  const provider = new Fake([{ ...base, tone: "顺", portrait }]);
+  const result = await runSummary({ provider }, destiny);
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 1);
+  assert.ok(result.status === "done" && !("tone" in result.output));
+});
+
 test("运行器：一次通过、带错误重写、三次不过删错留对、调用失败", async () => {
   const pass = await runSummary({ provider: new Fake([good]) }, input);
   assert.equal(pass.status, "done");

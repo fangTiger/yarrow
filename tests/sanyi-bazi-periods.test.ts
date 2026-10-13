@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { validateStructuredOutput } from "../src/agent/provider.js";
-import { auditBaziOutput } from "../src/sanyi/bazi-audit.js";
+import { auditBaziOutput, auditBaziSummaryProse } from "../src/sanyi/bazi-audit.js";
 import { publicBaziReading } from "../src/sanyi/bazi-public.js";
 import * as baziPublic from "../src/sanyi/bazi-public.js";
 import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA, baziLanguageErrors,
@@ -181,6 +181,17 @@ test("命理大运事实含本运与原局关系，只放行本步关系", () =>
     ? { ...item, note: "午午自刑宜守" } : item);
   assert.match(auditBaziOutput({ ...output, periods: wrong }, facts).errors.join("；"),
     /第 2 步大运短评.*午午自刑/);
+});
+
+test("命理总述核对的事实表含各步大运与原局关系，三家能说的总述可转述", () => {
+  const input = sampleBazi("destiny");
+  // 「丑未冲」只出现在第 8 步大运与原局之间，原局与流年里都没有。
+  const text = "晚年第八步运丑未冲，宜守。";
+  assert.ok(auditBaziSummaryProse(text, input.facts).length > 0);
+  const facts = baziShared.withDestinyLuckRelations(input.chart, input.facts);
+  assert.deepEqual(auditBaziSummaryProse(text, facts), []);
+  // 原事实表不被改动。
+  assert.ok(!input.facts.get("luck:8")?.tokens.has("丑未冲"));
 });
 
 test("调候派不用合冲刑害：余春台的大运事实不含关系", () => {

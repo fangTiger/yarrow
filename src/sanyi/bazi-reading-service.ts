@@ -5,6 +5,7 @@ import { lookupQiongtong } from "../calendar/qiongtong.js";
 import type { StructuredOutputProvider } from "../agent/provider.js";
 import { buildBirthChart } from "./birth-chart.js";
 import { buildBaziFacts } from "./bazi-facts.js";
+import { withDestinyLuckRelations } from "./schools/bazi-shared.js";
 import { derivedChart, periodConsensus, yearConsensus } from "./bazi-public.js";
 import { auditBaziSummaryProse } from "./bazi-audit.js";
 import {
@@ -281,7 +282,8 @@ export class BaziReadingService {
       return null;
     }
     const chart = reading.chart;
-    const facts = buildBaziFacts(chart, reading.analysis, reading.tiaohou);
+    const baseFacts = buildBaziFacts(chart, reading.analysis, reading.tiaohou);
+    const facts = reading.kind === "destiny" ? withDestinyLuckRelations(chart, baseFacts) : baseFacts;
     const pillars = [chart.pillars.year, chart.pillars.month, chart.pillars.day, chart.pillars.time]
       .map((pillar) => pillar?.ganZhi ?? "缺").join(" ");
     const points = [

@@ -500,6 +500,10 @@ export async function runSummary(
         effort: "medium",
       });
       const output = validateStructuredOutput<PlainSummary>(SUMMARY_SCHEMA, raw);
+      // 命理不分倾向：模型偶尔多写 tone，直接去掉，不为此重写。
+      if (input.kind === "destiny" && output.tone !== undefined) {
+        delete output.tone;
+      }
       lastValid = output;
       errors = checkSummary(output, input);
       if (errors.length === 0) {

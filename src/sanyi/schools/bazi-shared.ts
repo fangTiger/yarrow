@@ -76,9 +76,10 @@ export function baziSystemPrompt(school: BaziSchool, kind: BaziSchoolInput["kind
   return school.systemPrompt.replace(LEGACY_DESTINY_RULE, DESTINY_PERIOD_RULES);
 }
 
-function destinyLuckFact(key: BaziSchoolKey, input: BaziSchoolInput, id: string, fact: Fact): Fact {
+/** 命理大运事实补藏干与十神；withRelations 时再补本运与原局的合冲刑害。 */
+function enrichLuckFact(chart: BaziChart, id: string, fact: Fact, withRelations: boolean): Fact {
   const index = Number(id.slice(5));
-  const cycle = input.chart.luck?.cycles.find((item) => item.index === index);
+  const cycle = chart.luck?.cycles.find((item) => item.index === index);
   if (!cycle) {
     throw new Error(`第 ${index} 步大运事实与命盘不符`);
   }
@@ -88,21 +89,34 @@ function destinyLuckFact(key: BaziSchoolKey, input: BaziSchoolInput, id: string,
     throw new Error(`第 ${index} 步大运藏干缺失`);
   }
   const hidden = stems.flatMap((stem) => {
-    const god = lunarPkg.LunarUtil.SHI_SHEN[input.chart.dayMaster + stem];
+    const god = lunarPkg.LunarUtil.SHI_SHEN[chart.dayMaster + stem];
     if (!god) {
       throw new Error(`第 ${index} 步大运十神缺失`);
     }
     return [stem, god];
   });
-  // 本运与原局的合冲刑害只给用关系的两家；调候派按设计不用关系。
-  const relations = ALLOWED[key].includes("relation:")
-    ? findRelations(makeNodes(input.chart, cycle, null))
+  const relations = withRelations
+    ? findRelations(makeNodes(chart, cycle, null))
       .filter((relation) => relation.scope === "luck")
       .map((relation) => relation.label)
     : [];
   const relationLabel = relations.length > 0 ? ` 关系 ${relations.join(" ")}` : "";
   return { ...fact, label: `${fact.label} 藏干 ${hidden.join(" ")}${relationLabel}`,
     tokens: new Set([...fact.tokens, ...hidden, ...relations]) };
+}
+function destinyLuckFact(key: BaziSchoolKey, input: BaziSchoolInput, id: string, fact: Fact): Fact {
+  // 本运与原局的合冲刑害只给用关系的两家；调候派按设计不用关系。
+  return enrichLuckFact(input.chart, id, fact, ALLOWED[key].includes("relation:"));
+}
+/** 命理总述的核对事实：总述综合三家，三家能引用的大运藏干与关系，总述转述时也应放行。 */
+export function withDestinyLuckRelations(chart: BaziChart, facts: FactTable): FactTable {
+  const result: FactTable = new Map(facts);
+  for (const [id, fact] of facts) {
+    if (/^luck:\d+$/u.test(id)) {
+      result.set(id, enrichLuckFact(chart, id, fact, true));
+    }
+  }
+  return result;
 }
 export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): FactTable {
   const facts: FactTable = new Map();
