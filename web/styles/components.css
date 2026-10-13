@@ -17,6 +17,12 @@
   font-family: var(--brush);
   font-size: 24px;
 }
+.brand-mark {
+  display: block;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
 .brand, .panel-head h2 {
   font-family: var(--brush);
   font-weight: 400;
@@ -679,9 +685,6 @@ html:lang(en) .luopan-trigram-label { font-size: 9px !important; }
   .topbar {
     flex-wrap: wrap;
     gap: 8px;
-  }
-  .topbar > .seal {
-    flex-shrink: 0;
   }
   .wallet-button {
     padding-inline: 8px;

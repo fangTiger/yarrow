@@ -2,7 +2,6 @@ export const zh = {
   "meta.title": "三易",
   "meta.description": "一问三家：六爻问事，程颐、京房、邵雍各自解卦。",
   "brand.name": "三易",
-  "brand.seal": "问",
   "lang.toggle": "中 / EN",
   "lang.toggleLabel": "Switch to English",
   "home.sectionLabel": "问卦",

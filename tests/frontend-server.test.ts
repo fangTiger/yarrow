@@ -34,6 +34,8 @@ async function fixture(api: SanyiApi = fakeApi()) {
   await mkdir(publicDir);
   await writeFile(join(publicDir, "index.html"), "三易", "utf8");
   await writeFile(join(publicDir, "font.woff2"), "font", "utf8");
+  await writeFile(join(publicDir, "favicon.ico"), "ico", "utf8");
+  await writeFile(join(publicDir, "apple-touch-icon.png"), "png", "utf8");
   const server = createFrontendServer({ publicDir, api });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
@@ -162,6 +164,18 @@ test("未知错误为 500 且不泄露堆栈", async () => {
     const response = await fetch(`${item.base}/api/now`);
     assert.equal(response.status, 500);
     assert.doesNotMatch(JSON.stringify(await response.json()), /at /);
+  } finally {
+    await close(item);
+  }
+});
+test("站点图标 ico 与 png 使用正确类型", async () => {
+  const item = await fixture();
+  try {
+    const ico = await fetch(`${item.base}/favicon.ico`);
+    assert.equal(ico.status, 200);
+    assert.equal(ico.headers.get("content-type"), "image/x-icon");
+    const png = await fetch(`${item.base}/apple-touch-icon.png`);
+    assert.equal(png.headers.get("content-type"), "image/png");
   } finally {
     await close(item);
   }

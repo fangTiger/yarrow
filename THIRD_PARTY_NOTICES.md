@@ -19,3 +19,8 @@
 - 五级“旺相休囚死”明确采用[《三命通会·卷二》“论五行旺相休囚死”](https://zh.wikisource.org/wiki/%E4%B8%89%E5%91%BD%E9%80%9A%E6%9C%83/%E5%8D%B7%E4%BA%8C)的逐季表：春木旺火相水休金囚土死；夏火旺土相木休水囚金死；季夏土旺金相火休木囚水死；秋金旺水相土休火囚木死；冬水旺木相金休土囚火死。《增删卜易》“四时旺相章”只明列旺、相、余气并将其余合称休囚，本项目不会把《三命通会》的五级表误称为《增删卜易》原表。
 - 爻位“初＝足／基层、二＝腹／家宅、三＝股／门户、四＝胸／门外、五＝君位、上＝首／宗庙”按本轮产品需求作为辅助象征展示，不标称为《增删卜易》的确定规则，也不据此自动输出吉凶。
 - 项目现有《周易》语料含卦辞与爻辞，因此五卦均展示卦辞；不含彖辞和大象辞，本轮宁缺毋滥，未从未经校验的新语料拼接。应期、日月合、十二长生与完整吉凶综合也未实现，避免未选择流派时混写。
+
+## 马善政毛笔楷书字体（Ma Shan Zheng）与品牌印
+
+- 品牌名、印章与标题所用毛笔字为 [Ma Shan Zheng Regular](https://github.com/google/fonts/tree/main/ofl/mashanzheng)，采用 SIL Open Font License 1.1，许可证全文见 `web/fonts/OFL.txt`；网页只发布按用字裁剪的子集 `web/fonts/mashanzheng-subset.woff2`（由 `scripts/subset-sanyi-font.py` 生成）。
+- 品牌印（`web/brand/yarrow-mark.svg`、`web/favicon.svg`、`web/favicon.ico`、`web/apple-touch-icon.png`）中的「易」取自该字体的字形轮廓（`scripts/brand-glyph-yi.json`），作为图形使用，不随图标分发字体文件；图标由 `npm run brand:icons` 重新生成。

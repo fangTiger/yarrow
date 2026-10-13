@@ -3,6 +3,7 @@ import type { AnyPublicReading } from "../lib/api.js";
 import { applyReadingTranslation } from "../lib/reading-translation.js";
 import { useLang, useT, type Lang } from "../lib/i18n.js";
 import { LangToggle } from "../components/LangToggle.js";
+import { TopbarBrand } from "../components/TopbarBrand.js";
 import { QuestionResult } from "./Reading.js";
 import { BaziReading } from "./BaziReading.js";
 import { NamingReading } from "./NamingReading.js";
@@ -71,8 +72,7 @@ export function SampleReading({ kind }: { kind: SampleKind }) {
     return () => { active = false; };
   }, [kind, lang]);
   return <main className="page sample-page">
-    <header className="topbar"><span className="seal">{t("brand.seal")}</span>
-      <span className="brand">{t("brand.name")}</span><div className="topbar-actions">
+    <header className="topbar"><TopbarBrand /><div className="topbar-actions">
         <LangToggle /><a href="#/">{t("result.backHome")}</a></div></header>
     <div className="sample-banner">{t("sample.banner")}</div>
     <SampleContent lang={lang} reading={reading} />

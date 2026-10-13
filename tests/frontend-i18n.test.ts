@@ -24,7 +24,7 @@ import { renderIn } from "./helpers/render-in.js";
 
 const placeholders = (value: string) => [...value.matchAll(/\{([^}]+)\}/gu)].map((match) => match[1]).sort();
 const EN_HAN_WHITELIST = new Set<keyof typeof zh>([
-  "brand.seal", "lang.toggle", "sample.banner",
+  "lang.toggle", "sample.banner",
 ]);
 
 test("中英字典键和占位符完全一致，英文值不含汉字", () => {

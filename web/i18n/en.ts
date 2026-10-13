@@ -5,7 +5,6 @@ export const en: Record<keyof typeof zh, string> = {
   "meta.description": "Ask Yarrow for an I Ching or BaZi reading, "
     + "interpreted through three classical schools.",
   "brand.name": "Yarrow",
-  "brand.seal": "问",
   "lang.toggle": "中 / EN",
   "lang.toggleLabel": "Switch to Chinese",
   "home.sectionLabel": "Reading form",

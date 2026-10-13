@@ -24,7 +24,7 @@ const FIXED_COPY = [
   "起名依据", "五行分析", "五", "诗", "音",
   "0123456789",
 ] as const;
-const BRUSH_KEYS = ["brand.name", "brand.seal", "home.title", "history.title"] as const;
+const BRUSH_KEYS = ["brand.name", "home.title", "history.title"] as const;
 export function buildFontCharset(): string {
   const source = [
     ...ZHOUYI_CORPUS.map((item) => item.name),

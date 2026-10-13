@@ -9,6 +9,7 @@ import { HexagramFigure } from "../components/HexagramFigure.js";
 import { Luopan } from "../components/Luopan.js";
 import { ShikongBar, toView } from "../components/ShikongBar.js";
 import { ThrowRecord } from "../components/ThrowRecord.js";
+import { TopbarBrand } from "../components/TopbarBrand.js";
 import { BaziReading } from "./BaziReading.js";
 import { NamingReading } from "./NamingReading.js";
 import { api, type AnyPublicReading, type PublicReading } from "../lib/api.js";
@@ -256,8 +257,7 @@ export function Reading({ id }: { id: string }) {
     return (
       <main className="page">
         <header className="topbar">
-          <span className="seal">{lang === "en" ? "Y" : "名"}</span>
-          <span className="brand">{t("brand.name")}</span>
+          <TopbarBrand />
           <nav className="nav"><a href="#/">{t("result.backHome")}</a></nav><WalletBar />
         </header>
         {translationPanel}
@@ -270,8 +270,7 @@ export function Reading({ id }: { id: string }) {
     return (
       <main className="page">
         <header className="topbar">
-          <span className="seal">{lang === "en" ? "Y" : "问"}</span>
-          <span className="brand">{t("brand.name")}</span>
+          <TopbarBrand />
           <nav className="nav"><a href="#/">{t("result.backHome")}</a></nav>
           <WalletBar />
         </header>
@@ -287,8 +286,7 @@ export function Reading({ id }: { id: string }) {
   return (
     <main className="page">
       <header className="topbar">
-        <span className="seal">{lang === "en" ? "Y" : "问"}</span>
-        <span className="brand">{t("brand.name")}</span>
+        <TopbarBrand />
         <a href="#/">{t("result.backHome")}</a>
         <WalletBar />
       </header>

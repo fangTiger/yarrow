@@ -44,3 +44,17 @@
 
 - **WHEN** 英文用户不会写汉字
 - **THEN** 可从选择器中选「林 Lin · forest」作为姓
+
+### Requirement: 品牌印与浏览器图标
+
+各页顶栏 MUST 以同一枚品牌印（朱印「易」，字形取自 Ma Shan Zheng）作为标识，中英文一致，不再随页面或语言换字。浏览器 MUST 能取到站点图标：SVG 图标供现代浏览器、`favicon.ico`（16/32/48）供旧环境与默认请求、180×180 的 `apple-touch-icon.png` 供 iOS 主屏；小尺寸图标的字形 MUST 加粗，保证 16px 下仍可辨认。
+
+#### Scenario: 打开首页
+
+- **WHEN** 用户打开首页
+- **THEN** 顶栏左侧是朱印「易」与品牌名（英文 Yarrow，中文 三易），浏览器标签页显示同一枚朱印
+
+#### Scenario: 浏览器默认请求
+
+- **WHEN** 浏览器或抓取器请求 `/favicon.ico`
+- **THEN** 服务端以 `image/x-icon` 返回含 16、32、48 三档的图标
