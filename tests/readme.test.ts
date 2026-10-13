@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 test("README 包含运行、安全和报告说明", async () => {
-  const readme = await readFile("README.md", "utf8");
+  const readme = await readFile("docs/legacy/arc-testnet-feasibility.md", "utf8");
   for (const required of [
     "https://faucet.circle.com",
     "ARC_PRIVATE_KEY",
@@ -28,7 +28,7 @@ test("示例配置不诱导把私钥写入 .env", async () => {
 });
 
 test("README 包含前端启动、只读数据来源与仪式诚实说明", async () => {
-  const readme = await readFile("README.md", "utf8");
+  const readme = await readFile("docs/legacy/arc-testnet-feasibility.md", "utf8");
   for (const required of [
     "npm run frontend:dev",
     "http://127.0.0.1:4173",
@@ -38,5 +38,19 @@ test("README 包含前端启动、只读数据来源与仪式诚实说明", asyn
     "不会签名或发送交易",
   ]) {
     assert.match(readme, new RegExp(required.replaceAll(".", "\\.")), `README 缺少前端说明：${required}`);
+  }
+});
+
+test("中英文 README 互相链接，并写明线上地址与 Arc 主网", async () => {
+  const [english, chinese] = await Promise.all([
+    readFile("README.md", "utf8"),
+    readFile("README.zh-CN.md", "utf8"),
+  ]);
+  assert.match(english, /\[中文\]\(README\.zh-CN\.md\)/);
+  assert.match(chinese, /\[English\]\(README\.md\)/);
+  for (const readme of [english, chinese]) {
+    assert.match(readme, /https:\/\/yarrow-six\.vercel\.app/);
+    assert.match(readme, /`5042`/);
+    assert.match(readme, /SANYI_FEE_RECIPIENT/);
   }
 });
