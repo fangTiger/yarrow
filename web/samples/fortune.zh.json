@@ -621,7 +621,8 @@
      "luckChange": null
     }
    ]
-  }
+  },
+  "warnings": []
  },
  "analysis": {
   "nodes": [
@@ -3841,6 +3842,7 @@
    "outlook": "这十年以甲申为运，前段火旺受制、宜守成，2028至2030年前后渐得土金之助，走势转稳，属先压后缓的节奏。"
   },
   "basis": 3,
+  "attempts": 1,
   "retries": 0,
   "anchor": {
    "title": "三家取用",

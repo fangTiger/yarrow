@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import type { AnyPublicReading } from "../web/lib/api.js";
 import { createElement } from "react";
@@ -103,4 +104,19 @@ test("示例按语言优先加载 <kind>.<lang>.json，缺失时退回 <kind>.js
   const zh = await loadSampleReading("question", fetcher as never, "zh");
   assert.equal(zh, null);
   assert.deepEqual(requested, ["/samples/question.zh.json", "/samples/question.json"]);
+});
+
+test("随附的六份示例都能按各自语言完整渲染，盘面字段齐全", () => {
+  for (const kind of ["question", "fortune", "naming"] as const) {
+    for (const lang of ["zh", "en"] as const) {
+      const file = `${kind}.${lang}.json`;
+      const reading = JSON.parse(readFileSync(new URL(`../web/samples/${file}`, import.meta.url), "utf8")) as
+        AnyPublicReading;
+      assert.equal(reading.kind, kind, file);
+      if (reading.kind === "fortune") assert.ok(Array.isArray(reading.chart.warnings), `${file} 缺 chart.warnings`);
+      const html = renderIn(lang, createElement(SampleContent, { reading, lang }));
+      assert.ok(html.length > 1_000, file);
+      assert.doesNotMatch(html, /示例准备中/u, file);
+    }
+  }
 });

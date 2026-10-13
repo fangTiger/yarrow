@@ -621,7 +621,8 @@
      "luckChange": null
     }
    ]
-  }
+  },
+  "warnings": []
  },
  "analysis": {
   "nodes": [
@@ -3691,6 +3692,7 @@
    "outlook": "这一年以平稳为底色，财路可见但需靠经营落地，重点在守住本位、理清人情与钱财的边界，稳中求进比冒进扩张更合算。"
   },
   "basis": 3,
+  "attempts": 1,
   "retries": 0,
   "anchor": {
    "title": "三家取用",
