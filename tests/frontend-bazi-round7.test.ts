@@ -49,7 +49,7 @@ test('交运带与相邻年标注避让，优先今年且窄屏短文案', () =>
     assert.equal(yunLabel('甲申', null, false), '甲申运');
 });
 test('合议统一一位小数，所有消费位置使用格式函数', async () => {
-    assert.deepEqual([4, 5.3, 6].map(consensusText), ['4.0成', '5.3成', '6.0成']);
+    assert.deepEqual([4, 5.3, 6].map((value) => consensusText(value)), ['4.0成', '5.3成', '6.0成']);
     const panel = await readFile(new URL('../web/components/LiuNianPanel.tsx', import.meta.url), 'utf8');
     assert.ok((panel.match(/consensusText\(/g) ?? []).length >= 4);
     assert.doesNotMatch(panel, /\$\{[^}]*\.average\}成/);

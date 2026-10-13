@@ -1,15 +1,16 @@
 import { useState } from "react";
-import type { FortuneSchoolOutput } from "../../src/sanyi/bazi-schema.js";
 import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
-import { BAZI_KEYS } from "../lib/liunian-chart.js";
+import { BAZI_KEYS, readingNow } from "../lib/liunian-chart.js";
 import { api } from "../lib/api.js";
-import {
-  confidenceEn, elementEn, schoolEn, stemBranchEn, tenGodEn, verdictEn,
-} from "../lib/result-format.js";
+import { confidenceEn, stemBranchEn, tenGodEn } from "../lib/result-format.js";
 import { useT } from "../lib/i18n.js";
 import type { TFunction } from "../lib/i18n.js";
 import { AlmanacPanel } from "./AlmanacPanel.js";
+import { BaziElements } from "./BaziElements.js";
+import { BaziLuck } from "./BaziLuck.js";
+import { BaziRelations } from "./BaziRelations.js";
 import { BaziTable } from "./BaziTable.js";
+import { LiuNianPanel } from "./LiuNianPanel.js";
 import { EnglishRemedy, EnglishSchoolArticle, EnglishSummary } from "./EnglishReadingSections.js";
 
 const PILLARS = ["year", "month", "day", "time"] as const;
@@ -59,6 +60,7 @@ export function EnglishBaziReading(props: {
   const t = useT();
   const [error, setError] = useState("");
   const { reading } = props;
+  const { currentYear, currentDate } = readingNow(reading);
   const retry = async (key: typeof BAZI_KEYS[number]) => {
     try {
       const value = await api.retrySchool(reading.id, key);
@@ -101,37 +103,11 @@ export function EnglishBaziReading(props: {
         })}</tr>
       </tbody></table></div>
     </section>
-    <section className="panel"><header className="panel-head"><h2>{t("bazi.elements")}</h2></header>
-      <div className="elements">{reading.analysis.elements.map((item) => <div className="el-row" key={item.element}>
-        <b>{elementEn(item.element)}</b><span>{t("bazi.count", { count: item.total })}</span>
-      </div>)}</div>
-    </section>
-    <section className="panel"><header className="panel-head"><h2>{t("bazi.luck")}</h2></header>
-      {reading.chart.luck ? <><p>{reading.chart.luck.direction === "forward"
-        ? t("bazi.forward") : t("bazi.backward")} · {t("bazi.luckStart", {
-        years: reading.chart.luck.start.years, months: reading.chart.luck.start.months,
-        days: reading.chart.luck.start.days, date: reading.chart.luck.start.solarDate,
-      })}{reading.chart.luck.approximate ? ` · ${t("bazi.approximate")}` : ""}</p>
-        <div className="luck">{reading.chart.luck.cycles.map((cycle) => <div key={cycle.index}>
-          <b>{stemBranchEn(cycle.ganZhi)}</b><small>{tenGodEn(cycle.stemGod)}<br />
-            {cycle.startAge}–{cycle.endAge}<br />{cycle.startYear}–{cycle.endYear}</small>
-        </div>)}</div></> : <p>{t("bazi.missing")}</p>}
-    </section>
-    {reading.kind === "fortune" ? <section className="panel liunian-panel">
-      <header className="panel-head"><h2>{t("bazi.annual")}</h2></header>
-      <div className="ln-scroll"><table className="ln-table"><thead><tr><th>{t("bazi.tableYear")}</th>
-        <th>{t("bazi.tablePillar")}</th>
-        {BAZI_KEYS.map((key) => <th key={key}>{schoolEn(key).name}</th>)}</tr></thead><tbody>
-        {reading.chart.liunian.years.map((year) => <tr key={year.year}><th>{year.year}<small>
-          {t("bazi.age", { age: year.age })}</small></th><td>{stemBranchEn(year.ganZhi)}<br />
-          {tenGodEn(year.stemGod)}</td>{BAZI_KEYS.map((key) => {
-          const output = reading.schools[key].output;
-          const entry = output && "years" in output
-            ? (output as FortuneSchoolOutput).years.find((item) => item.year === year.year) : undefined;
-          return <td key={key}>{entry ? <>{verdictEn(entry.verdict)} · {confidenceEn(entry.confidenceTenths)}
-            <br />{entry.note}</> : "—"}</td>;
-        })}</tr>)}</tbody></table></div>
-    </section> : null}
+    {/* 图表与中文页共用同一套组件，英文只换文字。 */}
+    <BaziLuck chart={reading.chart} currentYear={currentYear} currentDate={currentDate} />
+    {reading.kind === "fortune" ? <LiuNianPanel reading={reading} currentYear={currentYear} /> : null}
+    <div className="row2"><BaziRelations analysis={reading.analysis} />
+      <BaziElements elements={reading.analysis.elements} /></div>
     {error ? <p className="error" role="alert">{error}</p> : null}
     <details className="panel traditional-chart"><summary>{t("traditional.title")}</summary>
       <BaziTable chart={reading.chart} analysis={reading.analysis} />

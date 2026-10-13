@@ -77,3 +77,28 @@ const STRENGTH_EN: Readonly<Record<string, string>> = {
 export function strengthEn(value: string): string {
   return STRENGTH_EN[value] ?? value;
 }
+
+/** 合冲刑害的种类：成对关系只写动作，成局关系前面带出所化五行。 */
+const RELATION_KINDS_EN: Readonly<Record<string, string>> = {
+  合: "combine", 冲: "clash", 害: "harm", 破: "break", 刑: "punishment", 自刑: "self-punishment",
+  三合: "three harmony", 三会: "seasonal union", 半合: "half harmony", 拱: "arch",
+};
+
+interface RelationLike {
+  kind: string;
+  label: string;
+  nodeIds: readonly string[];
+}
+
+/** 关系标签去掉成员后的部分，如「三会火」→「Fire seasonal union」。 */
+export function relationKindEn(relation: RelationLike): string {
+  const kind = RELATION_KINDS_EN[relation.kind] ?? relation.kind;
+  const element = relation.label.slice(relation.nodeIds.length + relation.kind.length);
+  return element ? `${elementEn(element)} ${kind}` : kind;
+}
+
+/** 合冲刑害英译：成员写拼音、以连接号相接，如「巳午未三会火」→「Si–Wu–Wei Fire seasonal union」。 */
+export function relationEn(relation: RelationLike): string {
+  const members = [...relation.label.slice(0, relation.nodeIds.length)].map(stemBranchEn).join("–");
+  return `${members} ${relationKindEn(relation)}`;
+}

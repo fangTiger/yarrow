@@ -1,10 +1,9 @@
 // web/pages/BaziReading.tsx
 import { useState } from "react";
 import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
-import { resolveFortuneContext } from "../../src/sanyi/fortune-context.js";
 import { api } from "../lib/api.js";
 import { loadBirthProfile, type BirthProfileInput } from "../lib/birth-profile.js";
-import { BAZI_KEYS } from "../lib/liunian-chart.js";
+import { BAZI_KEYS, readingNow } from "../lib/liunian-chart.js";
 import { BirthCorrection } from "../components/BirthCorrection.js";
 import { PlainSummaryPanel } from "../components/PlainSummaryPanel.js";
 import { RemedyPanel } from "../components/RemedyPanel.js";
@@ -36,8 +35,7 @@ export function resolveBaziBirth(
 function ChineseBaziReading({ reading, onReading, birth: supplied, readonly: readOnly }: BaziReadingProps) {
     const [birth] = useState(() => resolveBaziBirth(supplied));
     const [error, setError] = useState("");
-    const currentYear = resolveFortuneContext("year", () => new Date(reading.createdAt), reading.chart.sect).anchorYear;
-    const currentDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(new Date(reading.createdAt));
+    const { currentYear, currentDate } = readingNow(reading);
     const retry = async (key: typeof BAZI_KEYS[number]) => {
         try {
             const value = await api.retrySchool(reading.id, key);

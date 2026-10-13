@@ -222,3 +222,10 @@
 /* 白话总述置顶后，八字命盘单栏，三家断语收进「看三家依据」。 */
 .bazi .hero.bazi-main { grid-template-columns: minmax(0, 1fr); }
 .bazi .schools-fold > .panel { padding: 0; border: 0; background: transparent; }
+
+/* 英文：五行名、学派名比单个汉字长，加宽首列；关系图节点改用较小字号，免得拼音相互挤压。 */
+html:lang(en) .bazi .el-row { grid-template-columns: 4.4em minmax(0, 1fr) 2.5em; }
+html:lang(en) .bazi .el-row > b { font-size: 17px; }
+html:lang(en) .bazi .ln-grid { --axis: 104px; }
+html:lang(en) .bazi .rel-node { font-size: 22px; }
+html:lang(en) .bazi .rel-arc-label { font-size: 12px; }

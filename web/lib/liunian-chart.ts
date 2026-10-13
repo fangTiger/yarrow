@@ -1,11 +1,20 @@
 // web/lib/liunian-chart.ts
 import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
 import type { YearConsensus } from "../../src/sanyi/bazi-public.js";
+import { resolveFortuneContext } from "../../src/sanyi/fortune-context.js";
 export const BAZI_NAMES = { shenxiaozhan: "沈孝瞻", yuchuntai: "余春台", rentieqiao: "任铁樵" } as const;
 export const BAZI_KEYS = ["shenxiaozhan", "yuchuntai", "rentieqiao"] as const;
 export type FortuneReading = Extract<PublicBaziReading, {
     kind: "fortune";
 }>;
+/** 结果页的「今年」：按存档创建时刻与换日口径取流年锚点；日期按北京时间，供大运判断今年所在之运。 */
+export function readingNow(reading: PublicBaziReading): { currentYear: number; currentDate: string } {
+    const createdAt = new Date(reading.createdAt);
+    return {
+        currentYear: resolveFortuneContext("year", () => createdAt, reading.chart.sect).anchorYear,
+        currentDate: new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(createdAt),
+    };
+}
 export const CHART = { width: 1000, height: 260, left: 90, right: 0, top: 25, bottom: 215 };
 export function yFor(value: number): number {
     return CHART.bottom - (value - 1) / 8 * (CHART.bottom - CHART.top);
@@ -110,9 +119,22 @@ export function schoolYear(reading: FortuneReading, key: typeof BAZI_KEYS[number
     return state.output.years.find((item) => item.year === year);
 }
 export const LABEL_BAND = 20;
-export function consensusText(value: number): string { return `${value.toFixed(1)}成`; }
-export function yunLabel(name: string, date: string | null, narrow: boolean): string {
-    return `${name}运${date && !narrow ? ` · ${date} 交运` : ''}`;
+type ChartLang = "zh" | "en";
+/** 三家合议均值：中文「4.0成」，英文「4.0/10」。 */
+export function consensusText(value: number, lang: ChartLang = "zh"): string {
+    return lang === "en" ? `${value.toFixed(1)}/10` : `${value.toFixed(1)}成`;
+}
+/** 整数几成：中文「7成」，英文「7/10」。 */
+export function tenthsText(value: number, lang: ChartLang = "zh"): string {
+    return lang === "en" ? `${value}/10` : `${value}成`;
+}
+/** 走势图上的换运标注；英文由调用方先把干支转成拼音。 */
+export function yunLabel(name: string, date: string | null, narrow: boolean, lang: ChartLang = "zh"): string {
+    const showDate = Boolean(date) && !narrow;
+    if (lang === "en") {
+        return `${name} period${showDate ? ` · from ${date}` : ''}`;
+    }
+    return `${name}运${showDate ? ` · ${date} 交运` : ''}`;
 }
 export function labelLayout(years: readonly (YearConsensus | null)[], currentYear: number, width: number, height = 194) {
     const labels = directLabels(years, currentYear, width <= 620);
@@ -131,12 +153,12 @@ export function labelLayout(years: readonly (YearConsensus | null)[], currentYea
 
 
 /** 某家某年没有断语时的说明：调用失败为「未落笔」，落笔但缺该年为「未给出」，仍在落笔为「落笔中」。 */
-export function yearGapLabel(status: string): string {
+export function yearGapLabel(status: string, lang: ChartLang = "zh"): string {
   if (status === "failed") {
-    return "未落笔";
+    return lang === "en" ? "Not written" : "未落笔";
   }
   if (status === "done") {
-    return "未给出";
+    return lang === "en" ? "Not given" : "未给出";
   }
-  return "落笔中";
+  return lang === "en" ? "Writing…" : "落笔中";
 }
