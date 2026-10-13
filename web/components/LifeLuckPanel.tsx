@@ -76,10 +76,6 @@ function LifeLuckContent({ reading, currentDate, luck }: {
   }> = [
     { id: "cycle", label: t("chart.life.rowCycle"), className: "gz",
       render: (index) => gz(cycles[index]!.ganZhi) },
-    { id: "ages", label: t("chart.life.rowAges"),
-      render: (index) => t("chart.life.ages", {
-        from: cycles[index]!.startAge, to: cycles[index]!.endAge,
-      }) },
     { id: "years", label: t("chart.life.rowYears"),
       render: (index) => `${cycles[index]!.startYear}–${cycles[index]!.endYear}` },
     { id: "god", label: t("bazi.stemGod"), render: (index) => god(cycles[index]!.stemGod) },
@@ -148,9 +144,11 @@ function LifeLuckContent({ reading, currentDate, luck }: {
               tenthsText(hoverConsensus.max, lang)}` : t("chart.life.notShown")}</div> : null}
       </div><div className="ln-x" style={{ gridTemplateColumns: `repeat(${cycles.length},minmax(0,1fr))` }}>
         {cycles.map((cycle) => <span className={cycle.index === currentIndex ? "now" : ""}
-          key={cycle.index}>{gz(cycle.ganZhi)}<small>{t("chart.life.ages", {
-            from: cycle.startAge, to: cycle.endAge,
-          })}</small><small>{cycle.startYear}–{cycle.endYear}</small></span>)}
+          key={cycle.index}>{gz(cycle.ganZhi)}
+          {/* 窄屏每列只有约 40px：只留起始年龄，年龄段与年份见下方逐运表。 */}
+          <small className="wide-only">{t("chart.life.ages", { from: cycle.startAge, to: cycle.endAge })}</small>
+          <small className="wide-only">{cycle.startYear}–{cycle.endYear}</small>
+          <small className="narrow-only">{t("chart.life.fromAge", { age: cycle.startAge })}</small></span>)}
       </div></div>
       <div className="ln-key"><span><i className="k-line" />{t("chart.life.keyLine")}</span>
         <span><i className="k-range" />{t("chart.life.keyRange")}</span>
@@ -160,12 +158,13 @@ function LifeLuckContent({ reading, currentDate, luck }: {
           {cycles.map((cycle) => <col key={cycle.index} />)}</colgroup><thead>
           <tr className="ln-span"><th></th>{cycleGroups(cycles, currentIndex).map((group) => (
             <th scope="colgroup" colSpan={group.count} key={group.label}>{t(GROUP_KEYS[group.label])}</th>
-          ))}</tr><tr><th>{t("chart.life.columnCycle")}</th>{cycles.map((cycle) => <th
+          ))}</tr><tr><th>{t("chart.life.rowAges")}</th>{cycles.map((cycle) => <th
             className={cycle.index === currentIndex ? "now" : ""} key={cycle.index}
             ref={(cell) => { if (cell) cells.current.set(cycle.index, cell); }}>
             <button aria-pressed={selected === cycle.index}
               className={`ln-year ${selected === cycle.index ? "sel" : ""}`}
-              onClick={() => setSelected(cycle.index)} type="button">{gz(cycle.ganZhi)}</button>
+              onClick={() => setSelected(cycle.index)} type="button">
+              {t("chart.life.ages", { from: cycle.startAge, to: cycle.endAge })}</button>
           </th>)}</tr></thead><tbody>{rows.map((row) => <tr
             className={row.id === "avg" ? "avg" : ""} key={row.id}><th scope="row">{row.label}</th>
             {cycles.map((cycle, index) => {

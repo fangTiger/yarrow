@@ -1,0 +1,4010 @@
+{
+ "id": "2rtspzykfobxtzeui323jznqx4",
+ "createdAt": "2026-10-13T05:35:18.312Z",
+ "question": "How will my life unfold, and what is my character like?",
+ "status": "done",
+ "payment": {
+  "firstHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+ },
+ "chart": {
+  "sect": 1,
+  "dayBoundary": "23:00",
+  "timeKnown": true,
+  "dayMaster": "辛",
+  "pillars": {
+   "year": {
+    "key": "year",
+    "label": "年柱",
+    "ganZhi": "戊辰",
+    "stem": "戊",
+    "branch": "辰",
+    "stemGod": "正印",
+    "hidden": [
+     {
+      "stem": "戊",
+      "god": "正印",
+      "qi": "main"
+     },
+     {
+      "stem": "乙",
+      "god": "偏财",
+      "qi": "middle"
+     },
+     {
+      "stem": "癸",
+      "god": "食神",
+      "qi": "residual"
+     }
+    ],
+    "diShi": "墓",
+    "naYin": "大林木"
+   },
+   "month": {
+    "key": "month",
+    "label": "月柱",
+    "ganZhi": "壬戌",
+    "stem": "壬",
+    "branch": "戌",
+    "stemGod": "伤官",
+    "hidden": [
+     {
+      "stem": "戊",
+      "god": "正印",
+      "qi": "main"
+     },
+     {
+      "stem": "辛",
+      "god": "比肩",
+      "qi": "middle"
+     },
+     {
+      "stem": "丁",
+      "god": "七杀",
+      "qi": "residual"
+     }
+    ],
+    "diShi": "冠带",
+    "naYin": "大海水"
+   },
+   "day": {
+    "key": "day",
+    "label": "日柱",
+    "ganZhi": "辛酉",
+    "stem": "辛",
+    "branch": "酉",
+    "stemGod": "日主",
+    "hidden": [
+     {
+      "stem": "辛",
+      "god": "比肩",
+      "qi": "main"
+     }
+    ],
+    "diShi": "临官",
+    "naYin": "石榴木"
+   },
+   "time": {
+    "key": "time",
+    "label": "时柱",
+    "ganZhi": "戊戌",
+    "stem": "戊",
+    "branch": "戌",
+    "stemGod": "正印",
+    "hidden": [
+     {
+      "stem": "戊",
+      "god": "正印",
+      "qi": "main"
+     },
+     {
+      "stem": "辛",
+      "god": "比肩",
+      "qi": "middle"
+     },
+     {
+      "stem": "丁",
+      "god": "七杀",
+      "qi": "residual"
+     }
+    ],
+    "diShi": "冠带",
+    "naYin": "平地木"
+   }
+  },
+  "taiYuan": "癸丑",
+  "mingGong": "辛酉",
+  "shenGong": "辛酉",
+  "luck": {
+   "approximate": false,
+   "direction": "backward",
+   "start": {
+    "years": 8,
+    "months": 7,
+    "days": 20,
+    "solarDate": "1997-06-23"
+   },
+   "cycles": [
+    {
+     "index": 1,
+     "ganZhi": "辛酉",
+     "stemGod": "比肩",
+     "startAge": 10,
+     "endAge": 19,
+     "startYear": 1997,
+     "endYear": 2006
+    },
+    {
+     "index": 2,
+     "ganZhi": "庚申",
+     "stemGod": "劫财",
+     "startAge": 20,
+     "endAge": 29,
+     "startYear": 2007,
+     "endYear": 2016
+    },
+    {
+     "index": 3,
+     "ganZhi": "己未",
+     "stemGod": "偏印",
+     "startAge": 30,
+     "endAge": 39,
+     "startYear": 2017,
+     "endYear": 2026
+    },
+    {
+     "index": 4,
+     "ganZhi": "戊午",
+     "stemGod": "正印",
+     "startAge": 40,
+     "endAge": 49,
+     "startYear": 2027,
+     "endYear": 2036
+    },
+    {
+     "index": 5,
+     "ganZhi": "丁巳",
+     "stemGod": "七杀",
+     "startAge": 50,
+     "endAge": 59,
+     "startYear": 2037,
+     "endYear": 2046
+    },
+    {
+     "index": 6,
+     "ganZhi": "丙辰",
+     "stemGod": "正官",
+     "startAge": 60,
+     "endAge": 69,
+     "startYear": 2047,
+     "endYear": 2056
+    },
+    {
+     "index": 7,
+     "ganZhi": "乙卯",
+     "stemGod": "偏财",
+     "startAge": 70,
+     "endAge": 79,
+     "startYear": 2057,
+     "endYear": 2066
+    },
+    {
+     "index": 8,
+     "ganZhi": "甲寅",
+     "stemGod": "正财",
+     "startAge": 80,
+     "endAge": 89,
+     "startYear": 2067,
+     "endYear": 2076
+    }
+   ]
+  },
+  "annual": {
+   "year": 2026,
+   "ganZhi": "丙午",
+   "age": 39,
+   "stemGod": "正官",
+   "currentLuck": {
+    "index": 3,
+    "ganZhi": "己未",
+    "stemGod": "偏印",
+    "startAge": 30,
+    "endAge": 39,
+    "startYear": 2017,
+    "endYear": 2026
+   },
+   "months": [
+    {
+     "index": 1,
+     "monthInChinese": "正",
+     "ganZhi": "庚寅",
+     "stemGod": "劫财"
+    },
+    {
+     "index": 2,
+     "monthInChinese": "二",
+     "ganZhi": "辛卯",
+     "stemGod": "比肩"
+    },
+    {
+     "index": 3,
+     "monthInChinese": "三",
+     "ganZhi": "壬辰",
+     "stemGod": "伤官"
+    },
+    {
+     "index": 4,
+     "monthInChinese": "四",
+     "ganZhi": "癸巳",
+     "stemGod": "食神"
+    },
+    {
+     "index": 5,
+     "monthInChinese": "五",
+     "ganZhi": "甲午",
+     "stemGod": "正财"
+    },
+    {
+     "index": 6,
+     "monthInChinese": "六",
+     "ganZhi": "乙未",
+     "stemGod": "偏财"
+    },
+    {
+     "index": 7,
+     "monthInChinese": "七",
+     "ganZhi": "丙申",
+     "stemGod": "正官"
+    },
+    {
+     "index": 8,
+     "monthInChinese": "八",
+     "ganZhi": "丁酉",
+     "stemGod": "七杀"
+    },
+    {
+     "index": 9,
+     "monthInChinese": "九",
+     "ganZhi": "戊戌",
+     "stemGod": "正印"
+    },
+    {
+     "index": 10,
+     "monthInChinese": "十",
+     "ganZhi": "己亥",
+     "stemGod": "偏印"
+    },
+    {
+     "index": 11,
+     "monthInChinese": "冬",
+     "ganZhi": "庚子",
+     "stemGod": "劫财"
+    },
+    {
+     "index": 12,
+     "monthInChinese": "腊",
+     "ganZhi": "辛丑",
+     "stemGod": "比肩"
+    }
+   ]
+  },
+  "birthLiChunYear": 1988,
+  "liunian": {
+   "anchorYear": 2026,
+   "years": [
+    {
+     "year": 2023,
+     "ganZhi": "癸卯",
+     "stem": "癸",
+     "branch": "卯",
+     "age": 36,
+     "stemGod": "食神",
+     "hidden": [
+      {
+       "stem": "乙",
+       "god": "偏财",
+       "qi": "main"
+      }
+     ],
+     "luck": {
+      "index": 3,
+      "ganZhi": "己未",
+      "stemGod": "偏印",
+      "startAge": 30,
+      "endAge": 39,
+      "startYear": 2017,
+      "endYear": 2026
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2024,
+     "ganZhi": "甲辰",
+     "stem": "甲",
+     "branch": "辰",
+     "age": 37,
+     "stemGod": "正财",
+     "hidden": [
+      {
+       "stem": "戊",
+       "god": "正印",
+       "qi": "main"
+      },
+      {
+       "stem": "乙",
+       "god": "偏财",
+       "qi": "middle"
+      },
+      {
+       "stem": "癸",
+       "god": "食神",
+       "qi": "residual"
+      }
+     ],
+     "luck": {
+      "index": 3,
+      "ganZhi": "己未",
+      "stemGod": "偏印",
+      "startAge": 30,
+      "endAge": 39,
+      "startYear": 2017,
+      "endYear": 2026
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2025,
+     "ganZhi": "乙巳",
+     "stem": "乙",
+     "branch": "巳",
+     "age": 38,
+     "stemGod": "偏财",
+     "hidden": [
+      {
+       "stem": "丙",
+       "god": "正官",
+       "qi": "main"
+      },
+      {
+       "stem": "庚",
+       "god": "劫财",
+       "qi": "middle"
+      },
+      {
+       "stem": "戊",
+       "god": "正印",
+       "qi": "residual"
+      }
+     ],
+     "luck": {
+      "index": 3,
+      "ganZhi": "己未",
+      "stemGod": "偏印",
+      "startAge": 30,
+      "endAge": 39,
+      "startYear": 2017,
+      "endYear": 2026
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2026,
+     "ganZhi": "丙午",
+     "stem": "丙",
+     "branch": "午",
+     "age": 39,
+     "stemGod": "正官",
+     "hidden": [
+      {
+       "stem": "丁",
+       "god": "七杀",
+       "qi": "main"
+      },
+      {
+       "stem": "己",
+       "god": "偏印",
+       "qi": "middle"
+      }
+     ],
+     "luck": {
+      "index": 3,
+      "ganZhi": "己未",
+      "stemGod": "偏印",
+      "startAge": 30,
+      "endAge": 39,
+      "startYear": 2017,
+      "endYear": 2026
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2027,
+     "ganZhi": "丁未",
+     "stem": "丁",
+     "branch": "未",
+     "age": 40,
+     "stemGod": "七杀",
+     "hidden": [
+      {
+       "stem": "己",
+       "god": "偏印",
+       "qi": "main"
+      },
+      {
+       "stem": "丁",
+       "god": "七杀",
+       "qi": "middle"
+      },
+      {
+       "stem": "乙",
+       "god": "偏财",
+       "qi": "residual"
+      }
+     ],
+     "luck": {
+      "index": 4,
+      "ganZhi": "戊午",
+      "stemGod": "正印",
+      "startAge": 40,
+      "endAge": 49,
+      "startYear": 2027,
+      "endYear": 2036
+     },
+     "luckLabel": null,
+     "luckChange": {
+      "date": "2027-06-23",
+      "from": "己未",
+      "to": "戊午"
+     }
+    },
+    {
+     "year": 2028,
+     "ganZhi": "戊申",
+     "stem": "戊",
+     "branch": "申",
+     "age": 41,
+     "stemGod": "正印",
+     "hidden": [
+      {
+       "stem": "庚",
+       "god": "劫财",
+       "qi": "main"
+      },
+      {
+       "stem": "壬",
+       "god": "伤官",
+       "qi": "middle"
+      },
+      {
+       "stem": "戊",
+       "god": "正印",
+       "qi": "residual"
+      }
+     ],
+     "luck": {
+      "index": 4,
+      "ganZhi": "戊午",
+      "stemGod": "正印",
+      "startAge": 40,
+      "endAge": 49,
+      "startYear": 2027,
+      "endYear": 2036
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2029,
+     "ganZhi": "己酉",
+     "stem": "己",
+     "branch": "酉",
+     "age": 42,
+     "stemGod": "偏印",
+     "hidden": [
+      {
+       "stem": "辛",
+       "god": "比肩",
+       "qi": "main"
+      }
+     ],
+     "luck": {
+      "index": 4,
+      "ganZhi": "戊午",
+      "stemGod": "正印",
+      "startAge": 40,
+      "endAge": 49,
+      "startYear": 2027,
+      "endYear": 2036
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2030,
+     "ganZhi": "庚戌",
+     "stem": "庚",
+     "branch": "戌",
+     "age": 43,
+     "stemGod": "劫财",
+     "hidden": [
+      {
+       "stem": "戊",
+       "god": "正印",
+       "qi": "main"
+      },
+      {
+       "stem": "辛",
+       "god": "比肩",
+       "qi": "middle"
+      },
+      {
+       "stem": "丁",
+       "god": "七杀",
+       "qi": "residual"
+      }
+     ],
+     "luck": {
+      "index": 4,
+      "ganZhi": "戊午",
+      "stemGod": "正印",
+      "startAge": 40,
+      "endAge": 49,
+      "startYear": 2027,
+      "endYear": 2036
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2031,
+     "ganZhi": "辛亥",
+     "stem": "辛",
+     "branch": "亥",
+     "age": 44,
+     "stemGod": "比肩",
+     "hidden": [
+      {
+       "stem": "壬",
+       "god": "伤官",
+       "qi": "main"
+      },
+      {
+       "stem": "甲",
+       "god": "正财",
+       "qi": "middle"
+      }
+     ],
+     "luck": {
+      "index": 4,
+      "ganZhi": "戊午",
+      "stemGod": "正印",
+      "startAge": 40,
+      "endAge": 49,
+      "startYear": 2027,
+      "endYear": 2036
+     },
+     "luckLabel": null,
+     "luckChange": null
+    },
+    {
+     "year": 2032,
+     "ganZhi": "壬子",
+     "stem": "壬",
+     "branch": "子",
+     "age": 45,
+     "stemGod": "伤官",
+     "hidden": [
+      {
+       "stem": "癸",
+       "god": "食神",
+       "qi": "main"
+      }
+     ],
+     "luck": {
+      "index": 4,
+      "ganZhi": "戊午",
+      "stemGod": "正印",
+      "startAge": 40,
+      "endAge": 49,
+      "startYear": 2027,
+      "endYear": 2036
+     },
+     "luckLabel": null,
+     "luckChange": null
+    }
+   ]
+  },
+  "warnings": []
+ },
+ "analysis": {
+  "nodes": [
+   {
+    "id": "natal.year.stem",
+    "label": "年柱干",
+    "value": "戊",
+    "type": "stem",
+    "scope": "natal"
+   },
+   {
+    "id": "natal.year.branch",
+    "label": "年柱支",
+    "value": "辰",
+    "type": "branch",
+    "scope": "natal"
+   },
+   {
+    "id": "natal.month.stem",
+    "label": "月柱干",
+    "value": "壬",
+    "type": "stem",
+    "scope": "natal"
+   },
+   {
+    "id": "natal.month.branch",
+    "label": "月柱支",
+    "value": "戌",
+    "type": "branch",
+    "scope": "natal"
+   },
+   {
+    "id": "natal.day.stem",
+    "label": "日柱干",
+    "value": "辛",
+    "type": "stem",
+    "scope": "natal"
+   },
+   {
+    "id": "natal.day.branch",
+    "label": "日柱支",
+    "value": "酉",
+    "type": "branch",
+    "scope": "natal"
+   },
+   {
+    "id": "natal.time.stem",
+    "label": "时柱干",
+    "value": "戊",
+    "type": "stem",
+    "scope": "natal"
+   },
+   {
+    "id": "natal.time.branch",
+    "label": "时柱支",
+    "value": "戌",
+    "type": "branch",
+    "scope": "natal"
+   },
+   {
+    "id": "luck.stem",
+    "label": "大运干",
+    "value": "己",
+    "type": "stem",
+    "scope": "luck"
+   },
+   {
+    "id": "luck.branch",
+    "label": "大运支",
+    "value": "未",
+    "type": "branch",
+    "scope": "luck"
+   },
+   {
+    "id": "year.stem",
+    "label": "流年干",
+    "value": "丙",
+    "type": "stem",
+    "scope": "year"
+   },
+   {
+    "id": "year.branch",
+    "label": "流年支",
+    "value": "午",
+    "type": "branch",
+    "scope": "year"
+   }
+  ],
+  "relations": [
+   {
+    "id": "冲:natal.year.branch:natal.month.branch",
+    "kind": "冲",
+    "label": "辰戌冲",
+    "nodeIds": [
+     "natal.year.branch",
+     "natal.month.branch"
+    ],
+    "scope": "natal"
+   },
+   {
+    "id": "合:natal.year.branch:natal.day.branch",
+    "kind": "合",
+    "label": "辰酉合",
+    "nodeIds": [
+     "natal.year.branch",
+     "natal.day.branch"
+    ],
+    "scope": "natal"
+   },
+   {
+    "id": "冲:natal.year.branch:natal.time.branch",
+    "kind": "冲",
+    "label": "辰戌冲",
+    "nodeIds": [
+     "natal.year.branch",
+     "natal.time.branch"
+    ],
+    "scope": "natal"
+   },
+   {
+    "id": "冲:natal.month.stem:year.stem",
+    "kind": "冲",
+    "label": "丙壬冲",
+    "nodeIds": [
+     "natal.month.stem",
+     "year.stem"
+    ],
+    "scope": "year"
+   },
+   {
+    "id": "害:natal.month.branch:natal.day.branch",
+    "kind": "害",
+    "label": "酉戌害",
+    "nodeIds": [
+     "natal.month.branch",
+     "natal.day.branch"
+    ],
+    "scope": "natal"
+   },
+   {
+    "id": "破:natal.month.branch:luck.branch",
+    "kind": "破",
+    "label": "戌未破",
+    "nodeIds": [
+     "natal.month.branch",
+     "luck.branch"
+    ],
+    "scope": "luck"
+   },
+   {
+    "id": "刑:natal.month.branch:luck.branch",
+    "kind": "刑",
+    "label": "戌未刑",
+    "nodeIds": [
+     "natal.month.branch",
+     "luck.branch"
+    ],
+    "scope": "luck"
+   },
+   {
+    "id": "半合:natal.month.branch:year.branch",
+    "kind": "半合",
+    "label": "午戌半合火",
+    "nodeIds": [
+     "natal.month.branch",
+     "year.branch"
+    ],
+    "scope": "year"
+   },
+   {
+    "id": "合:natal.day.stem:year.stem",
+    "kind": "合",
+    "label": "丙辛合",
+    "nodeIds": [
+     "natal.day.stem",
+     "year.stem"
+    ],
+    "scope": "year"
+   },
+   {
+    "id": "害:natal.day.branch:natal.time.branch",
+    "kind": "害",
+    "label": "酉戌害",
+    "nodeIds": [
+     "natal.day.branch",
+     "natal.time.branch"
+    ],
+    "scope": "natal"
+   },
+   {
+    "id": "破:natal.time.branch:luck.branch",
+    "kind": "破",
+    "label": "戌未破",
+    "nodeIds": [
+     "natal.time.branch",
+     "luck.branch"
+    ],
+    "scope": "luck"
+   },
+   {
+    "id": "刑:natal.time.branch:luck.branch",
+    "kind": "刑",
+    "label": "戌未刑",
+    "nodeIds": [
+     "natal.time.branch",
+     "luck.branch"
+    ],
+    "scope": "luck"
+   },
+   {
+    "id": "半合:natal.time.branch:year.branch",
+    "kind": "半合",
+    "label": "午戌半合火",
+    "nodeIds": [
+     "natal.time.branch",
+     "year.branch"
+    ],
+    "scope": "year"
+   },
+   {
+    "id": "合:luck.branch:year.branch",
+    "kind": "合",
+    "label": "午未合",
+    "nodeIds": [
+     "luck.branch",
+     "year.branch"
+    ],
+    "scope": "year"
+   }
+  ],
+  "shensha": [
+   {
+    "name": "天乙贵人",
+    "nodeId": "year.branch",
+    "basis": "日干辛"
+   },
+   {
+    "name": "天乙贵人",
+    "nodeId": "luck.branch",
+    "basis": "年干戊"
+   },
+   {
+    "name": "禄神",
+    "nodeId": "natal.day.branch",
+    "basis": "日干辛"
+   },
+   {
+    "name": "桃花",
+    "nodeId": "natal.day.branch",
+    "basis": "年支辰"
+   },
+   {
+    "name": "桃花",
+    "nodeId": "year.branch",
+    "basis": "日支酉"
+   },
+   {
+    "name": "华盖",
+    "nodeId": "natal.year.branch",
+    "basis": "年支辰"
+   }
+  ],
+  "elements": [
+   {
+    "element": "木",
+    "stem": 0,
+    "main": 0,
+    "middle": 1,
+    "residual": 0,
+    "total": 1
+   },
+   {
+    "element": "火",
+    "stem": 0,
+    "main": 0,
+    "middle": 0,
+    "residual": 2,
+    "total": 2
+   },
+   {
+    "element": "土",
+    "stem": 2,
+    "main": 3,
+    "middle": 0,
+    "residual": 0,
+    "total": 5
+   },
+   {
+    "element": "金",
+    "stem": 1,
+    "main": 1,
+    "middle": 2,
+    "residual": 0,
+    "total": 4
+   },
+   {
+    "element": "水",
+    "stem": 1,
+    "main": 0,
+    "middle": 0,
+    "residual": 1,
+    "total": 2
+   }
+  ],
+  "years": [
+   {
+    "year": 2023,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "己",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "未",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "癸",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "卯",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "合:natal.year.stem:year.stem",
+      "kind": "合",
+      "label": "戊癸合",
+      "nodeIds": [
+       "natal.year.stem",
+       "year.stem"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "害:natal.year.branch:year.branch",
+      "kind": "害",
+      "label": "卯辰害",
+      "nodeIds": [
+       "natal.year.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "破:natal.month.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.month.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "合:natal.month.branch:year.branch",
+      "kind": "合",
+      "label": "卯戌合",
+      "nodeIds": [
+       "natal.month.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.day.branch:year.branch",
+      "kind": "冲",
+      "label": "卯酉冲",
+      "nodeIds": [
+       "natal.day.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "合:natal.time.stem:year.stem",
+      "kind": "合",
+      "label": "戊癸合",
+      "nodeIds": [
+       "natal.time.stem",
+       "year.stem"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "破:natal.time.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.time.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "合:natal.time.branch:year.branch",
+      "kind": "合",
+      "label": "卯戌合",
+      "nodeIds": [
+       "natal.time.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "半合:luck.branch:year.branch",
+      "kind": "半合",
+      "label": "卯未半合木",
+      "nodeIds": [
+       "luck.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "年干戊"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2024,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "己",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "未",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "甲",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "自刑:natal.year.branch:year.branch",
+      "kind": "自刑",
+      "label": "辰辰自刑",
+      "nodeIds": [
+       "natal.year.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "破:natal.month.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.month.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "冲:natal.month.branch:year.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.month.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.day.branch:year.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.day.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "破:natal.time.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.time.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "冲:natal.time.branch:year.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.time.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "合:luck.stem:year.stem",
+      "kind": "合",
+      "label": "甲己合",
+      "nodeIds": [
+       "luck.stem",
+       "year.stem"
+      ],
+      "scope": "year"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "年干戊"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2025,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "己",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "未",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "乙",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "巳",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "破:natal.month.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.month.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "冲:natal.day.stem:year.stem",
+      "kind": "冲",
+      "label": "乙辛冲",
+      "nodeIds": [
+       "natal.day.stem",
+       "year.stem"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.day.branch:year.branch",
+      "kind": "半合",
+      "label": "巳酉半合金",
+      "nodeIds": [
+       "natal.day.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "破:natal.time.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.time.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "年干戊"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2026,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "己",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "未",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "丙",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "午",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.month.stem:year.stem",
+      "kind": "冲",
+      "label": "丙壬冲",
+      "nodeIds": [
+       "natal.month.stem",
+       "year.stem"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "破:natal.month.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.month.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "半合:natal.month.branch:year.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.month.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "合:natal.day.stem:year.stem",
+      "kind": "合",
+      "label": "丙辛合",
+      "nodeIds": [
+       "natal.day.stem",
+       "year.stem"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "破:natal.time.branch:luck.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "刑:natal.time.branch:luck.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "半合:natal.time.branch:year.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.time.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "合:luck.branch:year.branch",
+      "kind": "合",
+      "label": "午未合",
+      "nodeIds": [
+       "luck.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "year.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "年干戊"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "year.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2027,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "午",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "丁",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "未",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.month.stem:year.stem",
+      "kind": "合",
+      "label": "丁壬合",
+      "nodeIds": [
+       "natal.month.stem",
+       "year.stem"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.month.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "破:natal.month.branch:year.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.month.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "刑:natal.month.branch:year.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.month.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.time.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "破:natal.time.branch:year.branch",
+      "kind": "破",
+      "label": "戌未破",
+      "nodeIds": [
+       "natal.time.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "刑:natal.time.branch:year.branch",
+      "kind": "刑",
+      "label": "戌未刑",
+      "nodeIds": [
+       "natal.time.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "合:luck.branch:year.branch",
+      "kind": "合",
+      "label": "午未合",
+      "nodeIds": [
+       "luck.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "天乙贵人",
+      "nodeId": "year.branch",
+      "basis": "年干戊"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "luck.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2028,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "午",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "申",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "三会:year.branch:natal.day.branch:natal.month.branch",
+      "kind": "三会",
+      "label": "申酉戌三会金",
+      "nodeIds": [
+       "year.branch",
+       "natal.day.branch",
+       "natal.month.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "拱:natal.year.branch:year.branch",
+      "kind": "拱",
+      "label": "申辰拱水",
+      "nodeIds": [
+       "natal.year.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.month.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.time.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "文昌",
+      "nodeId": "year.branch",
+      "basis": "年干戊"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "luck.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2029,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "午",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "己",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:year.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.month.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "害:natal.month.branch:year.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "自刑:natal.day.branch:year.branch",
+      "kind": "自刑",
+      "label": "酉酉自刑",
+      "nodeIds": [
+       "natal.day.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "半合:natal.time.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "害:natal.time.branch:year.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.time.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "year.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "year.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "luck.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2030,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "午",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "庚",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:year.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.month.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "害:natal.day.branch:year.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "半合:natal.time.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "半合:luck.branch:year.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "luck.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "luck.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2031,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "午",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "亥",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.month.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.time.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "luck.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "驿马",
+      "nodeId": "year.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   },
+   {
+    "year": 2032,
+    "nodes": [
+     {
+      "id": "natal.year.stem",
+      "label": "年柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.year.branch",
+      "label": "年柱支",
+      "value": "辰",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.stem",
+      "label": "月柱干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.month.branch",
+      "label": "月柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.stem",
+      "label": "日柱干",
+      "value": "辛",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.day.branch",
+      "label": "日柱支",
+      "value": "酉",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.stem",
+      "label": "时柱干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "natal"
+     },
+     {
+      "id": "natal.time.branch",
+      "label": "时柱支",
+      "value": "戌",
+      "type": "branch",
+      "scope": "natal"
+     },
+     {
+      "id": "luck.stem",
+      "label": "大运干",
+      "value": "戊",
+      "type": "stem",
+      "scope": "luck"
+     },
+     {
+      "id": "luck.branch",
+      "label": "大运支",
+      "value": "午",
+      "type": "branch",
+      "scope": "luck"
+     },
+     {
+      "id": "year.stem",
+      "label": "流年干",
+      "value": "壬",
+      "type": "stem",
+      "scope": "year"
+     },
+     {
+      "id": "year.branch",
+      "label": "流年支",
+      "value": "子",
+      "type": "branch",
+      "scope": "year"
+     }
+    ],
+    "relations": [
+     {
+      "id": "冲:natal.year.branch:natal.month.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.month.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "合:natal.year.branch:natal.day.branch",
+      "kind": "合",
+      "label": "辰酉合",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "冲:natal.year.branch:natal.time.branch",
+      "kind": "冲",
+      "label": "辰戌冲",
+      "nodeIds": [
+       "natal.year.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.year.branch:year.branch",
+      "kind": "半合",
+      "label": "子辰半合水",
+      "nodeIds": [
+       "natal.year.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "害:natal.month.branch:natal.day.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.month.branch",
+       "natal.day.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "半合:natal.month.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.month.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "害:natal.day.branch:natal.time.branch",
+      "kind": "害",
+      "label": "酉戌害",
+      "nodeIds": [
+       "natal.day.branch",
+       "natal.time.branch"
+      ],
+      "scope": "natal"
+     },
+     {
+      "id": "破:natal.day.branch:year.branch",
+      "kind": "破",
+      "label": "子酉破",
+      "nodeIds": [
+       "natal.day.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     },
+     {
+      "id": "半合:natal.time.branch:luck.branch",
+      "kind": "半合",
+      "label": "午戌半合火",
+      "nodeIds": [
+       "natal.time.branch",
+       "luck.branch"
+      ],
+      "scope": "luck"
+     },
+     {
+      "id": "冲:luck.branch:year.branch",
+      "kind": "冲",
+      "label": "子午冲",
+      "nodeIds": [
+       "luck.branch",
+       "year.branch"
+      ],
+      "scope": "year"
+     }
+    ],
+    "shensha": [
+     {
+      "name": "天乙贵人",
+      "nodeId": "luck.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "文昌",
+      "nodeId": "year.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "禄神",
+      "nodeId": "natal.day.branch",
+      "basis": "日干辛"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "natal.day.branch",
+      "basis": "年支辰"
+     },
+     {
+      "name": "桃花",
+      "nodeId": "luck.branch",
+      "basis": "日支酉"
+     },
+     {
+      "name": "华盖",
+      "nodeId": "natal.year.branch",
+      "basis": "年支辰"
+     }
+    ]
+   }
+  ]
+ },
+ "tiaohou": {
+  "dayStem": "辛",
+  "monthBranch": "戌",
+  "monthName": "九月",
+  "useStems": [
+   "壬",
+   "甲"
+  ],
+  "section": "三秋辛金",
+  "quote": "'''九月辛金'''，戊土司令，母旺子相，须甲疏土，壬洩旺金，先壬后甲。壬甲两透，桃洞之仙。或壬透甲藏，又见戊者，平人。甲透、壬藏，戊在支内，异途之仕。"
+ },
+ "correction": {
+  "dst": "not-applied",
+  "solar": "not-applied",
+  "timeKnown": true,
+  "sect": 1,
+  "timeZone": "America/New_York",
+  "localStandard": "19:40",
+  "disambiguation": "exact"
+ },
+ "context": {
+  "horizon": "year",
+  "anchorYear": 2026,
+  "label": "2026 立春年",
+  "ganZhi": null
+ },
+ "almanac": {
+  "timestamp": "1791869718",
+  "solar": {
+   "timezone": "UTC+8",
+   "text": "2026-10-13 13:35:18"
+  },
+  "lunar": {
+   "date": "二〇二六年九月初四",
+   "timeBranch": "未",
+   "moonPhase": "蛾眉新"
+  },
+  "pillars": [
+   "丙午",
+   "戊戌",
+   "庚申",
+   "癸未"
+  ],
+  "naYin": [
+   "天河水",
+   "平地木",
+   "石榴木",
+   "杨柳木"
+  ],
+  "solarTerms": {
+   "current": "寒露",
+   "hou": "寒露 二候",
+   "wuHou": "雀入大水为蛤",
+   "previousAt": "2026-10-08 14:29:17",
+   "next": "霜降",
+   "nextAt": "2026-10-23 17:37:57"
+  },
+  "cycle": {
+   "monthBranch": "戌",
+   "day": "庚申",
+   "xun": "甲寅",
+   "voidBranches": [
+    "子",
+    "丑"
+   ]
+  },
+  "month": {
+   "timezone": "UTC+8",
+   "basis": "节气月",
+   "branch": "戌",
+   "element": "土",
+   "range": "寒露—立冬",
+   "boundaryUncertain": false
+  },
+  "dayOfficers": {
+   "officer": "开",
+   "deity": "金匮",
+   "path": "黄道"
+  },
+  "mansion": {
+   "name": "翼火蛇",
+   "palace": "南",
+   "guardian": "朱雀"
+  },
+  "clash": {
+   "description": "(甲寅)虎",
+   "direction": "南"
+  },
+  "almanac": {
+   "nineStar": "一白水天枢",
+   "joy": "西北",
+   "wealth": "正东",
+   "fortune": "西南",
+   "suitable": [
+    "嫁娶",
+    "祭祀",
+    "祈福",
+    "求嗣",
+    "开光",
+    "出行",
+    "解除",
+    "出火",
+    "进人口",
+    "开市",
+    "交易",
+    "立券",
+    "挂匾",
+    "纳财",
+    "入宅",
+    "移徙",
+    "栽种",
+    "破土",
+    "谢土"
+   ],
+   "avoid": [
+    "安床",
+    "安葬"
+   ],
+   "pengZu": [
+    "庚不经络织机虚张",
+    "申不安床鬼祟入房"
+   ]
+  }
+ },
+ "changes": 0,
+ "schools": {
+  "shenxiaozhan": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "useGod": "身旺印重，取财泄秀，喜木火，忌土金",
+    "headline": "印重身旺用财官",
+    "reason": "月令戌中戊印透干，辛日通根酉戌，印比成势，当取木火财官泄制。",
+    "sections": [
+     {
+      "title": "性格",
+      "text": "日主辛金坐酉，月时两戌藏辛，比肩通根，性有主见而内敛。月干壬水伤官透出，年时戊印亦透，印重卫金，心思细密而重规矩，外柔内执，遇事先自持。辰戌两冲，年与月、时相激，内心时有反复，酉戌相害，人际易生暗隙，须防自责与多虑。"
+     },
+     {
+      "title": "事业",
+      "text": "月令印星当权，戊印两透，格局偏向文书、专业、制度、教育、辅佐之途。伤官壬水透月，能吐秀，宜以才学技艺立身。辰酉合、申酉戌会金，比劫成群，独立作业尚可，合作易生争功。行运遇木火财官，格局转清，事业方见舒展。"
+     },
+     {
+      "title": "财运",
+      "text": "原局财星藏于年支辰中乙木、支中不见明财，财源须靠泄秀转化。比肩叠见，钱财易分夺，不宜合伙保财。走木火运，财官透出，方能聚财；行土金运，印比加重，反主耗散。理财以稳健自守为宜。"
+     },
+     {
+      "title": "感情",
+      "text": "日支酉为比肩，配偶宫坐同气，伴侣性格有主见，相处易如兄弟而少柔。酉戌相害在月日、日时之间，感情易生隔膜与误会，辰戌冲亦动家庭根气。宜择性情温厚者，多沟通忍让，方能久长。"
+     },
+     {
+      "title": "健康",
+      "text": "金旺印重，土金之气偏胜，辰戌冲、酉戌害，须留意肺金、呼吸道及脾胃运化。木火受制，肝气与心血亦宜调养。作息规律、情志舒畅为宜，如有不适请及时就医。"
+     }
+    ],
+    "advice": [
+     "以专业文书技艺立身，少与人争利。",
+     "行木火运时积极进取，土金运时守成。",
+     "情绪多自察，伴侣间多沟通化解隔膜。"
+    ],
+    "evidence": [
+     {
+      "ref": "structure:month",
+      "claim": "月令本气戊正印透干，印格成立"
+     },
+     {
+      "ref": "structure:roots",
+      "claim": "日主辛金通根月日时，印比成势身旺"
+     },
+     {
+      "ref": "pillar:month",
+      "claim": "月干壬水伤官透出可泄秀"
+     },
+     {
+      "ref": "relation:2",
+      "claim": "辰戌冲，年与月支相激"
+     },
+     {
+      "ref": "relation:11",
+      "claim": "酉戌害，日时支相损"
+     },
+     {
+      "ref": "luck:4",
+      "claim": "戊午运午戌半合火，火气生起"
+     },
+     {
+      "ref": "luck:7",
+      "claim": "乙卯运乙木偏财透，卯戌合火"
+     }
+    ],
+    "periods": [
+     {
+      "index": 1,
+      "verdict": "凶",
+      "confidenceTenths": 3,
+      "note": "辛酉比肩助旺，酉酉自刑，土金忌神重，宜守。"
+     },
+     {
+      "index": 2,
+      "verdict": "凶",
+      "confidenceTenths": 3,
+      "note": "庚申劫财会金，申辰拱水，比劫夺财，多耗。"
+     },
+     {
+      "index": 3,
+      "verdict": "平",
+      "confidenceTenths": 5,
+      "note": "己未偏印带丁杀乙财，戌未刑破，喜忌相抵。"
+     },
+     {
+      "index": 4,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "午戌半合火，火暖局，财官得气，事业渐展。"
+     },
+     {
+      "index": 5,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "丁火七杀透，丁壬合，巳酉半合金，官杀制身有功。"
+     },
+     {
+      "index": 6,
+      "verdict": "平",
+      "confidenceTenths": 5,
+      "note": "丙辰官印相生，然辰戌冲、辰辰自刑，动中带耗。"
+     },
+     {
+      "index": 7,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "乙卯偏财透，卯戌合火，财旺生官，得财之时。"
+     },
+     {
+      "index": 8,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "甲寅正财透，寅戌拱火，财官俱旺，晚运丰盈。"
+     }
+    ]
+   }
+  },
+  "yuchuntai": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "useGod": "取壬洩金、甲疏土，喜水木，忌土金。",
+    "headline": "辛金九月调候",
+    "reason": "此家理由与盘面不符的部分已删去。",
+    "sections": [
+     {
+      "title": "性格",
+      "text": "日主辛酉，坐下比肩，月透壬水伤官，年时两戊正印夹身。金白水清，心思明敏而语带锋芒；印重土厚，又见固执保守。伤官吐秀则喜表现、不服管束，正印双透则重名誉、念旧恩。辛金本性刚锐，酉金助之比肩心强，事多亲力亲为，不轻易示弱，也不轻易低头。日支无杂，性情专一，认定之事九牛难挽；月支戌中丁火七杀暗藏，遇压迫反激其志，能忍亦能发。整体外柔内刚，才思胜于口才，自尊胜于财利。"
+     },
+     {
+      "title": "事业",
+      "text": "调候取壬洩旺金、甲疏厚土。本局壬透月干，甲木仅藏于年支辰中余气，疏土之力不足，故一生须借木火之年运开启局面。印重身强，宜从文教、文书、审核、技术、金融、法律、行政等需精细与规矩之业；伤官透干，亦利凭借口才、创意、设计、传播谋生。若一味守成，则土厚金埋，事倍功半；逢水木运展其才，可掌实权或自立门户。"
+     },
+     {
+      "title": "财运",
+      "text": "年支辰中藏乙木偏财，为全局唯一明根之财，又受戊土盖头，财源来得晚而须力取。月干壬水伤官能生乙木，是生财之源，故财多由技艺、作品、口才、服务而来，非坐等可获。土重则财被印夺，忌以本求利、囤积不动产过重；逢甲乙木透出之运，财路方显，但须防比劫分夺。"
+     },
+     {
+      "title": "感情",
+      "text": "日坐酉金比肩，夫妻宫为同气之金，配偶多刚强好胜，或与命主性情相近，易生争持。妻星乙木藏于年支辰中，位置远而受土压，正缘多在离乡之后、或经年长之人引荐方得。月支戌、时支戌各藏丁火七杀，官杀不透，感情不喜张扬，多务实少浪漫。比肩重则易有第三者或旧情牵扰，宜以印之涵养化之，多沟通、少争胜，婚姻可稳。"
+     },
+     {
+      "title": "健康",
+      "text": "金旺土厚，水被土制，木受土压。金主肺与呼吸，土主脾胃，金寒土燥则易见咳喘、鼻敏感、皮肤干燥、消化不畅之象；水弱则肾与泌尿、津液不足，宜多饮水、少食辛辣燥热。月支戌、时支戌火土并藏，心火易亢，睡眠须调。命理仅供参照，身体不适请及时就医，不可据以自行诊断用药。"
+     }
+    ],
+    "advice": [
+     "以水木为喜，多亲近流水、林木之地，方位宜东南、东方。",
+     "忌土金过重，不宜久居燥土之地，居家宜通风保湿。",
+     "行事借伤官吐秀，以技艺、文才立身，切忌固守旧局。"
+    ],
+    "evidence": [
+     {
+      "ref": "tiaohou",
+      "claim": "调候取壬甲，先壬后甲"
+     },
+     {
+      "ref": "pillar:month",
+      "claim": "壬水伤官透干，为全局喜神"
+     },
+     {
+      "ref": "pillar:day",
+      "claim": "辛酉日主，比肩坐支，身旺"
+     },
+     {
+      "ref": "hidden:year",
+      "claim": "辰中乙木偏财藏而不透"
+     },
+     {
+      "ref": "hidden:month",
+      "claim": "戌中丁火七杀暗藏，官杀不透"
+     },
+     {
+      "ref": "elements",
+      "claim": "木少土重，水弱金旺"
+     }
+    ],
+    "periods": [
+     {
+      "index": 1,
+      "verdict": "平",
+      "confidenceTenths": 5,
+      "note": "辛酉比肩大运，助旺日主，调候壬水受金生，平中见稳。"
+     },
+     {
+      "index": 2,
+      "verdict": "吉",
+      "confidenceTenths": 7,
+      "note": "庚申藏壬水伤官，洩旺金之锐，喜神得地，此运多顺。"
+     },
+     {
+      "index": 3,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "己未偏印生身，但未中乙木疏土、丁火暖局，喜忌相兼偏吉。"
+     },
+     {
+      "index": 4,
+      "verdict": "凶",
+      "confidenceTenths": 3,
+      "note": "戊午正印透干，火土燥厚，土重埋金，调候壬水受制。"
+     },
+     {
+      "index": 5,
+      "verdict": "凶",
+      "confidenceTenths": 4,
+      "note": "丁巳七杀正官并透，火旺克金，虽藏戊土生身，毕竟燥土伤水。"
+     },
+     {
+      "index": 6,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "丙辰正官透干，辰中乙木疏土、癸水润局，喜神暗藏得力。"
+     },
+     {
+      "index": 7,
+      "verdict": "大吉",
+      "confidenceTenths": 8,
+      "note": "乙卯偏财透干，木旺疏土，调候甲木得力，财源大开。"
+     },
+     {
+      "index": 8,
+      "verdict": "大吉",
+      "confidenceTenths": 8,
+      "note": "甲寅正财透干，甲木疏土，壬水得泄，调候用神齐备。"
+     }
+    ]
+   },
+   "removed": 3
+  },
+  "rentieqiao": {
+   "status": "done",
+   "retries": 0,
+   "output": {
+    "useGod": "身强印旺，取财官伤为用，喜木火水，忌土金。",
+    "headline": "金白水清，印旺身强",
+    "reason": "辛酉坐禄通根月时，印重土厚生金，身强之势分明，当取财官伤为用，忌再逢土金。",
+    "sections": [
+     {
+      "title": "性格",
+      "text": "日主辛金坐酉禄，月支时支皆藏辛比肩，日主同五行通根月、日、时三柱，比肩成势，故性情刚介自立、主意坚定，不肯随人俯仰。年柱戊辰、时柱戊戌两透正印，印重则心慈念旧、重规矩体面，然印多则思虑繁、行动缓，易以稳妥自缚。月透壬水伤官，聪慧外露、口才敏锐，喜以己意评判是非；伤官与正印并见，既守礼法又暗存反骨。辰戌冲两见，年时与月支相战，内心常有翻腾不安，遇事易反复思量。酉戌害叠见月日、日时，亲近之人反多磨擦，情面上不肯低头。藏干乙木偏财、丁火七杀皆未透，进取之心存于内而少显于外。时柱已知，晚景心性可参；然命宫身宫未提供，此层不论。"
+     },
+     {
+      "title": "事业",
+      "text": "身强印旺，宜以财官为用力处。原局伤官透月，聪明才干在言辩、技艺、谋略一路；正印两透，宜文教、行政、体制内或需资历凭信之门。辰酉合、辰戌冲并见，早年根基不稳，多迁动转换，遇土金之运助身太过，反主劳而少功。须待财官透发之年运，方见施展。总体上以专业本领取胜，忌恃强独断、与人争锋。丁火七杀藏于月时两戌，权柄不显，须运助方得；丙火正官惟大运透出，非原局所有，故不宜自许高位。"
+     },
+     {
+      "title": "财运",
+      "text": "全局木仅中气一位，财星极弱，唯年支藏乙偏财，财不透干，主财来不显、聚散由人，非坐享丰盈之命。金土过重，比肩争财，故合伙分利、亲友借贷最易破耗，宜自立门户、亲掌财权。见财之运（乙卯、甲寅）方能起色，然原局酉戌害、辰戌冲并见，得财之时多有纷争牵累。己未偏印当前，偏印生身而夺食，进财之路偏于劳心，宜守成不宜扩张。"
+     },
+     {
+      "title": "感情",
+      "text": "比肩成势，日支坐酉为比肩本气，夫妻宫为同类占据，主性情相类、亦主争强不让，配偶或有主张，相处易生角力。酉戌害见于日时与月日，亲近之间多龃龉，话不投机则生嫌隙。财星为妻，原局木弱不透，妻缘来得较迟，或聚少离多。辰戌冲、辰酉合交互，聚散之象明显，宜以宽和化刚，不宜以理压人。丁火七杀藏戌，亦主感情中暗藏执着。"
+     },
+     {
+      "title": "健康",
+      "text": "金土最旺，火水俱弱，木仅中气，五行偏枯之象。金旺则肺与皮毛、大肠之气偏刚，土重则脾胃易滞，水火不足则心肾之气不充。辰戌冲两见，冲主动荡，戌未刑破叠见，尤须留意脾胃与腰足。宜多疏木泄土，慎思虑、节饮食，勿以刚强自恃。若有不适，应及时就医，命理不作医疗断语。"
+     }
+    ],
+    "advice": [
+     "用神在木火水，宜向东方、南方求发展，多近文教、技艺、生发之业，忌一味守成。",
+     "比肩重重，钱财宜自掌管，慎合伙与担保，免争财耗散。",
+     "性刚喜胜，宜以宽和养情，酉戌害之象自可缓减。"
+    ],
+    "evidence": [
+     {
+      "ref": "pillar:day",
+      "claim": "日主辛金坐酉禄"
+     },
+     {
+      "ref": "structure:roots",
+      "claim": "日主同五行通根月、日、时三柱"
+     },
+     {
+      "ref": "pillar:year",
+      "claim": "年柱戊辰正印透干"
+     },
+     {
+      "ref": "pillar:time",
+      "claim": "时柱戊戌正印透干，印重身强"
+     },
+     {
+      "ref": "pillar:month",
+      "claim": "月柱壬戌伤官透干"
+     },
+     {
+      "ref": "relation:2",
+      "claim": "辰戌冲，年月中支相战"
+     },
+     {
+      "ref": "relation:11",
+      "claim": "酉戌害，日时相妨"
+     },
+     {
+      "ref": "elements",
+      "claim": "木弱火微，金土偏重"
+     },
+     {
+      "ref": "hidden:year",
+      "claim": "年支藏乙偏财，财不透干"
+     }
+    ],
+    "periods": [
+     {
+      "index": 1,
+      "verdict": "平",
+      "confidenceTenths": 5,
+      "note": "辛酉比肩助身，辰酉合而酉戌害，少年多动。"
+     },
+     {
+      "index": 2,
+      "verdict": "凶",
+      "confidenceTenths": 3,
+      "note": "庚申劫财会金，比劫争财，忌神当权。"
+     },
+     {
+      "index": 3,
+      "verdict": "平",
+      "confidenceTenths": 4,
+      "note": "己未偏印生身，戌未刑破，喜忌相抵。"
+     },
+     {
+      "index": 4,
+      "verdict": "凶",
+      "confidenceTenths": 3,
+      "note": "戊午印旺助身，午戌合火为忌，土重金埋。"
+     },
+     {
+      "index": 5,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "丁火七杀透而制身，巳酉合金，官杀得用。"
+     },
+     {
+      "index": 6,
+      "verdict": "吉",
+      "confidenceTenths": 6,
+      "note": "丙辰正官透干，辰酉合而丙辛合，官星为用。"
+     },
+     {
+      "index": 7,
+      "verdict": "大吉",
+      "confidenceTenths": 8,
+      "note": "乙卯偏财透干，卯戌合财，木旺为用最喜。"
+     },
+     {
+      "index": 8,
+      "verdict": "大吉",
+      "confidenceTenths": 8,
+      "note": "甲寅正财透干，寅戌拱火，财官并旺得用。"
+     }
+    ]
+   }
+  }
+ },
+ "summary": {
+  "status": "done",
+  "output": {
+   "conclusion": "一生起伏中见后吉，性格外柔内刚、主见坚定而思虑多。",
+   "agreement": "三家皆认：身强印旺，喜木火水，忌土金；宜以专业才学立身，比肩重不宜合伙争财；晚运木旺转好。",
+   "difference": "沈、任二家重财官伤透出与土金之害；余春台重水木调候，强调财源靠泄秀而生、须借木运开启局面。",
+   "explanation": [
+    "命局日主辛金坐酉，月时两戌藏辛，比肩通根三柱，印星戊土两透，属身强印重之局。身强则须以财官伤泄制为用，故三家一致取木火水为喜，忌土金再助身。",
+    "月干壬水伤官透出，金白水清，聪明外露，宜以文教、文书、技术、创作等精细行业立身；但印重能夺食，行事易思虑繁、行动缓，守稳有余、开拓稍欠。",
+    "原局财星仅年支辰中乙木藏而不透，又被戊土盖头，故正财来路较晚、须力取；比肩成群则钱财易分夺，合伙或担保最易耗散，宜自掌财权、亲力亲为。",
+    "辰戌冲两见、酉戌害叠加，年与月时相激，内心常有翻覆，亲近之人反多磨擦；感情上夫妻宫坐比肩，伴侣性情相类、易生角力，须以宽和化刚、多沟通方能久长。"
+   ],
+   "remedy": {
+    "principle": "以宽和化刚锐，以专长筑根基，钱财自管，争强处退一步。",
+    "plan": [
+     {
+      "action": "专注深耕一项专业技能或文书技艺，凭本事立身",
+      "basis": "伤官壬水透月能吐秀，印重宜以才学技艺取胜",
+      "timing": "木火之运（如丁巳、丙辰、乙卯、甲寅）积极进取"
+     },
+     {
+      "action": "钱财自己掌管，避免合伙、借贷与担保",
+      "basis": "比肩叠见、财星不透，合伙最易分夺耗散"
+     },
+     {
+      "action": "伴侣间多沟通忍让，少以理压人",
+      "basis": "夫妻宫坐比肩，酉戌害易生隔膜误会"
+     }
+    ],
+    "avoid": [
+     "忌一味守成、固守旧局，以免土厚金埋、事倍功半",
+     "忌恃强独断、与人争锋，反增纷争牵累"
+    ]
+   },
+   "portrait": {
+    "traits": [
+     "内敛",
+     "主见强",
+     "心思细",
+     "念旧",
+     "外柔内刚"
+    ],
+    "strengths": [
+     "才思明敏，能凭专业技艺立身",
+     "重规矩体面、念旧情，可靠堪托"
+    ],
+    "blindSpots": [
+     "思虑过多，行动易缓、稳妥自缚",
+     "刚介喜胜，亲近之人反多磨擦"
+    ],
+    "summary": "外柔内刚、才思胜于口才，自尊重于财利，守礼中暗存反骨。"
+   },
+   "watch": {
+    "window": "40至49岁戊午大运",
+    "condition": "若一味守成或与人争利，易劳而功少、得财多纷争"
+   },
+   "outlook": "早年印比偏重多迁动，中年渐有起色，晚运木旺转好、渐入佳境。"
+  },
+  "basis": 3,
+  "attempts": 1,
+  "retries": 0,
+  "anchor": {
+   "title": "三家取用",
+   "lines": [
+    "沈孝瞻：身旺印重，取财泄秀，喜木火，忌土金",
+    "余春台：取壬洩金、甲疏土，喜水木，忌土金。",
+    "任铁樵：身强印旺，取财官伤为用，喜木火水，忌土金。",
+    "调候：壬、甲（《穷通宝鉴》）"
+   ]
+  }
+ },
+ "kind": "destiny",
+ "periods": [
+  {
+   "index": 1,
+   "average": 4.3,
+   "min": 3,
+   "max": 5,
+   "count": 3
+  },
+  {
+   "index": 2,
+   "average": 4.3,
+   "min": 3,
+   "max": 7,
+   "count": 3
+  },
+  {
+   "index": 3,
+   "average": 5,
+   "min": 4,
+   "max": 6,
+   "count": 3
+  },
+  {
+   "index": 4,
+   "average": 4,
+   "min": 3,
+   "max": 6,
+   "count": 3
+  },
+  {
+   "index": 5,
+   "average": 5.3,
+   "min": 4,
+   "max": 6,
+   "count": 3
+  },
+  {
+   "index": 6,
+   "average": 5.7,
+   "min": 5,
+   "max": 6,
+   "count": 3
+  },
+  {
+   "index": 7,
+   "average": 7.3,
+   "min": 6,
+   "max": 8,
+   "count": 3
+  },
+  {
+   "index": 8,
+   "average": 7.3,
+   "min": 6,
+   "max": 8,
+   "count": 3
+  }
+ ],
+ "translation": {
+  "lang": "en",
+  "units": {
+   "summary": {
+    "status": "done",
+    "texts": [
+     "A life of ups and downs with good fortune in later years; outwardly gentle but inwardly firm, strong-willed yet given to much thought.",
+     "All three schools agree: the self is strong and the resource star is prosperous; Wood, Fire, and Water are favorable, while Earth and Metal are unfavorable. One should build a foundation through professional skill and learning. With Friend stars heavy, partnerships and disputes over money are inadvisable; in later luck, Wood becomes prosperous and things improve.",
+     "Shen and Ren emphasize the exposure of the wealth, officer, and Hurting Officer stars and the harm of Earth and Metal; Yu Chuntai emphasizes Water and Wood for Tiao Hou (climate balance of the chart), stressing that wealth comes from releasing the showy energy and that Wood luck is needed to open up the situation.",
+     "In the birth chart, the day master is Xin (Metal), sitting on You, with two Xu in the month and hour pillars concealing Xin, so the Friend (Bi Jian) is rooted across three pillars. The resource star, Wu (Earth), appears twice, making this a chart with a strong self and heavy resource. When the self is strong, wealth, authority, and output stars are needed to drain or control it, so all three schools agree to take Wood, Fire, and Water as favorable elements, and avoid Earth and Metal, which would further strengthen the self.",
+     "The month stem Ren Water, the Hurting Officer, is exposed, giving clear Metal and pure Water, with intelligence showing outwardly. One should establish oneself in refined fields such as education, writing, technical work, or creative work. But heavy resource can rob the output, making one prone to overthinking and slow action, strong at holding steady but somewhat lacking in breaking new ground.",
+     "In the original chart, the wealth star is only hidden in Yi Wood within the year branch Chen and is not exposed, and it is covered by Wu Earth, so Direct Wealth comes late and must be earned by effort. With Friend stars in a group, money is easily divided and seized, and partnerships or guarantees most easily drain it. One should keep control of finances personally and do things oneself.",
+     "With two clashes between Chen and Xu and an added harm between You and Xu, the year pillar and the month and hour pillars stir against each other. The heart often turns over, and close people instead bring more friction. In relationships, the spouse palace holds the Friend star, so the partner has a similar temperament and quarrels arise easily. Only tolerance and communication can make it last.",
+     "Use tolerance to soften sharpness, build a foundation with expertise, manage money personally, and step back where competition would arise.",
+     "Focus on deeply developing one professional skill or writing craft, and establish yourself through ability.",
+     "The Hurting Officer Ren Water is exposed in the month and can release showy talent; with heavy resource, it is better to win through talent and skill.",
+     "During Wood and Fire luck periods, such as Ding Si, Bing Chen, Yi Mao, and Jia Yin, advance actively.",
+     "Manage money yourself, and avoid partnerships, loans, and guarantees.",
+     "Friend stars appear repeatedly and the wealth star is not exposed, so partnerships most easily divide and drain resources.",
+     "Communicate more and yield more with your partner, and do not press others with reason.",
+     "The spouse palace holds the Friend star, and the harm between You and Xu easily creates distance and misunderstanding.",
+     "Avoid only defending what is established and clinging to old patterns, lest thick Earth bury Metal and much effort yield little result.",
+     "Avoid relying on strength and acting alone or contending with others, which only adds conflict and entanglement.",
+     "Reserved",
+     "Strong-willed",
+     "Detail-minded",
+     "Nostalgic",
+     "Outwardly gentle, inwardly firm",
+     "Bright and quick in thought, able to establish oneself through professional skill",
+     "Values rules and dignity, remembers old ties, and is reliable and trustworthy",
+     "Thinks too much, acts slowly, and is bound by caution",
+     "Firm and eager to prevail, causing more friction with close people",
+     "Outwardly gentle but inwardly firm; talent surpasses speech; self-respect matters more than money; within propriety there is a hidden streak of rebellion.",
+     "Ages 40 to 49, the Wu Wu Da Yun (ten-year luck period)",
+     "If one only defends what is established or contends with others over profit, effort will be great and results small, and wealth will bring much conflict.",
+     "Early years are marked by heavy resource and Friend influences and much movement; middle age gradually improves; later luck with prosperous Wood turns better and gradually enters a good phase."
+    ],
+    "failures": 0
+   },
+   "shenxiaozhan": {
+    "status": "done",
+    "texts": [
+     "The day master is strong and the resource is heavy; take Wealth to release the elegance. Wood and Fire are favorable; Earth and Metal are unfavorable.",
+     "Heavy resource and a strong day master: use Wealth and Officer.",
+     "The month branch Xu hides Wu (Earth) resource, which appears in the heavenly stems. The Xin day master has rooted support in You and Xu, so resource and peers form a strong force. Wood and Fire, Wealth and Officer, should be taken to release and control it.",
+     "The Day Master is Xin Metal seated on You, while the two Xu in the month and hour pillars hide Xin. The Friend stems share the same root, giving a nature that has its own views yet is reserved. The Ren Water Hurting Officer on the month stem is exposed, and the Wu seal in the year and hour is also exposed. The seal is heavy and guards the Metal, so the mind is meticulous and values rules; outwardly gentle but inwardly firm, one first steadies oneself when facing matters. The two clashes of Chen and Xu set the year against the month and hour, so the heart repeatedly wavers. The harm between You and Xu makes hidden rifts easy in relationships, and one must guard against self-blame and overthinking.",
+     "The month order gives power to the resource star, and the two Wu resource stems appear, so the pattern leans toward documents, expertise, systems, education, and support roles. The Hurting Officer Ren Water appears in the month and can express elegance, so it is fitting to establish oneself through talent, learning, and skill. Chen and You combine, and Shen, You, and Xu form a Metal combination; peers and rob wealth gather in groups. Working independently is still acceptable, but cooperation easily gives rise to disputes over credit. When the luck cycle meets Wood and Fire, Wealth and Officer, the pattern becomes clear, and career begins to open up.",
+     "In the original chart, the wealth star is hidden in Yi Wood within the year branch Chen, and no visible wealth appears in the branches, so the source of wealth must rely on releasing elegance for transformation. Friend appears repeatedly, so money is easily divided and seized; partnerships are not suitable for preserving wealth. In Wood and Fire luck cycles, Wealth and Officer appear, and only then can wealth gather; in Earth and Metal luck cycles, resource and peers increase, which instead indicates scattering. Managing money with steadiness and self-restraint is advisable.",
+     "The day branch You is Friend, and the spouse palace sits on the same qi, so the partner is opinionated, and getting along is easily like siblings with little tenderness. You and Xu harm each other between month and day and between day and hour, so feelings easily develop barriers and misunderstandings, and the Chen and Xu clash also stirs the family root. It is advisable to choose someone warm and gentle in nature and to communicate and yield more, so the relationship can last.",
+     "Metal is strong and resource is heavy, with Earth and Metal qi somewhat dominant. Chen and Xu clash and You and Xu harm each other, so attention should be paid to the lungs, respiratory tract, and the spleen and stomach's transportation and transformation. Wood and Fire are controlled, so liver qi and heart blood should also be regulated. Regular rest and a smooth emotional state are advisable; if there is discomfort, seek medical care promptly.",
+     "Establish yourself through professional documents and skills, and contend less with others over profit.",
+     "Advance actively during Wood and Fire luck cycles, and preserve what has been achieved during Earth and Metal luck cycles.",
+     "Observe your emotions often, and communicate more with your partner to dissolve barriers.",
+     "Xin You Friend supports strength; You and You self-punish; the unfavorable elements Earth and Metal are heavy, so it is advisable to hold steady.",
+     "Geng Shen Rob Wealth meets Metal; Shen and Chen support Water; peers and rob wealth seize wealth, causing much depletion.",
+     "Ji Wei Indirect Resource carries Ding Seven Killings and Yi Wealth; Xu and Wei punish and break each other, so favorable and unfavorable influences offset.",
+     "Wu and Xu half-combine into Fire; Fire warms the chart; Wealth and Officer gain qi, and career gradually unfolds.",
+     "Ding Fire Seven Killings appears; Ding and Ren combine; Si and You half-combine into Metal; Officer and Seven Killings control the self with merit.",
+     "Bing Chen Officer and resource generate each other, yet Chen and Xu clash and Chen and Chen self-punish, so movement brings depletion.",
+     "Yi Mao Indirect Wealth appears; Mao and Xu combine into Fire; Wealth is strong and generates Officer; this is a time to gain wealth.",
+     "Jia Yin Direct Wealth appears; Yin and Xu support Fire; Wealth and Officer are both prosperous, and later luck is abundant."
+    ],
+    "failures": 0
+   },
+   "yuchuntai": {
+    "status": "done",
+    "texts": [
+     "Use Ren to release the excess Metal and Jia to loosen the heavy Earth; Water and Wood are favorable, while Earth and Metal are unfavorable.",
+     "Xin Metal in the ninth month: Tiao Hou (climate balance of the chart)",
+     "Parts of this school's reasoning that did not match the chart have been removed.",
+     "The Ri Zhu (Day Master, the self in the chart) is Xin You, with a Friend sitting beneath it. Ren Water, the Hurting Officer, shows in the month stem, while two Wu Earth Direct Resources flank the self in the year and hour stems. White Metal and clear Water give a bright, quick mind and sharp speech. Heavy Resource and thick Earth also bring stubbornness and conservatism. When the Hurting Officer expresses itself, the person likes to perform and resists control; when two Direct Resources show, the person values reputation and remembers old kindness. Xin Metal is naturally hard and keen, and You Metal strengthens it, making the Friend influence strong: the person tends to do things personally, does not easily show weakness, and does not easily bow. With no mixed elements in the day branch, the nature is single-minded, and once something is decided, it is almost impossible to turn back. Ding Fire, the Seven Killings, is hidden in Xu of the month branch; when pressured, ambition is stirred instead, and the person can both endure and unleash. Overall, soft outside and firm inside, talent in thought surpasses skill in speech, and self-respect outweighs wealth.",
+     "For Tiao Hou (climate balance of the chart), use Ren Water to drain the strong Metal and Jia Wood to loosen the thick Earth. In this chart, Ren appears in the month stem, while Jia Wood is only stored as residual qi in Chen of the year branch, so its power to loosen Earth is insufficient. Therefore, throughout life one must rely on years and luck periods of Wood and Fire to open up the situation. With heavy Resource and a strong self, one should follow fields such as education, documentation, auditing, technology, finance, law, and administration, which require precision and rules; with Hurting Officer appearing in the stem, it is also favorable to make a living through eloquence, creativity, design, and communication. If one only sticks to preserving what exists, then Earth is thick and Metal is buried, and half the effort yields little result; when Water and Wood luck periods arrive to display one's talents, one can hold real power or establish one's own business.",
+     "Yi Wood, the Indirect Wealth, is hidden in Chen of the year branch. It is the only wealth with a clear root in the whole chart, and it is covered by Wu Earth above, so wealth comes late and must be actively pursued. Ren Water, the Hurting Officer, in the month stem can produce Yi Wood, and is the source of wealth; thus wealth mostly comes from skills, works, speech, and services, not from waiting passively. When Earth is heavy, wealth is snatched by Resource; it is unfavorable to seek profit from capital or to hoard too much real estate. When Jia and Yi Wood appear in luck periods, the path of wealth becomes visible, but one must guard against rivalry and division by Friends and Rob Wealth.",
+     "With You Metal, a Friend, sitting in the day branch, the spouse palace is Metal of the same qi. The spouse is often strong-willed and competitive, or similar in temperament to the native, so disputes easily arise. The wife star Yi Wood is hidden in Chen of the year branch, far away and pressed by Earth, so the proper match often comes after leaving one's hometown or through the introduction of an older person. Ding Fire, the Seven Killings, is hidden in both Xu of the month branch and Xu of the hour branch. Officer and Killings do not show in the stems, so relationships do not like display and are more practical than romantic. When Friend is heavy, third parties or old attachments easily cause trouble; it is best to transform this with the tolerance of Resource, communicate more, and compete less, so marriage can be stable.",
+     "Metal is strong and Earth is thick; Water is controlled by Earth, and Wood is pressed by Earth. Metal governs the lungs and breathing, Earth governs the spleen and stomach. When Metal is cold and Earth is dry, there may easily be coughing, asthma, nasal allergies, dry skin, and poor digestion. When Water is weak, the kidneys, urinary system, and body fluids are insufficient; one should drink more water and eat less spicy, dry, and heating food. Fire and Earth are both hidden in Xu of the month branch and Xu of the hour branch, so heart fire easily becomes excessive, and sleep must be regulated. This reading is for reference only; if unwell, seek medical care promptly, and do not use it to diagnose or medicate yourself.",
+     "Water and Wood are favorable; spend more time near flowing water and forests, and favorable directions are southeast and east.",
+     "Avoid excessive Earth and Metal; do not live long in dry Earth regions, and keep the home ventilated and moist.",
+     "In action, rely on the Hurting Officer to express talent, build a life on skills and literary ability, and do not stubbornly cling to old patterns.",
+     "Xin You Friend Da Yun (ten-year luck period), supports and strengthens Ri Zhu (Day Master, the self in the chart); Tiao Hou (climate balance of the chart) Ren Water is generated by Metal, steady amid calm.",
+     "Geng Shen hides Ren Water, the Hurting Officer, releasing the sharpness of strong Metal. The favorable element gains ground, so this period is mostly smooth.",
+     "Ji Wei Indirect Resource supports the self, but Yi Wood in Wei loosens Earth and Ding Fire warms the chart, so favorable and unfavorable mix with a lean toward good.",
+     "Wu Wu Direct Resource appears in the stem, Fire and Earth are dry and thick, heavy Earth buries Metal, and Tiao Hou (climate balance of the chart) Ren Water is controlled.",
+     "Ding Si Seven Killings and Direct Officer both show; strong Fire controls Metal. Although hidden Wu Earth supports the self, after all dry Earth harms Water.",
+     "Bing Chen Direct Officer shows in the stem; Yi Wood in Chen loosens Earth and Gui Water moistens the chart, so hidden favorable elements are effective.",
+     "Yi Mao Indirect Wealth appears in the stem, Wood is strong and loosens Earth, Tiao Hou (climate balance of the chart) Jia Wood gains strength, and wealth sources open wide.",
+     "Jia Yin Direct Wealth appears in the stem, Jia Wood loosens Earth, Ren Water is drained, and the Yong Shen (the key element for the question) for Tiao Hou (climate balance of the chart) is complete."
+    ],
+    "failures": 0
+   },
+   "rentieqiao": {
+    "status": "done",
+    "texts": [
+     "With a strong self and strong Resource, take Wealth, Officer, and Hurting Officer as the Yong Shen (the key element for the question). Wood, Fire, and Water are favorable; Earth and Metal are unfavorable.",
+     "White Metal and clear Water; strong Resource and strong self.",
+     "The Day Master Xin Metal sits on its Lu at You, rooted through the month and hour. Heavy Resource and thick Earth generate Metal, so the strong-self tendency is clear. Take Wealth, Officer, and Hurting Officer as the Yong Shen (the key element for the question); avoid encountering Earth and Metal again.",
+     "The Ri Zhu (Day Master, the self in the chart) is Xin Metal seated on its Lu at You. Both the month and hour branches store Xin as Friend, and the Day Master's same element is rooted in the month, day, and hour pillars. Friend forms a force, so the temperament is upright and self-reliant, with firm opinions and unwillingness to bend to others. The year pillar Wu Chen and the hour pillar Wu Xu both reveal Direct Resource. Heavy Resource makes one kind and nostalgic, valuing rules and dignity; but too much Resource brings tangled thoughts and slow action, easily bound by the safe path. The month reveals Ren Water Hurting Officer, showing intelligence outwardly and sharp speech, liking to judge right and wrong by one's own views. Hurting Officer and Direct Resource appear together, so one both keeps propriety and secretly harbors a rebellious streak. Chen and Xu clash twice, with the year and hour at war with the month branch, so inner unrest is common and matters are often mulled over repeatedly. You and Xu Harm each other in month-day and day-hour, so close people actually cause more friction, and pride will not bow. The hidden stems Yi Wood Indirect Wealth and Ding Fire Seven Killings are both unrevealed, so ambition stays within and rarely shows outwardly. The hour pillar is known, so the late-life temperament can be considered; however, the Ming Gong and Shen Gong are not provided, so this layer is not discussed.",
+     "With a strong self and strong Resource, one should use Wealth and Officer as the point of effort. In the original chart the Hurting Officer is revealed in the month, so intelligence and talent lie in speech, skills, and strategy. Direct Resource is revealed twice, so one is suited to education, administration, institutions, or fields requiring credentials. Chen-You combination and Chen-Xu clash appear together, so the early foundation is unstable, with much moving and changing. Luck periods of Earth and Metal help the self too much and instead mean toil with little result. Only in years and luck periods where Wealth and Officer are revealed will there be room to perform. Overall, victory comes by professional ability; avoid relying on strength, acting alone, and contending with others. Ding Fire Seven Killings is hidden in the two Xu of month and hour, so authority is not apparent and needs luck to assist. Bing Fire Direct Officer only appears in the Da Yun (ten-year luck period), not in the original chart, so one should not presume a high position.",
+     "In the whole chart Wood is only a middle qi in one place, so the Wealth star is extremely weak. Only the year branch stores Yi Indirect Wealth, and Wealth does not appear in the stems, meaning money comes unobtrusively and gathers and scatters by others' hands; this is not a destiny of sitting on abundance. Metal and Earth are too heavy, and Friend competes for Wealth, so partnerships and loans among relatives and friends most easily cause loss. It is better to set up one's own door and personally control finances. Only in Wealth luck periods (Yi Mao, Jia Yin) can there be improvement; yet You-Xu Harm and Chen-Xu clash appear together in the original chart, so when gaining Wealth there is often dispute and entanglement. Ji Wei Indirect Resource is current; Indirect Resource generates the self and seizes food, so the path to income is more mentally taxing. It is better to preserve what is achieved than to expand.",
+     "Friend forms a force. The day branch sits on You as the original qi of Friend, so the spouse palace is occupied by the same kind. This means similar temperaments and also contention and unwillingness to yield; the spouse may have their own opinions, and getting along easily becomes a contest. You-Xu Harm appears in day-hour and month-day, so close relations have many disagreements; when words do not fit, resentment arises. Wealth is the wife; in the original chart Wood is weak and unrevealed, so the marriage affinity comes later, or there is more separation than gathering. Chen-Xu clash and Chen-You combination interact, so the image of gathering and scattering is clear. It is better to dissolve hardness with tolerance, not to overwhelm others with reason. Ding Fire Seven Killings hidden in Xu also indicates hidden attachment in relationships.",
+     "Metal and Earth are strongest, Fire and Water are both weak, and Wood is only a middle qi; this shows an imbalanced Five Elements. Strong Metal makes the qi of lungs, skin, and large intestine rather rigid; heavy Earth makes spleen and stomach easily stagnant; insufficient Water and Fire leave heart and kidney qi unfulfilled. Chen-Xu clash appears twice, and clash means upheaval. Xu-Wei punishment and break appear repeatedly, so particularly watch the spleen, stomach, waist, and feet. It is better to dredge Wood and drain Earth, think less, moderate diet, and not rely on toughness. If there is discomfort, seek medical care promptly; fate calculation does not make medical judgments.",
+     "The Yong Shen (the key element for the question) lies in Wood, Fire, and Water. It is better to seek development toward the East and South, draw near education, skills, and growth-oriented work, and avoid merely preserving what is achieved.",
+     "With Friend piled up repeatedly, money should be managed by oneself. Be cautious with partnerships and guarantees, lest Wealth be contested and scattered.",
+     "The nature is firm and likes to win; it is better to nurture relationships with tolerance, and the image of You-Xu Harm can then gradually ease.",
+     "Xin You Friend supports the self; Chen-You combine while You-Xu Harm, so youth has much movement.",
+     "Geng Shen Rob Wealth meets Metal; Friend and Rob Wealth contend for Wealth, and the Ji Shen (unfavorable element) is in power.",
+     "Ji Wei Indirect Resource generates the self; Xu-Wei punishment and break; favorable and unfavorable offset each other.",
+     "Wu Wu strong Resource supports the self; Wu-Xu combine into Fire as unfavorable; heavy Earth buries Metal.",
+     "Ding Fire Seven Killings is revealed and controls the self; Si-You combine into Metal, and Officer and Seven Killings are usable.",
+     "Bing Chen Direct Officer is revealed in the stem; Chen-You combine and Bing-Xin combine; the Officer star is usable.",
+     "Yi Mao Indirect Wealth is revealed in the stem; Mao-Xu combine into Wealth; strong Wood is most favorable as the Yong Shen (the key element for the question).",
+     "Jia Yin Direct Wealth is revealed in the stem; Yin-Xu support Fire; Wealth and Officer both thrive and are usable."
+    ],
+    "failures": 0
+   }
+  }
+ }
+}

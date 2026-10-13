@@ -243,3 +243,7 @@ html:lang(en) .bazi .el-row > b { font-size: 17px; }
 html:lang(en) .bazi .ln-grid { --axis: 104px; }
 html:lang(en) .bazi .rel-node { font-size: 22px; }
 html:lang(en) .bazi .rel-arc-label { font-size: 12px; }
+
+/* 一生运势横轴：宽屏写年龄段与年份，窄屏只写起始年龄。 */
+.bazi .narrow-only { display: none; }
+@media (max-width: 760px) { .bazi .ln-x .narrow-only { display: block; } }

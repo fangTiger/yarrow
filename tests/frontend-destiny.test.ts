@@ -229,3 +229,16 @@ test("画像与一生运势在窄屏保持画像纵排、图完整和表内横�
   assert.match(css, /\.ln-scroll\s*\{[^}]*overflow-x:\s*auto/u);
   assert.match(css, /\.ln-table tbody th[^}]*position:\s*sticky/u);
 });
+
+test("逐运表点选行为年龄段，大运干支只出现一行", async () => {
+  const { LifeLuckPanel } = await import("../web/components/LifeLuckPanel.js");
+  const reading = JSON.parse((await import("node:fs")).readFileSync(
+    new URL("../web/samples/destiny.zh.json", import.meta.url), "utf8"));
+  const html = renderIn("zh", createElement(LifeLuckPanel, { reading, currentDate: "2026-10-13" }));
+  const thead = html.slice(html.indexOf("<thead"), html.indexOf("</thead>"));
+  assert.match(thead, /<th>年龄<\/th>/u);
+  assert.match(thead, /class="ln-year[^"]*"[^>]*>6–15岁<\/button>/u);
+  const tbody = html.slice(html.indexOf("<tbody"), html.indexOf("</tbody>"));
+  assert.equal((tbody.match(/<th scope="row">大运<\/th>/gu) ?? []).length, 1);
+  assert.doesNotMatch(tbody, /<th scope="row">年龄<\/th>/u);
+});
