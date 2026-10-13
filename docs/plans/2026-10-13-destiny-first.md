@@ -92,6 +92,11 @@
   - portrait 只综合三家「性格」分项与用神已有的判断，不新增盘面依据，不做医疗、法律、投资结论；
   - 标签用简短的性格词（如「重情义」「求稳」），不要写干支或十神；
   - 命理总述可概括一生大运起伏，但不给总体吉凶评级。
+- [ ] D1 补充（真实模型冒烟发现）：命理大运事实 `destinyLuckFact` 补上该步大运与原局四柱之间的合冲刑害。用 `makeNodes(chart, cycle, null)` 加 `findRelations`，取 scope 为 luck 的关系，把关系标签写入 label 与 tokens。测试要覆盖：引用该步大运与原局的真实关系可以通过审计，引用别步大运的关系被拦下。
+- [ ] 一生走势概括：
+  - 命理且有 `periodConsensus` 时，总述必须写 `outlook`，用一句话概括一生大运起伏；没有时不得写；
+  - 命理仍不得写 tone；
+  - 改 `checkSummary`、提示词（「命理不写 tone 和 outlook」一句）与 mock。
 - [ ] `SummaryInput.periodConsensus?: string`：命理且有逐运合议时，由服务端拼成一行，如「第1步 戊申 4–13岁 5.0成；第2步 …」，并写入提示词「逐运合议」。
 - [ ] 核对与修补：
   - `checkSummary`：命理缺 portrait 或数量越界即报错；问事、运势出现 portrait 即报错；
