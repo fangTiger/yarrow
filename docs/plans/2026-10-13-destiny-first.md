@@ -102,7 +102,8 @@
   - `checkSummary`：命理缺 portrait 或数量越界即报错；问事、运势出现 portrait 即报错；
   - portrait 各条走现有的文本核对（禁用词、语言、盘面核对器），traits 只走禁用词与语言；
   - `summaryTexts` 纳入 portrait；
-  - `repairSummary`：删去不合格条目后，若 traits 少于 3 或 strengths、blindSpots 任一为空，整块省略。
+  - `repairSummary`：删去不合格条目后，条数不足（traits 少于 3，strengths、blindSpots 不足 2）或总评被删，整块省略，保证修补后的输出仍能通过核对。
+  - 命理大运与原局的关系事实只给沈孝瞻、任铁樵；调候派（余春台）不用关系。
 - [ ] mock-summary：命理给出合格 portrait。
 - [ ] 翻译单元（服务端 `units.ts` 与前端 `reading-translation.ts` 同步，顺序一致）：
   - summary 单元：portrait 放在 remedy 之后，依次为 traits.N、strengths.N、blindSpots.N、summary；

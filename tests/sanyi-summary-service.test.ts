@@ -161,34 +161,42 @@ test("总述写作中时页面继续轮询", () => {
   assert.equal(shouldPollReading({ ...(base as object), summary: { status: "done" } } as never), false);
 });
 
-test("运势与命理也写白话总述：运势带倾向与十年走势，命理不带", async () => {
-  const f = await baziFixture();
-  try {
-    const fortune = await f.bazi.create({ kind: "fortune", question: "我今年运势如何", birth, sect: 1,
-      horizon: "year", feeProof: baziProof(1) });
-    await f.bazi.whenSettled(fortune.id);
-    const a = await f.bazi.getReading(fortune.id);
-    assert.equal(a.status, "done");
-    assert.equal(a.summary?.status, "done");
-    assert.equal(a.summary?.basis, 3);
-    assert.ok(a.summary?.output?.tone);
-    assert.ok(a.summary?.output?.outlook);
-    // 八字心法依据：三家取用与调候。
-    assert.equal(a.summary?.anchor?.title, "三家取用");
-    const lines = a.summary?.anchor?.lines.join("\n") ?? "";
-    for (const name of ["沈孝瞻：", "余春台：", "任铁樵：", "调候："]) {
-      assert.ok(lines.includes(name), name);
+test(
+  "运势与命理也写白话总述：运势带倾向，命理带画像与走势但不带倾向",
+  async () => {
+    const f = await baziFixture();
+    try {
+      const fortune = await f.bazi.create({
+        kind: "fortune", question: "我今年运势如何", birth, sect: 1,
+        horizon: "year", feeProof: baziProof(1),
+      });
+      await f.bazi.whenSettled(fortune.id);
+      const a = await f.bazi.getReading(fortune.id);
+      assert.equal(a.status, "done");
+      assert.equal(a.summary?.status, "done");
+      assert.equal(a.summary?.basis, 3);
+      assert.ok(a.summary?.output?.tone);
+      assert.ok(a.summary?.output?.outlook);
+      // 八字心法依据：三家取用与调候。
+      assert.equal(a.summary?.anchor?.title, "三家取用");
+      const lines = a.summary?.anchor?.lines.join("\n") ?? "";
+      for (const name of ["沈孝瞻：", "余春台：", "任铁樵：", "调候："]) {
+        assert.ok(lines.includes(name), name);
+      }
+      assert.ok(a.summary?.output?.remedy);
+      const destiny = await f.bazi.create({
+        kind: "destiny", question: "我适合做什么", birth, sect: 1,
+        horizon: "year", feeProof: baziProof(2),
+      });
+      await f.bazi.whenSettled(destiny.id);
+      const b = await f.bazi.getReading(destiny.id);
+      assert.equal(b.summary?.status, "done");
+      assert.equal(b.summary?.output?.tone, undefined);
+      assert.ok(b.summary?.output?.outlook);
+      assert.ok(b.summary?.output?.portrait);
+      assert.ok(b.summary?.output?.remedy);
+    } finally {
+      await f.close();
     }
-    assert.ok(a.summary?.output?.remedy);
-    const destiny = await f.bazi.create({ kind: "destiny", question: "我适合做什么", birth, sect: 1,
-      horizon: "year", feeProof: baziProof(2) });
-    await f.bazi.whenSettled(destiny.id);
-    const b = await f.bazi.getReading(destiny.id);
-    assert.equal(b.summary?.status, "done");
-    assert.equal(b.summary?.output?.tone, undefined);
-    assert.equal(b.summary?.output?.outlook, undefined);
-    assert.ok(b.summary?.output?.remedy);
-  } finally {
-    await f.close();
-  }
-});
+  },
+);

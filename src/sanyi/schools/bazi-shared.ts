@@ -1,6 +1,7 @@
 // src/sanyi/schools/bazi-shared.ts
 import lunarPkg from "lunar-javascript";
 import type { BaziChart } from "../../calendar/bazi.js";
+import { findRelations, makeNodes } from "../../calendar/bazi-relations.js";
 import type { QiongtongEntry } from "../../calendar/qiongtong.js";
 import type { FortuneHorizon } from "../classify.js";
 import type { Fact, FactTable } from "../facts.js";
@@ -75,7 +76,7 @@ export function baziSystemPrompt(school: BaziSchool, kind: BaziSchoolInput["kind
   return school.systemPrompt.replace(LEGACY_DESTINY_RULE, DESTINY_PERIOD_RULES);
 }
 
-function destinyLuckFact(input: BaziSchoolInput, id: string, fact: Fact): Fact {
+function destinyLuckFact(key: BaziSchoolKey, input: BaziSchoolInput, id: string, fact: Fact): Fact {
   const index = Number(id.slice(5));
   const cycle = input.chart.luck?.cycles.find((item) => item.index === index);
   if (!cycle) {
@@ -93,8 +94,15 @@ function destinyLuckFact(input: BaziSchoolInput, id: string, fact: Fact): Fact {
     }
     return [stem, god];
   });
-  return { ...fact, label: `${fact.label} 藏干 ${hidden.join(" ")}`,
-    tokens: new Set([...fact.tokens, ...hidden]) };
+  // 本运与原局的合冲刑害只给用关系的两家；调候派按设计不用关系。
+  const relations = ALLOWED[key].includes("relation:")
+    ? findRelations(makeNodes(input.chart, cycle, null))
+      .filter((relation) => relation.scope === "luck")
+      .map((relation) => relation.label)
+    : [];
+  const relationLabel = relations.length > 0 ? ` 关系 ${relations.join(" ")}` : "";
+  return { ...fact, label: `${fact.label} 藏干 ${hidden.join(" ")}${relationLabel}`,
+    tokens: new Set([...fact.tokens, ...hidden, ...relations]) };
 }
 export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): FactTable {
   const facts: FactTable = new Map();
@@ -108,7 +116,7 @@ export function selectBaziFacts(key: BaziSchoolKey, input: BaziSchoolInput): Fac
       }
       // 余家逐年只收运年干支、十神与藏干，不追加格局派使用的关系和神煞。
       if (input.kind === "destiny" && /^luck:\d+$/u.test(id)) {
-        facts.set(id, destinyLuckFact(input, id, fact));
+        facts.set(id, destinyLuckFact(key, input, id, fact));
       } else if (key === "yuchuntai" && yearFact) {
         const match = fact.label.match(/^(\d{4}) 年/u);
         const entry = input.chart.liunian.years.find((year) => String(year.year) === match?.[1]);

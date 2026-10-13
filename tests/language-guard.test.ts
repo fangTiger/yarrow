@@ -52,6 +52,10 @@ test("总述核对不把英文问题原文计入汉字占比", () => {
     conclusion: "适合稳中求进。", agreement: "三家都认为宜发挥耐心。",
     explanation: ["命局整体较稳，先积累经验。"],
     remedy: { principle: "稳步行动。", plan: [{ action: "先做准备", basis: "三家意见" }], avoid: ["不要冒进"] },
+    portrait: {
+      traits: ["求稳", "耐心", "有担当"], strengths: ["做事稳妥", "愿意担当"],
+      blindSpots: ["有时多虑", "偶尔固执"], summary: "稳中有韧，重视承诺。",
+    },
   };
   assert.deepEqual(checkSummary(chinese, input), []);
   const english: PlainSummary = {
@@ -61,6 +65,12 @@ test("总述核对不把英文问题原文计入汉字占比", () => {
       principle: "Move carefully.",
       plan: [{ action: "Prepare first", basis: "The schools agree" }],
       avoid: ["Do not rush"],
+    },
+    portrait: {
+      traits: ["Steady", "Patient", "Reliable"],
+      strengths: ["Works carefully", "Takes responsibility"],
+      blindSpots: ["Can overthink", "Can be stubborn"],
+      summary: "Steady, resilient, and committed.",
     },
   };
   assert.match(checkSummary(english, input).join("\n"), /请用中文作答/u);

@@ -45,6 +45,18 @@ function plainSummaryEntries(summary: StoredReading["summary"]): TranslationEntr
       add(entries, `summary.output.remedy.avoid.${index}`, text)
     ));
   }
+  if (output.portrait) {
+    output.portrait.traits.forEach((text, index) => (
+      add(entries, `summary.output.portrait.traits.${index}`, text)
+    ));
+    output.portrait.strengths.forEach((text, index) => (
+      add(entries, `summary.output.portrait.strengths.${index}`, text)
+    ));
+    output.portrait.blindSpots.forEach((text, index) => (
+      add(entries, `summary.output.portrait.blindSpots.${index}`, text)
+    ));
+    add(entries, "summary.output.portrait.summary", output.portrait.summary);
+  }
   if (output.watch) {
     add(entries, "summary.output.watch.window", output.watch.window);
     add(entries, "summary.output.watch.condition", output.watch.condition);
@@ -91,9 +103,18 @@ function baziUnits(reading: Extract<StoredReading, { kind: "destiny" | "fortune"
       output.sections.forEach((section, index) => (
         add(entries, `${prefix}.sections.${index}.text`, section.text)
       ));
+      if ("timing" in output && output.timing) {
+        add(entries, `${prefix}.timing.window`, output.timing.window);
+        add(entries, `${prefix}.timing.condition`, output.timing.condition);
+      }
       output.advice.forEach((text, index) => add(entries, `${prefix}.advice.${index}`, text));
       if ("years" in output) {
         output.years.forEach((year, index) => add(entries, `${prefix}.years.${index}.note`, year.note));
+      }
+      if ("periods" in output) {
+        output.periods?.forEach((period, index) => (
+          add(entries, `${prefix}.periods.${index}.note`, period.note)
+        ));
       }
     }
     return { key, kind: reading.kind, entries, allowedHan: [] };

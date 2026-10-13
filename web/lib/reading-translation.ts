@@ -67,6 +67,19 @@ function plainSummaryPaths(reading: MutableRecord): string[] {
       add(paths, `summary.output.remedy.avoid.${index}`, text)
     ));
   }
+  const portrait = output.portrait as MutableRecord | undefined;
+  if (portrait) {
+    (portrait.traits as unknown[] | undefined)?.forEach((text, index) => (
+      add(paths, `summary.output.portrait.traits.${index}`, text)
+    ));
+    (portrait.strengths as unknown[] | undefined)?.forEach((text, index) => (
+      add(paths, `summary.output.portrait.strengths.${index}`, text)
+    ));
+    (portrait.blindSpots as unknown[] | undefined)?.forEach((text, index) => (
+      add(paths, `summary.output.portrait.blindSpots.${index}`, text)
+    ));
+    add(paths, "summary.output.portrait.summary", portrait.summary);
+  }
   const watch = output.watch as MutableRecord | undefined;
   if (watch) {
     add(paths, "summary.output.watch.window", watch.window);
@@ -109,9 +122,17 @@ function baziSchoolPaths(reading: MutableRecord, key: string): string[] {
   (output.sections as MutableRecord[]).forEach((section, index) => (
     add(paths, `${prefix}.sections.${index}.text`, section.text)
   ));
+  const timing = output.timing as MutableRecord | undefined;
+  if (timing) {
+    add(paths, `${prefix}.timing.window`, timing.window);
+    add(paths, `${prefix}.timing.condition`, timing.condition);
+  }
   (output.advice as unknown[]).forEach((text, index) => add(paths, `${prefix}.advice.${index}`, text));
   (output.years as MutableRecord[] | undefined)?.forEach((year, index) => (
     add(paths, `${prefix}.years.${index}.note`, year.note)
+  ));
+  (output.periods as MutableRecord[] | undefined)?.forEach((period, index) => (
+    add(paths, `${prefix}.periods.${index}.note`, period.note)
   ));
   return paths;
 }

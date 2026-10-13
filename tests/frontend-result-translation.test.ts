@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import type { StoredTranslation } from "../src/sanyi/translation/store.js";
+import { extractUnits } from "../src/sanyi/translation/units.js";
 import {
   applyReadingTranslation,
   translationViewState,
@@ -24,6 +25,58 @@ const translation = (status: "pending" | "writing" | "done" | "failed", texts?: 
     },
   },
 }) satisfies StoredTranslation;
+
+function valueAt(root: unknown, path: string): unknown {
+  return path.split(".").reduce<unknown>((value, part) => {
+    if (!value || typeof value !== "object") return undefined;
+    return Array.isArray(value)
+      ? value[Number(part)]
+      : (value as Record<string, unknown>)[part];
+  }, root);
+}
+
+function baziReading(kind: "destiny" | "fortune") {
+  const school = kind === "destiny" ? {
+    useGod: "以木为用神", headline: "稳步积累", reason: "日主得助",
+    sections: [{ title: "性格", text: "做事稳妥" }], advice: ["先打基础"], evidence: [],
+    periods: [
+      { index: 1, verdict: "吉", confidenceTenths: 7, note: "木旺得助" },
+      { index: 2, verdict: "凶", confidenceTenths: 3, note: "" },
+    ],
+  } : {
+    useGod: "以木为用神", headline: "稳中有升", reason: "日主得助",
+    sections: [{ title: "事业", text: "宜稳步推进" }],
+    timing: { window: "春季", condition: "准备完成" },
+    advice: ["先打基础"], evidence: [], verdict: "吉", confidenceTenths: 7,
+    years: [{ year: 2026, verdict: "吉", confidenceTenths: 7, note: "机会增加" }],
+  };
+  return {
+    id: "abcdefghijklmnopqrstuvwxyz", kind, status: "done",
+    schools: Object.fromEntries(["shenxiaozhan", "yuchuntai", "rentieqiao"].map((key) => (
+      [key, { status: "done", output: school, attempts: 1, retries: 0 }]
+    ))),
+    summary: {
+      status: "done", basis: 3, attempts: 1, retries: 0,
+      output: {
+        conclusion: "稳步向前", agreement: "三家看法接近",
+        explanation: ["先稳后进", "量力而行"],
+        remedy: {
+          principle: "稳住节奏", plan: [{ action: "先做准备", basis: "三家意见" }],
+          avoid: ["不要急进"],
+        },
+        ...(kind === "destiny" ? {
+          portrait: {
+            traits: ["重情义", "求稳", "有担当"],
+            strengths: ["做事稳妥", "愿意担当"],
+            blindSpots: ["有时多虑", "偶尔固执"],
+            summary: "稳中有韧，重视承诺。",
+          },
+          outlook: "早年宜守，中年渐顺",
+        } : { tone: "顺", outlook: "前低后高" }),
+      },
+    },
+  };
+}
 
 test("英文译文按总述清单顺序覆盖，未完成单元保留中文", () => {
   const reading = {
@@ -56,6 +109,57 @@ test("英文译文按总述清单顺序覆盖，未完成单元保留中文", ()
     translation: translation("writing"),
   } as never) as unknown as typeof reading;
   assert.equal(pending.summary.output.conclusion, "中文结论");
+});
+
+test("服务端抽取与前端回填在命理、运势夹具上路径和顺序逐条一致", () => {
+  for (const kind of ["destiny", "fortune"] as const) {
+    const reading = baziReading(kind);
+    const units = extractUnits(reading as never);
+    const unitsTranslation = Object.fromEntries(units.map((unit) => [unit.key, {
+      status: "done" as const,
+      sourceHash: `${unit.key}-hash`, attempts: 1, failures: 0,
+      texts: [...unit.entries.map((entry) => `EN:${entry.path}`), "__EXTRA_PATH__"],
+    }]));
+    const translated = applyReadingTranslation({
+      ...reading, translation: { lang: "en", units: unitsTranslation },
+    } as never) as unknown;
+    for (const unit of units) {
+      for (const entry of unit.entries) {
+        assert.equal(valueAt(translated, entry.path), `EN:${entry.path}`, `${kind} ${entry.path}`);
+      }
+    }
+    const { translation: _translation, ...translatedReading } = translated as Record<string, unknown>;
+    assert.doesNotMatch(JSON.stringify(translatedReading), /__EXTRA_PATH__/u,
+      `${kind} 前端多出翻译路径`);
+  }
+});
+
+test("英文回填覆盖命理画像与运势应期", () => {
+  for (const kind of ["destiny", "fortune"] as const) {
+    const reading = baziReading(kind);
+    const units = extractUnits(reading as never);
+    const translated = applyReadingTranslation({
+      ...reading,
+      translation: {
+        lang: "en",
+        units: Object.fromEntries(units.map((unit) => [unit.key, {
+          status: "done", sourceHash: `${unit.key}-hash`, attempts: 1, failures: 0,
+          texts: unit.entries.map((entry) => `EN:${entry.path}`),
+        }])),
+      },
+    } as never) as unknown;
+    if (kind === "destiny") {
+      assert.equal(valueAt(translated, "summary.output.portrait.traits.0"),
+        "EN:summary.output.portrait.traits.0");
+      assert.equal(valueAt(translated, "summary.output.portrait.summary"),
+        "EN:summary.output.portrait.summary");
+    } else {
+      assert.equal(valueAt(translated, "schools.shenxiaozhan.output.timing.window"),
+        "EN:schools.shenxiaozhan.output.timing.window");
+      assert.equal(valueAt(translated, "schools.shenxiaozhan.output.timing.condition"),
+        "EN:schools.shenxiaozhan.output.timing.condition");
+    }
+  }
 });
 
 test("翻译状态覆盖未就绪、翻译中、完成与失败可重试", () => {

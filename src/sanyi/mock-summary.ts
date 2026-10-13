@@ -30,6 +30,17 @@ export function mockSummaryOutput(kind: SummaryKind, prompt: string): PlainSumma
   if (kind !== "destiny" && tone) {
     output.tone = tone;
   }
+  if (kind === "destiny") {
+    output.portrait = {
+      traits: ["重情义", "求稳", "有担当"],
+      strengths: ["做事稳妥，能够顾全大局", "遇到责任愿意主动承担"],
+      blindSpots: ["顾虑较多时容易迟疑", "压力之下偶尔过于坚持"],
+      summary: "重承诺也重秩序，稳中带着韧劲。",
+    };
+    if (prompt.includes("逐运合议：")) {
+      output.outlook = "早年宜稳住根基，中年渐有转机，往后以守成为先。";
+    }
+  }
   if (kind === "fortune") {
     output.outlook = "十年之中有起有伏，前几年宜守，后几年渐有转机。";
   }

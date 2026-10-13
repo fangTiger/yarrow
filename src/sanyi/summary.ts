@@ -26,6 +26,14 @@ export interface Remedy {
   avoid: string[];
 }
 
+/** 命理性格画像：简短标签、优势、短板与一句总评。 */
+export interface Portrait {
+  traits: string[];
+  strengths: string[];
+  blindSpots: string[];
+  summary: string;
+}
+
 /** 心法依据：问事为本卦《大象传》原文，八字为三家取用与调候。 */
 export interface SummaryAnchor {
   title: string;
@@ -41,10 +49,12 @@ export interface PlainSummary {
   explanation: string[];
   /** 解法；改版前的旧存档没有。 */
   remedy?: Remedy;
+  /** 命理性格画像；旧存档以及问事、运势没有。 */
+  portrait?: Portrait;
   /** 旧存档的建议；新总述并入解法，不再输出。 */
   advice?: string[];
   watch?: { window: string; condition: string };
-  /** 运势的十年走势一句话；问事与命理不写。 */
+  /** 运势的十年走势，或命理有逐运合议时的一生走势。 */
   outlook?: string;
 }
 
@@ -72,6 +82,8 @@ export interface SummaryInput {
   chartPoints: readonly string[];
   /** 运势的逐年合议一行，如「2023 4.7成 · 2024 4.3成 …」。 */
   yearConsensus?: string;
+  /** 命理的逐运合议一行，如「第1步 戊申 4–13岁 5.0成；第2步 …」。 */
+  periodConsensus?: string;
   schools: readonly SummarySchool[];
   /** 心法依据，由服务端组装；核对前从正文中剔除。 */
   anchor: SummaryAnchor;
@@ -117,6 +129,26 @@ export const SUMMARY_SCHEMA = {
         },
       },
     },
+    portrait: {
+      type: "object",
+      additionalProperties: false,
+      required: ["traits", "strengths", "blindSpots", "summary"],
+      properties: {
+        traits: {
+          type: "array", minItems: 3, maxItems: 5,
+          items: { type: "string", minLength: 1, maxLength: 6 },
+        },
+        strengths: {
+          type: "array", minItems: 2, maxItems: 2,
+          items: { type: "string", minLength: 1, maxLength: 40 },
+        },
+        blindSpots: {
+          type: "array", minItems: 2, maxItems: 2,
+          items: { type: "string", minLength: 1, maxLength: 40 },
+        },
+        summary: { type: "string", minLength: 1, maxLength: 60 },
+      },
+    },
     watch: {
       type: "object",
       additionalProperties: false,
@@ -141,10 +173,15 @@ export const SUMMARY_SYSTEM_PROMPT = `你是「三易」的白话总述执笔人
 - remedy 是解法，回答「那我该怎么办」：principle 用一句白话讲清「心法依据」教人怎么处事，不要照抄原文。
 - remedy.plan 写 2 至 3 步：action 写做什么，basis 写依据的盘面要点或三家说法，
   timing 写什么时候做（结合应期，没有就省略）；remedy.avoid 写 1 至 2 条别做什么。
+- 仅命理写 portrait：只综合三家「性格」分项与用神已有判断，不新增盘面依据。
+  traits 写 3 至 5 个简短性格词，不写干支或十神；strengths 与 blindSpots 各写 2 条，
+  summary 写一句总评。
 - 解法只给现实中能照做的做法：不给颜色、方位、数字、佩戴之类的趋避，
   不推荐开光物、法器、符咒、护身符、吉祥物、摆件，不涉及放生、捐款、供奉、烧香。
 - 需要留意的时间写入 watch，必须写明成立条件；没有就省略。
-- 运势必须写 outlook，用一句话概括十年走势；命理不写 tone 和 outlook，也不评吉凶。
+- 运势必须写 outlook，用一句话概括十年走势。
+- 命理不写 tone，也不给总体吉凶评级；有「逐运合议」时必须写 outlook，
+  用一句话概括一生大运起伏，没有逐运合议时不写 outlook。
 - 不做医疗、法律、投资结论；涉及健康时建议就医。
 - 自称只说「三易」，语气平实，不渲染恐惧，也不打包票。
 输出必须严格符合给定 JSON Schema。`;
@@ -205,6 +242,9 @@ export function buildSummaryPrompt(input: SummaryInput): string {
   if (input.yearConsensus) {
     lines.push(`逐年合议：${input.yearConsensus}`);
   }
+  if (input.periodConsensus) {
+    lines.push(`逐运合议：${input.periodConsensus}`);
+  }
   lines.push(`心法依据（${input.anchor.title}）：`, ...input.anchor.lines.map((line) => `- ${line}`));
   lines.push("盘面要点：", ...input.chartPoints.map((point) => `- ${point}`), "三家断语：");
   lines.push(...input.schools.map(schoolBlock));
@@ -237,7 +277,7 @@ function textErrors(text: string, input: SummaryInput): string[] {
   return [...input.proseErrors(stripAnchor(text, input.anchor)), ...forbiddenErrors(text)];
 }
 
-function summaryTexts(output: PlainSummary): string[] {
+function baseSummaryTexts(output: PlainSummary): string[] {
   const texts = [output.conclusion, output.agreement, ...output.explanation, ...(output.advice ?? [])];
   if (output.remedy) {
     texts.push(output.remedy.principle, ...output.remedy.avoid);
@@ -257,6 +297,16 @@ function summaryTexts(output: PlainSummary): string[] {
   return texts;
 }
 
+function portraitTexts(portrait: Portrait | undefined): string[] {
+  return portrait
+    ? [...portrait.traits, ...portrait.strengths, ...portrait.blindSpots, portrait.summary]
+    : [];
+}
+
+function summaryTexts(output: PlainSummary): string[] {
+  return [...baseSummaryTexts(output), ...portraitTexts(output.portrait)];
+}
+
 export function summaryLanguageErrors(output: PlainSummary): string[] {
   return chineseBodyErrors(summaryTexts(output));
 }
@@ -265,8 +315,28 @@ export function summaryLanguageErrors(output: PlainSummary): string[] {
 export function checkSummary(output: PlainSummary, input: SummaryInput): string[] {
   const errors: string[] = summaryLanguageErrors(output);
   if (input.kind === "destiny") {
-    if (output.tone !== undefined || output.outlook !== undefined) {
-      errors.push("命理不写倾向（tone）与十年走势（outlook）");
+    if (output.tone !== undefined) {
+      errors.push("命理不写倾向（tone）");
+    }
+    if (!output.portrait) {
+      errors.push("命理须写性格画像（portrait）");
+    } else {
+      if (output.portrait.traits.length < 3 || output.portrait.traits.length > 5) {
+        errors.push("性格标签须为 3 至 5 项");
+      }
+      if (output.portrait.strengths.length !== 2) {
+        errors.push("性格优势须恰好 2 项");
+      }
+      if (output.portrait.blindSpots.length !== 2) {
+        errors.push("性格短板须恰好 2 项");
+      }
+    }
+    if (input.periodConsensus) {
+      if (!output.outlook) {
+        errors.push("命理有逐运合议时须写一生走势（outlook）");
+      }
+    } else if (output.outlook !== undefined) {
+      errors.push("命理没有逐运合议时不写 outlook");
     }
   } else if (input.consensus !== null) {
     const tone = expectedTone(input.consensus);
@@ -280,7 +350,20 @@ export function checkSummary(output: PlainSummary, input: SummaryInput): string[
   if (input.kind !== "fortune" && output.outlook !== undefined && input.kind !== "destiny") {
     errors.push("只有运势写十年走势（outlook）");
   }
-  errors.push(...textErrors(summaryTexts(output).join("\n"), input));
+  if (input.kind !== "destiny" && output.portrait) {
+    errors.push(`${input.kind === "question" ? "问事" : "运势"}不写性格画像（portrait）`);
+  }
+  errors.push(...textErrors(baseSummaryTexts(output).join("\n"), input));
+  if (output.portrait) {
+    for (const trait of output.portrait.traits) {
+      errors.push(...chineseBodyErrors([trait]), ...forbiddenErrors(trait));
+    }
+    for (const text of [
+      ...output.portrait.strengths, ...output.portrait.blindSpots, output.portrait.summary,
+    ]) {
+      errors.push(...chineseBodyErrors([text]), ...textErrors(text, input));
+    }
+  }
   return errors;
 }
 
@@ -312,6 +395,29 @@ export function repairSummary(output: PlainSummary, input: SummaryInput): Summar
     explanation: explanation.length > 0 ? explanation : ["与盘面不符的解释已删去，详见三家依据。"],
     remedy: repairRemedy(output.remedy, input.kind, keep),
   };
+  if (input.kind === "destiny" && output.portrait) {
+    const keepPortrait = (value: string, trait: boolean): string => {
+      const errors = trait
+        ? [...chineseBodyErrors([value]), ...forbiddenErrors(value)]
+        : [...chineseBodyErrors([value]), ...textErrors(value, input)];
+      if (errors.length === 0) {
+        return value;
+      }
+      removed += 1;
+      return "";
+    };
+    const traits = output.portrait.traits.map((value) => keepPortrait(value, true))
+      .filter((value) => value !== "");
+    const strengths = output.portrait.strengths.map((value) => keepPortrait(value, false))
+      .filter((value) => value !== "");
+    const blindSpots = output.portrait.blindSpots.map((value) => keepPortrait(value, false))
+      .filter((value) => value !== "");
+    const portraitSummary = keepPortrait(output.portrait.summary, false);
+    if (traits.length >= 3 && traits.length <= 5 && strengths.length === 2
+      && blindSpots.length === 2 && portraitSummary) {
+      repaired.portrait = { traits, strengths, blindSpots, summary: portraitSummary };
+    }
+  }
   const difference = output.difference ? keep(output.difference) : "";
   if (difference) {
     repaired.difference = difference;
@@ -325,6 +431,9 @@ export function repairSummary(output: PlainSummary, input: SummaryInput): Summar
   }
   if (input.kind === "fortune") {
     repaired.outlook = (output.outlook ? keep(output.outlook) : "") || "十年走势见下方流年运势。";
+  }
+  if (input.kind === "destiny" && input.periodConsensus) {
+    repaired.outlook = (output.outlook ? keep(output.outlook) : "") || "一生大运起伏见「一生运势」。";
   }
   if (input.kind !== "destiny" && input.consensus !== null) {
     const tone = expectedTone(input.consensus);

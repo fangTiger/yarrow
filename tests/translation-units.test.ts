@@ -94,9 +94,64 @@ test("八字只抽取设计表指定正文，逐年短评归所在家", () => {
     "schools.shenxiaozhan.output.headline",
     "schools.shenxiaozhan.output.reason",
     "schools.shenxiaozhan.output.sections.0.text",
+    "schools.shenxiaozhan.output.timing.window",
+    "schools.shenxiaozhan.output.timing.condition",
     "schools.shenxiaozhan.output.advice.0",
     "schools.shenxiaozhan.output.years.0.note",
   ]);
+});
+
+test("命理翻译单元按约定顺序抽取画像与逐运短评，并跳过空短评", () => {
+  const destinySummary = {
+    ...summary,
+    output: {
+      ...summary.output,
+      tone: undefined,
+      portrait: {
+        traits: ["重情义", "求稳", "有担当"],
+        strengths: ["做事稳妥", "愿意担当"],
+        blindSpots: ["有时多虑", "偶尔固执"],
+        summary: "稳中有韧，重视承诺。",
+      },
+      outlook: "早年宜守，中年渐顺",
+    },
+  };
+  const output = {
+    useGod: "以木为用神",
+    headline: "稳步积累",
+    reason: "日主得助",
+    sections: [{ title: "性格", text: "做事稳妥" }],
+    advice: ["先打基础"],
+    evidence: [{ ref: "b1", claim: "不翻" }],
+    periods: [
+      { index: 1, verdict: "吉" as const, confidenceTenths: 7, note: "木旺得助" },
+      { index: 2, verdict: "凶" as const, confidenceTenths: 3, note: "" },
+    ],
+  };
+  const reading = {
+    id: "abcdefghijklmnopqrstuvwxyz", kind: "destiny", status: "done",
+    schools: Object.fromEntries(["shenxiaozhan", "yuchuntai", "rentieqiao"].map((key) => (
+      [key, { status: "done", output, attempts: 1, retries: 0 }]
+    ))),
+    summary: destinySummary,
+  };
+  const units = extractUnits(reading as never);
+  const summaryPaths = units[0]!.entries.map((entry) => entry.path);
+  const remedyEnd = summaryPaths.indexOf("summary.output.remedy.avoid.0");
+  assert.deepEqual(summaryPaths.slice(remedyEnd + 1, remedyEnd + 9), [
+    "summary.output.portrait.traits.0",
+    "summary.output.portrait.traits.1",
+    "summary.output.portrait.traits.2",
+    "summary.output.portrait.strengths.0",
+    "summary.output.portrait.strengths.1",
+    "summary.output.portrait.blindSpots.0",
+    "summary.output.portrait.blindSpots.1",
+    "summary.output.portrait.summary",
+  ]);
+  assert.deepEqual(units[1]!.entries.map((entry) => entry.path).slice(-1), [
+    "schools.shenxiaozhan.output.periods.0.note",
+  ]);
+  assert.equal(units[1]!.entries.some((entry) => entry.path.endsWith("periods.1.note")), false);
 });
 
 test("起名抽取合参与三家正文，名字本身不翻译", () => {

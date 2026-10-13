@@ -5,7 +5,7 @@ import { lookupQiongtong } from "../calendar/qiongtong.js";
 import type { StructuredOutputProvider } from "../agent/provider.js";
 import { buildBirthChart } from "./birth-chart.js";
 import { buildBaziFacts } from "./bazi-facts.js";
-import { derivedChart, yearConsensus } from "./bazi-public.js";
+import { derivedChart, periodConsensus, yearConsensus } from "./bazi-public.js";
 import { auditBaziSummaryProse } from "./bazi-audit.js";
 import {
   averageConfidence, runSummaryWithRetry, summaryState, type SummaryInput, type SummarySchool,
@@ -314,6 +314,21 @@ export class BaziReadingService {
         .map((item) => (item ? `${item.year} ${item.average.toFixed(1)}成` : null))
         .filter((item): item is string => item !== null)
         .join(" · ");
+    } else {
+      const periods = periodConsensus(reading).flatMap((item): string[] => {
+        if (!item) {
+          return [];
+        }
+        const cycle = reading.chart.luck?.cycles.find((value) => value.index === item.index);
+        if (!cycle) {
+          return [];
+        }
+        return [`第${cycle.index}步 ${cycle.ganZhi} ${cycle.startAge}–${cycle.endAge}岁 `
+          + `${item.average.toFixed(1)}成`];
+      });
+      if (periods.length > 0) {
+        input.periodConsensus = periods.join("；");
+      }
     }
     return input;
   }

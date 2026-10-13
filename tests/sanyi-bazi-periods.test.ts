@@ -168,6 +168,30 @@ test("命理大运事实含本运藏干与十神，只放行本步藏干", () =>
     /第 3 步大运短评.*酉/);
 });
 
+test("命理大运事实含本运与原局关系，只放行本步关系", () => {
+  const input = sampleBazi("destiny");
+  const facts = selectBaziFacts("shenxiaozhan", input);
+  assert.match(facts.get("luck:1")?.label ?? "", /午午自刑/);
+  assert.ok(facts.get("luck:1")?.tokens.has("午午自刑"));
+  const output = destiny(input);
+  const valid = output.periods!.map((item) => item.index === 1
+    ? { ...item, note: "午午自刑宜守" } : item);
+  assert.equal(auditBaziOutput({ ...output, periods: valid }, facts).ok, true);
+  const wrong = output.periods!.map((item) => item.index === 2
+    ? { ...item, note: "午午自刑宜守" } : item);
+  assert.match(auditBaziOutput({ ...output, periods: wrong }, facts).errors.join("；"),
+    /第 2 步大运短评.*午午自刑/);
+});
+
+test("调候派不用合冲刑害：余春台的大运事实不含关系", () => {
+  const input = sampleBazi("destiny");
+  const facts = selectBaziFacts("yuchuntai", input);
+  assert.ok(facts.get("luck:1"));
+  assert.doesNotMatch(facts.get("luck:1")?.label ?? "", /关系|午午自刑/u);
+  assert.ok(!facts.get("luck:1")?.tokens.has("午午自刑"));
+  assert.match(selectBaziFacts("rentieqiao", input).get("luck:1")?.label ?? "", /午午自刑/u);
+});
+
 test("命理修补按盘面排序去重，删多留缺，清空坏短评并夹回把握", () => {
   const input = sampleBazi("destiny");
   const facts = selectBaziFacts("shenxiaozhan", input);

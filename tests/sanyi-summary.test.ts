@@ -1,11 +1,14 @@
 // tests/sanyi-summary.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
-import { StructuredOutputError, type StructuredOutputProvider, type StructuredOutputRequest } from "../src/agent/provider.js";
+import {
+  StructuredOutputError, validateStructuredOutput, type StructuredOutputProvider,
+  type StructuredOutputRequest,
+} from "../src/agent/provider.js";
 import { auditQuestionProse } from "../src/sanyi/audit.js";
 import {
-  SUMMARY_SYSTEM_PROMPT, buildSummaryPrompt, checkSummary, expectedTone, repairSummary, runSummary,
-  type PlainSummary, type SummaryInput,
+  SUMMARY_SCHEMA, SUMMARY_SYSTEM_PROMPT, buildSummaryPrompt, checkSummary, expectedTone,
+  repairSummary, runSummary, type PlainSummary, type SummaryInput,
 } from "../src/sanyi/summary.js";
 import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
 import { facts } from "./helpers/sample-question.js";
@@ -41,6 +44,12 @@ const good: PlainSummary = {
     avoid: ["不要急着催问结果"],
   },
 };
+const portrait = {
+  traits: ["重情义", "求稳", "有担当"],
+  strengths: ["做事稳妥，能顾全大局", "遇事愿意承担责任"],
+  blindSpots: ["有时顾虑过多", "压力大时容易固执"],
+  summary: "重承诺也重秩序，稳中带着韧劲。",
+};
 
 test("倾向由合议决定：六成以上偏顺，四成以下偏不顺，其余为中", () => {
   assert.equal(expectedTone(6), "顺");
@@ -60,21 +69,79 @@ test("提示词含所问、合议倾向、盘面要点与三家断语；系统�
   for (const text of ["白话", "括号", "不得新增", "医疗", "JSON Schema", "remedy", "开光", "不给颜色、方位"]) {
     assert.ok(SUMMARY_SYSTEM_PROMPT.includes(text), text);
   }
+  for (const text of ["portrait", "性格", "逐运合议", "命理不写 tone"]) {
+    assert.ok(SUMMARY_SYSTEM_PROMPT.includes(text), text);
+  }
   assert.doesNotMatch(SUMMARY_SYSTEM_PROMPT, /押钱|赔付|封存|易者/);
+  const lifePrompt = buildSummaryPrompt({
+    ...input, kind: "destiny", consensus: null,
+    periodConsensus: "第1步 壬午 7–16岁 4.0成；第2步 癸未 17–26岁 6.0成",
+  });
+  assert.match(lifePrompt,
+    /逐运合议：第1步 壬午 7–16岁 4\.0成；第2步 癸未 17–26岁 6\.0成/);
 });
 
-test("一致性核对：倾向须合合议，命理不写倾向与走势，运势须写走势，正文不得编造盘面", () => {
+test("画像 Schema 可选但结构严格限制条数与长度", () => {
+  assert.doesNotThrow(() => validateStructuredOutput(SUMMARY_SCHEMA, good));
+  assert.doesNotThrow(() => validateStructuredOutput(SUMMARY_SCHEMA, { ...good, portrait }));
+  assert.throws(() => validateStructuredOutput(SUMMARY_SCHEMA, {
+    ...good, portrait: { ...portrait, traits: ["求稳", "重情义"] },
+  }));
+  assert.throws(() => validateStructuredOutput(SUMMARY_SCHEMA, {
+    ...good, portrait: { ...portrait, strengths: ["做事稳妥"] },
+  }));
+  assert.throws(() => validateStructuredOutput(SUMMARY_SCHEMA, {
+    ...good, portrait: { ...portrait, blindSpots: ["谨慎", "固执", "多虑"] },
+  }));
+  assert.throws(() => validateStructuredOutput(SUMMARY_SCHEMA, {
+    ...good, portrait: { ...portrait, traits: ["超过六个字标签", "求稳", "重情义"] },
+  }));
+});
+
+test("问事与运势拒绝画像，命理须有画像且按逐运合议决定走势", () => {
   assert.deepEqual(checkSummary(good, input), []);
   assert.match(checkSummary({ ...good, tone: "顺" }, input).join(""), /倾向.*中/);
   const destiny = { ...input, kind: "destiny" as const, consensus: null };
   assert.match(checkSummary(good, destiny).join(""), /命理不写倾向/);
   const { tone: _tone, ...noTone } = good;
-  assert.deepEqual(checkSummary(noTone, destiny), []);
+  assert.match(checkSummary(noTone, destiny).join(""), /命理须写性格画像/);
+  assert.deepEqual(checkSummary({ ...noTone, portrait }, destiny), []);
+  assert.match(checkSummary({ ...noTone, portrait: {
+    ...portrait, traits: ["求稳", "重情义"],
+  } }, destiny).join(""), /性格标签须为 3 至 5 项/);
+  assert.match(checkSummary({ ...noTone, portrait, outlook: "中年渐顺。" }, destiny).join(""),
+    /没有逐运合议.*outlook/);
+  const life = { ...destiny, periodConsensus: "第1步 壬午 7–16岁 4.0成" };
+  assert.match(checkSummary({ ...noTone, portrait }, life).join(""), /一生走势.*outlook/);
+  assert.deepEqual(
+    checkSummary({ ...noTone, portrait, outlook: "早年宜守，中年渐顺。" }, life),
+    [],
+  );
   const fortune = { ...input, kind: "fortune" as const };
   assert.match(checkSummary(good, fortune).join(""), /十年走势/);
   assert.deepEqual(checkSummary({ ...good, outlook: "前三年偏弱，后几年渐顺。" }, fortune), []);
+  assert.match(checkSummary({ ...good, portrait, outlook: "前三年偏弱，后几年渐顺。" }, fortune)
+    .join(""), /运势不写性格画像/);
+  assert.match(checkSummary({ ...good, portrait }, input).join(""), /问事不写性格画像/);
   assert.match(checkSummary({ ...good, explanation: [...good.explanation, "午火官鬼发动。"] }, input).join(""),
     /不存在的盘面组合/);
+});
+
+test("画像标签只查语言与禁用词，其余字段还须通过盘面核对", () => {
+  const strict: SummaryInput = {
+    ...input, kind: "destiny", consensus: null,
+    proseErrors: (text) => (/果断|午火/u.test(text) ? ["编造"] : []),
+  };
+  const { tone: _tone, ...base } = good;
+  assert.deepEqual(checkSummary({
+    ...base, portrait: { ...portrait, traits: ["果断", "求稳", "重情义"] },
+  }, strict), []);
+  assert.match(checkSummary({ ...base, portrait: {
+    ...portrait, strengths: ["午火助身，行事果断", portrait.strengths[1]!],
+  } }, strict).join(""), /编造/);
+  assert.match(checkSummary({ ...base, portrait: {
+    ...portrait, traits: ["开光", "求稳", "重情义"],
+  } }, strict).join(""), /开光/);
 });
 
 test("删错留对：删去编造盘面的句子，倾向不符时改为合议倾向并用模板结论", () => {
@@ -130,6 +197,44 @@ test("解法全被删时用模板兜底：问事与八字心法不同", () => {
   const destiny = { ...input, kind: "destiny" as const, consensus: null };
   const { tone: _tone, ...noTone } = empty;
   assert.equal(repairSummary(noTone, destiny).output.remedy?.principle, "按三家取用之意，扬长避短。");
+});
+
+test("画像修补删去坏条目，条目不足或总评不合格时整块省略", () => {
+  const destiny: SummaryInput = {
+    ...input, kind: "destiny", consensus: null,
+    proseErrors: (text) => (/午火/u.test(text) ? ["编造"] : []),
+  };
+  const { tone: _tone, ...base } = good;
+  const kept = repairSummary({ ...base, portrait: {
+    ...portrait, traits: [...portrait.traits, "开光"],
+  } }, destiny);
+  assert.deepEqual(kept.output.portrait, portrait);
+  assert.equal(kept.removed, 1);
+
+  const fewTraits = repairSummary({ ...base, portrait: {
+    ...portrait, traits: ["求稳", "开光", "重情义"],
+  } }, destiny);
+  assert.equal(fewTraits.output.portrait, undefined);
+
+  const missingStrength = repairSummary({ ...base, portrait: {
+    ...portrait, strengths: ["午火助身", "午火使人果断"],
+  } }, destiny);
+  assert.equal(missingStrength.output.portrait, undefined);
+
+  const missingSummary = repairSummary({ ...base, portrait: {
+    ...portrait, summary: "午火使人果断。",
+  } }, destiny);
+  assert.equal(missingSummary.output.portrait, undefined);
+});
+
+test("命理走势修补只在有逐运合议时保留或补上 outlook", () => {
+  const { tone: _tone, ...base } = good;
+  const without = { ...input, kind: "destiny" as const, consensus: null };
+  assert.equal(repairSummary({ ...base, portrait, outlook: "早年宜守。" }, without).output.outlook,
+    undefined);
+  const withPeriods = { ...without, periodConsensus: "第1步 壬午 7–16岁 4.0成" };
+  assert.equal(repairSummary({ ...base, portrait }, withPeriods).output.outlook,
+    "一生大运起伏见「一生运势」。");
 });
 
 class Fake implements StructuredOutputProvider {
