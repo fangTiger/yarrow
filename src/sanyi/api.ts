@@ -26,9 +26,16 @@ type ServiceBoundary = Pick<
   "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject" | "retrySummary"
 >;
 type SubjectKey = StoredReading["subject"]["finalKey"];
-export interface PublicQuestionReading extends Omit<StoredReading, "payment" | "schools"> {
+export interface PublicQuestionReading extends Omit<
+  StoredReading,
+  "payment" | "schools" | "summary" | "castProgressAt"
+> {
   payment: { firstHash: StoredReading["payment"]["transactionHash"] };
-  schools: Record<QuestionSchoolKey, Omit<StoredReading["schools"][QuestionSchoolKey], "attempts">>;
+  schools: Record<
+    QuestionSchoolKey,
+    Omit<StoredReading["schools"][QuestionSchoolKey], "attempts" | "startedAt">
+  >;
+  summary?: Omit<NonNullable<StoredReading["summary"]>, "startedAt">;
 }
 export type PublicReading = PublicQuestionReading | PublicBaziReading | PublicNamingReading;
 export type PublicReadingResponse = PublicReading & { translation?: StoredTranslation };
@@ -96,17 +103,27 @@ function feeProofFrom(value: unknown): SanyiFeeProof {
 }
 function publicReading(reading: StoredReading): PublicQuestionReading {
   const school = (key: QuestionSchoolKey) => {
-    const { attempts: _attempts, ...visible } = reading.schools[key];
+    const { attempts: _attempts, startedAt: _startedAt, ...visible } = reading.schools[key];
     return visible;
   };
+  const {
+    castProgressAt: _castProgressAt,
+    summary,
+    ...visibleReading
+  } = reading;
+  const visibleSummary = summary ? (() => {
+    const { startedAt: _startedAt, ...visible } = summary;
+    return visible;
+  })() : undefined;
   return {
-    ...reading,
+    ...visibleReading,
     payment: { firstHash: reading.payment.transactionHash },
     schools: {
       chengyi: school("chengyi"),
       jingfang: school("jingfang"),
       shaoyong: school("shaoyong"),
     },
+    ...(visibleSummary ? { summary: visibleSummary } : {}),
   };
 }
 async function notFound<T>(operation: () => Promise<T>): Promise<T> {

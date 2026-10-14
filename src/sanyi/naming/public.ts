@@ -114,7 +114,7 @@ function visibleFamily(
   key: NamingFamilyKey,
   state: NamingFamilyState,
 ) {
-  const { attempts: _attempts, output, ...visible } = state;
+  const { attempts: _attempts, startedAt: _startedAt, output, ...visible } = state;
   const normalized = output
     ? normalizeFamilyOutput(key, output, { favorableSource: reading.basis.favorableSource })
     : undefined;
@@ -148,7 +148,7 @@ function pickDetails(reading: StoredNamingReading, given: string) {
 export function publicNamingReading(reading: StoredNamingReading) {
   const summary = reading.summary;
   const visibleSummary = summary ? (() => {
-    const { attempts: _attempts, output, ...visible } = summary;
+    const { attempts: _attempts, startedAt: _startedAt, output, ...visible } = summary;
     return {
       ...visible,
       ...(output ? {

@@ -14,6 +14,8 @@ import type { RecordedThrow } from "./throws.js";
 
 export interface SchoolState {
   status: "pending" | "writing" | "done" | "failed" | "rejected";
+  /** 本次落笔开始时刻；旧存档没有此字段，不参与中断恢复。 */
+  startedAt?: string;
   output?: QuestionSchoolOutput;
   attempts: number;
   retries: number;
@@ -27,6 +29,8 @@ export interface SchoolState {
 /** 白话总述的存档状态。 */
 export interface SummaryState {
   status: "writing" | "done" | "failed";
+  /** 本次落笔开始时刻；旧存档没有此字段，不参与中断恢复。 */
+  startedAt?: string;
   output?: import("./summary.js").PlainSummary;
   /** 依据几家断语写成。 */
   basis: number;
@@ -65,6 +69,8 @@ export interface StoredQuestionReading {
   summary?: SummaryState;
   /** Arc 长时间无响应时暂停自动起卦，等待用户「继续起卦」。 */
   castPaused?: boolean;
+  /** 创建、续掷或恢复起卦的最近进展时刻，仅供中断恢复。 */
+  castProgressAt?: string;
   castTime?: string;
   lines?: readonly number[];
   chart?: LiuyaoChart;
@@ -76,6 +82,8 @@ export interface StoredQuestionReading {
 
 export interface BaziSchoolState {
   status: "pending" | "writing" | "done" | "failed";
+  /** 本次落笔开始时刻；旧存档没有此字段，不参与中断恢复。 */
+  startedAt?: string;
   output?: import("./bazi-schema.js").BaziSchoolOutput;
   attempts: number;
   retries: number;
@@ -113,6 +121,8 @@ export interface StoredBaziReading {
 
 export interface NamingFamilyState {
   status: "pending" | "writing" | "done" | "failed";
+  /** 本次落笔开始时刻；旧存档没有此字段，不参与中断恢复。 */
+  startedAt?: string;
   output?: import("./naming/schema.js").NamingFamilyOutput;
   attempts: number;
   retries: number;
@@ -123,6 +133,8 @@ export interface NamingFamilyState {
 
 export interface NamingSummaryState {
   status: "writing" | "done" | "failed";
+  /** 本次落笔开始时刻；旧存档没有此字段，不参与中断恢复。 */
+  startedAt?: string;
   output?: import("./naming/schema.js").NamingSummaryOutput;
   basis: number;
   attempts: number;
@@ -164,6 +176,138 @@ export interface StoredNamingReading {
 }
 
 export type StoredReading = StoredQuestionReading | StoredBaziReading | StoredNamingReading;
+
+// Vercel 单次函数最长 300 秒；多留 30 秒给落盘与轮询传播后再判定中断。
+export const WRITING_INTERRUPTION_TIMEOUT_MS = 330_000;
+// 自动起卦两分钟没有创建后的首掷或后续新掷，视为后台任务已失去进展。
+export const CAST_PROGRESS_TIMEOUT_MS = 120_000;
+export const WRITING_INTERRUPTION_ERROR = "落笔中断，请重试";
+
+type InterruptibleState = SchoolState | SummaryState | BaziSchoolState
+  | NamingFamilyState | NamingSummaryState;
+
+interface RecoveryTargets {
+  schools: Readonly<Record<string, string>>;
+  summary?: string;
+  cast?: {
+    progressAt: string;
+    throwsLength: number;
+    explicitProgressAt?: string;
+  };
+}
+
+function isOlderThan(value: string | undefined, now: number, threshold: number): value is string {
+  if (!value) return false;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) && now - timestamp > threshold;
+}
+
+function castingProgressAt(reading: StoredQuestionReading): string | undefined {
+  if (reading.castProgressAt) return reading.castProgressAt;
+  const lastThrow = reading.throws.at(-1);
+  if (!lastThrow) return reading.createdAt;
+  const seconds = Number(lastThrow.blockTimestamp);
+  if (!Number.isFinite(seconds)) return undefined;
+  const timestamp = new Date(seconds * 1_000);
+  return Number.isFinite(timestamp.getTime()) ? timestamp.toISOString() : undefined;
+}
+
+function recoveryTargets(reading: StoredReading, now: number): RecoveryTargets {
+  const states = reading.kind === "naming" ? reading.families : reading.schools;
+  const schools: Record<string, string> = {};
+  for (const [key, state] of Object.entries(states)) {
+    if (state.status === "writing"
+      && isOlderThan(state.startedAt, now, WRITING_INTERRUPTION_TIMEOUT_MS)) {
+      schools[key] = state.startedAt;
+    }
+  }
+  const summary = reading.summary?.status === "writing"
+    && isOlderThan(reading.summary.startedAt, now, WRITING_INTERRUPTION_TIMEOUT_MS)
+    ? reading.summary.startedAt
+    : undefined;
+  const progressAt = reading.kind === "question" ? castingProgressAt(reading) : undefined;
+  const cast = reading.kind === "question"
+    && reading.status === "awaiting-throws"
+    && !reading.castPaused
+    && isOlderThan(progressAt, now, CAST_PROGRESS_TIMEOUT_MS)
+    ? {
+        progressAt,
+        throwsLength: reading.throws.length,
+        ...(reading.castProgressAt ? { explicitProgressAt: reading.castProgressAt } : {}),
+      }
+    : undefined;
+  return {
+    schools,
+    ...(summary ? { summary } : {}),
+    ...(cast ? { cast } : {}),
+  };
+}
+
+function hasRecoveryTarget(targets: RecoveryTargets): boolean {
+  return Object.keys(targets.schools).length > 0
+    || targets.summary !== undefined
+    || targets.cast !== undefined;
+}
+
+function interruptedState<T extends InterruptibleState>(state: T, startedAt: string): T {
+  if (state.status !== "writing" || state.startedAt !== startedAt) return state;
+  const { startedAt: _startedAt, output: _output, ...rest } = state;
+  return { ...rest, status: "failed", error: WRITING_INTERRUPTION_ERROR } as T;
+}
+
+function hasWritingState(reading: StoredReading): boolean {
+  const states = reading.kind === "naming" ? reading.families : reading.schools;
+  return Object.values(states).some((state) => state.status === "writing")
+    || reading.summary?.status === "writing";
+}
+
+function recoverReading(reading: StoredReading, targets: RecoveryTargets): StoredReading {
+  let changed = false;
+  function recoverStates<T>(states: T): T {
+    const nextStates = { ...states };
+    for (const [key, startedAt] of Object.entries(targets.schools)) {
+      const state = (states as Record<string, InterruptibleState>)[key];
+      if (!state || state.status !== "writing" || state.startedAt !== startedAt) continue;
+      (nextStates as Record<string, InterruptibleState>)[key] = interruptedState(state, startedAt);
+      changed = true;
+    }
+    return nextStates;
+  }
+  let next: StoredReading;
+  if (reading.kind === "naming") {
+    next = { ...reading, families: recoverStates(reading.families) };
+  } else if (reading.kind === "question") {
+    next = { ...reading, schools: recoverStates(reading.schools) };
+  } else {
+    next = { ...reading, schools: recoverStates(reading.schools) };
+  }
+
+  if (targets.summary) {
+    if (next.kind === "naming" && next.summary?.status === "writing"
+      && next.summary.startedAt === targets.summary) {
+      next = { ...next, summary: interruptedState(next.summary, targets.summary) };
+      changed = true;
+    } else if (next.kind !== "naming" && next.summary?.status === "writing"
+      && next.summary.startedAt === targets.summary) {
+      next = { ...next, summary: interruptedState(next.summary, targets.summary) };
+      changed = true;
+    }
+  }
+  if (targets.cast && next.kind === "question"
+    && next.status === "awaiting-throws" && !next.castPaused
+    && next.throws.length === targets.cast.throwsLength
+    && next.castProgressAt === targets.cast.explicitProgressAt
+    && castingProgressAt(next) === targets.cast.progressAt) {
+    next = { ...next, castPaused: true };
+    changed = true;
+  }
+  if (!changed) return reading;
+  if (next.status === "writing" && !hasWritingState(next)) {
+    // 八字与起名的既有重试接口要求整卦已结束；所有活动落笔均已停下时开放重试。
+    next = { ...next, status: "done" };
+  }
+  return next;
+}
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz234567";
 
@@ -211,6 +355,17 @@ export class ReadingStore {
   async read<T extends StoredReading = StoredQuestionReading>(id: string): Promise<T> {
     const text = await this.backend.get(this.readingKey(id));
     return JSON.parse(text) as T;
+  }
+
+  /** 读取并用原子比较写回恢复平台中断的落笔或起卦状态。 */
+  async readRecovering<T extends StoredReading = StoredQuestionReading>(
+    id: string,
+    now: Date,
+  ): Promise<T> {
+    const reading = await this.read<T>(id);
+    const targets = recoveryTargets(reading, now.getTime());
+    if (!hasRecoveryTarget(targets)) return reading;
+    return this.update<T>(id, (current) => recoverReading(current, targets) as T);
   }
 
   /** 列出全部存档 id，供服务重启后续掷未完成的卦。 */

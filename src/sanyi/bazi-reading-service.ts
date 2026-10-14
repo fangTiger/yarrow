@@ -30,9 +30,9 @@ interface Dependencies {
   logger: SanyiLogger;
   clock: () => Date;
 }
-function schools(previous?: StoredBaziReading["schools"]): StoredBaziReading["schools"] {
+function schools(startedAt: string, previous?: StoredBaziReading["schools"]): StoredBaziReading["schools"] {
   function state(key: BaziSchoolKey): BaziSchoolState {
-    return { status: "writing", attempts: previous?.[key].attempts ?? 0,
+    return { status: "writing", startedAt, attempts: previous?.[key].attempts ?? 0,
       retries: previous?.[key].retries ?? 0 };
   }
   return { shenxiaozhan: state("shenxiaozhan"), yuchuntai: state("yuchuntai"),
@@ -78,16 +78,16 @@ export class BaziReadingService {
       chart, correction, context, analysis: analyzeBazi(chart),
       tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
       almanac: almanacAt(BigInt(Math.floor(now.getTime() / 1_000))),
-      changes: 0, status: "writing", schools: schools() };
+      changes: 0, status: "writing", schools: schools(now.toISOString()) };
     await this.deps.store.write(reading);
     this.start(id, () => this.runAll(reading));
     return reading;
   }
   async readAny(id: string): Promise<StoredReading> {
-    return this.deps.store.read<StoredReading>(id);
+    return this.deps.store.readRecovering<StoredReading>(id, this.deps.clock());
   }
   async getReading(id: string): Promise<StoredBaziReading> {
-    const reading = await this.deps.store.read<StoredReading>(id);
+    const reading = await this.deps.store.readRecovering<StoredReading>(id, this.deps.clock());
     if (reading.kind !== "destiny" && reading.kind !== "fortune") {
       throw new StateConflictError("此接口只适用于命理或运势");
     }
@@ -133,9 +133,10 @@ export class BaziReadingService {
       const { chart, correction } = chartFrom(birth, sect, current.context.anchorYear);
       // 所问时刻保持创建时刻，today 的流日按新 sect 重算，不漂移到切换当天。
       const context = resolveFortuneContext(current.context.horizon, () => new Date(current.createdAt), sect);
+      const startedAt = this.deps.clock().toISOString();
       const updated: StoredBaziReading = { ...current, chart, correction, context,
         analysis: analyzeBazi(chart), tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
-        changes: current.changes + 1, status: "writing", schools: schools(current.schools) };
+        changes: current.changes + 1, status: "writing", schools: schools(startedAt, current.schools) };
       await this.deps.store.write(updated);
       this.start(id, () => this.runAll(updated));
       return updated;
@@ -155,9 +156,11 @@ export class BaziReadingService {
       if (!school) {
         throw new SanyiInputError("三家键无效");
       }
+      const startedAt = this.deps.clock().toISOString();
       const updated = await this.deps.store.update<StoredBaziReading>(id, (reading) => ({ ...reading,
         status: "writing", schools: { ...reading.schools,
-          [key]: { status: "writing", attempts: state.attempts, retries: state.retries + 1 } } }));
+          [key]: { status: "writing", startedAt,
+            attempts: state.attempts, retries: state.retries + 1 } } }));
       this.start(id, async () => {
         await this.runOne(updated, school);
         await this.writeSummary(id, true);
@@ -216,9 +219,11 @@ export class BaziReadingService {
       if (summary.retries >= 2) {
         throw new LimitExceededError("白话总述重试次数已用尽");
       }
+      const startedAt = this.deps.clock().toISOString();
       const updated = await this.deps.store.update<StoredBaziReading>(id, (reading) => ({
         ...reading,
-        summary: { ...summary, status: "writing" as const, retries: summary.retries + 1 },
+        summary: { ...summary, status: "writing" as const, startedAt,
+          retries: summary.retries + 1 },
       }));
       this.start(id, () => this.writeSummary(id, true));
       return updated;
@@ -241,10 +246,11 @@ export class BaziReadingService {
       return;
     }
     const basis = input.schools.length;
+    const startedAt = this.deps.clock().toISOString();
     await this.deps.store.update<StoredBaziReading>(id, (current) => ({
       ...current,
       summary: {
-        status: "writing" as const, basis,
+        status: "writing" as const, startedAt, basis,
         attempts: previous?.attempts ?? 0,
         retries: preserveRetries ? previous?.retries ?? 0 : 0,
       },

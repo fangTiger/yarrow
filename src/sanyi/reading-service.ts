@@ -146,10 +146,11 @@ export class ReadingService {
     if (existing) {
       throw new PaymentAlreadyUsedError(existing);
     }
+    const createdAt = this.clock().toISOString();
     const reading: StoredReading = {
       id,
       kind: "question",
-      createdAt: this.clock().toISOString(),
+      createdAt,
       question,
       subject: {
         suggestedKey: suggested.key,
@@ -167,6 +168,7 @@ export class ReadingService {
       schools: initialSchools(),
       status: "awaiting-throws",
       castAfterBlock: receipt.blockNumber.toString(),
+      castProgressAt: createdAt,
     };
     await this.deps.store.write(reading);
     if (this.deps.autoCast ?? true) {
@@ -185,6 +187,7 @@ export class ReadingService {
       const updated = await this.deps.store.update(id, (current) => {
         const next = { ...current };
         delete next.castPaused;
+        next.castProgressAt = this.clock().toISOString();
         return next;
       });
       this.startBackground(id, this.autoCast(id));
@@ -198,7 +201,7 @@ export class ReadingService {
     for (const id of await this.deps.store.listIds()) {
       let reading: StoredReading;
       try {
-        reading = await this.deps.store.read(id);
+        reading = await this.deps.store.readRecovering(id, this.clock());
       } catch {
         continue;
       }
@@ -220,7 +223,7 @@ export class ReadingService {
     for (;;) {
       const reading = await this.readQuestion(id);
       const next = reading.throws.length + 1;
-      if (next > 6 || reading.status !== "awaiting-throws") {
+      if (next > 6 || reading.status !== "awaiting-throws" || reading.castPaused) {
         return;
       }
       try {
@@ -269,6 +272,7 @@ export class ReadingService {
       await this.deps.store.update(id, (current) => ({
         ...current,
         throws: [...current.throws, next],
+        castProgressAt: this.clock().toISOString(),
       }));
       if (index === 6) {
         this.startBackground(id, this.finalize(id));
@@ -287,12 +291,14 @@ export class ReadingService {
       if (state.retries >= 2) {
         throw new LimitExceededError("此家重试次数已用尽");
       }
+      const startedAt = this.clock().toISOString();
       const updated = await this.deps.store.update(id, (current) => ({
         ...current,
         schools: {
           ...current.schools,
           [key]: {
             status: "writing",
+            startedAt,
             attempts: current.schools[key].attempts,
             retries: current.schools[key].retries + 1,
           },
@@ -332,6 +338,7 @@ export class ReadingService {
         },
       };
       const context = this.rebuildContext(changed);
+      const startedAt = this.clock().toISOString();
       const updated = await this.deps.store.update(id, (current) => ({
         ...current,
         subject: changed.subject,
@@ -340,6 +347,7 @@ export class ReadingService {
           ...current.schools,
           jingfang: {
             status: "writing",
+            startedAt,
             attempts: current.schools.jingfang.attempts,
             retries: current.schools.jingfang.retries,
           },
@@ -355,7 +363,10 @@ export class ReadingService {
   }
 
   private async readQuestion(id: string): Promise<StoredReading> {
-    const reading = await this.deps.store.read<import("./store.js").StoredReading>(id);
+    const reading = await this.deps.store.readRecovering<import("./store.js").StoredReading>(
+      id,
+      this.clock(),
+    );
     if (reading.kind !== "question") {
       throw new StateConflictError("此接口只适用于问事");
     }
@@ -430,6 +441,7 @@ export class ReadingService {
     const bianzhan = selectPrimaryOracleText(lines);
     const almanac = this.calendar.almanacAt(timestamp);
     const qimen = this.calendar.qimenAt(timestamp);
+    const startedAt = this.clock().toISOString();
     await this.deps.store.update(id, (current) => ({
       ...current,
       lines,
@@ -441,9 +453,9 @@ export class ReadingService {
       qimen,
       status: "writing",
       schools: {
-        chengyi: { ...current.schools.chengyi, status: "writing" },
-        jingfang: { ...current.schools.jingfang, status: "writing" },
-        shaoyong: { ...current.schools.shaoyong, status: "writing" },
+        chengyi: { ...current.schools.chengyi, status: "writing", startedAt },
+        jingfang: { ...current.schools.jingfang, status: "writing", startedAt },
+        shaoyong: { ...current.schools.shaoyong, status: "writing", startedAt },
       },
     }));
     await Promise.all(QUESTION_SCHOOLS.map(async (school) => {
@@ -468,9 +480,15 @@ export class ReadingService {
       if (summary.retries >= 2) {
         throw new LimitExceededError("白话总述重试次数已用尽");
       }
+      const startedAt = this.clock().toISOString();
       const updated = await this.deps.store.update(id, (current) => ({
         ...current,
-        summary: { ...summary, status: "writing" as const, retries: summary.retries + 1 },
+        summary: {
+          ...summary,
+          status: "writing" as const,
+          startedAt,
+          retries: summary.retries + 1,
+        },
       }));
       this.startBackground(id, this.writeSummary(id, true));
       return updated;
@@ -494,10 +512,11 @@ export class ReadingService {
       return;
     }
     const basis = input.schools.length;
+    const startedAt = this.clock().toISOString();
     await this.deps.store.update(id, (current) => ({
       ...current,
       summary: {
-        status: "writing" as const, basis,
+        status: "writing" as const, startedAt, basis,
         attempts: previous?.attempts ?? 0,
         retries: preserveRetries ? previous?.retries ?? 0 : 0,
       },

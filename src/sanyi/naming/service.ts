@@ -50,8 +50,10 @@ export interface NamingCreateInput {
   feeProof: SanyiFeeProof;
 }
 
-function initialFamilies(): StoredNamingReading["families"] {
-  const state = (): NamingFamilyState => ({ status: "writing", attempts: 0, retries: 0 });
+function initialFamilies(startedAt: string): StoredNamingReading["families"] {
+  const state = (): NamingFamilyState => ({
+    status: "writing", startedAt, attempts: 0, retries: 0,
+  });
   return { wuxing: state(), shiwen: state(), yinyi: state() };
 }
 
@@ -213,7 +215,7 @@ export class NamingReadingService {
       status: "writing",
       basis: { ...chart, ...favorable, unborn: input.unborn },
       candidateIds: candidates.map(({ id: candidateId }) => candidateId),
-      families: initialFamilies(),
+      families: initialFamilies(now.toISOString()),
     };
     await this.deps.store.write(reading);
     this.start(id, () => this.runAll(reading));
@@ -221,11 +223,11 @@ export class NamingReadingService {
   }
 
   async readAny(id: string): Promise<StoredReading> {
-    return this.deps.store.read<StoredReading>(id);
+    return this.deps.store.readRecovering<StoredReading>(id, this.deps.clock());
   }
 
   async getReading(id: string): Promise<StoredNamingReading> {
-    const reading = await this.deps.store.read<StoredReading>(id);
+    const reading = await this.deps.store.readRecovering<StoredReading>(id, this.deps.clock());
     if (reading.kind !== "naming") {
       throw new StateConflictError("此接口只适用于起名");
     }
@@ -303,12 +305,14 @@ export class NamingReadingService {
       if (state.retries >= 2) throw new LimitExceededError("此家重试次数已用尽");
       const family = NAMING_FAMILIES.find((item) => item.key === key);
       if (!family) throw new SanyiInputError("三家键无效");
+      const startedAt = this.deps.clock().toISOString();
       const updated = await this.deps.store.update<StoredNamingReading>(id, (reading) => ({
         ...reading,
         status: "writing",
         families: {
           ...reading.families,
-          [key]: { status: "writing", attempts: state.attempts, retries: state.retries + 1 },
+          [key]: { status: "writing", startedAt,
+            attempts: state.attempts, retries: state.retries + 1 },
         },
       }));
       this.start(id, async () => {
@@ -346,10 +350,12 @@ export class NamingReadingService {
       }));
       return;
     }
+    const startedAt = this.deps.clock().toISOString();
     await this.deps.store.update<StoredNamingReading>(id, (current) => ({
       ...current,
       summary: {
         status: "writing",
+        startedAt,
         basis,
         attempts: previous?.attempts ?? 0,
         retries: preserveRetries ? previous?.retries ?? 0 : 0,
@@ -393,9 +399,10 @@ export class NamingReadingService {
         throw new StateConflictError("三家合参当前不可重试");
       }
       if (summary.retries >= 2) throw new LimitExceededError("三家合参重试次数已用尽");
+      const startedAt = this.deps.clock().toISOString();
       const updated = await this.deps.store.update<StoredNamingReading>(id, (reading) => ({
         ...reading,
-        summary: { ...summary, status: "writing", retries: summary.retries + 1 },
+        summary: { ...summary, status: "writing", startedAt, retries: summary.retries + 1 },
       }));
       this.start(id, () => this.writeSummary(id, true));
       return updated;

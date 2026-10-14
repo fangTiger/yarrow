@@ -72,11 +72,15 @@ export function periodConsensus(reading: StoredBaziReading): (PeriodConsensus | 
     return { index, average, min: Math.min(...values), max: Math.max(...values), count: values.length };
   });
 }
-function visibleSchool(state: BaziSchoolState): Omit<BaziSchoolState, "attempts"> {
-  const { attempts: _attempts, ...visible } = state;
+function visibleSchool(state: BaziSchoolState): Omit<BaziSchoolState, "attempts" | "startedAt"> {
+  const { attempts: _attempts, startedAt: _startedAt, ...visible } = state;
   return visible;
 }
 function common(reading: StoredBaziReading) {
+  const summary = reading.summary ? (() => {
+    const { startedAt: _startedAt, ...visible } = reading.summary!;
+    return visible;
+  })() : undefined;
   return { id: reading.id, createdAt: reading.createdAt, question: reading.question,
     status: reading.status, payment: { firstHash: reading.payment.transactionHash },
     chart: derivedChart(reading.chart), analysis: reading.analysis, tiaohou: reading.tiaohou,
@@ -85,7 +89,7 @@ function common(reading: StoredBaziReading) {
       shenxiaozhan: visibleSchool(reading.schools.shenxiaozhan),
       yuchuntai: visibleSchool(reading.schools.yuchuntai),
       rentieqiao: visibleSchool(reading.schools.rentieqiao),
-    }, summary: reading.summary };
+    }, ...(summary ? { summary } : {}) };
 }
 export function publicBaziReading(reading: StoredBaziReading) {
   const value = common(reading);
