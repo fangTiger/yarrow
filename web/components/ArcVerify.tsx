@@ -8,6 +8,9 @@ import {
 import { useLang, useT } from "../lib/i18n.js";
 import { ARC_EXPLORER, arcChain } from "../lib/wagmi.js";
 
+/** 付费结果出问题时的求助入口：公开仓库的 Issues，用户附上付款哈希即可定位。 */
+const SUPPORT_URL = "https://github.com/fangTiger/yarrow/issues";
+
 function explorer(path: string): string {
   return `${ARC_EXPLORER.replace(/\/$/u, "")}/${path}`;
 }
@@ -76,6 +79,8 @@ export function ArcVerify(props: {
     <button className="button" disabled={state === "running"} onClick={() => void run()} type="button">
       {state === "running" ? t("verify.running") : t("verify.button")}</button>
     {state === "error" ? <p className="error" role="alert">{t("verify.error")}</p> : null}
+    <p className="arc-verify-help">{t("verify.help")}{" "}
+      <a href={SUPPORT_URL} rel="noreferrer" target="_blank">GitHub Issues</a></p>
     {result ? <div aria-live="polite" className={`arc-verify-result ${result.ok ? "ok" : "bad"}`}>
       <p className="arc-verify-verdict"><b>{result.ok ? "✓" : "✗"}</b>
         {t(result.ok ? "verify.passed" : "verify.failed")}</p>

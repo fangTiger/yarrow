@@ -121,9 +121,11 @@ test("验证面板：示例只给说明不显示按钮，真实付款显示按�
   const sample = renderIn("zh", createElement(ArcVerify, { paymentHash: `0x${"0".repeat(64)}` }));
   assert.match(sample, /示例不含真实付款/u);
   assert.doesNotMatch(sample, /<button/u);
+  assert.doesNotMatch(sample, /github\.com/u, "示例不显示求助入口");
   for (const lang of ["zh", "en"] as const) {
     const html = renderIn(lang, createElement(ArcVerifyPanel, { paymentHash: hashOf("real") }));
     assert.match(html, /<button[^>]*>(在 Arc 上验证|Verify on Arc)<\/button>/u);
+    assert.match(html, /href="https:\/\/github\.com\/fangTiger\/yarrow\/issues"/u);
     if (lang === "en") assert.doesNotMatch(html, /[\p{Script=Han}]/u);
   }
   const cast = renderIn("en", createElement(ArcVerify, { paymentHash: hashOf("real"), question: "Q?",

@@ -294,6 +294,7 @@ export const en: Record<keyof typeof zh, string> = {
   "verify.throwCoins": "recomputed coins differ",
   "verify.error": "Couldn't reach Arc right now. Please try again.",
   "verify.explorer": "Arcscan",
+  "verify.help": "Reading didn't finish, or verification failed? Open an issue with your payment transaction hash and we'll look into it:",
   "question.castBlock": "Cast {index} block #{block}",
   "traditional.title": "Traditional chart (Chinese)",
   "bazi.title": "BaZi (Four Pillars of Destiny)",

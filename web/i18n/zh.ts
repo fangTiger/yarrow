@@ -291,6 +291,7 @@ export const zh = {
   "verify.throwCoins": "复算结果不符",
   "verify.error": "暂时连不上 Arc 节点，请稍后再试。",
   "verify.explorer": "Arcscan",
+  "verify.help": "结果没有生成，或验证未通过？请带上付款交易哈希到这里反馈，我们会尽快处理：",
   "question.castBlock": "第 {index} 掷区块 #{block}",
   "traditional.title": "传统盘（中文）",
   "bazi.title": "八字（四柱命理）",

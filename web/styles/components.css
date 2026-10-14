@@ -1702,3 +1702,5 @@ html:lang(en) .summary-conclusion p {
 .arc-verify-result a { color: var(--gold); }
 .arc-verify-raw { margin-top: 14px; }
 .arc-verify-raw > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.arc-verify-help { margin: 0; color: var(--dim); font-size: 12px; line-height: 1.6; }
+.arc-verify-help a { color: var(--gold); }
