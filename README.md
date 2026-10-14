@@ -192,6 +192,16 @@ flowchart LR
 | Storage | Upstash Redis in production · JSON files locally |
 | Quality | 847 tests (`node:test`) · `tsc --noEmit` |
 
+## What's next
+
+Planned, not yet built:
+
+- **A pay-per-reading API for AI agents.** An agent pays 0.05 USDC on Arc and gets back a structured, chart-checked reading, using the same payment check and on-chain verification as the web app. Arc's USDC gas and fast finality make machine-to-machine micro-payments like this practical.
+- **"Was it accurate?" on past luck cycles.** Readers mark each decade they have already lived as accurate or not. That gives us an honest accuracy signal and data for improving the masters' prompts.
+- **Share cards.** One-tap images of the character portrait and life chart, without birth data.
+- **Compatibility readings.** Two BaZi charts read together by the same three masters.
+- **A lighter first load.** Load the wallet stack only when someone is ready to pay.
+
 ## Getting started
 
 ```bash
