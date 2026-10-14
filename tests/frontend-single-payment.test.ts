@@ -20,7 +20,7 @@ test("付款钩子使用服务器配置与单笔写合约并等待回执", async
 });
 test("首页与结果页均放置钱包栏且付款区承载测试币引导", async () => {
   const [home, reading, button, bar, guide, styles] = await Promise.all([
-    readFile("web/pages/Home.tsx", "utf8"), readFile("web/pages/Reading.tsx", "utf8"),
+    readFile("web/pages/Home.tsx", "utf8"), readFile("web/components/ReadingTopbar.tsx", "utf8"),
     readFile("web/components/PaymentButton.tsx", "utf8"), readFile("web/components/WalletBar.tsx", "utf8"),
     readFile("web/components/WalletPaymentGuide.tsx", "utf8"),
     readFile("web/styles/components.css", "utf8"),

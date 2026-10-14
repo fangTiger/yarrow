@@ -1,4 +1,3 @@
-import { WalletBar } from "../components/WalletBar.js";
 // web/pages/Reading.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
@@ -9,7 +8,7 @@ import { HexagramFigure } from "../components/HexagramFigure.js";
 import { Luopan } from "../components/Luopan.js";
 import { ShikongBar, toView } from "../components/ShikongBar.js";
 import { ThrowRecord } from "../components/ThrowRecord.js";
-import { TopbarBrand } from "../components/TopbarBrand.js";
+import { ReadingTopbar } from "../components/ReadingTopbar.js";
 import { BaziReading } from "./BaziReading.js";
 import { NamingReading } from "./NamingReading.js";
 import { api, type AnyPublicReading, type PublicReading } from "../lib/api.js";
@@ -232,6 +231,7 @@ export function Reading({ id }: { id: string }) {
   if (error) {
     return (
       <main className="page">
+        <ReadingTopbar />
         <section className="panel error-panel">
           <h1>{t("result.openError")}</h1>
           <p className="error">{error}</p>
@@ -244,6 +244,7 @@ export function Reading({ id }: { id: string }) {
   if (!reading) {
     return (
       <main className="page">
+        <ReadingTopbar />
         <section aria-live="polite" className="panel">{t("result.opening")}</section>
         <DisclaimerFooter />
       </main>
@@ -256,10 +257,7 @@ export function Reading({ id }: { id: string }) {
   if (visibleReading.kind === "naming") {
     return (
       <main className="page">
-        <header className="topbar">
-          <TopbarBrand />
-          <nav className="nav"><a href="#/">{t("result.backHome")}</a></nav><WalletBar />
-        </header>
+        <ReadingTopbar />
         {translationPanel}
         <NamingReading reading={visibleReading} onReading={setReading} />
         <DisclaimerFooter />
@@ -269,11 +267,7 @@ export function Reading({ id }: { id: string }) {
   if (visibleReading.kind !== "question") {
     return (
       <main className="page">
-        <header className="topbar">
-          <TopbarBrand />
-          <nav className="nav"><a href="#/">{t("result.backHome")}</a></nav>
-          <WalletBar />
-        </header>
+        <ReadingTopbar />
         {lang === "zh" ? <ShikongBar data={toView(visibleReading.almanac)} /> : null}
         {translationPanel}
         <BaziReading reading={visibleReading} onReading={setReading} />
@@ -285,11 +279,7 @@ export function Reading({ id }: { id: string }) {
   const view = visibleReading.almanac ? toView(visibleReading.almanac) : undefined;
   return (
     <main className="page">
-      <header className="topbar">
-        <TopbarBrand />
-        <a href="#/">{t("result.backHome")}</a>
-        <WalletBar />
-      </header>
+      <ReadingTopbar />
       {lang === "zh" && view ? <ShikongBar data={view} /> : null}
       {translationPanel}
       {lang === "zh" && visibleReading.chart?.month.boundaryUncertain ? <p className="boundary-tag">月建 · 近交节</p> : null}

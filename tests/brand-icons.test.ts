@@ -95,7 +95,8 @@ test("顶栏品牌：中英文都是同一枚朱印「易」加品牌名", () =>
 });
 
 test("各页顶栏都用 TopbarBrand，不再放随页面变化的文字印", () => {
-  for (const path of ["web/pages/Home.tsx", "web/pages/SampleReading.tsx", "web/pages/Reading.tsx"]) {
+  // 结果页顶栏抽到 ReadingTopbar 组件。
+  for (const path of ["web/pages/Home.tsx", "web/pages/SampleReading.tsx", "web/components/ReadingTopbar.tsx"]) {
     const source = read(path).toString("utf8");
     const headers = [...source.matchAll(/<header className="topbar">([\s\S]*?)<\/header>/gu)];
     assert.ok(headers.length > 0, path);
