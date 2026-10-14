@@ -16,6 +16,20 @@ class HttpError extends Error {
 export class SanyiInputError extends HttpError {
   constructor(message: string, code = "invalid-input") { super(message, 400, code); }
 }
+/** 付款要求：与 GET /api/payment 相同，供 agent 从 402 响应中发现价格与收款方。 */
+export interface PaymentRequirements {
+  recipient: `0x${string}`;
+  amountUsdc6: string;
+  token: `0x${string}`;
+  chainId: number;
+}
+/** 请求其余字段均有效、仅缺付款凭证：HTTP 402，响应体附付款要求；错误码沿用前端已有的映射。 */
+export class PaymentRequiredError extends HttpError {
+  constructor(readonly payment: PaymentRequirements,
+    message = "需要先在 Arc 上支付卦金，再附上付款凭证重新提交") {
+    super(message, 402, "payment-proof-required");
+  }
+}
 export class NotFoundError extends HttpError {
   constructor(message = "未找到解读") { super(message, 404, "reading-not-found"); }
 }
@@ -41,6 +55,7 @@ export function statusForError(error: unknown): number {
     || error instanceof UnsupportedMediaType
     || error instanceof ForbiddenOrigin
     || error instanceof PayloadTooLarge
+    || error instanceof PaymentRequiredError
     || error instanceof TranslationHttpError
   ) {
     return error.status;

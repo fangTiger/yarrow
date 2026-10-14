@@ -192,11 +192,27 @@ flowchart LR
 | Storage | Upstash Redis in production · JSON files locally |
 | Quality | 847 tests (`node:test`) · `tsc --noEmit` |
 
+## For AI agents
+
+An agent can buy a reading without a browser or an account, and Yarrow still holds no keys:
+
+1. `POST /api/readings` without payment. A valid request gets **HTTP 402** with the price, the token, the recipient and the chain ID.
+2. Pay 0.05 USDC on Arc using the ERC-20 `transfer` function. Gas is paid in USDC too.
+3. Send the same request again with `feeProof: { payer, transactionHash }`, then poll `GET /api/readings/{id}`.
+
+Invalid requests get a 400 before any payment is asked for, and a payment is spent only when a reading claims it. The full guide for agents is at [`/llms.txt`](https://yarrow-six.vercel.app/llms.txt). [`scripts/agent-reading.ts`](scripts/agent-reading.ts) runs the whole loop with viem: read the 402, pay on Arc, claim and poll.
+
+```bash
+AGENT_PRIVATE_KEY=0x… node --import tsx scripts/agent-reading.ts https://yarrow-six.vercel.app "Will my new business partnership work out this year?"
+```
+
+This is HTTP 402 payment discovery, not the full x402 protocol. Yarrow never submits signed transfers on anyone's behalf, which is why it needs no private keys.
+
 ## What's next
 
 Planned, not yet built:
 
-- **A pay-per-reading API for AI agents.** An agent pays 0.05 USDC on Arc and gets back a structured, chart-checked reading, using the same payment check and on-chain verification as the web app. Arc's USDC gas and fast finality make machine-to-machine micro-payments like this practical.
+- **Full x402 for agents.** Yarrow already answers with HTTP 402 and accepts on-chain payments (see above). Next is accepting x402-signed USDC authorizations through a facilitator, so agents don't have to submit the transfer themselves.
 - **"Was it accurate?" on past luck cycles.** Readers mark each decade they have already lived as accurate or not. That gives us an honest accuracy signal and data for improving the masters' prompts.
 - **Share cards.** One-tap images of the character portrait and life chart, without birth data.
 - **Compatibility readings.** Two BaZi charts read together by the same three masters.

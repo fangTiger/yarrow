@@ -1,5 +1,6 @@
 // tests/frontend-server.test.ts
 import assert from "node:assert/strict";
+import { PaymentRequiredError } from "../src/sanyi/http-errors.js";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import type { Server } from "node:http";
 import { request } from "node:http";
@@ -180,6 +181,22 @@ test("未知错误为 500 且不泄露堆栈", async () => {
     const response = await fetch(`${item.base}/api/now`);
     assert.equal(response.status, 500);
     assert.doesNotMatch(JSON.stringify(await response.json()), /at /);
+  } finally {
+    await close(item);
+  }
+});
+test("缺付款凭证时 HTTP 402 并在响应体附付款要求", async () => {
+  const payment = { recipient: `0x${"33".repeat(20)}` as `0x${string}`, amountUsdc6: "50000",
+    token: "0x3600000000000000000000000000000000000000" as `0x${string}`, chainId: 5042 };
+  const item = await fixture(fakeApi({
+    createReading: async () => { throw new PaymentRequiredError(payment); },
+  }));
+  try {
+    const response = await post(item.base, "/api/readings", { question: "这次面试能过吗" });
+    assert.equal(response.status, 402);
+    const body = await response.json() as { code: string; payment: unknown };
+    assert.equal(body.code, "payment-proof-required");
+    assert.deepEqual(body.payment, payment);
   } finally {
     await close(item);
   }

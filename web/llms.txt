@@ -1,0 +1,40 @@
+# Yarrow · 三易
+
+> I Ching and BaZi readings by three classical masters, paid in USDC on Arc mainnet. Every I Ching cast can be recomputed from Arc block hashes.
+
+- Site: https://yarrow-six.vercel.app
+- Source: https://github.com/fangTiger/yarrow
+- Price: 0.05 USDC per reading on Arc mainnet (chain ID 5042). Gas on Arc is also paid in USDC.
+- Trust model: the server only reads Arc. It holds no private keys and never moves funds. You pay on-chain yourself, then claim the reading with your transaction hash. Each payment opens exactly one reading.
+
+## How an agent buys a reading
+
+1. **Discover the price.** POST your request to `/api/readings` without `feeProof`. A valid request returns **HTTP 402** with:
+   `{"code": "payment-proof-required", "payment": {"chainId": 5042, "token": "0x3600000000000000000000000000000000000000", "recipient": "0x…", "amountUsdc6": "50000"}}`
+   An invalid request returns 400 before any payment is asked for, so you never pay for a request that can't run. `GET /api/payment` returns the same `payment` object.
+2. **Pay.** Transfer exactly `amountUsdc6` (6 decimals: 50000 = 0.05 USDC) of `token` to `recipient` on Arc, using the ERC-20 `transfer` function. Wait for the receipt.
+3. **Claim.** POST the same request again with `"feeProof": {"payer": "<your address>", "transactionHash": "<0x… tx hash>"}`. The response is the reading, including its `id`. If the claim fails before the payment is accepted (for example, a validation error), the payment stays unused and you can retry with it.
+4. **Poll.** `GET /api/readings/{id}` until `status` is `"done"`. Readings usually take 30 to 120 seconds. The response has `summary.output` (plain-language conclusion and practical guidance) and `schools` (the three masters' readings).
+5. **English (optional).** The readings are written in Chinese. To get English, call `POST /api/readings/{id}/translate` with `{"lang": "en"}`, then `GET /api/readings/{id}?lang=en`. The `translation` field fills in as units finish.
+6. **Verify (optional).** For an I Ching reading, take `payment.firstHash` and each `throws[i].blockNumber`, then read the block hash from Arc. Each throw is the lowest three bits of
+   `keccak256(encodePacked(string "sanyi-throw-v1", bytes32 paymentTxHash, bytes32 blockHash, string question, uint8 index))`,
+   where 1 is the back of a coin and 0 the face. Every cast block must come after the payment block.
+
+Write requests must send `Content-Type: application/json` and `Origin: https://yarrow-six.vercel.app` (a cross-site request guard), with a body of 8 KiB at most.
+
+## Request bodies
+
+- **I Ching question.** Pass `kind` and `subjectKey`, because the server's keyword classifier is tuned for Chinese.
+  `{"kind": "question", "question": "Will my new business partnership work out this year?", "subjectKey": "career"}`
+  `subjectKey` is one of `career`, `wealth`, `documents`, `wellbeing`, `illness`, `peers`, `relationship`.
+- **BaZi destiny (life luck cycles and character).**
+  `{"kind": "destiny", "question": "How will my life unfold, and what is my character like?", "sect": 1, "birth": {"calendar": "solar", "isLeapMonth": false, "year": 1990, "month": 5, "day": 15, "time": {"hour": 14, "minute": 30}, "gender": "female", "timeZone": "America/New_York"}}`
+  Use `"time": null` if the birth hour is unknown. `timeZone` is an IANA name and defaults to `Asia/Shanghai`.
+- **BaZi fortune.** The same as destiny, with `"kind": "fortune"` and `"horizon"` set to `"today"`, `"month"`, `"year"`, `"next-year"` or `"year:2027"`.
+- **Naming.** `{"kind": "naming", "target": "person", "question": "gentle and literary", "surname": "林", "gender": "female", "length": 2, "unborn": false, "birth": {…}}`. For a business name, use `"target": "business"` and a `length` from 2 to 4.
+
+## Example
+
+`scripts/agent-reading.ts` in the repository runs the whole flow with viem: it reads the 402, pays on Arc, claims the reading and polls until it is done.
+
+This is HTTP 402 payment discovery, not the full x402 protocol. Yarrow never submits signed transfers on your behalf, so it needs no keys.

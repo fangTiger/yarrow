@@ -7,8 +7,10 @@ import { createSanyiApi, type SanyiApi } from "../sanyi/api.js";
 import {
   ForbiddenOrigin,
   PayloadTooLarge,
+  PaymentRequiredError,
   SanyiInputError,
   errorCodeForError,
+  type PaymentRequirements,
   statusForError,
   UnsupportedMediaType,
 } from "../sanyi/http-errors.js";
@@ -33,6 +35,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".map": "application/json; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".txt": "text/plain; charset=utf-8",
   ".woff2": "font/woff2",
 };
 const SCHOOL_KEYS = new Set<QuestionSchoolKey | BaziSchoolKey | NamingFamilyKey>([
@@ -95,7 +98,9 @@ async function readJsonBody(request: IncomingMessage): Promise<unknown> {
     throw new SanyiInputError("请求体不是合法 JSON");
   }
 }
-function errorPayload(error: unknown): { error: string; code?: string; readingId?: string } {
+function errorPayload(error: unknown): {
+  error: string; code?: string; readingId?: string; payment?: PaymentRequirements;
+} {
   const message = statusForError(error) === 500
     ? "服务暂时不可用"
     : error instanceof Error ? error.message : "服务暂时不可用";
@@ -104,6 +109,8 @@ function errorPayload(error: unknown): { error: string; code?: string; readingId
     error: message,
     ...(code ? { code } : {}),
     ...(error instanceof PaymentAlreadyUsedError ? { readingId: error.readingId } : {}),
+    // 402：附上付款要求，agent 无须另查 /api/payment 即可付款。
+    ...(error instanceof PaymentRequiredError ? { payment: error.payment } : {}),
   };
 }
 export type FrontendRequestHandler = (request: IncomingMessage, response: ServerResponse) => Promise<void>;

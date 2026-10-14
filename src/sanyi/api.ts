@@ -5,7 +5,7 @@ import { isAddress, getAddress, type Address } from "viem";
 import { ARC_CHAIN_ID, USDC_TOKEN_ADDRESS } from "../frontend/wallet.js";
 import { feeRecipientFromEnv, FEE_USDC6, type SanyiFeeProof } from "./fee.js";
 import { classifyQuestion } from "./classify.js";
-import { NotFoundError, SanyiInputError } from "./http-errors.js";
+import { NotFoundError, PaymentRequiredError, SanyiInputError, type PaymentRequirements } from "./http-errors.js";
 import type { ReadingService } from "./reading-service.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
 import type { StoredQuestionReading as StoredReading } from "./store.js";
@@ -88,8 +88,12 @@ function subjectFrom(value: unknown): SubjectKey | undefined {
   }
   return option.key;
 }
-function feeProofFrom(value: unknown): SanyiFeeProof {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+function feeProofFrom(value: unknown, requirements: PaymentRequirements): SanyiFeeProof {
+  // 完全没带付款凭证：请求其余部分已校验通过，以 402 告知价格与收款方；带了但格式不对仍是 400。
+  if (value === undefined || value === null) {
+    throw new PaymentRequiredError(requirements);
+  }
+  if (typeof value !== "object" || Array.isArray(value)) {
     throw new SanyiInputError("缺少卦金付款凭证", "payment-proof-required");
   }
   const proof = value as Record<string, unknown>;
@@ -150,10 +154,13 @@ export function createSanyiApi(
 ): SanyiApi {
   const clock = options.now ?? (() => new Date());
   let cache: { createdAt: number; value: ReturnType<typeof almanacAt> } | undefined;
+  const paymentRequirements = (): PaymentRequirements => ({
+    recipient: options.recipient ?? feeRecipientFromEnv({}), amountUsdc6: FEE_USDC6.toString(),
+    token: USDC_TOKEN_ADDRESS, chainId: options.chainId ?? ARC_CHAIN_ID,
+  });
   return {
     async payment() {
-      return { recipient: options.recipient ?? feeRecipientFromEnv({}), amountUsdc6: FEE_USDC6.toString(),
-        token: USDC_TOKEN_ADDRESS, chainId: options.chainId ?? ARC_CHAIN_ID };
+      return paymentRequirements();
     },
     async now() {
       const milliseconds = clock().getTime();
@@ -217,7 +224,7 @@ export function createSanyiApi(
           length,
           unborn: body.unborn,
           ...(body.birth === undefined || body.birth === null ? {} : { birth: body.birth }),
-          feeProof: feeProofFrom(body.feeProof),
+          feeProof: feeProofFrom(body.feeProof, paymentRequirements()),
         }));
       };
       if (body.kind === "naming") return createNaming();
@@ -249,7 +256,7 @@ export function createSanyiApi(
         }
         return publicBaziReading(await options.bazi.create({ kind: classification.kind,
           question: classification.question, birth: body.birth, sect,
-          horizon: classification.horizon ?? "year", feeProof: feeProofFrom(body.feeProof) }));
+          horizon: classification.horizon ?? "year", feeProof: feeProofFrom(body.feeProof, paymentRequirements()) }));
       }
       if (classification.kind !== "question") {
         throw new SanyiInputError(classification.suggestion ?? "请改为一件具体的事来问");
@@ -258,7 +265,7 @@ export function createSanyiApi(
       const reading = await service.createQuestionReading({
         question: classification.question,
         ...(body.kind === "question" ? { kind: "question" as const } : {}),
-        feeProof: feeProofFrom(body.feeProof),
+        feeProof: feeProofFrom(body.feeProof, paymentRequirements()),
         ...(subjectKey === undefined ? {} : { subjectKey }),
       });
       return publicReading(reading);

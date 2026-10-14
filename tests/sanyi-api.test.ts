@@ -5,7 +5,9 @@ import type { SanyiFeeProof } from "../src/sanyi/fee.js";
 import { createSanyiApi } from "../src/sanyi/api.js";
 import {
   NotFoundError,
+  PaymentRequiredError,
   SanyiInputError,
+  statusForError,
 } from "../src/sanyi/http-errors.js";
 import type { StoredQuestionReading as StoredReading } from "../src/sanyi/store.js";
 const ID = "abcdefghijklmnopqrstuvwxyz";
@@ -163,4 +165,29 @@ test("拒绝缺失或非法单笔付款凭证", async () => {
     { ...PROOF, transactionHash: "0x12" }, []]) {
     await assert.rejects(api.createReading({ question: "这次面试能过吗", feeProof }), SanyiInputError);
   }
+});
+
+test("缺少付款凭证时返回 402 与付款要求，供 agent 发现价格与收款方", async () => {
+  const { api, calls } = fixture();
+  const error = await api.createReading({ question: "这次面试能过吗", kind: "question", subjectKey: "career" })
+    .then(() => undefined, (caught: unknown) => caught);
+  assert.ok(error instanceof PaymentRequiredError);
+  assert.equal(statusForError(error), 402);
+  assert.equal(error.code, "payment-proof-required");
+  assert.deepEqual(error.payment, await api.payment());
+  assert.equal(calls.length, 0, "未付款不得进入服务");
+  for (const feeProof of [null, undefined]) {
+    await assert.rejects(api.createReading({ question: "这次面试能过吗", feeProof }), PaymentRequiredError);
+  }
+});
+
+test("请求本身无效时先给 400，不让 agent 为无效请求付款", async () => {
+  const { api } = fixture();
+  const short = await api.createReading({ question: "能过吗", kind: "question" })
+    .then(() => undefined, (caught: unknown) => caught);
+  assert.ok(short instanceof SanyiInputError && !(short instanceof PaymentRequiredError));
+  assert.equal(statusForError(short), 400);
+  const noBirth = await api.createReading({ question: "我这一生的运势走向与性格如何？", kind: "destiny" })
+    .then(() => undefined, (caught: unknown) => caught);
+  assert.equal(statusForError(noBirth), 400);
 });

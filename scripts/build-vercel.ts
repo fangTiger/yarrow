@@ -22,7 +22,7 @@ await mkdir(staticDir, { recursive: true });
 await mkdir(functionDir, { recursive: true });
 
 const STATIC_ENTRIES = [
-  "index.html", "favicon.ico", "favicon.svg", "apple-touch-icon.png",
+  "index.html", "favicon.ico", "favicon.svg", "apple-touch-icon.png", "llms.txt",
   "dist", "brand", "samples", "fonts/mashanzheng-subset.woff2", "fonts/OFL.txt",
 ];
 for (const entry of STATIC_ENTRIES) {

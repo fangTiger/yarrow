@@ -194,11 +194,27 @@ flowchart LR
 | 存储 | 生产环境用 Upstash Redis，本地用 JSON 文件 |
 | 质量 | 847 个测试（`node:test`）· `tsc --noEmit` |
 
+## 面向 AI agent
+
+agent 不需要浏览器、也不需要账号就能买一卦，三易依然不持有任何私钥：
+
+1. 不带付款，直接 `POST /api/readings`。有效请求会得到 **HTTP 402**，附价格、代币、收款地址与链 ID。
+2. 在 Arc 上用 ERC-20 `transfer` 付 0.05 USDC，gas 同样用 USDC 付。
+3. 带上 `feeProof: { payer, transactionHash }` 重新提交同一请求，再轮询 `GET /api/readings/{id}`。
+
+无效请求会先返回 400，不会让 agent 白付钱；付款只在一卦认领它时才算用掉。完整说明见 [`/llms.txt`](https://yarrow-six.vercel.app/llms.txt)。[`scripts/agent-reading.ts`](scripts/agent-reading.ts) 用 viem 跑通全流程：读 402、链上付款、认领、轮询。
+
+```bash
+AGENT_PRIVATE_KEY=0x… node --import tsx scripts/agent-reading.ts https://yarrow-six.vercel.app "Will my new business partnership work out this year?"
+```
+
+这是 HTTP 402 付款发现，不是完整的 x402 协议。三易从不代人提交签名转账，因此不需要私钥。
+
 ## 下一步
 
 以下是规划中的事项，尚未实现：
 
-- **面向 AI agent 的按次付费接口。** agent 在 Arc 上付 0.05 USDC，拿到一份经盘面核对的结构化解读；付款核对与链上验证和网页版相同。Arc 用 USDC 付 gas、终局快，正适合这类机器之间的小额付款。
+- **完整的 x402。** 三易已经能返回 402、接受链上付款（见上一节）；下一步是通过 facilitator 接受 x402 签名的 USDC 授权，agent 无须自己提交转账。
 - **过去的运「准不准」。** 用户给已经走过的每步大运标注准或不准，我们由此得到真实的准确度信号，也有数据来改进三家的提示词。
 - **分享卡片。** 一键生成性格画像与一生运势的图片，不含生辰。
 - **合婚。** 同样由三家合看两个人的八字。
