@@ -62,6 +62,13 @@ Yarrow works differently:
 </td></tr>
 <tr><td colspan="2">
 
+**Verify on Arc.** One click, and your browser checks the payment against Arc mainnet directly, without going through Yarrow's server. For I Ching readings it also recomputes all six throws from the block hashes. Shown here: the first paid mainnet reading.
+
+<img src="docs/screenshots/verify-on-arc.png" alt="Verify on Arc: payment checked against Arc mainnet" width="100%" />
+
+</td></tr>
+<tr><td colspan="2">
+
 **I Ching hexagram.** Cast from Arc blocks, with the changing lines and the resulting hexagram. The classical judgement and line texts appear in the original Chinese with English translations.
 
 <img src="docs/screenshots/hexagram.png" alt="Hexagram reading" width="100%" />

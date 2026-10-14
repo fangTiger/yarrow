@@ -64,6 +64,13 @@
 </td></tr>
 <tr><td colspan="2">
 
+**在 Arc 上验证。** 一键之下，浏览器直接向 Arc 主网核对付款，不经过三易服务器；问事卦还会用区块哈希复算全部六掷。图为主网首笔付费解读的验证结果。
+
+<img src="docs/screenshots/verify-on-arc.png" alt="在 Arc 上验证：向 Arc 主网核对付款" width="100%" />
+
+</td></tr>
+<tr><td colspan="2">
+
 **六爻卦象。** 由 Arc 区块起出，标出动爻和变卦。卦辞、爻辞保留中文原文，附英文译文。
 
 <img src="docs/screenshots/hexagram.png" alt="卦象" width="100%" />
