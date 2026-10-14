@@ -1,15 +1,15 @@
 # Vercel CLI 不读 .gitignore：部署只上传构建所需的源码与脚本，
-# 密钥、本地数据、日志与研究产物一律不上传。
+# 密钥、本地数据、日志与研究产物一律不上传。根目录用前导 / 限定，免得误伤 src/calendar/data。
 .env
 .env.*
 !.env.example
-data/
-log/
-output/
-reports/
-docs/
-contracts/
-openspec/
+/data/
+/log/
+/output/
+/reports/
+/docs/
+/contracts/
+/openspec/
 tools/naming/raw/
 .venv-tools/
 .playwright-cli/
