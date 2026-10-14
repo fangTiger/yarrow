@@ -1685,3 +1685,20 @@ html:lang(en) .summary-conclusion p {
   outline: 2px solid var(--line-strong);
   outline-offset: 2px;
 }
+
+/* 在 Arc 上验证：浏览器直连 Arc 核对付款并复算六掷。 */
+.arc-verify { display: grid; gap: 12px; justify-items: start; }
+.arc-verify-intro, .arc-verify-note { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.arc-verify-result { width: 100%; border: 1px solid var(--line); padding: 12px 14px; }
+.arc-verify-result.ok { border-color: rgb(69 160 126 / 0.5); background: var(--jade-soft); }
+.arc-verify-result.bad { border-color: rgb(208 97 74 / 0.5); background: var(--cinnabar-soft); }
+.arc-verify-verdict { margin: 0 0 8px; font-weight: 600; }
+.arc-verify-verdict b { margin-right: 8px; }
+.arc-verify-result ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.arc-verify-result li { display: grid; grid-template-columns: 1.4em minmax(0, 1fr); gap: 4px; font-size: 13px;
+  line-height: 1.6; overflow-wrap: anywhere; }
+.arc-verify-result li.ok b { color: var(--jade); }
+.arc-verify-result li.bad b, .arc-verify-result li.bad em { color: var(--cinnabar); }
+.arc-verify-result a { color: var(--gold); }
+.arc-verify-raw { margin-top: 14px; }
+.arc-verify-raw > summary { cursor: pointer; color: var(--muted); font-size: 13px; }

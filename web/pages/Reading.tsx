@@ -24,6 +24,7 @@ import { QimenBoard } from "../components/QimenBoard.js";
 import { SchoolCard } from "../components/SchoolCard.js";
 import { SubjectChange } from "../components/SubjectChange.js";
 import { VerifyPanel } from "../components/VerifyPanel.js";
+import { ArcVerifyPanel } from "../components/ArcVerify.js";
 import { EnglishQuestionResult } from "../components/EnglishQuestionResult.js";
 import { DisclaimerFooter } from "../components/DisclaimerFooter.js";
 import { useLang, useT } from "../lib/i18n.js";
@@ -260,6 +261,7 @@ export function Reading({ id }: { id: string }) {
         <ReadingTopbar />
         {translationPanel}
         <NamingReading reading={visibleReading} onReading={setReading} />
+        <ArcVerifyPanel paymentHash={visibleReading.payment.firstHash} />
         <DisclaimerFooter />
       </main>
     );
@@ -271,6 +273,7 @@ export function Reading({ id }: { id: string }) {
         {lang === "zh" ? <ShikongBar data={toView(visibleReading.almanac)} /> : null}
         {translationPanel}
         <BaziReading reading={visibleReading} onReading={setReading} />
+        <ArcVerifyPanel paymentHash={visibleReading.payment.firstHash} />
         <DisclaimerFooter />
       </main>
     );

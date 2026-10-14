@@ -1,3 +1,4 @@
+import { ArcVerify } from "./ArcVerify.js";
 import { useState } from "react";
 import { getZhouyiEnglish, getZhouyiLineEnglish } from "../../src/agent/zhouyi-en.js";
 import { getHexagramText } from "../../src/agent/zhouyi-corpus.js";
@@ -99,10 +100,12 @@ export function EnglishQuestionResult(props: {
       {reading.qimen ? <QimenBoard value={reading.qimen} /> : null}
       {reading.almanac ? <AlmanacPanel value={reading.almanac} /> : null}
     </details> : null}
-    <section className="panel verify-panel"><header className="panel-head"><h2>{t("question.proof")}</h2></header>
+    <section className="panel verify-panel"><header className="panel-head"><h2>{t("verify.title")}</h2></header>
+      <ArcVerify paymentHash={reading.payment.firstHash} question={reading.question} throws={reading.throws} />
+      <details className="arc-verify-raw"><summary>{t("question.proof")}</summary>
       <dl><div><dt>{t("question.paymentTx")}</dt><dd>{reading.payment.firstHash}</dd></div>
         {reading.throws.map((item) => <div key={item.index}><dt>{t("question.castBlock", {
           index: item.index, block: item.blockNumber,
-        })}</dt><dd>{item.blockHash}</dd></div>)}</dl></section>
+        })}</dt><dd>{item.blockHash}</dd></div>)}</dl></details></section>
   </>;
 }

@@ -127,6 +127,34 @@ sequenceDiagram
   `keccak256("sanyi-throw-v1", paymentTxHash, blockHash, question, index)`.
   The payment and the six block hashes are stored with the reading and shown on the reading page, so anyone can recompute the hexagram.
 - **Mainnet guardrails.** The service refuses to start on mainnet if no fee recipient is set, or if the RPC or explorer URL points to a testnet.
+- **One-click verification.** Every paid reading has a **Verify on Arc** button. Your browser fetches the payment receipt and the six block hashes straight from the Arc RPC, checks the USDC transfer, and recomputes all six throws. Yarrow's server is not involved.
+
+### Why Arc
+
+- **USDC is the gas token.** A reading costs 0.05 USDC, and gas is paid in USDC as well, so a newcomer needs exactly one asset. There's no second token to buy just to press "pay".
+- **Deterministic finality.** An Arc block is final once it is produced, and no reorg can replace it. A hexagram cast from block hashes can't be changed after the fact, by us or anyone else.
+- **Fast blocks.** We measured about two blocks per second on mainnet. Each of the six throws waits for a fresh block after the payment, and the whole cast still takes only a few seconds.
+- **Everything needed to check a reading lives on Arc.** The payment receipt and the block hashes are public, so the browser can verify a reading without trusting Yarrow.
+
+In scope today: every reading (I Ching, BaZi destiny and fortune, naming) is paid and verifiable on Arc, and I Ching readings also draw their randomness from Arc blocks. BaZi and naming are deterministic calculations from the birth chart, so they need no randomness.
+
+### Mainnet proof
+
+| | |
+|---|---|
+| Network | Arc Mainnet · chain ID `5042` · RPC `https://rpc.mainnet.arc.io` |
+| USDC (ERC-20 interface) | `0x3600000000000000000000000000000000000000` |
+| Fee recipient | [`0x81d48d2c5D0744e8eF7A5c35cDceB0A27A1c707B`](https://explorer.arc.io/address/0x81d48d2c5D0744e8eF7A5c35cDceB0A27A1c707B) |
+| First paid mainnet reading | [`0x6893ee27…11604073`](https://explorer.arc.io/tx/0x6893ee27689be0982e331e385d9166bde5eb35d15c8eeb435dca85ad11604073) · block 25,855,931 · 2026-10-14 03:09 UTC · 0.05 USDC · a BaZi destiny reading |
+
+The payment above produced a complete reading on the live site: three masters, eight scored luck cycles and a character portrait. The reading link isn't published, because a BaZi chart reveals the payer's birth data. The live endpoint `GET https://yarrow-six.vercel.app/api/payment` returns the same recipient, amount and chain ID that the app enforces.
+
+### Verify a reading yourself
+
+1. Open any paid reading and press **Verify on Arc**. The checks run in your browser against the Arc RPC.
+2. Or by hand: take the payment hash and the six block numbers from the reading page, read each block hash from Arc, and compute
+   `keccak256(encodePacked("sanyi-throw-v1", paymentTxHash, blockHash, question, index))`.
+   The lowest three bits are the three coins (1 = back, 0 = face). Every cast block must come after the payment block.
 
 ## Architecture
 

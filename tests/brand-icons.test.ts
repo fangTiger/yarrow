@@ -106,3 +106,17 @@ test("各页顶栏都用 TopbarBrand，不再放随页面变化的文字印", ()
     }
   }
 });
+
+test("分享预览：Open Graph 与 Twitter 大图卡片，预览图 1200×630", () => {
+  const html = read("web/index.html").toString("utf8");
+  for (const pattern of [
+    /<meta property="og:title" content="[^"]+" \/>/u,
+    /<meta property="og:image" content="https:\/\/[^"]+\/brand\/og\.png" \/>/u,
+    /<meta property="og:url" content="https:\/\/[^"]+" \/>/u,
+    /<meta name="twitter:card" content="summary_large_image" \/>/u,
+    /<meta name="twitter:image" content="https:\/\/[^"]+\/brand\/og\.png" \/>/u,
+  ]) {
+    assert.match(html, pattern);
+  }
+  assert.deepEqual(pngSize(read("web/brand/og.png")), { width: 1200, height: 630 });
+});

@@ -86,7 +86,10 @@ test("只读问事示例不渲染重试或改事项操作", () => {
     summary: { status: "failed", basis: 1, retries: 0, error: "暂未生成" },
   } as unknown as AnyPublicReading;
   const html = renderIn("zh", createElement(() => sampleResult(reading)));
-  assert.doesNotMatch(html, /<button|subject-change|免费重试|改事项/u);
+  // 「在 Arc 上验证」只读链上数据、不改存档，示例带真实付款时应当可用；其余按钮一律不出现。
+  const withoutVerify = html.replace(/<div class="arc-verify">[\s\S]*?<\/button>/u, "");
+  assert.match(html, /在 Arc 上验证<\/button>/u);
+  assert.doesNotMatch(withoutVerify, /<button|subject-change|免费重试|改事项/u);
 });
 
 test("示例按语言优先加载 <kind>.<lang>.json，缺失时退回 <kind>.json", async () => {
