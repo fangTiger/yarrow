@@ -1665,3 +1665,23 @@ html:lang(en) .summary-conclusion p {
   line-height: 1.4;
   letter-spacing: 0;
 }
+
+/* 顶栏返回首页：与语言切换、钱包同款描边按钮。 */
+.topbar-actions .home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  margin-left: 0;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.topbar-actions .home-button:hover, .topbar-actions .home-button:focus-visible {
+  border-color: var(--gold);
+  outline: 2px solid var(--line-strong);
+  outline-offset: 2px;
+}

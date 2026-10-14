@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from "react";
 import type { AnyPublicReading } from "../lib/api.js";
 import { applyReadingTranslation } from "../lib/reading-translation.js";
 import { useLang, useT, type Lang } from "../lib/i18n.js";
+import { HomeButton } from "../components/HomeButton.js";
 import { LangToggle } from "../components/LangToggle.js";
 import { TopbarBrand } from "../components/TopbarBrand.js";
 import { QuestionResult } from "./Reading.js";
@@ -73,7 +74,7 @@ export function SampleReading({ kind }: { kind: SampleKind }) {
   }, [kind, lang]);
   return <main className="page sample-page">
     <header className="topbar"><TopbarBrand /><div className="topbar-actions">
-        <LangToggle /><a href="#/">{t("result.backHome")}</a></div></header>
+        <HomeButton /><LangToggle /></div></header>
     <div className="sample-banner">{t("sample.banner")}</div>
     <SampleContent lang={lang} reading={reading} />
     <DisclaimerFooter />

@@ -205,6 +205,7 @@ export const en: Record<keyof typeof zh, string> = {
   "throw.legend": "Solid coins are backs; outlined coins are faces. One back is Young Yang, "
     + "two backs are Young Yin, three backs are moving Old Yang, and three faces are moving Old Yin.",
   "result.backHome": "Back to home",
+  "nav.home": "Home",
   "result.opening": "Opening this reading...",
   "result.openError": "This reading cannot be opened right now",
   "result.charting": "Preparing the chart",

@@ -202,6 +202,7 @@ export const zh = {
   "throw.legend": "实心为背，空心为字。一背为单（少阳），二背为拆（少阴），"
     + "三背为重（老阳，动），三字为交（老阴，动）。",
   "result.backHome": "返回首页",
+  "nav.home": "首页",
   "result.opening": "正在打开这一卦",
   "result.openError": "这一卦暂时打不开",
   "result.charting": "正在排盘",
