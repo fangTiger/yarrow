@@ -1704,3 +1704,5 @@ html:lang(en) .summary-conclusion p {
 .arc-verify-raw > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 .arc-verify-help { margin: 0; color: var(--dim); font-size: 12px; line-height: 1.6; }
 .arc-verify-help a { color: var(--gold); }
+/* 「在 Arc 上验证」的「上验证」不在毛笔字体子集里（子集已接近 100 KB 上限），标题统一用正文字体，免得一半毛笔一半宋体。 */
+.verify-panel .panel-head h2 { font-family: var(--serif); font-weight: 600; letter-spacing: 0.04em; }
