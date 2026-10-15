@@ -1,0 +1,14 @@
+# daily-almanac Specification
+
+## Purpose
+TBD - created by archiving change share-and-daily. Update Purpose after archive.
+## Requirements
+### Requirement: 首页今日黄历
+
+首页 MUST 免费显示今日黄历：公历与农历日期、日柱、节气、建除与值神、宜忌（各最多 8 项）、冲煞与喜神财神福神方位，数据来自 `/api/now`，不调用模型。卡片 MUST 提供「看看你今天的运势」入口，预填运势与 today。英文版 MUST 通过展示用术语表翻译，查不到的词条不显示，页面不得出现汉字，且不显示彭祖百忌与七十二候。窄屏 MUST 折叠为一行摘要。
+
+#### Scenario: 英文用户打开首页
+
+- **WHEN** 英文模式打开首页
+- **THEN** 看到「Today」卡片：日期、日柱拼音、Good for 与 Avoid 的英文事项，没有汉字
+

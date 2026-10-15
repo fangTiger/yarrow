@@ -1,0 +1,42 @@
+# ink-night-theme Specification
+
+## Purpose
+TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+## Requirements
+### Requirement: 水墨夜色板与字体
+
+界面 MUST 使用单一深色「水墨夜」主题：焦墨底 `#0F1110` 叠加低透明墨晕、面板 `#151816`、正文 `#EAE5D9`、泥金 `#C9A866`、朱砂 `#D0614A`、石绿 `#82B59E`、印章 `#A63A2B`，并以 CSS 变量管理。正文 MUST 使用系统宋体栈；毛笔体（马善政，SIL OFL）MUST 自托管并子集化为固定字表，仅用于卦名、门星神、六神六亲、干支、标题、印章与三家姓。模型生成的动态文字 MUST 不使用毛笔体，改用系统楷体栈。页面 MUST 不请求任何境外字体服务。
+
+#### Scenario: 打开任意页面
+
+- **WHEN** 页面完成加载
+- **THEN** 页面不向 Google Fonts 或其它境外字体服务发起请求
+- **AND** 卦名以毛笔体显示
+
+### Requirement: 经典纹样仅作装饰
+
+罗盘二十四山、后天八卦（离南在上）、洛书与宫名水印 MUST 使用固定经典图式，只作装饰且不承载可变信息；罗盘 MAY 缓慢转动，在 `prefers-reduced-motion` 时 MUST 静止。
+
+#### Scenario: 减少动态效果
+
+- **WHEN** 用户系统开启减少动态效果
+- **THEN** 罗盘不转动，其余内容完整显示
+
+### Requirement: 文化守卫
+
+界面文案与构建产物 MUST 不包含日文假名（U+3040–U+30FF）、「・」分隔符，以及「易者」「身銭」「筮竹」「神社」「高島」「断易」「問」「賭」等日式称谓与写法；用户可见文案 MUST 不出现「押钱」「赔付」「封存」。以上 MUST 由自动测试强制。
+
+#### Scenario: 构建产物扫描
+
+- **WHEN** 运行前端内容测试
+- **THEN** 构建产物中上述字符与词汇出现次数为零
+
+### Requirement: 响应式与可读性
+
+正文字号 MUST 不小于 14px；页面在 390 像素宽视口 MUST 无横向滚动，宽排盘表 MUST 在自身容器内横向滚动；触控目标 MUST 不小于 44 像素；桌面宽度 MUST 以双列呈现（卦象与三家、排盘与奇门），980 像素以下 MUST 单列。
+
+#### Scenario: 手机查看问事结果
+
+- **WHEN** 用户在 390 像素宽设备查看问事结果
+- **THEN** 页面本身无横向溢出，排盘表可在表内横向滚动
+

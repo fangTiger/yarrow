@@ -1,0 +1,14 @@
+# share-card Specification
+
+## Purpose
+TBD - created by archiving change share-and-daily. Update Purpose after archive.
+## Requirements
+### Requirement: 结果分享图
+
+命理、问事、运势结果在总述完成后 MUST 可生成 1080×1350 的 PNG 分享图，支持预览、系统分享（浏览器支持时）与下载。命理卡 MUST 只用年龄段标注一生走势，MUST 不含四柱、大运干支、年份或生辰；问事卡 MUST 不含付款哈希；三类卡片 MUST 带站点地址。英文卡片除所问原文外 MUST 不含汉字。
+
+#### Scenario: 分享性格画像
+
+- **WHEN** 用户在命理结果页点「生成分享图」
+- **THEN** 得到一张含性格标签、总评与一生走势曲线的图片，其中没有任何生辰信息
+

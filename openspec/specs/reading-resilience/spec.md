@@ -1,0 +1,14 @@
+# reading-resilience Specification
+
+## Purpose
+TBD - created by archiving change arc-verify-resilience. Update Purpose after archive.
+## Requirements
+### Requirement: 中断后可重试
+
+三家、起名各家与白话总述进入「落笔中」时 MUST 记录开始时刻。读取存档时，处于「落笔中」超过 330 秒的状态 MUST 改判为失败并注明「落笔中断」，且 MUST 不计入重试次数，用户可用现有按钮重试。问事起卦停在待掷超过 120 秒且未暂停时，读取时 MUST 改为暂停，用户可继续起卦。没有开始时刻的旧存档 MUST 不受影响。
+
+#### Scenario: 函数超时中断
+
+- **WHEN** 一卦在 Vercel 上因 300 秒时限被中断，某家停在「落笔中」
+- **THEN** 6 分钟后用户刷新页面，该家显示失败与重试按钮，重试次数不减少
+

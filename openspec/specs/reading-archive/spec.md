@@ -1,0 +1,46 @@
+# reading-archive Specification
+
+## Purpose
+TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+## Requirements
+### Requirement: 独立链接与不可枚举 id
+
+每次解读 MUST 在服务端存档并拥有独立链接 `#/r/<id>`，id MUST 为 128 位随机数的 base32 编码；刷新或分享链接 MUST 显示同一份结果，且 MUST 不重新收费或重新调用模型。
+
+#### Scenario: 刷新结果页
+
+- **WHEN** 用户在三家落笔完成后刷新结果页
+- **THEN** 页面从存档显示同一卦、同样的三家断语与白话总述
+
+#### Scenario: 存档记录删错留对
+
+- **WHEN** 某家断语经删错留对后展示
+- **THEN** 存档记录删去的处数（不保存被删原文），结果页与分享链接显示同样的注明
+
+### Requirement: 复算材料公开
+
+问事存档 MUST 包含规范化问题、付款首笔交易哈希、六掷的区块号与区块哈希、六爻、卦时与排盘口径，结果页 MUST 提供可展开的复算信息与 Arcscan 链接。
+
+#### Scenario: 查看复算信息
+
+- **WHEN** 用户展开复算信息
+- **THEN** 能看到付款交易与六个区块的链接，以及复算公式说明
+
+### Requirement: 本机最近记录
+
+浏览器 MUST 在本机存储中保留最近 20 条解读的链接、类型、问题与时间，并在顶栏右上角的「卦历」小图标里列出、可打开；存储不可用时 MUST 不影响问卦。
+
+#### Scenario: 回到首页
+
+- **WHEN** 用户完成两次解读后回到首页
+- **THEN** 右上角「卦历」浮层列出这两条最近记录
+
+### Requirement: 存档隐私边界
+
+存档 MUST 不包含原始出生日期、出生时间、出生地、钱包私密信息或模型密钥；日志 MUST 写入 `log/` 目录且遵守同样的边界。
+
+#### Scenario: 检查命理存档
+
+- **WHEN** 测试读取一份命理存档与对应日志
+- **THEN** 其中不出现原始生辰字段
+
