@@ -1,7 +1,7 @@
 # reading-translation Specification
 
 ## Purpose
-TBD - created by archiving change yarrow-global. Update Purpose after archive.
+规定中文解读按总述和各家拆分为可缓存、可失效、可核对的英文翻译单元，并统一术语与《周易》古文译法。本能力支撑 Yarrow 英文结果页，同时限制并发、失败冷却和每日翻译用量。
 ## Requirements
 ### Requirement: 按单元翻译
 

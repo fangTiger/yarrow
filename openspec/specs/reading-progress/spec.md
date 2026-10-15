@@ -1,7 +1,7 @@
 # reading-progress Specification
 
 ## Purpose
-TBD - created by archiving change reading-experience. Update Purpose after archive.
+规定三家尚在落笔时，结果页如何提前展示命理大运、流年走势、画像占位和逐家进度。本能力服务于三易长耗时解读的等待体验，使用户能够边等边看且不会把部分结果误当成最终合议。
 ## Requirements
 ### Requirement: 边等边看
 

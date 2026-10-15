@@ -1,7 +1,7 @@
 # onboarding-home Specification
 
 ## Purpose
-TBD - created by archiving change yarrow-global. Update Purpose after archive.
+规定三易首页的八卦品牌入口、类型说明、示例结果、钱包引导、外国用户辅助与免责声明。本能力承担 Yarrow 的首次上手体验，并以命理优先的方式把用户引入问事、命理、运势和起名流程。
 ## Requirements
 ### Requirement: 八卦首页与一句话说明
 

@@ -1,7 +1,7 @@
 # usage-metrics Specification
 
 ## Purpose
-TBD - created by archiving change funding-and-metrics. Update Purpose after archive.
+规定三易按北京时间逐日累计首页、示例、钱包、付款与解读终态等白名单事件，并通过受保护接口读取漏斗数据。本能力只提供匿名聚合使用计数，不采集地址、IP、问题或生辰。
 ## Requirements
 ### Requirement: 基础使用计数
 

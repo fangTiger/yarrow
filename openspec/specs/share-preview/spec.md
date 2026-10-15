@@ -1,7 +1,7 @@
 # share-preview Specification
 
 ## Purpose
-TBD - created by archiving change arc-verify-resilience. Update Purpose after archive.
+规定三易站点链接在社交平台展开时使用的 Open Graph 与 Twitter 大图元数据。本能力提供统一品牌印、英文标语和绝对地址预览图，改善 Yarrow 首页链接的分享识别度。
 ## Requirements
 ### Requirement: 分享预览卡片
 

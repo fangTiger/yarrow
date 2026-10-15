@@ -1,7 +1,7 @@
 # language-switch Specification
 
 ## Purpose
-TBD - created by archiving change yarrow-global. Update Purpose after archive.
+规定三易整站中英文切换、语言记忆、字典一致性及周边组件和错误信息的本地化行为。本能力支撑 Yarrow 的双语界面，并约束英文模式不得泄漏未允许的汉字。
 ## Requirements
 ### Requirement: 中英一键切换
 

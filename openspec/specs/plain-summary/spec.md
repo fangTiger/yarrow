@@ -1,7 +1,7 @@
 # plain-summary Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定问事、命理和运势如何把已落笔三家合成为白话总述、现实可行的解法与必要的性格画像，并与合议及盘面事实保持一致。本能力位于三易结果页最前部，负责降低术语门槛并在模型失败或内容越界时提供可核对的重写与兜底。
 ## Requirements
 ### Requirement: 白话总述
 

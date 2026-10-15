@@ -1,7 +1,7 @@
 # ink-night-theme Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定三易“水墨夜”视觉系统的色板、字体、经典纹样、文化用语守卫以及响应式可读性。本能力统一首页与各类结果页的品牌呈现，并确保移动端、减少动态效果和字体自托管等基础体验。
 ## Requirements
 ### Requirement: 水墨夜色板与字体
 

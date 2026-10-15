@@ -1,7 +1,7 @@
 # naming Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-naming. Update Purpose after archive.
+规定三易人名与商号起名的输入、补益五行、三家候选、诗文出处、程序核对、合参推荐和名字卡分析。本能力把起名作为独立付费术数接入统一流程，同时约束字库来源、隐私边界与不承诺改运。
 ## Requirements
 ### Requirement: 起名入口
 

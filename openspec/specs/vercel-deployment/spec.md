@@ -1,7 +1,7 @@
 # vercel-deployment Specification
 
 ## Purpose
-TBD - created by archiving change vercel-mainnet-deploy. Update Purpose after archive.
+规定三易部署到 Vercel 与 Arc 主网时的链配置、共享 Redis 存储、后台任务保活和 HTTPS 同源校验。本能力保证无状态函数实例之间能够安全延续付款认领、解读、翻译与轮询流程。
 ## Requirements
 ### Requirement: 主网链配置
 系统 SHALL 从环境变量读取 Arc 链 ID、RPC 与浏览器地址；链 ID 为 5042 时视为主网。

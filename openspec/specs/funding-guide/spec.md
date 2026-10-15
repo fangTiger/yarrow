@@ -1,7 +1,7 @@
 # funding-guide Specification
 
 ## Purpose
-TBD - created by archiving change funding-and-metrics. Update Purpose after archive.
+规定 Arc 主网模式下获取原生 USDC 的中英文付款指引、触发条件与安全提醒，并保留测试网水龙头路径。本能力服务于三易付款区，帮助没有 Arc USDC 的用户完成首次卦金准备。
 ## Requirements
 ### Requirement: Arc 主网 USDC 获取指引
 

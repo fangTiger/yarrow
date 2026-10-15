@@ -1,7 +1,7 @@
 # unified-question-entry Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定首页以单一输入接收用户问题，并通过规则分类或手动选择分流到问事、命理、运势与起名。本能力统一三易各术数的入口、类型提示和生辰补填，避免分类不明确时擅自发起付费流程。
 ## Requirements
 ### Requirement: 单一问题入口
 

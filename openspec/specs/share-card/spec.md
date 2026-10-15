@@ -1,7 +1,7 @@
 # share-card Specification
 
 ## Purpose
-TBD - created by archiving change share-and-daily. Update Purpose after archive.
+规定问事、命理和运势结果在浏览器中生成、预览、分享与下载竖版 PNG 卡片的内容和隐私边界。本能力服务于三易结果传播，确保分享图保留结论与关键图形而不泄露付款哈希或生辰命盘信息。
 ## Requirements
 ### Requirement: 结果分享图
 

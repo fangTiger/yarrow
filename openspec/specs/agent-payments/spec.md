@@ -1,7 +1,7 @@
 # agent-payments Specification
 
 ## Purpose
-TBD - created by archiving change agent-payments. Update Purpose after archive.
+规定 AI agent 通过 HTTP 402 发现卦金要求、在 Arc 上自行付款、凭交易哈希认领并轮询解读的接口契约。本能力服务于三易的机器客户接入，使 agent 无需托管密钥即可购买问事、命理、运势或起名解读。
 ## Requirements
 ### Requirement: HTTP 402 付款发现
 

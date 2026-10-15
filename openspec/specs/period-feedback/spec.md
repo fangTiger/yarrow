@@ -1,7 +1,7 @@
 # period-feedback Specification
 
 ## Purpose
-TBD - created by archiving change reading-experience. Update Purpose after archive.
+规定用户对已开始的大运标注“准”或“不太准”的存储、取消与展示规则。本能力为三易命理结果提供个人回看反馈，但不在样本不足时汇总或宣称跨卦准确率。
 ## Requirements
 ### Requirement: 大运准不准标注
 

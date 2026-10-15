@@ -1,7 +1,7 @@
 # reading-resilience Specification
 
 ## Purpose
-TBD - created by archiving change arc-verify-resilience. Update Purpose after archive.
+规定无状态函数或进程中断后，如何从持久化开始时刻识别停滞的三家、起名、总述与自动起卦任务，并转成可重试状态。本能力保障三易解读在平台超时后不会永久卡在“落笔中”或“待掷”。
 ## Requirements
 ### Requirement: 中断后可重试
 

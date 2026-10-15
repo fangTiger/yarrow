@@ -1,7 +1,7 @@
 # bazi-chart Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定八字四柱、十神、藏干、起运、大运、流年、合冲刑害、神煞、五行与调候等确定性排盘事实，以及这些事实在命理和运势结果页的展示顺序。本能力为三易命理与运势三家提供可核对的共同命盘底座。
 ## Requirements
 ### Requirement: 四柱与派生事实
 

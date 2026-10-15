@@ -1,7 +1,7 @@
 # bazi-three-schools Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定沈孝瞻、余春台、任铁樵三家对同一八字独立取用、输出命理或运势断语、逐运逐年判断并接受事实核对的方式。本能力构成三易命理与运势的“三家合参”核心，并约束失败隔离、重写和缺时柱边界。
 ## Requirements
 ### Requirement: 命理三家人设与判断路径
 

@@ -1,7 +1,7 @@
 # question-three-schools Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定程颐、京房、邵雍三家基于同一问事卦独立落笔的取法、结构化输出、事实核对、失败隔离与合议展示。本能力构成三易问事解读核心，并允许在不改卦、不重复收费的前提下调整事项后重写相关判断。
 ## Requirements
 ### Requirement: 问事三家人设与判断路径
 

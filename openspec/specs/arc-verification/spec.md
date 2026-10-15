@@ -1,7 +1,7 @@
 # arc-verification Specification
 
 ## Purpose
-TBD - created by archiving change arc-verify-resilience. Update Purpose after archive.
+规定浏览器直接读取 Arc 链上回执与区块，核对卦金收款并复算问事六掷的验证流程。本能力为三易结果页提供不经业务服务端的公开校验入口，让用户能够识别付款、区块哈希或铜钱记录的不一致。
 ## Requirements
 ### Requirement: 浏览器端链上验证
 

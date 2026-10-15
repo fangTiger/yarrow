@@ -1,7 +1,7 @@
 # six-throw-casting Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定问事付款后由服务端依次完成六掷、以付款交易和连续 Arc 区块生成可公开复算的铜钱结果，并在网络中断后续掷。本能力是三易六爻问事从卦金凭证到确定性成卦的随机性与进度基础。
 ## Requirements
 ### Requirement: 付款后自动六掷
 

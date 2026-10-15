@@ -1,7 +1,7 @@
 # shikong-almanac-qimen Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定问事结果所用统一卦时下的时空栏、黄历与时家奇门确定性计算、展示和回归校验。本能力为三易问事三家提供同源历法背景，确保日柱、节气、黄历与奇门不使用彼此冲突的时间口径。
 ## Requirements
 ### Requirement: 时空栏
 

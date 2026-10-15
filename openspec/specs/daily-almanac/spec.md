@@ -1,7 +1,7 @@
 # daily-almanac Specification
 
 ## Purpose
-TBD - created by archiving change share-and-daily. Update Purpose after archive.
+规定首页免费“今日黄历”的数据内容、接口来源、中英文展示和窄屏形态。本能力为三易首页提供无需模型与付款的每日入口，并可直接引导用户发起今日运势解读。
 ## Requirements
 ### Requirement: 首页今日黄历
 

@@ -1,7 +1,7 @@
 # destiny-upsell Specification
 
 ## Purpose
-TBD - created by archiving change reading-experience. Update Purpose after archive.
+规定从命理一生运势的大运区间跳转到对应十年流年细看的预填流程。本能力连接三易的命理结果与运势入口，让用户沿当前或未来大运继续发起一次明确范围的付费解读。
 ## Requirements
 ### Requirement: 从命理细看某十年
 

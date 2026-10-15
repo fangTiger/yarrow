@@ -1,7 +1,7 @@
 # birth-timezone Specification
 
 ## Purpose
-TBD - created by archiving change yarrow-global. Update Purpose after archive.
+规定出生地 IANA 时区、海外当地标准时与节气时刻的换算口径，并保持旧数据和中国时区行为兼容。本能力支撑三易面向全球用户的八字排盘，也要求英文提问仍先生成可核对的中文解读。
 ## Requirements
 ### Requirement: 出生地时区
 

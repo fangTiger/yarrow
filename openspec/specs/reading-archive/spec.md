@@ -1,7 +1,7 @@
 # reading-archive Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定三易解读的不可枚举独立链接、服务端存档、问事复算材料和浏览器本机卦历。本能力保证刷新与分享读取同一结果，同时约束存档和日志不保留原始生辰、密钥或钱包私密信息。
 ## Requirements
 ### Requirement: 独立链接与不可枚举 id
 

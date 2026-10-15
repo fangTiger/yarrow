@@ -1,7 +1,7 @@
 # birth-profile Specification
 
 ## Purpose
-TBD - created by archiving change sanyi-chinese-redesign. Update Purpose after archive.
+规定命理、运势与人名起名所需生辰字段、本机档案、缺时辰、夏令时校正和换日口径。本能力服务于三易的生辰输入与排盘入口，同时限制服务端存档和日志不得保留原始生辰。
 ## Requirements
 ### Requirement: 生辰字段与缺时辰
 
