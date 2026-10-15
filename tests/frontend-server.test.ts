@@ -2,15 +2,16 @@
 import assert from "node:assert/strict";
 import { PaymentRequiredError } from "../src/sanyi/http-errors.js";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
-import type { Server } from "node:http";
+import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Readable } from "node:stream";
 import test from "node:test";
 import type { SanyiApi } from "../src/sanyi/api.js";
 import { PaymentAlreadyUsedError } from "../src/sanyi/reading-service.js";
 import { ArcUnavailableError } from "../src/sanyi/throws.js";
-import { createFrontendServer } from "../src/frontend/server.js";
+import { createFrontendHandler, createFrontendServer } from "../src/frontend/server.js";
 function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
   const reading = { id: "abcdefghijklmnopqrstuvwxyz", status: "awaiting-throws" };
   return {
@@ -23,6 +24,7 @@ function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
     retrySummary: async () => reading as never,
     getReading: async () => reading as never,
     retrySchool: async () => reading as never,
+    setPeriodFeedback: async () => reading as never,
     changeSubject: async () => reading as never,
     changeDayBoundary: async () => reading as never,
     translateReading: async () => ({ lang: "en", units: {} }),
@@ -57,7 +59,40 @@ function post(base: string, path: string, body: unknown, headers: Record<string,
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
 }
-test("七条新路由返回成功状态", async () => {
+async function dispatchPost(
+  api: SanyiApi,
+  path: string,
+  body: unknown,
+  headers: Record<string, string> = {},
+) {
+  const text = typeof body === "string" ? body : JSON.stringify(body);
+  const request = Readable.from([Buffer.from(text)]) as IncomingMessage;
+  Object.assign(request, {
+    method: "POST",
+    url: path,
+    headers: {
+      host: "local.test",
+      origin: "http://local.test",
+      "content-type": "application/json",
+      ...headers,
+    },
+  });
+  let status = 0;
+  let payload = "";
+  const response = {
+    writeHead(nextStatus: number) {
+      status = nextStatus;
+      return this;
+    },
+    end(chunk?: string) {
+      payload = chunk ?? "";
+      return this;
+    },
+  } as unknown as ServerResponse;
+  await createFrontendHandler({ api })(request, response);
+  return { status, payload: JSON.parse(payload) as unknown };
+}
+test("写入与读取路由返回成功状态", async () => {
   const item = await fixture();
   try {
     const id = "abcdefghijklmnopqrstuvwxyz";
@@ -69,6 +104,7 @@ test("七条新路由返回成功状态", async () => {
       ["POST", `/api/readings/${id}/summary/retry`, {}],
       ["GET", `/api/readings/${id}`],
       ["POST", `/api/readings/${id}/schools/chengyi/retry`, {}],
+      ["POST", `/api/readings/${id}/feedback`, { periodIndex: 3, vote: "accurate" }],
       ["POST", `/api/readings/${id}/subject`, { subjectKey: "career" }],
     ];
     for (const [method, path, body] of routes) {
@@ -248,12 +284,12 @@ test("付款配置 GET 无需同源校验", async () => {
   }
 });
 
-test("换日与八字重试路由沿用 Origin、JSON、8 KiB 和 id 边界", async () => {
+test("换日、八字重试与大运反馈路由沿用 Origin、JSON、8 KiB 和 id 边界", async () => {
   const item = await fixture();
   try {
     const id = "abcdefghijklmnopqrstuvwxyz";
     for (const path of [`/api/readings/${id}/day-boundary`, `/api/readings/${id}/schools/yuchuntai/retry`,
-      `/api/readings/${id}/schools/shiwen/retry`]) {
+      `/api/readings/${id}/schools/shiwen/retry`, `/api/readings/${id}/feedback`]) {
       assert.equal((await post(item.base, path, {})).status, 200);
       assert.equal((await fetch(`${item.base}${path}`, { method: "POST",
         headers: { "content-type": "application/json" }, body: "{}" })).status, 403);
@@ -289,4 +325,25 @@ test("换日与八字重试中文错误沿用 400 与 409 映射", async () => {
   } finally {
     await close(item);
   }
+});
+
+test("大运反馈处理函数校验同源、JSON、8 KiB 和 id 边界", async () => {
+  const calls: unknown[] = [];
+  const api = fakeApi({
+    setPeriodFeedback: async (id, body) => {
+      calls.push({ id, body });
+      return { id, kind: "destiny" } as never;
+    },
+  });
+  const path = "/api/readings/abcdefghijklmnopqrstuvwxyz/feedback";
+  const accepted = await dispatchPost(api, path, { periodIndex: 3, vote: "accurate" });
+  assert.equal(accepted.status, 200);
+  assert.deepEqual(calls, [{
+    id: "abcdefghijklmnopqrstuvwxyz",
+    body: { periodIndex: 3, vote: "accurate" },
+  }]);
+  assert.equal((await dispatchPost(api, path, {}, { origin: "https://evil.example" })).status, 403);
+  assert.equal((await dispatchPost(api, path, {}, { "content-type": "text/plain" })).status, 415);
+  assert.equal((await dispatchPost(api, path, "x".repeat(9 * 1_024))).status, 413);
+  assert.equal((await dispatchPost(api, path.replace("abcdefghijklmnopqrstuvwxyz", "bad"), {})).status, 404);
 });

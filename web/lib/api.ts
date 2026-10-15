@@ -92,6 +92,11 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
         | import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey
         | NamingFamilyKey,
     ) => request<AnyPublicReading>(`/api/readings/${id}/schools/${key}/retry`, {}),
+    setPeriodFeedback: (
+      id: string,
+      periodIndex: number,
+      vote: import("../../src/sanyi/store.js").PeriodFeedbackVote | null,
+    ) => request<AnyPublicReading>(`/api/readings/${id}/feedback`, { periodIndex, vote }),
     changeDayBoundary: (id: string, birth: import("./birth-profile.js").BirthProfileInput, sect: 1 | 2) =>
       request<AnyPublicReading>(`/api/readings/${id}/day-boundary`, { birth, sect }),
     changeSubject: (id: string, subjectKey: string) => request<PublicReading>(

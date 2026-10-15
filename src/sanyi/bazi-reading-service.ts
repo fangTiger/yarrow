@@ -22,7 +22,7 @@ import { SanyiInputError } from "./http-errors.js";
 import { BAZI_SCHOOLS } from "./schools/bazi-index.js";
 import type { BaziSchool, BaziSchoolInput, BaziSchoolKey } from "./schools/bazi-shared.js";
 import { ReadingStore, newReadingId, type BaziSchoolState, type StoredBaziReading,
-  type StoredReading } from "./store.js";
+  type PeriodFeedbackVote, type StoredReading } from "./store.js";
 interface Dependencies {
   store: ReadingStore;
   provider: StructuredOutputProvider;
@@ -46,6 +46,29 @@ function chartFrom(birth: unknown, sect: 1 | 2, targetYear: number) {
     // 校验或底层错误可能包含输入，不把异常原文传播到日志或存档。
     throw new SanyiInputError("生辰格式或排盘口径无效，请检查填写内容");
   }
+}
+function assertFeedbackTarget(
+  reading: StoredReading,
+  periodIndex: number,
+  currentYear: number,
+): asserts reading is StoredBaziReading & { kind: "destiny" } {
+  if (reading.kind !== "destiny") {
+    throw new SanyiInputError("此接口只适用于命理");
+  }
+  if (!Number.isInteger(periodIndex)) {
+    throw new SanyiInputError("大运编号须为整数");
+  }
+  const cycle = reading.chart.luck?.cycles.find((item) => item.index === periodIndex);
+  if (!cycle) {
+    throw new SanyiInputError("大运编号不存在");
+  }
+  if (cycle.startYear > currentYear) {
+    throw new SanyiInputError("尚未开始的大运不可标注");
+  }
+}
+function beijingYear(now: Date): number {
+  // 大运是否开始按产品统一的北京时间民用年份判断，不依赖宿主机器时区。
+  return new Date(now.getTime() + 8 * 3_600_000).getUTCFullYear();
 }
 export class BaziReadingService {
   private readonly queues = new Map<string, Promise<void>>();
@@ -93,6 +116,31 @@ export class BaziReadingService {
     }
     return reading;
   }
+  async setPeriodFeedback(
+    id: string,
+    periodIndex: number,
+    vote: PeriodFeedbackVote | null,
+  ): Promise<StoredBaziReading> {
+    return this.lock(id, async () => {
+      const now = this.deps.clock();
+      const current = await this.deps.store.readRecovering<StoredReading>(id, now);
+      const currentYear = beijingYear(now);
+      assertFeedbackTarget(current, periodIndex, currentYear);
+      if (vote !== null && vote !== "accurate" && vote !== "inaccurate") {
+        throw new SanyiInputError("标注值无效");
+      }
+      return this.deps.store.update<StoredBaziReading>(id, (reading) => {
+        assertFeedbackTarget(reading, periodIndex, currentYear);
+        const periods = { ...reading.feedback?.periods };
+        if (vote === null) {
+          delete periods[String(periodIndex)];
+        } else {
+          periods[String(periodIndex)] = { vote, at: now.toISOString() };
+        }
+        return { ...reading, feedback: { periods } };
+      });
+    });
+  }
   async whenSettled(id: string): Promise<void> {
     await (this.background.get(id) ?? Promise.resolve());
   }
@@ -134,10 +182,24 @@ export class BaziReadingService {
       // 所问时刻保持创建时刻，today 的流日按新 sect 重算，不漂移到切换当天。
       const context = resolveFortuneContext(current.context.horizon, () => new Date(current.createdAt), sect);
       const startedAt = this.deps.clock().toISOString();
-      const updated: StoredBaziReading = { ...current, chart, correction, context,
-        analysis: analyzeBazi(chart), tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
-        changes: current.changes + 1, status: "writing", schools: schools(startedAt, current.schools) };
-      await this.deps.store.write(updated);
+      const updated = await this.deps.store.update<StoredBaziReading>(id, (latest) => {
+        if (latest.changes >= 2) {
+          throw new LimitExceededError("换日切换次数已用尽");
+        }
+        const latestWriting = Object.values(latest.schools)
+          .some((state) => state.status === "writing");
+        if (latest.status !== "done" || latestWriting) {
+          throw new StateConflictError("三家尚未全部落笔，请稍后切换换日口径");
+        }
+        if (latest.changes !== current.changes || latest.chart.sect !== current.chart.sect) {
+          throw new StateConflictError("换日口径已更新，请刷新后重试");
+        }
+        return { ...latest, chart, correction, context,
+          analysis: analyzeBazi(chart),
+          tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
+          changes: latest.changes + 1, status: "writing",
+          schools: schools(startedAt, latest.schools) };
+      });
       this.start(id, () => this.runAll(updated));
       return updated;
     });

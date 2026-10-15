@@ -1,8 +1,8 @@
 ## E1. 准不准接口（后端）
 
-- [ ] 1.1 存档 `feedback.periods` 与公开视图
-- [ ] 1.2 `POST /api/readings/:id/feedback`：校验、原子更新、同源
-- [ ] 1.3 测试
+- [x] 1.1 存档 `feedback.periods` 与公开视图
+- [x] 1.2 `POST /api/readings/:id/feedback`：校验、原子更新、同源
+- [x] 1.3 测试
 
 ## E2. 前端
 

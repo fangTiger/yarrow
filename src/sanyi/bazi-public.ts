@@ -94,7 +94,12 @@ function common(reading: StoredBaziReading) {
 export function publicBaziReading(reading: StoredBaziReading) {
   const value = common(reading);
   if (reading.kind === "destiny") {
-    return { ...value, kind: "destiny" as const, periods: periodConsensus(reading) };
+    const feedback = reading.feedback && Object.keys(reading.feedback.periods).length > 0
+      ? { periods: Object.fromEntries(Object.entries(reading.feedback.periods)
+        .map(([index, item]) => [index, item.vote])) }
+      : undefined;
+    return { ...value, kind: "destiny" as const, periods: periodConsensus(reading),
+      ...(feedback ? { feedback } : {}) };
   }
   const outputs = doneOutputs(reading);
   let consensusTenths: number | null = null;

@@ -135,6 +135,7 @@ export function createFrontendHandler(options: FrontendServerOptions = {}): Fron
         /^\/api\/readings\/([^/]+)\/schools\/([^/]+)\/retry$/,
       );
       const boundaryRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/day-boundary$/);
+      const feedbackRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/feedback$/);
       const subjectRoute = url.pathname.match(/^\/api\/readings\/([^/]+)\/subject$/);
       const isApi = url.pathname.startsWith("/api/");
       const writing = request.method === "POST";
@@ -189,6 +190,10 @@ export function createFrontendHandler(options: FrontendServerOptions = {}): Fron
       }
       if (boundaryRoute && request.method === "POST" && api && isReadingId(boundaryRoute[1] ?? "")) {
         json(response, 200, await api.changeDayBoundary(boundaryRoute[1] as string, body));
+        return;
+      }
+      if (feedbackRoute && request.method === "POST" && api && isReadingId(feedbackRoute[1] ?? "")) {
+        json(response, 200, await api.setPeriodFeedback(feedbackRoute[1] as string, body));
         return;
       }
       if (subjectRoute && request.method === "POST" && api && isReadingId(subjectRoute[1] ?? "")) {

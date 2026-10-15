@@ -93,6 +93,7 @@ export interface BaziSchoolState {
   /** 删错留对时校正的吉凶把握处数。 */
   adjusted?: number;
 }
+export type PeriodFeedbackVote = "accurate" | "inaccurate";
 export interface StoredBaziReading {
   id: string;
   kind: "destiny" | "fortune";
@@ -117,6 +118,9 @@ export interface StoredBaziReading {
   changes: number;
   schools: Record<import("./schools/bazi-shared.js").BaziSchoolKey, BaziSchoolState>;
   summary?: SummaryState;
+  feedback?: {
+    periods: Record<string, { vote: PeriodFeedbackVote; at: string }>;
+  };
 }
 
 export interface NamingFamilyState {

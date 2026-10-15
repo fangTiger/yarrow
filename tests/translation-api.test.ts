@@ -76,6 +76,7 @@ function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
     retrySummary: async () => reading() as never,
     getReading: async () => reading() as never,
     retrySchool: async () => reading() as never,
+    setPeriodFeedback: async () => reading() as never,
     changeSubject: async () => reading() as never,
     changeDayBoundary: async () => reading() as never,
     translateReading: async () => ({ lang: "en", units: {} }),

@@ -10,6 +10,7 @@ import type { ReadingService } from "./reading-service.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
 import type { StoredQuestionReading as StoredReading } from "./store.js";
 import type { StoredReading as AnyStoredReading } from "./store.js";
+import type { PeriodFeedbackVote } from "./store.js";
 import { normalizeBirthProfile } from "./birth-profile.js";
 import { overrideClassification, type FortuneHorizon, type QuestionKind } from "./classify.js";
 import type { BaziReadingService } from "./bazi-reading-service.js";
@@ -58,6 +59,7 @@ export interface SanyiApi {
   /** 免费触发英文翻译；实际生成在后台继续。 */
   translateReading(id: string, input: unknown): Promise<StoredTranslation>;
   retrySchool(id: string, key: QuestionSchoolKey | BaziSchoolKey | NamingFamilyKey): Promise<PublicReading>;
+  setPeriodFeedback(id: string, input: unknown): Promise<PublicReading>;
   changeSubject(id: string, input: unknown): Promise<PublicReading>;
   changeDayBoundary(id: string, input: unknown): Promise<PublicReading>;
 }
@@ -325,6 +327,23 @@ export function createSanyiApi(
         return publicBaziReading(await notFound(() => options.bazi!.retrySchool(id, key)));
       }
       return publicReading(await notFound(() => service.retrySchool(id, key)));
+    },
+    async setPeriodFeedback(id, input) {
+      const body = record(input);
+      if (typeof body.periodIndex !== "number" || !Number.isInteger(body.periodIndex)) {
+        throw new SanyiInputError("大运编号须为整数");
+      }
+      if (body.vote !== null && body.vote !== "accurate" && body.vote !== "inaccurate") {
+        throw new SanyiInputError("标注值无效");
+      }
+      if (!options.bazi) {
+        throw new SanyiInputError("八字服务尚未配置");
+      }
+      const vote = body.vote as PeriodFeedbackVote | null;
+      const updated = await notFound(() => {
+        return options.bazi!.setPeriodFeedback(id, body.periodIndex as number, vote);
+      });
+      return publicBaziReading(updated);
     },
     async changeDayBoundary(id, input) {
       const body = record(input);
