@@ -29,7 +29,7 @@ type ServiceBoundary = Pick<
 type SubjectKey = StoredReading["subject"]["finalKey"];
 export interface PublicQuestionReading extends Omit<
   StoredReading,
-  "payment" | "schools" | "summary" | "castProgressAt"
+  "payment" | "schools" | "summary" | "castProgressAt" | "terminalMetric"
 > {
   payment: { firstHash: StoredReading["payment"]["transactionHash"] };
   schools: Record<
@@ -114,6 +114,7 @@ function publicReading(reading: StoredReading): PublicQuestionReading {
   };
   const {
     castProgressAt: _castProgressAt,
+    terminalMetric: _terminalMetric,
     summary,
     ...visibleReading
   } = reading;

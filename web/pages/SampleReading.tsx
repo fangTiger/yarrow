@@ -9,6 +9,7 @@ import { QuestionResult } from "./Reading.js";
 import { BaziReading } from "./BaziReading.js";
 import { NamingReading } from "./NamingReading.js";
 import { DisclaimerFooter } from "../components/DisclaimerFooter.js";
+import { track } from "../lib/metrics.js";
 
 export type SampleKind = "destiny" | "question" | "fortune" | "naming";
 
@@ -64,6 +65,7 @@ export function SampleReading({ kind }: { kind: SampleKind }) {
   const { lang } = useLang();
   const t = useT();
   const [reading, setReading] = useState<AnyPublicReading | null>();
+  useEffect(() => track(`sample_view:${kind}`), [kind]);
   useEffect(() => {
     let active = true;
     setReading(undefined);

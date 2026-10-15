@@ -5,6 +5,7 @@ import { USDC_TOKEN_ADDRESS } from "../../src/frontend/wallet.js";
 import { ARC_CHAIN_ID, ARC_NETWORK } from "../lib/wagmi.js";
 import { walletSummary } from "../lib/wallet-summary.js";
 import { useT } from "../lib/i18n.js";
+import { track } from "../lib/metrics.js";
 
 interface WalletRenderProps {
   account?: { address: string };
@@ -37,9 +38,13 @@ export function WalletBar() {
         }, t, ARC_NETWORK);
         const action = summary.state === "disconnected" ? openConnectModal
           : summary.state === "wrong-chain" ? () => switchChain({ chainId: ARC_CHAIN_ID }) : openAccountModal;
+        const act = () => {
+          if (summary.state === "disconnected") track("wallet_connect_click");
+          action();
+        };
         return (
           <div className="wallet-bar">
-            <button className="wallet-button" onClick={action} type="button">
+            <button className="wallet-button" onClick={act} type="button">
               <span>{summary.label}</span>
               {summary.state === "connected" ? (
                 <span className="wallet-details">{summary.balance} · {summary.network}</span>

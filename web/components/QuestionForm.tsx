@@ -18,6 +18,8 @@ import { NamingFields } from "./NamingFields.js";
 import { PaymentButton } from "./PaymentButton.js";
 import { SubjectSelect } from "./SubjectSelect.js";
 import { useLang, useT } from "../lib/i18n.js";
+import { FundingGuide } from "./FundingGuide.js";
+import { ARC_NETWORK } from "../lib/wagmi.js";
 
 function initialBirthValues(): BirthFormValues {
   const stored = loadBirthProfile();
@@ -227,6 +229,7 @@ export function QuestionForm() {
       ) : (
         <button className="button button-primary" disabled type="button">{t("payment.button")}</button>
       )}
+      <FundingGuide mainnet={ARC_NETWORK.mainnet} />
       {!gate.ready && gate.reason && gate.reason !== status ? (
         <p className="hint gate">{gate.reason}</p>
       ) : null}

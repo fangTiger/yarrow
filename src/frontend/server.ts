@@ -15,6 +15,11 @@ import {
   UnsupportedMediaType,
 } from "../sanyi/http-errors.js";
 import { createSanyiLogger } from "../sanyi/log.js";
+import {
+  isFrontendMetricEvent,
+  NOOP_METRICS,
+  type UsageMetrics,
+} from "../sanyi/metrics.js";
 import { PaymentAlreadyUsedError } from "../sanyi/reading-service.js";
 import type { BaziSchoolKey } from "../sanyi/schools/bazi-shared.js";
 import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
@@ -25,6 +30,8 @@ import { createSanyiRuntime } from "./runtime.js";
 interface FrontendServerOptions {
   publicDir?: string;
   api?: SanyiApi;
+  metrics?: UsageMetrics;
+  statsToken?: string;
 }
 const CONTENT_TYPES: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -63,6 +70,10 @@ function json(response: ServerResponse, status: number, payload: unknown): void 
     "content-type": "application/json; charset=utf-8",
   });
   response.end(JSON.stringify(payload));
+}
+function empty(response: ServerResponse, status: number): void {
+  response.writeHead(status, { "cache-control": "no-store" });
+  response.end();
 }
 function requireSameOrigin(request: IncomingMessage): void {
   const host = request.headers.host;
@@ -119,6 +130,7 @@ export type FrontendRequestHandler = (request: IncomingMessage, response: Server
 export function createFrontendHandler(options: FrontendServerOptions = {}): FrontendRequestHandler {
   const publicDir = resolve(options.publicDir ?? resolve(process.cwd(), "web"));
   const api = options.api;
+  const metrics = options.metrics ?? NOOP_METRICS;
   return async (request, response) => {
     const rawPath = (request.url ?? "/").split("?", 1)[0] ?? "/";
     const url = new URL(request.url ?? "/", "http://localhost");
@@ -143,6 +155,35 @@ export function createFrontendHandler(options: FrontendServerOptions = {}): Fron
         requireSameOrigin(request);
       }
       const body = writing && isApi ? await readJsonBody(request) : undefined;
+      if (request.method === "POST" && url.pathname === "/api/events") {
+        const event = body && typeof body === "object" && !Array.isArray(body)
+          ? (body as Record<string, unknown>).event
+          : undefined;
+        if (!isFrontendMetricEvent(event)) {
+          throw new SanyiInputError("事件名无效", "invalid-event");
+        }
+        await metrics.increment(event);
+        empty(response, 204);
+        return;
+      }
+      if (request.method === "GET" && url.pathname === "/api/stats") {
+        if (!options.statsToken) {
+          json(response, 404, { error: "未找到接口" });
+          return;
+        }
+        const token = request.headers["x-stats-token"];
+        if (typeof token !== "string" || token !== options.statsToken) {
+          json(response, 403, { error: "拒绝访问" });
+          return;
+        }
+        const rawDays = url.searchParams.get("days");
+        const days = rawDays === null ? 14 : Number(rawDays);
+        if (!Number.isInteger(days) || days < 1 || days > 60 || (rawDays !== null && !/^\d+$/u.test(rawDays))) {
+          throw new SanyiInputError("days 必须是 1–60 的整数", "invalid-days");
+        }
+        json(response, 200, { days: await metrics.recentDays(days) });
+        return;
+      }
       if (request.method === "GET" && url.pathname === "/api/payment" && api) {
         json(response, 200, await api.payment());
         return;
@@ -236,14 +277,14 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const clock = () => new Date();
-  const { api, service, network, recipient } = createSanyiRuntime({
+  const { api, service, network, recipient, metrics, statsToken } = createSanyiRuntime({
     backend: backendFromEnv(process.env),
     logger: createSanyiLogger("log", clock),
     clock,
   });
   const port = Number(process.env.FRONTEND_PORT ?? "4173");
   const host = process.env.FRONTEND_HOST ?? "127.0.0.1";
-  createFrontendServer({ api }).listen(port, host, () => {
+  createFrontendServer({ api, metrics, statsToken }).listen(port, host, () => {
     console.log(`三易服务已启动：http://${host}:${port}（${network.name}）`);
     console.log(`三易收款地址：${recipient}`);
     console.log("问事卦金：0.05 USDC；付款后自动六掷，三家依同一卦独立落笔");

@@ -15,9 +15,13 @@ export interface DocumentBackend {
   compareAndSet(key: string, expected: string, value: string): Promise<boolean>;
   /** 仅当键不存在时写入，返回是否写入。 */
   setIfAbsent(key: string, value: string): Promise<boolean>;
+  /** 原子累加 `{ counts: Record<string, number> }` 文档中的一个计数。 */
+  incrementCounter(key: string, field: string): Promise<void>;
   /** 列出某一目录下的键名（不含目录前缀）。 */
   list(prefix: string): Promise<string[]>;
 }
+
+const FILE_COUNTER_QUEUES = new Map<string, Promise<void>>();
 
 export function missingDocument(key: string): NodeJS.ErrnoException {
   const error: NodeJS.ErrnoException = new Error(`存档不存在：${key}`);
@@ -75,6 +79,32 @@ export class FileBackend implements DocumentBackend {
     }
   }
 
+  async incrementCounter(key: string, field: string): Promise<void> {
+    const target = this.path(key);
+    const previous = FILE_COUNTER_QUEUES.get(target) ?? Promise.resolve();
+    const current = previous.catch(() => {}).then(async () => {
+      let counts: Record<string, number> = {};
+      try {
+        const parsed = JSON.parse(await this.get(key)) as { counts?: unknown };
+        if (parsed.counts && typeof parsed.counts === "object" && !Array.isArray(parsed.counts)) {
+          counts = parsed.counts as Record<string, number>;
+        }
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
+      const value = counts[field];
+      await this.set(key, JSON.stringify({
+        counts: { ...counts, [field]: (typeof value === "number" ? value : 0) + 1 },
+      }));
+    });
+    FILE_COUNTER_QUEUES.set(target, current);
+    try {
+      await current;
+    } finally {
+      if (FILE_COUNTER_QUEUES.get(target) === current) FILE_COUNTER_QUEUES.delete(target);
+    }
+  }
+
   async list(prefix: string): Promise<string[]> {
     try {
       const names = await readdir(join(this.root, prefix));
@@ -91,6 +121,15 @@ const COMPARE_AND_SET = `if redis.call("GET", KEYS[1]) == ARGV[1] then
   return 1
 end
 return 0`;
+
+/** Redis 内一次完成 JSON 计数读取、递增和写回，实例数量不会制造 CAS 丢写。 */
+const INCREMENT_COUNTER = `local raw = redis.call("GET", KEYS[1])
+local doc = raw and cjson.decode(raw) or {counts = {}}
+if type(doc.counts) ~= "table" then doc.counts = {} end
+local current = tonumber(doc.counts[ARGV[1]]) or 0
+doc.counts[ARGV[1]] = current + 1
+redis.call("SET", KEYS[1], cjson.encode(doc))
+return current + 1`;
 
 export interface RedisBackendOptions {
   url: string;
@@ -147,6 +186,10 @@ export class RedisBackend implements DocumentBackend {
   async setIfAbsent(key: string, value: string): Promise<boolean> {
     const result = await this.command(["SET", this.key(key), value, "NX"]);
     return result === "OK";
+  }
+
+  async incrementCounter(key: string, field: string): Promise<void> {
+    await this.command(["EVAL", INCREMENT_COUNTER, "1", this.key(key), field]);
   }
 
   async list(prefix: string): Promise<string[]> {

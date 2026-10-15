@@ -7,6 +7,7 @@ import { derivedChart } from "../bazi-public.js";
 import type { SanyiFeeProof, SanyiFeeVerifier } from "../fee.js";
 import { SanyiInputError } from "../http-errors.js";
 import type { SanyiLogger } from "../log.js";
+import { incrementMetricSafely, NOOP_METRICS, type MetricsRecorder } from "../metrics.js";
 import {
   LimitExceededError,
   PaymentAlreadyUsedError,
@@ -36,6 +37,7 @@ interface Dependencies {
   provider: StructuredOutputProvider;
   feeVerifier: SanyiFeeVerifier;
   logger: SanyiLogger;
+  metrics?: MetricsRecorder;
   clock: () => Date;
 }
 
@@ -174,8 +176,11 @@ function favorableNote(reading: StoredNamingReading): string {
 export class NamingReadingService {
   private readonly queues = new Map<string, Promise<void>>();
   private readonly background = new Map<string, Promise<void>>();
+  private readonly metrics: MetricsRecorder;
 
-  constructor(private readonly deps: Dependencies) {}
+  constructor(private readonly deps: Dependencies) {
+    this.metrics = deps.metrics ?? NOOP_METRICS;
+  }
 
   async create(input: NamingCreateInput): Promise<StoredNamingReading> {
     validateInput(input);
@@ -218,7 +223,8 @@ export class NamingReadingService {
       families: initialFamilies(now.toISOString()),
     };
     await this.deps.store.write(reading);
-    this.start(id, () => this.runAll(reading));
+    await incrementMetricSafely(this.metrics, this.deps.logger, "reading_created:naming");
+    this.start(id, () => this.runAll(reading, true), true);
     return reading;
   }
 
@@ -289,10 +295,10 @@ export class NamingReadingService {
     });
   }
 
-  private async runAll(reading: StoredNamingReading): Promise<void> {
+  private async runAll(reading: StoredNamingReading, countTerminal: boolean): Promise<void> {
     await Promise.all(NAMING_FAMILIES.map((family) => this.runOne(reading, family)));
     await this.writeSummary(reading.id, false);
-    await this.finish(reading.id);
+    await this.finish(reading.id, countTerminal);
   }
 
   async retryFamily(id: string, key: NamingFamilyKey): Promise<StoredNamingReading> {
@@ -318,7 +324,7 @@ export class NamingReadingService {
       this.start(id, async () => {
         await this.runOne(updated, family);
         await this.writeSummary(id, true);
-        await this.finish(id);
+        await this.finish(id, false);
       });
       return updated;
     });
@@ -409,20 +415,43 @@ export class NamingReadingService {
     });
   }
 
-  private async finish(id: string): Promise<void> {
-    await this.deps.store.update<StoredNamingReading>(id, (reading) => ({ ...reading, status: "done" }));
-    await this.deps.logger.write("起名三家落笔完成", { readingId: id });
+  private async finish(id: string, countTerminal: boolean): Promise<void> {
+    const token = newReadingId();
+    const finished = await this.deps.store.update<StoredNamingReading>(id, (reading) => ({
+      ...reading,
+      status: "done",
+      ...(countTerminal ? {
+        terminalMetric: reading.terminalMetric ?? { outcome: "done", token },
+      } : {}),
+    }));
+    try {
+      await this.deps.logger.write("起名三家落笔完成", { readingId: id });
+    } catch {
+      // 完成日志失败不能把已完成结果改写为失败。
+    }
+    if (countTerminal && finished.terminalMetric?.token === token) {
+      await incrementMetricSafely(this.metrics, this.deps.logger, "reading_done:naming");
+    }
   }
 
-  private start(id: string, operation: () => Promise<void>): void {
+  private start(id: string, operation: () => Promise<void>, countTerminalFailure = false): void {
     const task = operation().catch(async () => {
+      const token = newReadingId();
+      let failed: StoredNamingReading | undefined;
       try {
-        await this.deps.store.update<StoredNamingReading>(id, (reading) => ({
-          ...reading, status: "failed",
+        failed = await this.deps.store.update<StoredNamingReading>(id, (reading) => ({
+          ...reading,
+          status: "failed",
+          ...(countTerminalFailure ? {
+            terminalMetric: reading.terminalMetric ?? { outcome: "failed", token },
+          } : {}),
         }));
         await this.deps.logger.write("起名编排失败", { readingId: id });
       } catch {
         // 存储与日志异常不得造成未处理拒绝，也不得回显生辰。
+      }
+      if (countTerminalFailure && failed?.terminalMetric?.token === token) {
+        await incrementMetricSafely(this.metrics, this.deps.logger, "reading_failed:naming");
       }
     });
     this.background.set(id, task);

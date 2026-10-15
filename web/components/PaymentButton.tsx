@@ -12,6 +12,7 @@ import type { NamingRequest } from "../lib/home-entry.js";
 import { useT } from "../lib/i18n.js";
 import { paymentFailure } from "../lib/payment-error.js";
 import { WalletPaymentGuide } from "./WalletPaymentGuide.js";
+import { track } from "../lib/metrics.js";
 export function PaymentButton(props: {
   question: string;
   classification: ClassificationView;
@@ -26,6 +27,7 @@ export function PaymentButton(props: {
   const [error, setError] = useState("");
   const [existingReadingId, setExistingReadingId] = useState<string>();
   const submit = async () => {
+    track("pay_click");
     setBusy(true);
     setError("");
     setExistingReadingId(undefined);

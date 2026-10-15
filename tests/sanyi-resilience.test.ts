@@ -567,6 +567,14 @@ class RacingBackend implements DocumentBackend {
     return true;
   }
 
+  async incrementCounter(key: string, field: string): Promise<void> {
+    const current = this.documents.has(key)
+      ? JSON.parse(this.documents.get(key) as string) as { counts: Record<string, number> }
+      : { counts: {} };
+    current.counts[field] = (current.counts[field] ?? 0) + 1;
+    this.documents.set(key, JSON.stringify(current));
+  }
+
   async list(): Promise<string[]> {
     return [];
   }

@@ -17,6 +17,7 @@ import { resolveFortuneContext, periodFacts } from "./fortune-context.js";
 import type { FortuneHorizon } from "./classify.js";
 import type { SanyiFeeProof, SanyiFeeVerifier } from "./fee.js";
 import type { SanyiLogger } from "./log.js";
+import { incrementMetricSafely, NOOP_METRICS, type MetricsRecorder } from "./metrics.js";
 import { LimitExceededError, PaymentAlreadyUsedError, StateConflictError } from "./reading-service.js";
 import { SanyiInputError } from "./http-errors.js";
 import { BAZI_SCHOOLS } from "./schools/bazi-index.js";
@@ -28,6 +29,7 @@ interface Dependencies {
   provider: StructuredOutputProvider;
   feeVerifier: SanyiFeeVerifier;
   logger: SanyiLogger;
+  metrics?: MetricsRecorder;
   clock: () => Date;
 }
 function schools(startedAt: string, previous?: StoredBaziReading["schools"]): StoredBaziReading["schools"] {
@@ -73,7 +75,10 @@ function beijingYear(now: Date): number {
 export class BaziReadingService {
   private readonly queues = new Map<string, Promise<void>>();
   private readonly background = new Map<string, Promise<void>>();
-  constructor(private readonly deps: Dependencies) {}
+  private readonly metrics: MetricsRecorder;
+  constructor(private readonly deps: Dependencies) {
+    this.metrics = deps.metrics ?? NOOP_METRICS;
+  }
   async create(input: {
     kind: "destiny" | "fortune";
     question: string;
@@ -103,7 +108,8 @@ export class BaziReadingService {
       almanac: almanacAt(BigInt(Math.floor(now.getTime() / 1_000))),
       changes: 0, status: "writing", schools: schools(now.toISOString()) };
     await this.deps.store.write(reading);
-    this.start(id, () => this.runAll(reading));
+    await incrementMetricSafely(this.metrics, this.deps.logger, `reading_created:${input.kind}`);
+    this.start(id, input.kind, () => this.runAll(reading, true), true);
     return reading;
   }
   async readAny(id: string): Promise<StoredReading> {
@@ -200,7 +206,7 @@ export class BaziReadingService {
           changes: latest.changes + 1, status: "writing",
           schools: schools(startedAt, latest.schools) };
       });
-      this.start(id, () => this.runAll(updated));
+      this.start(id, updated.kind, () => this.runAll(updated, false));
       return updated;
     });
   }
@@ -223,10 +229,10 @@ export class BaziReadingService {
         status: "writing", schools: { ...reading.schools,
           [key]: { status: "writing", startedAt,
             attempts: state.attempts, retries: state.retries + 1 } } }));
-      this.start(id, async () => {
+      this.start(id, updated.kind, async () => {
         await this.runOne(updated, school);
         await this.writeSummary(id, true);
-        await this.finish(id);
+        await this.finish(id, false);
       });
       return updated;
     });
@@ -263,11 +269,11 @@ export class BaziReadingService {
       return { ...current, schools: { ...current.schools, [school.key]: state } };
     });
   }
-  private async runAll(reading: StoredBaziReading): Promise<void> {
+  private async runAll(reading: StoredBaziReading, countTerminal: boolean): Promise<void> {
     await Promise.all(BAZI_SCHOOLS.map((school) => this.runOne(reading, school)));
     // 三家落笔后写白话总述，写完才算这一卦完成。
     await this.writeSummary(reading.id, false);
-    await this.finish(reading.id);
+    await this.finish(reading.id, countTerminal);
   }
 
   /** 白话总述暂未生成时免费重试，至多两次。 */
@@ -287,7 +293,7 @@ export class BaziReadingService {
         summary: { ...summary, status: "writing" as const, startedAt,
           retries: summary.retries + 1 },
       }));
-      this.start(id, () => this.writeSummary(id, true));
+      this.start(id, current.kind, () => this.writeSummary(id, true));
       return updated;
     });
   }
@@ -403,17 +409,47 @@ export class BaziReadingService {
     }
     return input;
   }
-  private async finish(id: string): Promise<void> {
-    await this.deps.store.update<StoredBaziReading>(id, (reading) => ({ ...reading, status: "done" }));
-    await this.deps.logger.write("八字三家落笔完成", { readingId: id });
+  private async finish(id: string, countTerminal: boolean): Promise<void> {
+    const token = newReadingId();
+    const reading = await this.deps.store.update<StoredBaziReading>(id, (current) => ({
+      ...current,
+      status: "done",
+      ...(countTerminal ? {
+        terminalMetric: current.terminalMetric ?? { outcome: "done", token },
+      } : {}),
+    }));
+    try {
+      await this.deps.logger.write("八字三家落笔完成", { readingId: id });
+    } catch {
+      // 完成日志失败不能把已完成结果改写为失败。
+    }
+    if (countTerminal && reading.terminalMetric?.token === token) {
+      await incrementMetricSafely(this.metrics, this.deps.logger, `reading_done:${reading.kind}`);
+    }
   }
-  private start(id: string, operation: () => Promise<void>): void {
+  private start(
+    id: string,
+    kind: StoredBaziReading["kind"],
+    operation: () => Promise<void>,
+    countTerminalFailure = false,
+  ): void {
     const task = operation().catch(async () => {
+      const token = newReadingId();
+      let failed: StoredBaziReading | undefined;
       try {
-        await this.deps.store.update<StoredBaziReading>(id, (reading) => ({ ...reading, status: "failed" }));
+        failed = await this.deps.store.update<StoredBaziReading>(id, (reading) => ({
+          ...reading,
+          status: "failed",
+          ...(countTerminalFailure ? {
+            terminalMetric: reading.terminalMetric ?? { outcome: "failed", token },
+          } : {}),
+        }));
         await this.deps.logger.write("八字编排失败", { readingId: id });
       } catch {
         // 存储和日志异常不得产生未处理拒绝，也不得回显生辰。
+      }
+      if (countTerminalFailure && failed?.terminalMetric?.token === token) {
+        await incrementMetricSafely(this.metrics, this.deps.logger, `reading_failed:${kind}`);
       }
     });
     this.background.set(id, task);

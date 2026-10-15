@@ -1,5 +1,5 @@
 // web/pages/Home.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HistoryMenu } from "../components/HistoryMenu.js";
 import { QuestionForm } from "../components/QuestionForm.js";
 import { WalletBar } from "../components/WalletBar.js";
@@ -10,6 +10,7 @@ import { useT } from "../lib/i18n.js";
 import { ARC_NETWORK } from "../lib/wagmi.js";
 import { Luopan } from "../components/Luopan.js";
 import { DailyAlmanac } from "../components/DailyAlmanac.js";
+import { track } from "../lib/metrics.js";
 
 export function HomeContent() {
   const t = useT();
@@ -33,6 +34,7 @@ export function HomeContent() {
 /** 首页：顶栏右上角放卦历与钱包，中间只留问卦表单。 */
 export function Home() {
   const [recent] = useState(loadRecentReadings);
+  useEffect(() => track("home_view"), []);
   return (
     <main className="page">
       <header className="topbar">

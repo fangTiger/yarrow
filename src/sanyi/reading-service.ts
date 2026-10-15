@@ -18,6 +18,11 @@ import {
   averageConfidence, runSummaryWithRetry, summaryState, type SummaryInput, type SummarySchool,
 } from "./summary.js";
 import type { SanyiLogger } from "./log.js";
+import {
+  incrementMetricSafely,
+  NOOP_METRICS,
+  type MetricsRecorder,
+} from "./metrics.js";
 import { buildOriginalTexts } from "./original-texts.js";
 import { runSchool, type SchoolRunResult } from "./school-runner.js";
 import { QUESTION_SCHOOLS, type QuestionSchoolKey } from "./schools/index.js";
@@ -49,6 +54,7 @@ export interface ReadingServiceDependencies {
   provider: StructuredOutputProvider;
   store: ReadingStore;
   logger: SanyiLogger;
+  metrics?: MetricsRecorder;
   clock?: () => Date;
   waitOptions?: WaitOptions;
   calendar?: CalendarDependencies;
@@ -111,11 +117,13 @@ export class ReadingService {
   private readonly waitOptions: WaitOptions;
   private readonly readingQueues = new Map<string, Promise<void>>();
   private readonly background = new Map<string, Promise<void>>();
+  private readonly metrics: MetricsRecorder;
 
   constructor(private readonly deps: ReadingServiceDependencies) {
     this.clock = deps.clock ?? (() => new Date());
     this.calendar = deps.calendar ?? { almanacAt, qimenAt };
     this.waitOptions = deps.waitOptions ?? {};
+    this.metrics = deps.metrics ?? NOOP_METRICS;
   }
 
   async createQuestionReading(input: {
@@ -171,8 +179,9 @@ export class ReadingService {
       castProgressAt: createdAt,
     };
     await this.deps.store.write(reading);
+    await incrementMetricSafely(this.metrics, this.deps.logger, "reading_created:question");
     if (this.deps.autoCast ?? true) {
-      this.startBackground(id, this.autoCast(id));
+      this.startBackground(id, this.autoCast(id), true);
     }
     return reading;
   }
@@ -190,7 +199,7 @@ export class ReadingService {
         next.castProgressAt = this.clock().toISOString();
         return next;
       });
-      this.startBackground(id, this.autoCast(id));
+      this.startBackground(id, this.autoCast(id), true);
       return updated;
     });
   }
@@ -206,7 +215,7 @@ export class ReadingService {
         continue;
       }
       if (reading.kind === "question" && reading.status === "awaiting-throws" && !reading.castPaused) {
-        this.startBackground(id, this.autoCast(id));
+        this.startBackground(id, this.autoCast(id), true);
         resumed.push(id);
       }
     }
@@ -275,7 +284,7 @@ export class ReadingService {
         castProgressAt: this.clock().toISOString(),
       }));
       if (index === 6) {
-        this.startBackground(id, this.finalize(id));
+        this.startBackground(id, this.finalize(id), true);
       }
       return next;
     });
@@ -408,9 +417,9 @@ export class ReadingService {
     }
   }
 
-  private startBackground(id: string, task: Promise<void>): void {
+  private startBackground(id: string, task: Promise<void>, countTerminalFailure = false): void {
     const current = task.catch(async (error: unknown) => {
-      await this.failReading(id, error);
+      await this.failReading(id, error, countTerminalFailure);
     });
     const previous = this.background.get(id) ?? Promise.resolve();
     const combined = Promise.all([previous, current]).then(() => {});
@@ -463,10 +472,15 @@ export class ReadingService {
     }));
     // 三家落笔后写白话总述，写完才算这一卦完成，页面因此会一直轮询到总述出现。
     await this.writeSummary(id, false);
-    await this.deps.store.update(id, (current) => ({
+    const token = newReadingId();
+    const finished = await this.deps.store.update(id, (current) => ({
       ...current,
       status: "done",
+      terminalMetric: current.terminalMetric ?? { outcome: "done", token },
     }));
+    if (finished.terminalMetric?.token === token) {
+      await incrementMetricSafely(this.metrics, this.deps.logger, "reading_done:question");
+    }
   }
 
   /** 白话总述暂未生成时免费重试，至多两次。 */
@@ -668,13 +682,18 @@ export class ReadingService {
     };
   }
 
-  private async failReading(id: string, error: unknown): Promise<void> {
+  private async failReading(id: string, error: unknown, countTerminal: boolean): Promise<void> {
     const message = `排盘失败：${errorMessage(error)}`;
+    const token = newReadingId();
+    let failed: StoredReading | undefined;
     try {
-      await this.deps.store.update(id, (current) => ({
+      failed = await this.deps.store.update<StoredReading>(id, (current) => ({
         ...current,
         status: "failed",
         error: message,
+        ...(countTerminal ? {
+          terminalMetric: current.terminalMetric ?? { outcome: "failed", token },
+        } : {}),
       }));
     } catch {
       // 存档本身不可写时仍须继续尝试记录日志。
@@ -686,6 +705,9 @@ export class ReadingService {
       });
     } catch {
       // 日志失败不能产生未处理拒绝。
+    }
+    if (countTerminal && failed?.terminalMetric?.token === token) {
+      await incrementMetricSafely(this.metrics, this.deps.logger, "reading_failed:question");
     }
   }
 }

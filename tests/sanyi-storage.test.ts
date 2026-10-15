@@ -8,7 +8,7 @@ import { backendFromEnv, FileBackend, RedisBackend } from "../src/sanyi/storage.
 import { ReadingStore, type StoredQuestionReading } from "../src/sanyi/store.js";
 import { TranslationStore } from "../src/sanyi/translation/store.js";
 
-/** 内存版 Upstash REST：只实现三易用到的命令，EVAL 按比较后写入的语义执行。 */
+/** 内存版 Upstash REST：只实现三易用到的命令，EVAL 按对应 Lua 的原子语义执行。 */
 function fakeUpstash() {
   const data = new Map<string, string>();
   const commands: string[] = [];
@@ -30,8 +30,18 @@ function fakeUpstash() {
       result = "OK";
     }
     if (name === "EVAL") {
-      const [, , key, expected, value] = rest as [string, string, string, string, string];
-      result = data.get(key) === expected ? (data.set(key, value), 1) : 0;
+      if (rest.length === 4) {
+        const [, , key, field] = rest as [string, string, string, string];
+        const document = data.has(key)
+          ? JSON.parse(data.get(key) as string) as { counts: Record<string, number> }
+          : { counts: {} };
+        document.counts[field] = (document.counts[field] ?? 0) + 1;
+        data.set(key, JSON.stringify(document));
+        result = document.counts[field];
+      } else {
+        const [, , key, expected, value] = rest as [string, string, string, string, string];
+        result = data.get(key) === expected ? (data.set(key, value), 1) : 0;
+      }
     }
     if (name === "SCAN") {
       const prefix = (rest[2] as string).slice(0, -1);
@@ -75,6 +85,16 @@ test("Redis 存储：两个实例并发更新同一卦，比较后写入不丢�
   assert.equal(final.length, 5);
   for (const label of ["甲", "乙", "丙", "丁"]) assert.ok(final.includes(label));
   assert.ok(upstash.commands.includes("EVAL"));
+});
+
+test("Redis 存储：两百个实例原子累加同一 JSON 计数不丢更新", async () => {
+  const upstash = fakeUpstash();
+  await Promise.all(Array.from({ length: 200 }, () => (
+    upstash.backend().incrementCounter("metrics/2026-10-16", "home_view")
+  )));
+  assert.deepEqual(JSON.parse(upstash.data.get("sanyi:metrics/2026-10-16") as string), {
+    counts: { home_view: 200 },
+  });
 });
 
 test("Redis 存储：同一笔付款只能认领一次，第二个实例拿到已有解读", async () => {

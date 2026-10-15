@@ -6,6 +6,7 @@ import { createSanyiPublicClient } from "../sanyi/arc-client.js";
 import { BaziReadingService } from "../sanyi/bazi-reading-service.js";
 import { ArcFeeVerifier, feeRecipientFromEnv } from "../sanyi/fee.js";
 import type { SanyiLogger } from "../sanyi/log.js";
+import { DocumentUsageMetrics } from "../sanyi/metrics.js";
 import { NamingReadingService } from "../sanyi/naming/service.js";
 import { ReadingService } from "../sanyi/reading-service.js";
 import type { DocumentBackend } from "../sanyi/storage.js";
@@ -32,6 +33,7 @@ export function createSanyiRuntime(options: SanyiRuntimeOptions) {
   const recipient = feeRecipientFromEnv(env);
   const publicClient = createSanyiPublicClient(network);
   const { backend, logger } = options;
+  const metrics = new DocumentUsageMetrics({ backend, logger, clock });
   const store = new ReadingStore(backend);
   const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
   const longProvider = createDefaultProvider({ maxTokens: 8_192, timeoutMilliseconds: 90_000 });
@@ -42,10 +44,10 @@ export function createSanyiRuntime(options: SanyiRuntimeOptions) {
     logger,
     clock,
   });
-  const bazi = new BaziReadingService({ store, logger, feeVerifier,
+  const bazi = new BaziReadingService({ store, logger, feeVerifier, metrics,
     // 八字运势含十年逐年断语，输出较长，放宽输出上限与单次超时。
     provider: longProvider, clock });
-  const naming = new NamingReadingService({ store, logger, feeVerifier,
+  const naming = new NamingReadingService({ store, logger, feeVerifier, metrics,
     provider: longProvider, clock });
   const service = new ReadingService({
     feeVerifier,
@@ -62,7 +64,8 @@ export function createSanyiRuntime(options: SanyiRuntimeOptions) {
     provider: createDefaultProvider({ maxTokens: 4_096 }),
     store,
     logger,
+    metrics,
   });
   const api = createSanyiApi(service, { recipient, chainId: network.chainId, bazi, naming, translation });
-  return { api, service, network, recipient };
+  return { api, service, network, recipient, metrics, statsToken: env.STATS_TOKEN ?? "" };
 }

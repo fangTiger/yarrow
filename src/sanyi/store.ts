@@ -43,6 +43,12 @@ export interface SummaryState {
   anchor?: import("./summary.js").SummaryAnchor;
 }
 
+/** 结果首次进入终态时的持久化声明，只供服务端做指标幂等。 */
+export interface TerminalMetricClaim {
+  outcome: "done" | "failed";
+  token: string;
+}
+
 export interface StoredQuestionReading {
   id: string;
   kind: "question";
@@ -78,6 +84,7 @@ export interface StoredQuestionReading {
   bianzhan?: OracleSelection;
   almanac?: AlmanacResult;
   qimen?: QimenResult;
+  terminalMetric?: TerminalMetricClaim;
 }
 
 export interface BaziSchoolState {
@@ -121,6 +128,7 @@ export interface StoredBaziReading {
   feedback?: {
     periods: Record<string, { vote: PeriodFeedbackVote; at: string }>;
   };
+  terminalMetric?: TerminalMetricClaim;
 }
 
 export interface NamingFamilyState {
@@ -177,6 +185,7 @@ export interface StoredNamingReading {
   candidateIds: string[];
   families: Record<import("./naming/schema.js").NamingFamilyKey, NamingFamilyState>;
   summary?: NamingSummaryState;
+  terminalMetric?: TerminalMetricClaim;
 }
 
 export type StoredReading = StoredQuestionReading | StoredBaziReading | StoredNamingReading;

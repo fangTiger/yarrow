@@ -6,6 +6,7 @@ import { ARC_CHAIN_ID, ARC_NETWORK } from "../lib/wagmi.js";
 import { useT } from "../lib/i18n.js";
 import { isMobileBrowser, metaMaskDeepLink } from "../lib/wallet-guide.js";
 import { walletSummary } from "../lib/wallet-summary.js";
+import { FundingGuide } from "./FundingGuide.js";
 
 /** 钱包安装、切网与领测试币说明只放在付款区，避免挤占顶栏。 */
 export function WalletPaymentGuide() {
@@ -44,8 +45,10 @@ export function WalletPaymentGuide() {
     setCopied(true);
   }} type="button">{t(copied ? "wallet.copied" : "wallet.copyAddress")}</button>;
   if (summary.showFunding) {
-    // 主网没有水龙头：说明需要准备的 USDC，并方便复制地址去转账。
-    return <div className="wallet-guide wallet-zero"><span>{t("wallet.fundNotice")}</span>{copyAddress}</div>;
+    // 主网没有水龙头：直接展开获取指引，并方便复制收款地址。
+    return <div className="wallet-guide wallet-zero">
+      <FundingGuide mainnet={ARC_NETWORK.mainnet} open />{copyAddress}
+    </div>;
   }
   if (!summary.showFaucet) return null;
   return <div className="wallet-guide wallet-zero"><span>{t("wallet.testnetNotice")}</span>
