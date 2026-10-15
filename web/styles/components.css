@@ -1695,6 +1695,77 @@ html:lang(en) .summary-conclusion p {
   letter-spacing: 0;
 }
 
+/* 结果分享图：预览沿用站点的深底、金线与朱印，不改变总述本身的排版。 */
+.share-card-entry {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding-top: 2px;
+}
+.share-card-trigger { cursor: pointer; }
+.share-card-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(4 6 5 / 0.86);
+}
+.share-card-dialog {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 560px);
+  max-height: calc(100dvh - 40px);
+  padding: 18px;
+  border: 1px solid var(--line-strong);
+  background: #0F1110;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.58);
+  overflow: auto;
+}
+.share-card-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.share-card-dialog h2 {
+  margin: 0;
+  color: var(--gold);
+  font-family: var(--brush);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.share-card-close {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--paper);
+  font-size: 26px;
+  cursor: pointer;
+}
+.share-card-dialog img {
+  display: block;
+  width: min(100%, 432px);
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  background: #0F1110;
+}
+.share-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.share-card-actions a { text-decoration: none; }
+@media (max-width: 620px) {
+  .share-card-backdrop { padding: 10px; }
+  .share-card-dialog { max-height: calc(100dvh - 20px); padding: 14px; }
+  .share-card-actions > * { flex: 1; text-align: center; }
+}
+
 /* 顶栏返回首页：与语言切换、钱包同款描边按钮。 */
 .topbar-actions .home-button {
   display: inline-flex;

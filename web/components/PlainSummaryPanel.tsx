@@ -4,6 +4,7 @@ import { api, type AnyPublicReading } from "../lib/api.js";
 import { repairNote, summaryStatus } from "../lib/reading-state.js";
 import { useT } from "../lib/i18n.js";
 import { readingSchools, useElapsedSeconds } from "../lib/reading-progress.js";
+import { ShareCard } from "./ShareCard.js";
 
 const SCHOOL_NAME_KEYS = {
   chengyi: "wait.school.chengyi",
@@ -137,6 +138,7 @@ export function PlainSummaryPanel(props: {
         ? "summary.lifeOutlook" : "summary.outlook")}</b>{output.outlook}</p> : null}
       <p className="hint">{note ? t("summary.basisNote", { count: summary.basis, note })
         : t("summary.basis", { count: summary.basis })}</p>
+      <ShareCard reading={reading} sample={props.readonly} />
     </section>
   );
 }

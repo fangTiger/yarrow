@@ -4,11 +4,16 @@ import { confidenceEn, schoolEn, verdictEn } from "../lib/result-format.js";
 import { useT } from "../lib/i18n.js";
 import { summaryStatus } from "../lib/reading-state.js";
 import { ReadingProgress } from "./PlainSummaryPanel.js";
+import { ShareCard } from "./ShareCard.js";
 
 type InterpretedReading = Exclude<AnyPublicReading, { kind: "naming" }>;
 
-export function EnglishSummary({ reading }: { reading: InterpretedReading }) {
+export function EnglishSummary(props: {
+  reading: InterpretedReading;
+  readonly?: boolean | undefined;
+}) {
   const t = useT();
+  const { reading } = props;
   const summary = reading.summary;
   const status = summaryStatus(reading, t);
   if (status.kind === "progress") {
@@ -37,6 +42,7 @@ export function EnglishSummary({ reading }: { reading: InterpretedReading }) {
         ? "summary.lifeOutlook" : "summary.outlook")}</b>
         {output.outlook}</p> : null}
       <p className="hint">{t("summary.basis", { count: summary.basis })}</p>
+      <ShareCard reading={reading} sample={props.readonly} />
     </section>
   );
 }

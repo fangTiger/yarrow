@@ -84,7 +84,7 @@ export function EnglishBaziReading(props: {
       : showLifeLuck ? <DestinyPortraitPending /> : null}
     {showLifeLuck && destiny ? <LifeLuckPanel currentDate={currentDate} onReading={props.onReading}
       reading={destiny} readonly={props.readonly} /> : null}
-    <EnglishSummary reading={reading} />
+    <EnglishSummary reading={reading} readonly={props.readonly} />
     <EnglishRemedy reading={reading} />
     <details className="panel schools-fold"><summary>{t("schools.title")}
       <span>{t("schools.baziIntro")}</span></summary>

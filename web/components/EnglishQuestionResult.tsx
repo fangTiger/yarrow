@@ -43,7 +43,7 @@ export function EnglishQuestionResult(props: {
     }
   };
   return <>
-    <EnglishSummary reading={reading} />
+    <EnglishSummary reading={reading} readonly={props.readonly} />
     <EnglishRemedy reading={reading} />
     <details className="panel schools-fold"><summary>{t("schools.title")}
       <span>{t("schools.questionIntro")}</span></summary>

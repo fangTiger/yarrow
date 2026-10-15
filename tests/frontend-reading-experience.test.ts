@@ -104,7 +104,7 @@ test("英文写作期命理与运势图表不泄露尚未翻译的汉字", () =>
   assert.doesNotMatch(annual, /[\p{Script=Han}]/u);
 });
 
-test("旧命理存档仍降级原大运轴；完成的只读示例逐字不变", () => {
+test("旧命理存档仍降级原大运轴；完成的只读示例含分享入口且文本快照稳定", () => {
   const old = clone(destiny);
   delete old.summary?.output?.portrait;
   for (const key of schoolKeys) {
@@ -123,12 +123,13 @@ test("旧命理存档仍降级原大运轴；完成的只读示例逐字不变",
     const html = renderIn("zh", createElement(BaziReading, {
       reading, birth: null, onReading: noop, readonly: true,
     }));
+    assert.match(html, />生成分享图<\/button>/u);
     const text = html.replace(/<[^>]*>/gu, "");
     return createHash("sha256").update(text).digest("hex");
   });
   assert.deepEqual(hashes, [
-    "e7d4052a44bec8a9f9d0b702cde1b65a59f84614ecd6419683aa1645388f89dc",
-    "1ffdc6cf91cd2b65ff87703cd8ae3b4848223a17c9cdd09b009c156f4664f8ce",
+    "268790898433e26a01ffbc154b7f471e0ad14ea23c20127373d918a285791482",
+    "6d04e7a55839898312cad60ef13a52cdad9870884d75d5e9fdcc026f70f292fc",
   ]);
 });
 
