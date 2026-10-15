@@ -262,3 +262,32 @@ test("ShareCard 自身拒绝未完成总述，示例入口保留标记语义", (
   assert.match(html, /data-sample="true"/u);
   assert.match(html, />生成分享图<\/button>/u);
 });
+
+test("中文分行时收尾标点不落在行首，挪到上一行末尾", () => {
+  const measure = (text: string) => [...text].length * 10;
+  const lines = wrapText("甲乙，丙丁。戊", 20, measure, 5);
+  assert.ok(lines.slice(1).every((line) => !/^[，。、；：！？）」』”,.;:!?)]/u.test(line)), lines.join("|"));
+  assert.equal(lines.join(""), "甲乙，丙丁。戊");
+});
+
+test("内容多时自动收紧：中英文三类卡片的正文都不压到卡尾分隔线", () => {
+  // 近似真实字宽：汉字一个字号宽，拉丁字母约半个字号宽。
+  const measure = (text: string, size: number) => [...text]
+    .reduce((sum, char) => sum + (/[　-鿿＀-￯]/u.test(char) ? size : size * 0.52), 0);
+  for (const file of ["destiny.zh", "destiny.en", "fortune.zh", "fortune.en", "question.zh", "question.en"]) {
+    const lang = file.endsWith(".en") ? "en" : "zh";
+    const reading = lang === "en" ? englishSample(file.split(".")[0] as never) : sample(file);
+    const model = buildShareCard(reading, lang, lang === "en" ? enT : zhT);
+    const layout = layoutShareCard(model, measure);
+    const footerRule = layout.blocks.find((block) => block.role === "footer-rule")!;
+    for (const block of layout.blocks) {
+      if (block.role === "footer" || block.role === "footer-rule" || block.kind === "frame") continue;
+      assert.ok(block.y + block.height <= footerRule.y, `${file} ${block.role} 压到卡尾`);
+    }
+    const trend = layout.blocks.find((block) => block.kind === "trend");
+    if (trend?.kind === "trend") {
+      assert.ok(trend.points[0]!.x >= trend.x + 40, `${file} 走势首点贴边`);
+      assert.ok(trend.points.at(-1)!.x <= trend.x + trend.width - 40, `${file} 走势末点贴边`);
+    }
+  }
+});

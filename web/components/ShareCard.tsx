@@ -118,6 +118,10 @@ export function ShareCard(props: {
     setError("");
     try {
       await document.fonts.ready;
+      // 品牌印图片与顶栏同源；取不到时退回文字印，不影响出图。
+      const mark = new Image();
+      mark.src = "/brand/yarrow-mark.svg";
+      const markReady = await mark.decode().then(() => true, () => false);
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
       if (!context) throw new Error("canvas-context");
@@ -125,7 +129,7 @@ export function ShareCard(props: {
         brush: '"Ma Shan Zheng Subset", "Kaiti SC", "STKaiti", "KaiTi", serif',
         body: '"Songti SC", "STSong", Georgia, serif',
         latin: "Georgia, serif",
-      });
+      }, markReady ? { mark } : {});
       const blob = await canvasBlob(canvas);
       if (!mounted.current || generation.current !== activeGeneration) return;
       const image = new File([blob], `yarrow-${props.reading.kind}.png`, { type: "image/png" });

@@ -317,6 +317,16 @@ export function wrapText(
     else addOversizedUnit(unit);
   }
   if (current) lines.push(current);
+  // 中文排版避头：收尾标点不落在行首，挪到上一行末尾（允许略微超出行宽）。
+  for (let index = 1; index < lines.length; index += 1) {
+    while (/^[，。、；：！？）」』”’,.;:!?)]/u.test(lines[index]!) && lines[index]!.length > 0) {
+      lines[index - 1] = `${lines[index - 1]}${lines[index]!.charAt(0)}`;
+      lines[index] = lines[index]!.slice(1);
+    }
+  }
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    if (lines[index] === "") lines.splice(index, 1);
+  }
   const truncated = lines.length > maxLines;
   if (truncated) {
     lines.length = maxLines;
@@ -406,6 +416,13 @@ export type ShareCardLayoutBlock = {
   width: number;
   height: number;
 } | {
+  kind: "frame";
+  role: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} | {
   kind: "seal";
   role: string;
   x: number;
@@ -429,17 +446,18 @@ function layoutTrend(chart: TrendChart, block: LayoutBox): {
   points: ShareCardTrendPointLayout[];
   segments: ShareCardTrendSegmentLayout[];
 } {
-  const top = block.y + 18;
-  const bottom = block.y + block.height - 58;
-  const step = block.width / Math.max(1, chart.points.length - 1);
+  const top = block.y + 24;
+  const bottom = block.y + block.height - 70;
+  const inset = 56;
+  const step = (block.width - inset * 2) / Math.max(1, chart.points.length - 1);
   const pointY = (value: number) => (
     bottom - (Math.max(1, Math.min(9, value)) - 1) / 8 * (bottom - top)
   );
   const points = chart.points.map((point, index) => ({
     label: point.label,
-    x: block.x + index * step,
+    x: block.x + inset + index * step,
     y: point.value === null ? null : pointY(point.value),
-    labelY: block.y + block.height - 18,
+    labelY: block.y + block.height - 22,
   }));
   const segments: ShareCardTrendSegmentLayout[] = [];
   let previous: ShareCardTrendPointLayout | undefined;
@@ -464,26 +482,30 @@ function layoutHexagramFigure(
   moving: readonly number[],
   box: LayoutBox,
 ): ShareCardHexagramFigureLayout {
-  const lineWidth = 164;
+  // 卦名一行加六爻共约 290 像素，在区块内垂直居中，空间越大越舒展。
+  const lineWidth = 220;
+  const gap = 28;
+  const half = (lineWidth - gap) / 2;
+  const top = box.y + Math.max(0, (box.height - 290) / 2);
   const lineX = box.x + (box.width - lineWidth) / 2;
   const lines = Array.from({ length: 6 }, (_, visual) => {
     const position = 5 - visual;
-    const lineY = box.y + 60 + visual * 30;
+    const lineY = top + 66 + visual * 40;
     const segments = figure.lines[position]
-      ? [{ x: lineX, y: lineY, width: lineWidth, height: 12 }]
+      ? [{ x: lineX, y: lineY, width: lineWidth, height: 16 }]
       : [
-        { x: lineX, y: lineY, width: 68, height: 12 },
-        { x: lineX + 96, y: lineY, width: 68, height: 12 },
+        { x: lineX, y: lineY, width: half, height: 16 },
+        { x: lineX + half + gap, y: lineY, width: half, height: 16 },
       ];
     const movingDot = moving.includes(position + 1)
-      ? { x: lineX + lineWidth + 22, y: lineY + 6, radius: 7 }
+      ? { x: lineX + lineWidth + 28, y: lineY + 8, radius: 9 }
       : undefined;
     return { segments, movingDot };
   });
   return {
     name: figure.name,
     nameX: box.x + box.width / 2,
-    nameY: box.y + 28,
+    nameY: top + 32,
     lines,
   };
 }
@@ -508,91 +530,137 @@ function layoutHexagram(chart: HexagramChart, block: LayoutBox): {
 
 /** 固定画布上的全部位置计算；不读取 DOM 或 canvas，Node 测试可直接覆盖。 */
 export function layoutShareCard(model: ShareCardModel, measure: ShareCardMeasure): ShareCardLayout {
-  const blocks: ShareCardLayoutBlock[] = [];
-  const left = 72;
+  // 社交平台上卡片常被缩到约 360 像素宽，字号按此放大：标题 72、结论 48 上下、正文 30。
+  const left = 88;
   const width = SHARE_CARD_WIDTH - left * 2;
-  const addText = (
-    role: string,
-    text: string,
-    y: number,
-    size: number,
-    maxLines: number,
-    color: ShareCardColor = "paper",
-    font: ShareCardFont = "body",
-  ) => {
-    const lines = wrapText(text, width, (value) => measure(value, size, font), maxLines);
-    const lineHeight = Math.round(size * 1.45);
-    blocks.push({
-      kind: "text", role, x: left, y, width, height: lines.length * lineHeight,
-      size, color, font, lines,
-      lineYs: lines.map((_, index) => y + (index + 1) * lineHeight),
-    });
-    return y + lines.length * lineHeight;
+  const contentTop = 240;
+  const footerRuleY = 1222;
+  const latin = model.brand !== "三易";
+  const header: ShareCardLayoutBlock[] = [
+    { kind: "frame", role: "frame", x: 32, y: 32, width: SHARE_CARD_WIDTH - 64, height: SHARE_CARD_HEIGHT - 64 },
+    {
+      kind: "seal", role: "brand-mark", x: left, y: 78, width: 92, height: 92,
+      inset: { x: left + 7, y: 85, width: 78, height: 78 },
+      // 中英文统一用朱印「易」；有品牌印图片时绘制图片，否则退回文字。
+      mark: { text: "易", x: left + 46, y: 142, size: 52, font: "brush" },
+    },
+    {
+      kind: "text", role: "brand", x: left + 118, y: 92, width: 640, height: 64,
+      size: 50, color: "gold", font: latin ? "latin" : "brush",
+      lines: [model.brand], lineYs: [144],
+    },
+    { kind: "rule", role: "header-rule", x: left, y: 206, width, height: 1 },
+  ];
+
+  interface Fit { chart: number; lines: number; headline: number }
+  const layoutContent = (offset: number, chartHeight: number, fit: Fit) => {
+    const blocks: ShareCardLayoutBlock[] = [];
+    const addText = (
+      role: string,
+      text: string,
+      y: number,
+      size: number,
+      maxLines: number,
+      color: ShareCardColor = "paper",
+      font: ShareCardFont = "body",
+      lineRatio = 1.42,
+    ) => {
+      const lines = wrapText(text, width, (value) => measure(value, size, font), maxLines);
+      const lineHeight = Math.round(size * lineRatio);
+      blocks.push({
+        kind: "text", role, x: left, y, width, height: lines.length * lineHeight,
+        size, color, font, lines,
+        lineYs: lines.map((_, index) => y + (index + 1) * lineHeight - Math.round(size * 0.3)),
+      });
+      return y + lines.length * lineHeight;
+    };
+    let y = addText("title", model.title, contentTop + offset, 72, 1, "gold", latin ? "latin" : "brush", 1.3) + 22;
+    if (model.question) {
+      y = addText("question-label", model.question, y, 32, 2, "muted") + 20;
+    }
+    if (model.chips?.length) {
+      // 标签放大后一行放不下时折到第二行，最多两行。
+      const items: ShareCardChipLayout[] = [];
+      const chipHeight = 66;
+      let chipX = left;
+      let row = 0;
+      for (const original of model.chips) {
+        const natural = measure(original, 30, "body") + 40;
+        if (chipX > left && chipX + natural > left + width) {
+          row += 1;
+          chipX = left;
+        }
+        if (row > 1) break;
+        const available = left + width - chipX;
+        const text = natural <= available ? original
+          : fitEllipsis(original, Math.max(1, available - 40), (value) => measure(value, 30, "body"));
+        const chipWidth = Math.min(measure(text, 30, "body") + 40, available);
+        const chipY = y + row * (chipHeight + 14);
+        items.push({
+          text, x: chipX, y: chipY, width: chipWidth, height: chipHeight,
+          textX: chipX + chipWidth / 2, textY: chipY + 44,
+        });
+        chipX += chipWidth + 14;
+      }
+      const rows = items.length ? Math.max(...items.map((item) => item.y)) - y + chipHeight : 0;
+      blocks.push({ kind: "chips", role: "chips", x: left, y, width, height: rows, items });
+      y += rows + 30;
+    }
+    // 结论排不下时先缩字号再截断：英文总评常比中文长一倍。
+    const headlineSize = model.kind === "question" ? 46 : 48;
+    const fitsAt = (size: number) => wrapText(model.headline, width, (value) => measure(value, size, "body"),
+      fit.headline + 1).length <= fit.headline;
+    const headlineFinal = fitsAt(headlineSize) ? headlineSize : fitsAt(40) ? 40 : headlineSize - 6;
+    y = addText("headline", model.headline, y, headlineFinal, fit.headline) + 26;
+    if (model.chart) {
+      const chartBox = { x: left, y, width, height: chartHeight };
+      if (model.chart.kind === "trend") {
+        blocks.push({ kind: "trend", role: "chart", ...chartBox, ...layoutTrend(model.chart, chartBox) });
+      } else {
+        blocks.push({ kind: "hexagram", role: "chart", ...chartBox, ...layoutHexagram(model.chart, chartBox) });
+      }
+      y += chartHeight + 26;
+    }
+    for (const [index, line] of model.lines.entries()) {
+      y = addText(`line-${index}`, line, y, 30, model.kind === "question" ? 2 : fit.lines) + 14;
+    }
+    return { blocks, end: y };
   };
 
-  blocks.push({
-    kind: "seal", role: "brand-mark", x: left, y: 58, width: 82, height: 82,
-    inset: { x: left + 6, y: 64, width: 70, height: 70 },
-    mark: {
-      text: model.brand === "三易" ? "易" : "Y",
-      x: left + 41,
-      y: 115,
-      size: 42,
-      font: model.brand === "三易" ? "brush" : "latin",
-    },
-  });
-  blocks.push({
-    kind: "text", role: "brand", x: 176, y: 70, width: 760, height: 58,
-    size: 42, color: "gold", font: model.brand === "三易" ? "brush" : "latin",
-    lines: [model.brand], lineYs: [131],
-  });
-  blocks.push({ kind: "rule", role: "header-rule", x: left, y: 164, width, height: 1 });
-  let y = addText("title", model.title, 202, 56, 1, "gold", "brush") + 20;
-  if (model.question) {
-    y = addText("question-label", model.question, y, 27, 2, "muted") + 22;
-  }
-  if (model.chips?.length) {
-    const items: ShareCardChipLayout[] = [];
-    let chipX = left;
-    for (const original of model.chips) {
-      const available = left + width - chipX;
-      if (available < 44) break;
-      const text = measure(original, 22, "body") + 30 <= available
-        ? original
-        : fitEllipsis(original, Math.max(1, available - 30), (value) => (
-          measure(value, 22, "body")
-        ));
-      const chipWidth = Math.min(measure(text, 22, "body") + 30, available);
-      items.push({
-        text, x: chipX, y, width: chipWidth, height: 54,
-        textX: chipX + chipWidth / 2, textY: y + 36,
-      });
-      chipX += chipWidth + 12;
+  // 由宽到紧依次尝试，取第一档放得下的；剩余空间先给图表（走势最多加 220、卦画最多加 120），
+  // 仍有余则整体下移居中。最紧一档仍放不下时照用，正文行数已压到最少。
+  const bottomLimit = footerRuleY - 36;
+  const fits: Fit[] = [
+    { chart: 300, lines: 4, headline: 4 },
+    { chart: 280, lines: 3, headline: 4 },
+    { chart: 240, lines: 3, headline: 3 },
+    { chart: 210, lines: 2, headline: 3 },
+    // 先压次要的总评与走势概括，再压结论，免得结论断在半句。
+    { chart: 190, lines: 1, headline: 3 },
+    { chart: 170, lines: 1, headline: 2 },
+  ];
+  let fit = fits.at(-1)!;
+  let first = layoutContent(0, fit.chart, fit);
+  for (const candidate of fits) {
+    const attempt = layoutContent(0, candidate.chart, candidate);
+    if (attempt.end <= bottomLimit) {
+      fit = candidate;
+      first = attempt;
+      break;
     }
-    blocks.push({ kind: "chips", role: "chips", x: left, y, width, height: 54, items });
-    y += 78;
   }
-  y = addText("headline", model.headline, y, model.kind === "question" ? 35 : 38, 3) + 24;
-  const chartHeight = model.chart?.kind === "hexagram" ? 292 : 276;
-  if (model.chart) {
-    const chartBox = { x: left, y, width, height: chartHeight };
-    if (model.chart.kind === "trend") {
-      blocks.push({
-        kind: "trend", role: "chart", ...chartBox, ...layoutTrend(model.chart, chartBox),
-      });
-    } else {
-      blocks.push({
-        kind: "hexagram", role: "chart", ...chartBox, ...layoutHexagram(model.chart, chartBox),
-      });
-    }
-    y += chartHeight + 24;
-  }
-  const lineLimit = model.kind === "question" ? 2 : 3;
-  for (const [index, line] of model.lines.entries()) {
-    y = addText(`line-${index}`, line, y, model.kind === "question" ? 24 : 26, lineLimit) + 14;
-  }
-  blocks.push({ kind: "rule", role: "footer-rule", x: left, y: 1212, width, height: 1 });
-  addText("footer", model.footer, 1242, 21, 2, "muted", "latin");
+  let spare = Math.max(0, bottomLimit - first.end);
+  const grow = model.chart ? Math.min(spare, model.chart.kind === "trend" ? 220 : 120) : 0;
+  spare -= grow;
+  const content = layoutContent(Math.floor(spare / 2), fit.chart + grow, fit);
+  const blocks: ShareCardLayoutBlock[] = [...header, ...content.blocks];
+  blocks.push({ kind: "rule", role: "footer-rule", x: left, y: footerRuleY, width, height: 1 });
+  const footerLines = wrapText(model.footer, width, (value) => measure(value, 26, "latin"), 2);
+  blocks.push({
+    kind: "text", role: "footer", x: left, y: footerRuleY + 18, width, height: footerLines.length * 36,
+    size: 26, color: "muted", font: "latin", lines: footerLines,
+    lineYs: footerLines.map((_, index) => footerRuleY + 52 + index * 36),
+  });
   return { width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT, blocks };
 }
 
@@ -630,7 +698,7 @@ function drawTrend(
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.strokeStyle = COLORS.gold;
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 5;
   ctx.beginPath();
   block.segments.forEach((segment) => {
     ctx.moveTo(segment.from.x, segment.from.y);
@@ -638,15 +706,16 @@ function drawTrend(
   });
   ctx.stroke();
   ctx.fillStyle = COLORS.gold;
-  ctx.font = fontFor(fonts, "latin", 17);
+  ctx.font = fontFor(fonts, "latin", 22);
   ctx.textAlign = "center";
   block.points.forEach((point) => {
     if (point.y !== null) {
       ctx.beginPath();
-      ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.fillText(point.label, point.x, point.labelY);
+    // 英文刻度「ages 10–19」八个并排会连成一串，画时去掉前缀，只写年龄段。
+    ctx.fillText(point.label.replace(/^ages\s+/iu, ""), point.x, point.labelY);
   });
   ctx.restore();
 }
@@ -657,7 +726,7 @@ function drawFigure(
   fonts: ShareCardFonts,
 ): void {
   ctx.fillStyle = COLORS.gold;
-  ctx.font = fontFor(fonts, "body", 25);
+  ctx.font = fontFor(fonts, "body", 32);
   ctx.textAlign = "center";
   ctx.fillText(figure.name, figure.nameX, figure.nameY);
   for (const line of figure.lines) {
@@ -681,7 +750,7 @@ function drawHexagram(
 ): void {
   drawFigure(ctx, block.figures[0]!, fonts);
   ctx.fillStyle = COLORS.gold;
-  ctx.font = fontFor(fonts, "latin", 34);
+  ctx.font = fontFor(fonts, "latin", 46);
   ctx.textAlign = "center";
   ctx.fillText(block.arrow.text, block.arrow.x, block.arrow.y);
   drawFigure(ctx, block.figures[1]!, fonts);
@@ -692,6 +761,7 @@ export function drawShareCard(
   ctx: CanvasRenderingContext2D,
   model: ShareCardModel,
   fonts: ShareCardFonts = {},
+  assets: { mark?: CanvasImageSource | undefined } = {},
 ): void {
   ctx.canvas.width = SHARE_CARD_WIDTH;
   ctx.canvas.height = SHARE_CARD_HEIGHT;
@@ -707,6 +777,13 @@ export function drawShareCard(
       ctx.font = fontFor(fonts, block.font, block.size);
       ctx.textAlign = "left";
       block.lines.forEach((line, index) => ctx.fillText(line, block.x, block.lineYs[index]!));
+    } else if (block.kind === "frame") {
+      ctx.strokeStyle = "rgba(201,168,102,.28)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(block.x, block.y, block.width, block.height);
+    } else if (block.kind === "seal" && assets.mark) {
+      // 品牌印图片（朱印「易」），与站点顶栏、图标一致。
+      ctx.drawImage(assets.mark, block.x, block.y, block.width, block.height);
     } else if (block.kind === "seal") {
       ctx.fillStyle = COLORS.red;
       ctx.fillRect(block.x, block.y, block.width, block.height);
@@ -721,7 +798,8 @@ export function drawShareCard(
       ctx.fillStyle = "rgba(201,168,102,.42)";
       ctx.fillRect(block.x, block.y, block.width, block.height);
     } else if (block.kind === "chips") {
-      ctx.font = fontFor(fonts, "body", 22);
+      ctx.font = fontFor(fonts, "body", 30);
+      ctx.lineWidth = 2;
       for (const item of block.items) {
         ctx.strokeStyle = COLORS.gold;
         ctx.strokeRect(item.x, item.y, item.width, item.height);
