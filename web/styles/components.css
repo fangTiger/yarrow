@@ -1806,3 +1806,119 @@ html:lang(en) .summary-conclusion p {
 .arc-verify-help a { color: var(--gold); }
 /* 「在 Arc 上验证」的「上验证」不在毛笔字体子集里（子集已接近 100 KB 上限），标题统一用正文字体，免得一半毛笔一半宋体。 */
 .verify-panel .panel-head h2 { font-family: var(--serif); font-weight: 600; letter-spacing: 0.04em; }
+
+/* 今日黄历：首页每日内容独立成卡，手机端默认只露出日期与三项宜。 */
+.daily-almanac {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, rgb(201 168 102 / 0.08), rgb(21 24 22 / 0.88) 58%);
+}
+.daily-almanac-summary { display: none; }
+.daily-almanac-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(280px, 1.3fr);
+  gap: 18px 28px;
+  padding: 20px clamp(18px, 3vw, 30px);
+}
+.daily-almanac-body > header { align-self: center; }
+.daily-almanac-kicker {
+  margin: 0 0 7px;
+  color: var(--gold);
+  font-family: var(--brush);
+  font-size: 25px;
+  letter-spacing: 0.1em;
+}
+.daily-almanac-date { margin: 0; color: var(--muted); line-height: 1.7; }
+.daily-almanac-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+}
+.daily-almanac-facts > div {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 11px 13px;
+  background: var(--panel-2);
+}
+.daily-almanac-facts span { color: var(--dim); font-size: 11px; letter-spacing: 0.08em; }
+.daily-almanac-facts b { font-size: 13px; font-weight: 500; line-height: 1.55; }
+.daily-almanac-yi-ji { display: grid; grid-column: 1 / -1; gap: 10px; }
+.daily-almanac-activities {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 11px;
+  align-items: start;
+}
+.daily-almanac-badge {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+  font-size: 12px;
+}
+.daily-almanac-badge.good { color: var(--jade); }
+.daily-almanac-badge.bad { color: var(--cinnabar); }
+.daily-almanac-activities ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+.daily-almanac-chip {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.daily-almanac-chip.good { background: var(--jade-soft); }
+.daily-almanac-chip.bad { background: var(--cinnabar-soft); }
+.daily-almanac-cta {
+  grid-column: 1 / -1;
+  justify-self: end;
+  min-height: 0;
+  color: var(--gold);
+  line-height: 1.5;
+  text-decoration: none;
+}
+.daily-almanac-cta:hover, .daily-almanac-cta:focus-visible { text-decoration: underline; }
+html:lang(en) .daily-almanac-kicker { font-family: var(--serif); letter-spacing: 0.02em; }
+
+@media (max-width: 760px) {
+  .daily-almanac-body { grid-template-columns: minmax(0, 1fr); }
+  .daily-almanac-facts { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 620px) {
+  .daily-almanac-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 0;
+    background: transparent;
+    color: var(--paper);
+    text-align: left;
+    cursor: pointer;
+  }
+  .daily-almanac-summary > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .daily-almanac-summary > span:last-child { flex: none; color: var(--gold); font-size: 18px; }
+  .daily-almanac.is-expanded .daily-almanac-summary { border-bottom: 1px solid var(--line); }
+  .daily-almanac.is-expanded .daily-almanac-summary > span:last-child { transform: rotate(180deg); }
+  .daily-almanac:not(.is-expanded) .daily-almanac-body { display: none; }
+  .daily-almanac-body { gap: 14px; padding: 16px 14px; }
+  .daily-almanac-date { font-size: 12px; }
+  .daily-almanac-cta { justify-self: start; }
+}
+/* 今日黄历：英文「Good for」「Avoid」放不进圆形徽章，改为随文字伸缩的胶囊。 */
+html:lang(en) .daily-almanac-badge { width: auto; min-width: 0; padding: 0 12px; border-radius: 999px; white-space: nowrap; }
+html:lang(en) .daily-almanac-activities { grid-template-columns: 6.2em minmax(0, 1fr); }
+html:lang(en) .daily-almanac-badge { justify-self: start; height: 30px; }

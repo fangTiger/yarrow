@@ -9,7 +9,7 @@ import {
   DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint, classificationHint,
   deriveEntry, entryGate, fromClassification, namingBirthProblem, namingGate, namingRequest,
   paymentClassification, prefillFromHash, submissionQuestion,
-  type ClassificationView, type EntryChoice, type NamingFormValues,
+  type ClassificationView, type EntryChoice, type HashPrefill, type NamingFormValues,
 } from "../lib/home-entry.js";
 import { BirthFields } from "./BirthFields.js";
 import { HorizonChips } from "./HorizonChips.js";
@@ -22,6 +22,36 @@ import { useLang, useT } from "../lib/i18n.js";
 function initialBirthValues(): BirthFormValues {
   const stored = loadBirthProfile();
   return stored ? fromBirthInput(stored) : EMPTY_BIRTH;
+}
+
+interface HashPrefillNavigation {
+  window: {
+    addEventListener(type: "hashchange", listener: () => void): void;
+    removeEventListener(type: "hashchange", listener: () => void): void;
+  };
+  location: { hash: string; pathname: string; search: string };
+  history: { state: unknown; replaceState(state: unknown, unused: string, url: string): void };
+}
+
+/** 首页已挂载时继续响应带参数的 hash 链接，并在读取后清掉一次性参数。 */
+export function observeHashPrefill(
+  apply: (value: HashPrefill) => void,
+  navigation: HashPrefillNavigation = { window, location, history },
+): () => void {
+  const update = () => {
+    const hash = navigation.location.hash;
+    if (!hash.startsWith("#/?")) return;
+    const value = prefillFromHash(hash);
+    if (!value) return;
+    apply(value);
+    navigation.history.replaceState(
+      navigation.history.state,
+      "",
+      `${navigation.location.pathname}${navigation.location.search}#/`,
+    );
+  };
+  navigation.window.addEventListener("hashchange", update);
+  return () => navigation.window.removeEventListener("hashchange", update);
 }
 
 /** 首页中间的问卦表单：类型选项、细项、问题框、生辰行与问卦按钮。 */
@@ -47,6 +77,17 @@ export function QuestionForm() {
     if (!hashPrefill.clear || typeof history === "undefined" || typeof location === "undefined") return;
     history.replaceState(history.state, "", `${location.pathname}${location.search}#/`);
   }, [hashPrefill.clear]);
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof location === "undefined"
+      || typeof history === "undefined") return undefined;
+    return observeHashPrefill((value) => {
+      setQuestion(value.question ?? "");
+      setChoice(value.choice);
+      setView(undefined);
+      setClassifying(false);
+      setError("");
+    });
+  }, []);
   useEffect(() => {
     if (!valid) {
       return undefined;

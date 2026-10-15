@@ -277,7 +277,8 @@ test("内容多时自动收紧：中英文三类卡片的正文都不压到卡�
   for (const file of ["destiny.zh", "destiny.en", "fortune.zh", "fortune.en", "question.zh", "question.en"]) {
     const lang = file.endsWith(".en") ? "en" : "zh";
     const reading = lang === "en" ? englishSample(file.split(".")[0] as never) : sample(file);
-    const model = buildShareCard(reading, lang, lang === "en" ? enT : zhT);
+    const model = buildShareCard(reading as Parameters<typeof buildShareCard>[0], lang,
+      lang === "en" ? enT : zhT);
     const layout = layoutShareCard(model, measure);
     const footerRule = layout.blocks.find((block) => block.role === "footer-rule")!;
     for (const block of layout.blocks) {

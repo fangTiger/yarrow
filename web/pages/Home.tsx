@@ -9,6 +9,7 @@ import { TopbarBrand } from "../components/TopbarBrand.js";
 import { useT } from "../lib/i18n.js";
 import { ARC_NETWORK } from "../lib/wagmi.js";
 import { Luopan } from "../components/Luopan.js";
+import { DailyAlmanac } from "../components/DailyAlmanac.js";
 
 export function HomeContent() {
   const t = useT();
@@ -24,6 +25,7 @@ export function HomeContent() {
         </ol>
       </div>
     </section>
+    <DailyAlmanac />
     <section aria-label={t("home.sectionLabel")} className="home-main"><QuestionForm /></section>
   </>;
 }
