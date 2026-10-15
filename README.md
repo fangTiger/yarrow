@@ -153,8 +153,9 @@ In scope today: every reading (I Ching, BaZi destiny and fortune, naming) is pai
 | USDC (ERC-20 interface) | `0x3600000000000000000000000000000000000000` |
 | Fee recipient | [`0x81d48d2c5D0744e8eF7A5c35cDceB0A27A1c707B`](https://explorer.arc.io/address/0x81d48d2c5D0744e8eF7A5c35cDceB0A27A1c707B) |
 | First paid mainnet reading | [`0x6893ee27…11604073`](https://explorer.arc.io/tx/0x6893ee27689be0982e331e385d9166bde5eb35d15c8eeb435dca85ad11604073) · block 25,855,931 · 2026-10-14 03:09 UTC · 0.05 USDC · a BaZi destiny reading |
+| Live I Ching reading cast on mainnet | [Open the reading](https://yarrow-six.vercel.app/#/r/hp3dwtwfh4odwheswlryjcjaae) and press **Verify on Arc** · payment [`0x1126f7c0…6df788fd1`](https://explorer.arc.io/tx/0x1126f7c0db89f94e88891644b41a239e864539c5c7c0e057f1d767d6df788fd1) · block 26,125,457 · six throws from blocks 26,125,458–26,125,464 · 2026-10-15 17:09 UTC |
 
-The payment above produced a complete reading on the live site: three masters, eight scored luck cycles and a character portrait. The reading link isn't published, because a BaZi chart reveals the payer's birth data. The live endpoint `GET https://yarrow-six.vercel.app/api/payment` returns the same recipient, amount and chain ID that the app enforces.
+The first payment produced a complete BaZi reading on the live site: three masters, eight scored luck cycles and a character portrait. Its link isn't published, because a BaZi chart reveals the payer's birth data. The I Ching reading ("Will Bitcoin rise today?") contains no personal data, so it is public. Its verdict was "flat; watch rather than trade", with a reminder not to base trades on a hexagram. It is also the Chinese sample reading. The live endpoint `GET https://yarrow-six.vercel.app/api/payment` returns the same recipient, amount and chain ID that the app enforces.
 
 ### Verify a reading yourself
 

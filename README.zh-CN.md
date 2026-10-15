@@ -155,8 +155,9 @@ sequenceDiagram
 | USDC（ERC-20 接口） | `0x3600000000000000000000000000000000000000` |
 | 收款地址 | [`0x81d48d2c5D0744e8eF7A5c35cDceB0A27A1c707B`](https://explorer.arc.io/address/0x81d48d2c5D0744e8eF7A5c35cDceB0A27A1c707B) |
 | 主网首笔付费解读 | [`0x6893ee27…11604073`](https://explorer.arc.io/tx/0x6893ee27689be0982e331e385d9166bde5eb35d15c8eeb435dca85ad11604073) · 区块 25,855,931 · 2026-10-14 03:09 UTC · 0.05 USDC · 八字命理 |
+| 主网起卦的问事（公开） | [打开这一卦](https://yarrow-six.vercel.app/#/r/hp3dwtwfh4odwheswlryjcjaae)，点「在 Arc 上验证」 · 付款 [`0x1126f7c0…6df788fd1`](https://explorer.arc.io/tx/0x1126f7c0db89f94e88891644b41a239e864539c5c7c0e057f1d767d6df788fd1) · 区块 26,125,457 · 六掷取自区块 26,125,458–26,125,464 · 2026-10-15 17:09 UTC |
 
-这笔付款在线上生成了一卦完整的解读：三家断语、八步逐运评分与性格画像。由于八字盘面会暴露付款人的生辰，这一卦的链接不公开。线上接口 `GET https://yarrow-six.vercel.app/api/payment` 返回的收款地址、金额与链 ID，就是程序实际校验的值。
+首笔付款在线上生成了一卦完整的八字解读：三家断语、八步逐运评分与性格画像。由于八字盘面会暴露付款人的生辰，那一卦的链接不公开。问事那一卦（「比特币今天还会上涨吗？」）不含个人信息，因此公开。它的结论是「三家倾向持平……以观望为主」，并提醒别把卦象当成买卖依据。这一卦同时也是中文问事示例。线上接口 `GET https://yarrow-six.vercel.app/api/payment` 返回的收款地址、金额与链 ID，就是程序实际校验的值。
 
 ### 自己验证一卦
 

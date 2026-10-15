@@ -1,16 +1,16 @@
 {
- "id": "itxhog2gsjbuwooekzzlddp33m",
+ "id": "hp3dwtwfh4odwheswlryjcjaae",
  "kind": "question",
- "createdAt": "2026-10-12T19:19:29.057Z",
- "question": "这次跳槽能顺利吗？",
+ "createdAt": "2026-10-15T17:09:13.954Z",
+ "question": "比特币今天还会上涨吗？",
  "subject": {
-  "suggestedKey": "career",
-  "finalKey": "career",
-  "overridden": false,
-  "changes": 0
+  "suggestedKey": "peers",
+  "finalKey": "wealth",
+  "overridden": true,
+  "changes": 1
  },
  "payment": {
-  "firstHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  "firstHash": "0x1126f7c0db89f94e88891644b41a239e864539c5c7c0e057f1d767d6df788fd1"
  },
  "throws": [
   {
@@ -24,24 +24,24 @@
    "value": 7,
    "name": "单",
    "moving": false,
-   "blockNumber": "66867148",
-   "blockHash": "0xb23e494f85168e3e0ab61746b40fddcb0d00af8b5cc0970d5cc55294397267fa",
-   "blockTimestamp": "1791832769"
+   "blockNumber": "26125458",
+   "blockHash": "0x836ab97f35ca486621f116c4af0949049a7f90bd27063026f5239d0977c5b699",
+   "blockTimestamp": "1792084153"
   },
   {
    "index": 2,
    "coins": [
-    1,
     0,
+    1,
     0
    ],
    "backs": 1,
    "value": 7,
    "name": "单",
    "moving": false,
-   "blockNumber": "66867150",
-   "blockHash": "0x30bdfd69a6ef4106264ef6133252cacbb5ee5607cfa4110dd64e0f52dc9a406d",
-   "blockTimestamp": "1791832770"
+   "blockNumber": "26125459",
+   "blockHash": "0x8d559618e6f933479f6b34855e3f567dead6fb37e61b236d4d246f99b4f9b20d",
+   "blockTimestamp": "1792084154"
   },
   {
    "index": 3,
@@ -54,12 +54,27 @@
    "value": 8,
    "name": "拆",
    "moving": false,
-   "blockNumber": "66867151",
-   "blockHash": "0x0c398b0a3f8906ed5a6ab171e23d778a166bd9d6571084d0c3162eedb5069f9d",
-   "blockTimestamp": "1791832771"
+   "blockNumber": "26125461",
+   "blockHash": "0xd68572e9d796fbd78b9eb5fc0da70455f1b90ed6290aa20ead2ee7ed3069d2cc",
+   "blockTimestamp": "1792084155"
   },
   {
    "index": 4,
+   "coins": [
+    1,
+    1,
+    0
+   ],
+   "backs": 2,
+   "value": 8,
+   "name": "拆",
+   "moving": false,
+   "blockNumber": "26125462",
+   "blockHash": "0x6573bae436411226a7e93c638d35644ff685db7dda215636bb1773ec39064e4e",
+   "blockTimestamp": "1792084155"
+  },
+  {
+   "index": 5,
    "coins": [
     0,
     1,
@@ -69,96 +84,85 @@
    "value": 8,
    "name": "拆",
    "moving": false,
-   "blockNumber": "66867152",
-   "blockHash": "0x54edb58e7418b6946189be445f9b7d730861fb71331876908d2116d1ba5137d5",
-   "blockTimestamp": "1791832771"
-  },
-  {
-   "index": 5,
-   "coins": [
-    0,
-    0,
-    0
-   ],
-   "backs": 0,
-   "value": 6,
-   "name": "交",
-   "moving": true,
-   "blockNumber": "66867153",
-   "blockHash": "0x026a646eefccab0b72b0b93ef453538cb858ff17ded570b9abe9a25e6ee1e847",
-   "blockTimestamp": "1791832772"
+   "blockNumber": "26125463",
+   "blockHash": "0x53a022c4f47b62a5e23363211e8229da9c4deceb76c73a0a1294cece463128d5",
+   "blockTimestamp": "1792084156"
   },
   {
    "index": 6,
    "coins": [
-    1,
     0,
-    0
+    1,
+    1
    ],
-   "backs": 1,
-   "value": 7,
-   "name": "单",
+   "backs": 2,
+   "value": 8,
+   "name": "拆",
    "moving": false,
-   "blockNumber": "66867154",
-   "blockHash": "0x957fbf20e56ee215cb155493b171e09264e4aaa702dedd003800cf5959d3e047",
-   "blockTimestamp": "1791832772"
+   "blockNumber": "26125464",
+   "blockHash": "0xf450cf5abf6a0aee75473d923d2050c84c383134e94ed5ceb53df786d28ea82b",
+   "blockTimestamp": "1792084156"
   }
  ],
  "schools": {
   "chengyi": {
    "status": "done",
    "output": {
-    "verdict": "吉",
-    "confidenceTenths": 7,
-    "headline": "损而有孚终得吉",
-    "reason": "主占六五元吉，损卦有孚可贞，之卦中孚利涉大川，跳槽可顺但需以诚信节损为本。",
+    "verdict": "平",
+    "confidenceTenths": 5,
+    "headline": "临卦观势，静待其变",
+    "reason": "卦辞元亨利贞，然无动爻，事态未定，宜守正待时。",
     "sections": [
      {
       "title": "一、主占之辞与卦义",
-      "text": "主占之辞为六五：或益之，十朋之龟，弗克违，元吉。此爻居尊位而柔顺中正，损上益下，故有或益之之象。十朋之龟，言其受益之厚且不可辞。程颐按：义理之吉，不在求益，而在合义。损卦卦辞云：有孚，元吉，无咎，可贞，利有攸往。曷之？二簋可用享。损而有孚，则虽薄亦可通神明。之卦风泽中孚，卦辞云：豚鱼吉，利涉大川，利贞。中孚之诚，可涉险难。今问跳槽，本卦山泽损，示当有所减损而后得；之卦中孚，示以诚信为本，则终可济。"
+      "text": "所引主占之辞为卦辞：元，亨，利，贞。地泽临之卦义，在于临事临物之际，当以正固为本。今问比特币今日是否上涨，卦辞虽具元亨之象，然未见动爻，义理上不以必涨为断，只明临事当守正。"
      },
      {
       "title": "二、卦时卦德与处境",
-      "text": "月建戌，为深秋收成之时，万物收敛，正合损卦损下益上、损己益人之义。本卦山泽损，山在上泽在下，损泽之深以益山之高，喻当前处境须先付出或舍弃某些既得利益，方能成就新机。互卦地雷复，示反复其道，七日来复，跳槽过程或有一番周折反复，然终归复于正。错卦泽山咸，综卦风雷益，皆见交感与增益之机。程颐按：损卦六三云三人行，则损一人。一人行，则得其友。跳槽之际，若结伴而行反易生变，独断专行反得其友。六四云换其疾，使遄有喜，无咎，言去其旧疾，速则有喜。此皆示当断则断，去旧从新。"
+      "text": "月建戌，卦为地泽临，之卦亦为地泽临，互卦为地雷复，对卦为天山遁，反卦为风地观。临有临近、临下之义，复有反复、回复之象，遁有退避之势，观有观望之德。诸象并见，说明当前行情处于反复观待之中，不可执一而论涨跌。"
      },
      {
       "title": "三、处世之道与行动",
-      "text": "程颐按：损卦初九云已事遄往，无咎，酌损之。既决定跳槽，则当速往，不可犹豫，然须酌量所损，不可过度。九二云利贞，征凶，弗损益之，若时机未至，妄动则凶，不损己反为益。上九云弗损益之，无咎，贞吉，利有攸往，得臣无家，终得吉。之卦中孚初九云虞吉。有它，不燕，言安守本分则吉，若怀二心则不安。九二云鸣鹤在阴，其子和之，我有好爵，吾与尔靡之，示以诚信感人，新环境自有呼应。九五云有孚孪如，无咎，诚信笃实则无咎。然上九云翰音登于天，贞凶，戒不可虚声过实，否则招凶。故跳槽能顺，但须以诚信为本，量力而行，去旧务速，择新务诚。"
+      "text": "依义理，临事以贞，不因一时之象而妄动。本卦六三云：甘临，无攸利，既忧之，无咎。此示人不可耽于甘悦之诱，若知忧惧、守正自省，则可无咎。今日若问涨跌，当以观变为主，不宜据卦辞元亨而必断上涨。"
      }
     ],
     "timing": {
-     "window": "戌月之后，至迟不过复卦七日来复之数，约在数月之内。",
-     "condition": "须以诚信为本，去旧从新果断而不犹豫，且所损适度，不贪不妄，则损卦六五元吉可应。若怀二心或虚声过实，则中孚上九贞凶，应期不吉。"
+     "window": "今日之内",
+     "condition": "须以实际行情走势为验，若市场出现明确止跌回稳之象，方可言临事有应；否则仍属观望之期。"
     },
     "advice": [
-     "以诚信为本，对新旧东家皆不欺不瞒，合中孚之德。",
-     "去旧务速，如损卦初九已事遄往，但须酌损，不可过度索取或承诺。",
-     "独行其志，如六三一人行则得其友，不必强求结伴跳槽。"
+     "守正观望，不因卦辞元亨而轻断必涨。",
+     "以六三甘临之戒自省，勿贪一时之悦。",
+     "若涉资金，风险自担，不可执卦为操作依据。"
     ],
     "evidence": [
      {
       "ref": "main-text",
-      "claim": "六五：或益之，十朋之龟，弗克违，元吉。"
+      "claim": "卦辞：元，亨，利，贞。"
      },
      {
       "ref": "hexagram:primary",
-      "claim": "本卦 山泽损 卦辞：有孚，元吉，无咎，可贞，利有攸往。曷之？二簋可用享。"
+      "claim": "本卦为地泽临。"
      },
      {
       "ref": "hexagram:derived",
-      "claim": "之卦 风泽中孚 卦辞：豚鱼吉，利涉大川，利贞。"
+      "claim": "之卦为地泽临。"
      },
      {
-      "ref": "hexagram:primary",
-      "claim": "本卦 山泽损 初九：已事遄往，无咎，酌损之。"
+      "ref": "hexagram:mutual",
+      "claim": "互卦为地雷复。"
      },
      {
-      "ref": "hexagram:primary",
-      "claim": "本卦 山泽损 六三：三人行，则损一人。一人行，则得其友。"
+      "ref": "hexagram:opposite",
+      "claim": "对卦为天山遁。"
      },
      {
-      "ref": "hexagram:derived",
-      "claim": "之卦 风泽中孚 上九：翰音登于天，贞凶。"
+      "ref": "hexagram:reversed",
+      "claim": "反卦为风地观。"
+     },
+     {
+      "ref": "month",
+      "claim": "月建戌。"
      }
     ]
    },
@@ -168,60 +172,64 @@
    "status": "done",
    "output": {
     "verdict": "平",
-    "confidenceTenths": 6,
-    "headline": "官鬼受制，跳槽多阻",
-    "reason": "用神官鬼两现皆衰，应爻日破，虽有六五动生，世空待实，成事需时。",
+    "confidenceTenths": 5,
+    "headline": "用神死静，难言续涨",
+    "reason": "妻财为用而临应死地，兄弟双空动扰，虽原神相扶，本日续涨之力不足，偏平。",
     "sections": [
      {
       "title": "一、用神旺衰空破",
-      "text": "用神为官鬼。二爻丁卯木官鬼临玄武，处囚地；六爻丙寅木官鬼临螣蛇为应，处囚地且日破。月建戌、日辰庚申，木气受金克泄，官鬼整体衰弱，主跳槽之职位机会不旺，阻力明显。"
+      "text": "用神为妻财，落五爻癸亥水，临应，月建戌土克水，日辰癸亥虽为水而同气，然爻位标注为死，且卦中无动变生扶，故用神不当令而衰。初爻父母丁巳火日破，于财无助，反成仇神之势。用神不空不破，但死气沉沉，今日上行动能有限。"
      },
      {
       "title": "二、原神忌神",
-      "text": "五爻丙子水妻财临勾陈，处死地且旬空发动，变出辛巳火父母，为原神动而生官，本是转机，然子水空死，生扶之力先虚后实。三爻丁丑土兄弟临青龙持世，旺而旬空，伏丙申金子孙，子孙为忌神仇神，伏于世下，主自身多虑、易生变卦之心，亦防口舌竞争。"
+      "text": "原神为子孙癸酉金，居上爻，标注为相，金能生水，于财有源，是其可取之处。忌神为三、四两爻兄弟丁丑、癸丑土，皆旺而旬空，土本克水，又值旬空，克力暂缓，故不为大凶，但空而不实，随时可出空为患，压制财气。仇神初爻父母巳火日破，亦耗财之力。"
      },
      {
       "title": "三、世应与动变",
-      "text": "世爻三爻丁丑土兄弟，旺而旬空，主自己心气虽高却底气未实。应爻六爻丙寅木官鬼，囚而日破，主对方或目标岗位状态不稳。五爻妻财动化父母，为损卦六五'或益之，十朋之龟，弗克违，元吉'之象，动变转向风泽中孚，中孚主诚信等待，说明此事宜缓不宜急，先有损后方能得益。"
+      "text": "世在二爻丁卯木官鬼，临青龙而囚，木不克土亦不助水，世应之间财居应位，主客相持。本卦地泽临，之卦仍为地泽临，六爻安静无动，事无骤变之机。主占之辞曰：元，亨，利，贞。其辞虽吉，然系于静守贞正，非主今日必涨之征。"
      },
      {
       "title": "四、应期",
-      "text": "用神官鬼木衰且应爻日破，待木得生扶或破处逢合之时可见转机。以月建戌、日辰庚申推，亥卯未月木气转旺，或寅卯日木气得助，世爻丑土出空之时，事态方易落定。应期成立条件：官鬼得生扶、世爻出空、且无子孙忌神发动克官。"
+      "text": "用神妻财亥水得日辰同气，今日尚可维持，然月建戌土克之，又无动爻来生，故难有显著上冲。兄弟丑土两爻旬空，出空之期在旬内他日，届时克财之力方显。应期看：若亥水得金生水助之刻，方有回稳；若丑土出空、巳火再起，则承压转弱。此为条件推演，非必然之数。"
      }
     ],
+    "timing": {
+     "window": "今日盘中至次日交接之间",
+     "condition": "须见金水之气相续，即原神酉金得助、用神亥水不被土克压时，方有企稳回稳之象；若兄弟丑土出空、父母巳火复起，则承压转弱，上行动能消退。"
+    },
     "advice": [
-     "先稳住现有岗位，不要因一时冲动仓促离职。",
-     "投递与面试宜多核查对方岗位稳定性，避免信息不实。",
-     "待用神得助、世爻出空之时再作最终决定。"
+     "六爻所示仅为卦象推演，不构成投资建议，请勿据以作出买卖决定。",
+     "今日用神死而忌神空伏，宜观察为主，等兄弟出空之后的实际量价表现再作判断。",
+     "控制风险敞口，市场波动自有其规律，不宜以单一卦象加码。"
     ],
     "evidence": [
      {
-      "ref": "line:2",
-      "claim": "2爻丁卯木官鬼临玄武，处囚地，用神衰弱。"
+      "ref": "line:5",
+      "claim": "用神妻财为癸亥水，临应，标注为死。"
      },
      {
       "ref": "line:6",
-      "claim": "6爻丙寅木官鬼临螣蛇为应，处囚地且日破，目标岗位状态不稳。"
-     },
-     {
-      "ref": "line:5",
-      "claim": "5爻丙子水妻财处死地、旬空发动，变出辛巳火父母，为原神动而生官，先虚后实。"
+      "claim": "原神子孙癸酉金，标注为相。"
      },
      {
       "ref": "line:3",
-      "claim": "3爻丁丑土兄弟持世，旺而旬空，伏丙申金子孙，为忌神仇神伏于世下。"
+      "claim": "三爻兄弟丁丑土，旺而旬空，为忌神。"
      },
      {
-      "ref": "use-god",
-      "claim": "用神官鬼，官鬼为所求职位之事。"
+      "ref": "line:4",
+      "claim": "四爻兄弟癸丑土，旺而旬空，为忌神。"
      },
      {
-      "ref": "hexagram:primary",
-      "claim": "本卦山泽损，主先损后益。"
+      "ref": "line:2",
+      "claim": "世爻二爻丁卯木官鬼，临青龙而囚。"
      },
      {
-      "ref": "hexagram:derived",
-      "claim": "之卦风泽中孚，主诚信等待。"
+      "ref": "month",
+      "claim": "月建为戌。"
+     },
+     {
+      "ref": "day",
+      "claim": "日辰癸亥，旬空子丑。"
      }
     ]
    },
@@ -230,53 +238,53 @@
   "shaoyong": {
    "status": "done",
    "output": {
-    "verdict": "吉",
-    "confidenceTenths": 7,
-    "headline": "损而有孚，跳槽可成",
-    "reason": "体兑金为用艮土所生，主占六五元吉，之卦中孚利涉大川，跳槽可顺。",
+    "verdict": "平",
+    "confidenceTenths": 5,
+    "headline": "体用比和势平",
+    "reason": "坤体兑用比和，临卦元亨利贞，但变卦同本卦，互见复，动静未分，故平。",
     "sections": [
      {
       "title": "一、体用生克",
-      "text": "兑为体，艮为用，用土生体金，为外来助力就我，不是我去求人。损卦六五为主占之辞：『或益之，十朋之龟，弗克违，元吉。』损中有益，先舍后得，跳槽之事有人相荐或条件加码，大体可成。惟九二言『利贞，征凶，弗损益之』，急躁妄动反损，须先守定再动。"
+      "text": "坤为体，兑为用，兑金与坤土比和，无生克之偏。体用比和，事势平稳，涨跌互见，未成一边倒。"
      },
      {
       "title": "二、互卦与变卦",
-      "text": "互卦地雷复，复有反复、去而复来之象，说明机会可能不止一次，或须回头再谈一轮。之卦风泽中孚，卦辞：『豚鱼吉，利涉大川，利贞。』中孚主诚信相孚，新东家重承诺与实意，宜以诚相待，不可虚言。初九：『虞吉。有它，不燕。』提醒莫脚踏两船、三心二意。六三：『得敌，或鼓或罢，或泣或歌。』过程有较量与情绪起落，非一路坦途。"
+      "text": "本卦地泽临，互卦地雷复，变卦仍为地泽临。临卦辞元，亨，利，贞，主占之辞同。变卦同本卦，事无大变，往复循环，宜守不宜躁。"
      },
      {
       "title": "三、时令与行动",
-      "text": "月建戌，土旺生体兑金，时令助我，主动之时。损卦初九：『已事遄往，无咎，酌损之。』旧职交接宜速、宜清，该让之利酌情让出，反得从容。上九：『弗损益之，无咎，贞吉，利有攸往，得臣无家。』守正则吉，利有攸往，新去处可得人倚重。主占元吉在前，故断为吉。"
+      "text": "月建戌，土旺。坤体得时，兑用得生，然比和之象，涨势不猛。临卦初九咸临，贞吉；九二咸临，吉无不利；六三甘临，无攸利，既忧之，无咎。行动宜观势待时，勿追高。"
      }
     ],
     "timing": {
-     "window": "戌月土旺生体，契机在月内；中孚六四『月几望』提示月望前后易见分晓。",
-     "condition": "须旧职交接清爽、新约条件谈实、不脚踏两船，应期方成立；若三心二意或条件悬空，则中孚上九『翰音登于天，贞凶』，迟而失实。"
+     "window": "今日内辰、巳、午时（7-13时）",
+     "condition": "若午时前兑用得土金相生之势，则见小涨；若未时后土气转衰，则回落。"
     },
     "advice": [
-     "先厘清旧职交接与承诺，不动声色把该办之事办完。",
-     "对新东家的条件以诚相问、以实相约，勿跨两家、勿虚报。",
-     "谈判中可让小利以换大局，莫在细节上争到伤和气。"
+     "不宜追涨，可待回调再察。",
+     "关注午后量能变化，缩量则观望。",
+     "此非投资建议，市场有风险，决策需谨慎。"
     ],
     "evidence": [
      {
       "ref": "body-use",
-      "claim": "兑为体，艮为用，用土生体金，主外来助力就我。"
+      "claim": "坤为体，兑为用，体用比和，无生克。"
      },
      {
       "ref": "hexagram:primary",
-      "claim": "主占之辞 六五：『或益之，十朋之龟，弗克违，元吉。』"
+      "claim": "本卦地泽临，卦辞元，亨，利，贞。"
      },
      {
       "ref": "hexagram:derived",
-      "claim": "之卦 风泽中孚 卦辞：『豚鱼吉，利涉大川，利贞。』"
-     },
-     {
-      "ref": "month",
-      "claim": "月建戌，土旺生金，时令助体。"
+      "claim": "之卦地泽临，卦辞元，亨，利，贞。"
      },
      {
       "ref": "hexagram:mutual",
-      "claim": "互卦地雷复，有反复、再来之象。"
+      "claim": "互卦地雷复，示反复循环。"
+     },
+     {
+      "ref": "month",
+      "claim": "月建戌，土旺，坤体得时。"
      }
     ]
    },
@@ -284,27 +292,27 @@
   }
  },
  "status": "done",
- "castAfterBlock": "1",
+ "castAfterBlock": "26125457",
  "lines": [
   7,
   7,
   8,
   8,
-  6,
-  7
+  8,
+  8
  ],
- "castTime": "1791832769",
+ "castTime": "1792084153",
  "chart": {
   "school": "京房纳甲·八宫世应·六甲旬空·节气月；旺相休囚死依《三命通会》五级表",
   "dateRule": "区块时间戳按 UTC+8 民用日期、00:00 换日；月建按太阳视黄经节气月（不采用子初换日）",
   "day": {
    "timezone": "UTC+8",
    "dayBoundary": "00:00",
-   "localDate": "2026-10-13",
-   "ganzhi": "庚申",
-   "stem": "庚",
-   "branch": "申",
-   "cycleIndex": 56,
+   "localDate": "2026-10-16",
+   "ganzhi": "癸亥",
+   "stem": "癸",
+   "branch": "亥",
+   "cycleIndex": 59,
    "voidBranches": [
     "子",
     "丑"
@@ -319,13 +327,13 @@
    "boundaryUncertain": false
   },
   "palace": {
-   "name": "艮",
+   "name": "坤",
    "element": "土",
-   "sequence": "三世"
+   "sequence": "二世"
   },
   "trigrams": {
    "upper": {
-    "name": "艮",
+    "name": "坤",
     "element": "土"
    },
    "lower": {
@@ -333,25 +341,24 @@
     "element": "金"
    }
   },
-  "shiPosition": 3,
-  "yingPosition": 6,
+  "shiPosition": 2,
+  "yingPosition": 5,
   "nature": {
    "primary": null,
    "derived": null
   },
   "focus": {
-   "subjectKey": "career",
-   "subjectLabel": "工作／官职",
-   "useGod": "官鬼",
-   "overridden": false,
+   "subjectKey": "wealth",
+   "subjectLabel": "钱财／货品",
+   "useGod": "妻财",
+   "overridden": true,
    "useGodPositions": [
-    2,
-    6
+    5
    ],
    "hiddenUseGodPositions": [],
-   "originalGod": "妻财",
-   "tabooGod": "子孙",
-   "enemyGod": "兄弟"
+   "originalGod": "子孙",
+   "tabooGod": "兄弟",
+   "enemyGod": "父母"
   },
   "rows": [
    {
@@ -361,7 +368,7 @@
     "primaryYang": true,
     "changedYang": true,
     "changing": false,
-    "sixSpirit": "白虎",
+    "sixSpirit": "玄武",
     "marker": null,
     "primary": {
      "stemBranch": "丁巳",
@@ -382,7 +389,7 @@
      "isMonthBroken": false
     },
     "hidden": null,
-    "isDayBroken": false,
+    "isDayBroken": true,
     "isHiddenMoving": false,
     "advanceRetreat": null,
     "returnEffect": null
@@ -394,8 +401,8 @@
     "primaryYang": true,
     "changedYang": true,
     "changing": false,
-    "sixSpirit": "玄武",
-    "marker": null,
+    "sixSpirit": "青龙",
+    "marker": "世",
     "primary": {
      "stemBranch": "丁卯",
      "branch": "卯",
@@ -427,8 +434,8 @@
     "primaryYang": false,
     "changedYang": false,
     "changing": false,
-    "sixSpirit": "青龙",
-    "marker": "世",
+    "sixSpirit": "朱雀",
+    "marker": null,
     "primary": {
      "stemBranch": "丁丑",
      "branch": "丑",
@@ -447,12 +454,7 @@
      "strength": "旺",
      "isMonthBroken": false
     },
-    "hidden": {
-     "stemBranch": "丙申",
-     "element": "金",
-     "relation": "子孙",
-     "isVoid": false
-    },
+    "hidden": null,
     "isDayBroken": false,
     "isHiddenMoving": false,
     "advanceRetreat": null,
@@ -465,23 +467,23 @@
     "primaryYang": false,
     "changedYang": false,
     "changing": false,
-    "sixSpirit": "朱雀",
+    "sixSpirit": "勾陈",
     "marker": null,
     "primary": {
-     "stemBranch": "丙戌",
-     "branch": "戌",
+     "stemBranch": "癸丑",
+     "branch": "丑",
      "element": "土",
      "relation": "兄弟",
-     "isVoid": false,
+     "isVoid": true,
      "strength": "旺",
      "isMonthBroken": false
     },
     "changed": {
-     "stemBranch": "辛未",
-     "branch": "未",
+     "stemBranch": "癸丑",
+     "branch": "丑",
      "element": "土",
      "relation": "兄弟",
-     "isVoid": false,
+     "isVoid": true,
      "strength": "旺",
      "isMonthBroken": false
     },
@@ -494,28 +496,28 @@
    {
     "position": 5,
     "positionSymbol": "君位",
-    "value": 6,
+    "value": 8,
     "primaryYang": false,
-    "changedYang": true,
-    "changing": true,
-    "sixSpirit": "勾陈",
-    "marker": null,
+    "changedYang": false,
+    "changing": false,
+    "sixSpirit": "螣蛇",
+    "marker": "应",
     "primary": {
-     "stemBranch": "丙子",
-     "branch": "子",
+     "stemBranch": "癸亥",
+     "branch": "亥",
      "element": "水",
      "relation": "妻财",
-     "isVoid": true,
+     "isVoid": false,
      "strength": "死",
      "isMonthBroken": false
     },
     "changed": {
-     "stemBranch": "辛巳",
-     "branch": "巳",
-     "element": "火",
-     "relation": "父母",
+     "stemBranch": "癸亥",
+     "branch": "亥",
+     "element": "水",
+     "relation": "妻财",
      "isVoid": false,
-     "strength": "休",
+     "strength": "死",
      "isMonthBroken": false
     },
     "hidden": null,
@@ -527,32 +529,32 @@
    {
     "position": 6,
     "positionSymbol": "首／宗庙",
-    "value": 7,
-    "primaryYang": true,
-    "changedYang": true,
+    "value": 8,
+    "primaryYang": false,
+    "changedYang": false,
     "changing": false,
-    "sixSpirit": "螣蛇",
-    "marker": "应",
+    "sixSpirit": "白虎",
+    "marker": null,
     "primary": {
-     "stemBranch": "丙寅",
-     "branch": "寅",
-     "element": "木",
-     "relation": "官鬼",
+     "stemBranch": "癸酉",
+     "branch": "酉",
+     "element": "金",
+     "relation": "子孙",
      "isVoid": false,
-     "strength": "囚",
+     "strength": "相",
      "isMonthBroken": false
     },
     "changed": {
-     "stemBranch": "辛卯",
-     "branch": "卯",
-     "element": "木",
-     "relation": "官鬼",
+     "stemBranch": "癸酉",
+     "branch": "酉",
+     "element": "金",
+     "relation": "子孙",
      "isVoid": false,
-     "strength": "囚",
+     "strength": "相",
      "isMonthBroken": false
     },
     "hidden": null,
-    "isDayBroken": true,
+    "isDayBroken": false,
     "isHiddenMoving": false,
     "advanceRetreat": null,
     "returnEffect": null
@@ -561,62 +563,62 @@
  },
  "meihua": {
   "body": {
-   "position": "lower",
-   "name": "兑",
-   "element": "金",
-   "strength": "相"
+   "position": "upper",
+   "name": "坤",
+   "element": "土",
+   "strength": "旺"
   },
   "use": {
-   "position": "upper",
-   "name": "艮",
-   "element": "土"
+   "position": "lower",
+   "name": "兑",
+   "element": "金"
   },
-  "bodyUseRelation": "用生体",
+  "bodyUseRelation": "体生用",
   "mutual": {
    "name": "地雷复",
    "lower": "震",
    "upper": "坤"
   },
   "changed": {
-   "name": "风泽中孚",
+   "name": "地泽临",
    "changedUse": {
-    "name": "巽",
-    "element": "木"
+    "name": "兑",
+    "element": "金"
    },
-   "relationToBody": "体克变卦"
+   "relationToBody": "体生变卦"
   },
   "rule": "按本站体用取法；本站不采集外应"
  },
  "bianzhan": {
-  "rule": "本卦爻辞",
+  "rule": "本卦卦辞",
   "primary": {
-   "label": "六五",
-   "text": "或益之，十朋之龟，弗克违，元吉。"
+   "label": "卦辞",
+   "text": "元，亨，利，贞。"
   },
   "secondary": []
  },
  "almanac": {
-  "timestamp": "1791832769",
+  "timestamp": "1792084153",
   "solar": {
    "timezone": "UTC+8",
-   "text": "2026-10-13 03:19:29"
+   "text": "2026-10-16 01:09:13"
   },
   "lunar": {
-   "date": "二〇二六年九月初四",
-   "timeBranch": "寅",
-   "moonPhase": "蛾眉新"
+   "date": "二〇二六年九月初七",
+   "timeBranch": "丑",
+   "moonPhase": "上弦"
   },
   "pillars": [
    "丙午",
    "戊戌",
-   "庚申",
-   "戊寅"
+   "癸亥",
+   "癸丑"
   ],
   "naYin": [
    "天河水",
    "平地木",
-   "石榴木",
-   "城头土"
+   "大海水",
+   "桑柘木"
   ],
   "solarTerms": {
    "current": "寒露",
@@ -628,7 +630,7 @@
   },
   "cycle": {
    "monthBranch": "戌",
-   "day": "庚申",
+   "day": "癸亥",
    "xun": "甲寅",
    "voidBranches": [
     "子",
@@ -644,99 +646,98 @@
    "boundaryUncertain": false
   },
   "dayOfficers": {
-   "officer": "开",
-   "deity": "金匮",
+   "officer": "除",
+   "deity": "玉堂",
    "path": "黄道"
   },
   "mansion": {
-   "name": "翼火蛇",
-   "palace": "南",
-   "guardian": "朱雀"
+   "name": "亢金龙",
+   "palace": "东",
+   "guardian": "青龙"
   },
   "clash": {
-   "description": "(甲寅)虎",
-   "direction": "南"
+   "description": "(丁巳)蛇",
+   "direction": "西"
   },
   "almanac": {
-   "nineStar": "一白水天枢",
-   "joy": "西北",
-   "wealth": "正东",
-   "fortune": "西南",
+   "nineStar": "七赤金摇光",
+   "joy": "东南",
+   "wealth": "正南",
+   "fortune": "东北",
    "suitable": [
-    "嫁娶",
     "祭祀",
-    "祈福",
-    "求嗣",
     "开光",
     "出行",
     "解除",
+    "理发",
+    "伐木",
     "出火",
-    "进人口",
-    "开市",
-    "交易",
-    "立券",
-    "挂匾",
-    "纳财",
-    "入宅",
-    "移徙",
-    "栽种",
-    "破土",
-    "谢土"
+    "拆卸",
+    "上梁",
+    "合脊",
+    "安床",
+    "造畜稠"
    ],
    "avoid": [
-    "安床",
-    "安葬"
+    "嫁娶",
+    "安葬",
+    "行丧",
+    "词讼",
+    "造桥",
+    "作灶",
+    "破土",
+    "动土"
    ],
    "pengZu": [
-    "庚不经络织机虚张",
-    "申不安床鬼祟入房"
+    "癸不词讼理弱敌强",
+    "亥不嫁娶不利新郎"
    ]
   }
  },
  "qimen": {
-  "localTime": "2026-10-13 03:19:29",
+  "localTime": "2026-10-16 01:09:13",
   "method": "时家转盘拆补法",
-  "dayPillar": "庚申",
-  "hourPillar": "戊寅",
+  "dayPillar": "癸亥",
+  "hourPillar": "癸丑",
   "solarTerm": "寒露",
   "layout": "阴遁三局下元",
-  "xunHead": "甲戌",
-  "chiefStem": "己",
-  "chiefStar": "天芮",
-  "chiefStarPalace": "震三",
-  "chiefDoor": "死门",
-  "chiefDoorPalace": "兑七",
+  "xunHead": "甲辰",
+  "chiefStem": "壬",
+  "chiefStar": "天任",
+  "chiefStarPalace": "兑七",
+  "chiefDoor": "生门",
+  "chiefDoorPalace": "艮八",
   "dayVoid": "子丑",
-  "hourVoid": "申酉",
-  "horse": "申",
+  "hourVoid": "寅卯",
+  "horse": "亥",
   "palaces": {
    "坎一": {
     "earthStem": "庚",
     "star": "天辅",
     "heavenStem": "乙",
-    "door": "开门",
-    "god": "太阴"
+    "door": "休门",
+    "god": "九地"
    },
    "坤二": {
     "earthStem": "己",
     "star": "天蓬",
     "heavenStem": "庚",
-    "door": "景门",
-    "god": "玄武"
+    "door": "死门",
+    "god": "腾蛇"
    },
    "震三": {
     "earthStem": "戊",
     "star": "天芮",
     "heavenStem": "己",
-    "door": "生门",
-    "god": "值符"
+    "door": "伤门",
+    "god": "白虎"
    },
    "巽四": {
     "earthStem": "乙",
     "star": "天柱",
     "heavenStem": "癸",
-    "door": "伤门",
-    "god": "九天"
+    "door": "杜门",
+    "god": "六合"
    },
    "中五": {
     "earthStem": "丙",
@@ -746,80 +747,79 @@
     "earthStem": "丁",
     "star": "天冲",
     "heavenStem": "戊",
-    "door": "惊门",
-    "god": "六合"
+    "door": "开门",
+    "god": "九天"
    },
    "兑七": {
     "earthStem": "癸",
     "star": "天任",
     "heavenStem": "壬",
-    "door": "死门",
-    "god": "白虎"
+    "door": "惊门",
+    "god": "值符"
    },
    "艮八": {
     "earthStem": "壬",
     "star": "天英",
     "heavenStem": "辛",
-    "door": "休门",
-    "god": "腾蛇"
+    "door": "生门",
+    "god": "玄武"
    },
    "离九": {
     "earthStem": "辛",
     "star": "天心",
     "heavenStem": "丁",
-    "door": "杜门",
-    "god": "九地"
+    "door": "景门",
+    "god": "太阴"
    }
   }
  },
  "summary": {
   "status": "done",
   "output": {
-   "tone": "顺",
-   "conclusion": "跳槽大体能成，但需以诚相待、果断清旧、莫脚踏两船。",
-   "agreement": "三家都认为卦象主\"先损后得\"：先舍旧、后得益，之卦中孚强调诚信为本；都认可损卦六五元吉，跳槽方向可成，但须守诚、果断、不三心二意。",
-   "difference": "程颐、邵雍断吉约七成，看重卦辞元吉与体用相生；京房断平约六成，指出用神官鬼衰弱、应爻日破、世爻旬空，机会不稳、成事需时。",
+   "tone": "中",
+   "conclusion": "三家倾向持平，今日比特币难言必涨，以观望为主。",
+   "agreement": "三派一致认为：本卦与变卦同为地泽临，六爻安静无动，事态未定，涨跌互见，不宜据卦辞元亨而断定今日必涨，宜守正观望。",
+   "difference": "程颐重义理，以无动爻、互见复卦遁卦说明行情反复观待，强调守正自省；京房从纳甲看用神妻财亥水临死地、月建戌土克之，上行动能不足，兄弟丑土旬空暂缓克力；邵雍以坤体兑用比和论势，判断涨跌互见、走势平稳，午后土气转衰或回落。",
    "explanation": [
-    "整体卦象是从山泽损转到风泽中孚，损是有所减损、先舍后得，中孚是诚信相待。也就是说这次跳槽要经历一番割舍和等待，但方向本身是通的。",
-    "邵雍以体兑用艮，土生金，外部机会或有人相荐、条件有加码之象；程颐也据六五\"或益之，十朋之龟\"断为吉，说明新去处大体可成。",
-    "京房一派提醒用神官鬼偏弱、应爻日破、世爻旬空，意味着对方岗位状态未必稳、自己也底气未实，所以过程不会一路坦途，仍有一轮反复或回头再谈。",
-    "互卦地雷复提示机会可能不止一次，须先守定再动；急躁妄动或脚踏两船，则易由吉转凶。"
+    "程颐一派看的是卦义：临卦讲的是临事守正，卦辞虽有元亨利贞，但六爻不动、之卦仍为本卦，说明今天事态没有明确方向，涨跌都谈不上定论，最稳妥的态度是看变化、不轻下判断。",
+    "京房一派从用神入手：所问是钱财，代表它的那一爻落于亥水，被月建戌土压制，又标注为死地，没有动爻来生扶，只是日辰同气勉强维持，所以今天继续上冲的力量不强。",
+    "京房还指出压制财气的兄弟两爻眼下旬空，暂时没发作，但空终会出空，克财的力量会在盘中或之后显现，这也是为什么整体断为持平而非明确上涨。",
+    "邵雍一派用体用比和来看：坤土为体、兑金为用，两者不冲不克，说明多空力量大致相当；加上变卦与互卦都显示循环往复、动静未分，行情更可能来回震荡，而不是单边拉升。"
    ],
    "remedy": {
-    "principle": "心法在于\"先损后得\"：该让的让、该断的断，对人对事都保持诚信实在，不贪不虚。",
+    "principle": "临事以守正为本，别把一时的卦象当成买卖依据，看不清就先站着看。",
     "plan": [
      {
-      "action": "先把旧职的交接、承诺、账目理清办完，不拖泥带水。",
-      "basis": "损卦初九\"已事遄往\"与上九\"利有攸往\"，旧事清则新事顺。",
-      "timing": "戌月之内宜先了结旧职，勿拖延至下一阶段。"
+      "action": "今天以观察行情为主，不急于加仓或追高。",
+      "basis": "三家一致：六爻安静、体用比和，涨跌未分。",
+      "timing": "今日盘中全程，尤其午后量能变化时。"
      },
      {
-      "action": "对新东家以诚相问、以实相约，条件谈清楚再定。",
-      "basis": "之卦中孚主诚信相待，\"豚鱼吉，利涉大川\"，诚则能济险。",
-      "timing": "月望前后（约半月内）易见分晓，届时谈定为宜。"
+      "action": "给自己设好可承受的风险上限，只动用闲钱。",
+      "basis": "京房提示兄弟出空后克财之力会显，行情可能转弱。"
      },
      {
-      "action": "谈条件时可让小利换大局，不在细节上争到伤和气。",
-      "basis": "损卦六五\"或益之，十朋之龟\"，损中有益、让中有得。"
+      "action": "若行情出现明确止跌企稳再留意，不确认就继续等。",
+      "basis": "程颐与邵雍均主张观势待时、不宜躁进。"
      }
     ],
     "avoid": [
-     "不要脚踏两条船或对两家虚报实情。",
-     "不要因一时冲动仓促离职，时机未到妄动反损。"
+     "不要因卦辞元亨就断定必涨而贸然操作。",
+     "不要听信任何以单一卦象为依据的加码建议。"
     ]
    },
    "watch": {
-    "window": "约一至数月内，亥卯未月或寅卯日木气得助、世爻出空之时。",
-    "condition": "须官鬼得生扶、世爻出空且无子孙忌神发动克官，转机方落定；若三心二意或虚言过实，则应期不吉。"
+    "window": "今日盘中至次日交接之间",
+    "condition": "若金水之气相续、行情止跌回稳，方可言临事有应；若兄弟出空、量能转弱，则承压转弱。"
    }
   },
   "basis": 3,
-  "attempts": 1,
+  "attempts": 2,
   "retries": 0,
   "anchor": {
-   "title": "《象传》· 山泽损",
+   "title": "《象传》· 地泽临",
    "lines": [
-    "山下有泽，损；君子以惩忿窒欲。"
+    "泽上有地，临；君子以教思无穷，容保民无疆。"
    ]
   }
  }
