@@ -1406,6 +1406,35 @@ html:lang(en) .luopan-trigram-label { font-size: 9px !important; }
   font-size: 22px;
   letter-spacing: 0.1em;
 }
+.reading-school-progress {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 1px;
+  list-style: none;
+  background: var(--line);
+}
+.reading-school-progress li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 12px;
+  background: var(--panel);
+  color: var(--muted);
+}
+.reading-school-progress b {
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 500;
+}
+.reading-elapsed, .reading-overdue {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+.reading-elapsed span { margin-left: 12px; color: var(--dim); }
+.reading-overdue { color: var(--gold); line-height: 1.7; }
 .summary-conclusion {
   display: flex;
   flex-wrap: wrap;

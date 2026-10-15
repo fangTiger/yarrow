@@ -30,6 +30,7 @@ import { DisclaimerFooter } from "../components/DisclaimerFooter.js";
 import { useLang, useT } from "../lib/i18n.js";
 import { applyReadingTranslation, translationViewState } from "../lib/reading-translation.js";
 import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
+import { useReadingTitle } from "../lib/reading-progress.js";
 const SCHOOL_KEYS = ["chengyi", "jingfang", "shaoyong"] as const;
 const SUBJECT_LABELS: Record<string, string> = Object.fromEntries(
   QUESTION_SUBJECTS.map(({ key, label }) => [key, label]),
@@ -181,6 +182,7 @@ export function Reading({ id }: { id: string }) {
   const [translationBusy, setTranslationBusy] = useState(false);
   const [translationRequestFailed, setTranslationRequestFailed] = useState(false);
   const translationTrigger = useRef("");
+  useReadingTitle(reading);
   const refresh = useCallback(async () => {
     try {
       const value = await api.getReading(id, lang);

@@ -8,7 +8,7 @@ import {
 import {
   DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint, classificationHint,
   deriveEntry, entryGate, fromClassification, namingBirthProblem, namingGate, namingRequest,
-  paymentClassification, submissionQuestion,
+  paymentClassification, prefillFromHash, submissionQuestion,
   type ClassificationView, type EntryChoice, type NamingFormValues,
 } from "../lib/home-entry.js";
 import { BirthFields } from "./BirthFields.js";
@@ -28,9 +28,13 @@ function initialBirthValues(): BirthFormValues {
 export function QuestionForm() {
   const t = useT();
   const { lang } = useLang();
-  const [question, setQuestion] = useState("");
+  const initialHash = typeof location === "undefined" ? "" : location.hash;
+  const [hashPrefill] = useState({
+    clear: initialHash.startsWith("#/?"), value: prefillFromHash(initialHash),
+  });
+  const [question, setQuestion] = useState(hashPrefill.value?.question ?? "");
   const [view, setView] = useState<ClassificationView>();
-  const [choice, setChoice] = useState<EntryChoice>({});
+  const [choice, setChoice] = useState<EntryChoice>(hashPrefill.value?.choice ?? {});
   const [classifying, setClassifying] = useState(false);
   const [error, setError] = useState("");
   const [birthValues, setBirthValues] = useState<BirthFormValues>(initialBirthValues());
@@ -39,6 +43,10 @@ export function QuestionForm() {
   });
   const length = [...question.trim()].length;
   const valid = length >= 4 && length <= 280;
+  useEffect(() => {
+    if (!hashPrefill.clear || typeof history === "undefined" || typeof location === "undefined") return;
+    history.replaceState(history.state, "", `${location.pathname}${location.search}#/`);
+  }, [hashPrefill.clear]);
   useEffect(() => {
     if (!valid) {
       return undefined;

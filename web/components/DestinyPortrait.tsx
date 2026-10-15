@@ -20,3 +20,12 @@ export function DestinyPortrait({ portrait }: { portrait: Portrait }) {
     <p className="portrait-summary">{portrait.summary}</p>
   </section>;
 }
+
+/** 总述尚未完成时先占住画像位置，避免完成瞬间推挤后续内容。 */
+export function DestinyPortraitPending() {
+  const t = useT();
+  return <section aria-label={t("chart.portrait.title")} className="panel destiny-portrait pending">
+    {/* 主标题用毛笔字；说明放小字，免得超出毛笔字体子集的字混排。 */}
+    <header className="panel-head"><h2>{t("chart.portrait.title")}</h2><p>{t("chart.portrait.pending")}</p></header>
+  </section>;
+}

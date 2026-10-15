@@ -1,6 +1,7 @@
 import type { BaziChart, LuckCycle } from "../../src/calendar/bazi.js";
 import type { PeriodConsensus, PublicBaziReading } from "../../src/sanyi/bazi-public.js";
 import { BAZI_KEYS } from "./liunian-chart.js";
+import type { TFunction } from "./i18n.js";
 
 export type DestinyReading = Extract<PublicBaziReading, { kind: "destiny" }>;
 export type CycleGroup = { label: "回看" | "当前" | "往后"; count: number };
@@ -50,6 +51,40 @@ export function hasPeriodData(reading: DestinyReading): boolean {
     return state.status === "done" && state.output && !("years" in state.output)
       && Boolean(state.output.periods?.length);
   });
+}
+
+/** 新卦生成期间固定显示一生运势；完成且没有逐运数据的旧存档才降级。 */
+export function shouldShowLifeLuck(reading: DestinyReading): boolean {
+  if (!reading.chart.luck?.cycles.length) return false;
+  return hasPeriodData(reading) || BAZI_KEYS.some((key) => {
+    const status = reading.schools[key].status;
+    return status === "pending" || status === "writing";
+  });
+}
+
+export type PeriodVote = "accurate" | "inaccurate";
+
+/** 再点同一项即取消；改点另一项则直接改选。 */
+export function nextPeriodVote(current: PeriodVote | undefined, clicked: PeriodVote): PeriodVote | null {
+  return current === clicked ? null : clicked;
+}
+
+/** 当前与未来大运跳到首页预填运势；过去的大运没有入口。 */
+export function cycleFortuneHref(
+  cycle: Pick<LuckCycle, "index" | "startYear" | "endYear">,
+  currentIndex: number | null,
+  t: TFunction,
+  currentYear?: number,
+): string | null {
+  const past = currentIndex === null
+    ? currentYear !== undefined && cycle.endYear < currentYear
+    : cycle.index < currentIndex;
+  if (past) return null;
+  const horizon = cycle.index === currentIndex ? "year" : `year:${cycle.startYear + 3}`;
+  const question = t("chart.life.fortuneQuestion", {
+    start: cycle.startYear, end: cycle.endYear,
+  });
+  return `#/?kind=fortune&horizon=${encodeURIComponent(horizon)}&q=${encodeURIComponent(question)}`;
 }
 
 /** 每步大运的直标：当前、一生最顺，以及当前之前最低的一步。 */

@@ -12,9 +12,9 @@ import { BaziRelations } from "./BaziRelations.js";
 import { BaziTable } from "./BaziTable.js";
 import { LiuNianPanel } from "./LiuNianPanel.js";
 import { EnglishRemedy, EnglishSchoolArticle, EnglishSummary } from "./EnglishReadingSections.js";
-import { DestinyPortrait } from "./DestinyPortrait.js";
+import { DestinyPortrait, DestinyPortraitPending } from "./DestinyPortrait.js";
 import { LifeLuckPanel } from "./LifeLuckPanel.js";
-import { hasPeriodData } from "../lib/life-luck.js";
+import { shouldShowLifeLuck } from "../lib/life-luck.js";
 
 const PILLARS = ["year", "month", "day", "time"] as const;
 const SECTION_TITLE_KEYS = {
@@ -66,7 +66,7 @@ export function EnglishBaziReading(props: {
   const { currentYear, currentDate } = readingNow(reading);
   const destiny = reading.kind === "destiny" ? reading : null;
   const portrait = destiny?.summary?.status === "done" ? destiny.summary.output?.portrait : undefined;
-  const showLifeLuck = Boolean(destiny?.chart.luck && destiny && hasPeriodData(destiny));
+  const showLifeLuck = Boolean(destiny && shouldShowLifeLuck(destiny));
   const retry = async (key: typeof BAZI_KEYS[number]) => {
     try {
       const value = await api.retrySchool(reading.id, key);
@@ -80,8 +80,10 @@ export function EnglishBaziReading(props: {
   };
   return <div className="bazi" data-reading={reading.id}>
     {/* 命理：性格画像与一生运势置顶；旧存档缺哪块就跳过哪块。 */}
-    {portrait ? <DestinyPortrait portrait={portrait} /> : null}
-    {showLifeLuck && destiny ? <LifeLuckPanel reading={destiny} currentDate={currentDate} /> : null}
+    {portrait ? <DestinyPortrait portrait={portrait} />
+      : showLifeLuck ? <DestinyPortraitPending /> : null}
+    {showLifeLuck && destiny ? <LifeLuckPanel currentDate={currentDate} onReading={props.onReading}
+      reading={destiny} readonly={props.readonly} /> : null}
     <EnglishSummary reading={reading} />
     <EnglishRemedy reading={reading} />
     <details className="panel schools-fold"><summary>{t("schools.title")}

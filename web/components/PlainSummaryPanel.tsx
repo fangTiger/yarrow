@@ -3,6 +3,44 @@ import { useState } from "react";
 import { api, type AnyPublicReading } from "../lib/api.js";
 import { repairNote, summaryStatus } from "../lib/reading-state.js";
 import { useT } from "../lib/i18n.js";
+import { readingSchools, useElapsedSeconds } from "../lib/reading-progress.js";
+
+const SCHOOL_NAME_KEYS = {
+  chengyi: "wait.school.chengyi",
+  jingfang: "wait.school.jingfang",
+  shaoyong: "wait.school.shaoyong",
+  shenxiaozhan: "wait.school.shenxiaozhan",
+  yuchuntai: "wait.school.yuchuntai",
+  rentieqiao: "wait.school.rentieqiao",
+} as const;
+
+/** 三类结果共用的等待信息；起名保留自己的现状。 */
+export function ReadingProgress(props: {
+  reading: Exclude<AnyPublicReading, { kind: "naming" }>;
+  status: string;
+  showHead?: boolean | undefined;
+}) {
+  const t = useT();
+  const seconds = useElapsedSeconds(props.reading.createdAt);
+  const minutes = Math.floor(seconds / 60);
+  const remainder = String(seconds % 60).padStart(2, "0");
+  return <section aria-live="polite" className="panel plain-summary pending">
+    {props.showHead === false ? <h2>{t("summary.title")}</h2> : <header className="panel-head">
+      <h2>{t("summary.title")}</h2>
+      <p>{t("summary.question", { question: props.reading.question })}</p>
+    </header>}
+    <p className="summary-progress">{props.status}</p>
+    <ul className="reading-school-progress">{readingSchools(props.reading).map(([key, state]) => {
+      const status = state.status === "done" ? t("wait.status.done")
+        : state.status === "writing" ? t("wait.status.writing") : t("wait.status.notWritten");
+      return <li key={key}><span>{t(SCHOOL_NAME_KEYS[key as keyof typeof SCHOOL_NAME_KEYS])}</span>
+        <b>{status}</b></li>;
+    })}</ul>
+    <p className="reading-elapsed">{t("wait.elapsed", { minutes, seconds: remainder })}
+      <span>{t("wait.usual")}</span></p>
+    {seconds > 180 ? <p className="reading-overdue">{t("wait.overdue")}</p> : null}
+  </section>;
+}
 
 /** 结果页最上方的白话总述：用大白话把三家合起来讲清楚；生成中显示进度，未生成可免费重试。 */
 export function PlainSummaryPanel(props: {
@@ -28,12 +66,7 @@ export function PlainSummaryPanel(props: {
     </header>
   );
   if (status.kind === "progress") {
-    return (
-      <section aria-live="polite" className="panel plain-summary pending">
-        {head}
-        <p className="summary-progress">{status.text}</p>
-      </section>
-    );
+    return <ReadingProgress reading={reading} status={status.text} />;
   }
   const summary = reading.summary;
   if (status.kind === "failed" || !summary?.output) {

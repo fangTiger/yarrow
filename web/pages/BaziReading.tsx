@@ -16,9 +16,9 @@ import { DayBoundaryChange } from "../components/DayBoundaryChange.js";
 import { LiuNianPanel } from "../components/LiuNianPanel.js";
 import { EnglishBaziReading } from "../components/EnglishBaziReading.js";
 import { useLang } from "../lib/i18n.js";
-import { DestinyPortrait } from "../components/DestinyPortrait.js";
+import { DestinyPortrait, DestinyPortraitPending } from "../components/DestinyPortrait.js";
 import { LifeLuckPanel } from "../components/LifeLuckPanel.js";
-import { hasPeriodData } from "../lib/life-luck.js";
+import { shouldShowLifeLuck } from "../lib/life-luck.js";
 
 type BaziReadingProps = {
     reading: PublicBaziReading;
@@ -41,7 +41,7 @@ function ChineseBaziReading({ reading, onReading, birth: supplied, readonly: rea
     const { currentYear, currentDate } = readingNow(reading);
     const destiny = reading.kind === "destiny" ? reading : null;
     const portrait = destiny?.summary?.status === "done" ? destiny.summary.output?.portrait : undefined;
-    const showLifeLuck = Boolean(destiny?.chart.luck && destiny && hasPeriodData(destiny));
+    const showLifeLuck = Boolean(destiny && shouldShowLifeLuck(destiny));
     const retry = async (key: typeof BAZI_KEYS[number]) => {
         try {
             const value = await api.retrySchool(reading.id, key);
@@ -55,8 +55,10 @@ function ChineseBaziReading({ reading, onReading, birth: supplied, readonly: rea
     };
     return <div className="bazi" data-reading={reading.id}>
     {/* 命理：性格画像与一生运势置顶；旧存档缺哪块就跳过哪块。 */}
-    {portrait ? <DestinyPortrait portrait={portrait}/> : null}
-    {showLifeLuck && destiny ? <LifeLuckPanel reading={destiny} currentDate={currentDate}/> : null}
+    {portrait ? <DestinyPortrait portrait={portrait}/>
+      : showLifeLuck ? <DestinyPortraitPending /> : null}
+    {showLifeLuck && destiny ? <LifeLuckPanel currentDate={currentDate} onReading={onReading}
+      reading={destiny} readonly={readOnly}/> : null}
     <PlainSummaryPanel readonly={readOnly} reading={reading} onReading={(value) => {
             if (value.kind === "destiny" || value.kind === "fortune") {
                 onReading(value);

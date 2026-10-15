@@ -4,10 +4,14 @@ import {
   yearGapLabel,
 } from "../lib/liunian-chart.js";
 import {
-  currentCycleIndex, cycleGroups, periodLabels, schoolPeriod, type DestinyReading,
+  currentCycleIndex, cycleFortuneHref, cycleGroups, nextPeriodVote, periodLabels, schoolPeriod,
+  type DestinyReading, type PeriodVote,
 } from "../lib/life-luck.js";
 import { useLang, useT } from "../lib/i18n.js";
 import { schoolEn, stemBranchEn, tenGodEn, verdictEn } from "../lib/result-format.js";
+import { readingIsWriting, writtenSchoolCount } from "../lib/reading-progress.js";
+import type { PublicBaziReading } from "../../src/sanyi/bazi-public.js";
+import { api, apiErrorMessage } from "../lib/api.js";
 
 const LABEL_KEYS = {
   当前: "chart.life.labelNow",
@@ -22,29 +26,46 @@ const GROUP_KEYS = {
 export function LifeLuckPanel(props: {
   reading: DestinyReading;
   currentDate: string;
+  onReading?: ((reading: PublicBaziReading) => void) | undefined;
+  readonly?: boolean | undefined;
 }) {
   const luck = props.reading.chart.luck;
   return luck?.cycles.length ? <LifeLuckContent {...props} luck={luck} /> : null;
 }
 
-function LifeLuckContent({ reading, currentDate, luck }: {
+function LifeLuckContent({ reading, currentDate, luck, onReading, readonly }: {
   reading: DestinyReading;
   currentDate: string;
   luck: NonNullable<DestinyReading["chart"]["luck"]>;
+  onReading?: ((reading: PublicBaziReading) => void) | undefined;
+  readonly?: boolean | undefined;
 }) {
   const { lang } = useLang();
   const t = useT();
   const en = lang === "en";
   const cycles = luck.cycles;
+  const writing = readingIsWriting(reading);
+  const written = writtenSchoolCount(reading);
   const currentIndex = currentCycleIndex(reading.chart, currentDate);
   const initial = currentIndex ?? cycles[0]!.index;
   const [selected, setSelected] = useState(initial);
   const [hover, setHover] = useState<number | null>(null);
+  const [feedbackBusy, setFeedbackBusy] = useState(false);
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
   const scroll = useRef<HTMLDivElement>(null);
   const cells = useRef(new Map<number, HTMLTableCellElement>());
   const geometry = chartGeometry(reading.periods, cycles.map(() => null));
-  const labels = periodLabels(reading.periods, currentIndex);
+  const labels = writing ? cycles.map(() => []) : periodLabels(reading.periods, currentIndex);
   const active = cycles.find((cycle) => cycle.index === selected) ?? cycles[0]!;
+  const currentYear = Number(currentDate.slice(0, 4));
+  const feedback = reading.feedback?.periods ?? {};
+  const selectedVote = feedback[String(selected)] as PeriodVote | undefined;
+  const votes = Object.values(feedback);
+  const accurate = votes.filter((vote) => vote === "accurate").length;
+  const inaccurate = votes.filter((vote) => vote === "inaccurate").length;
+  const feedbackTotal = accurate + inaccurate;
+  const fortuneHref = cycleFortuneHref(active, currentIndex, t, currentYear);
   const selectedConsensus = reading.periods.find((item) => item?.index === selected);
   const hovered = hover === null ? undefined : cycles[hover];
   const hoverConsensus = hover === null ? undefined : reading.periods[hover];
@@ -56,6 +77,8 @@ function LifeLuckContent({ reading, currentDate, luck }: {
   const verdictText = (entry: { verdict: string; confidenceTenths: number }) => (
     `${en ? verdictEn(entry.verdict) : entry.verdict} ${tenthsText(entry.confidenceTenths, lang)}`
   );
+  const noteText = (note: string) => en && /\p{Script=Han}/u.test(note)
+    ? t("chart.noteTranslationPending") : note;
   const plotTop = (value: number) => LABEL_BAND + value / 100 * (194 - LABEL_BAND);
   const yp = (y: number) => (y - CHART.top) / (CHART.bottom - CHART.top) * 100;
   const position = (index: number) => `${(index + 0.5) / cycles.length * 100}%`;
@@ -67,6 +90,26 @@ function LifeLuckContent({ reading, currentDate, luck }: {
       container.scrollLeft = Math.max(0, cell.offsetLeft - 76 - (container.clientWidth - 166) / 2);
     }
   }, [selected]);
+  useEffect(() => {
+    setFeedbackSaved(false);
+    setFeedbackError("");
+  }, [selected]);
+  const setFeedback = async (vote: PeriodVote) => {
+    setFeedbackBusy(true);
+    setFeedbackSaved(false);
+    setFeedbackError("");
+    try {
+      const updated = await api.setPeriodFeedback(
+        reading.id, selected, nextPeriodVote(selectedVote, vote),
+      );
+      if (updated.kind === "destiny") onReading?.(updated);
+      setFeedbackSaved(true);
+    } catch (caught) {
+      setFeedbackError(apiErrorMessage(caught, t));
+    } finally {
+      setFeedbackBusy(false);
+    }
+  };
   const rows: Array<{
     id: string;
     label: string;
@@ -91,7 +134,11 @@ function LifeLuckContent({ reading, currentDate, luck }: {
         ? consensusText(reading.periods[index]!.average, lang) : "—" },
   ];
   return <section aria-label={t("chart.life.title")} className="panel liunian-panel life-luck-panel">
-    <header className="panel-head"><h2>{t("chart.life.title")}</h2><p>
+    <header className="panel-head"><h2>{t("chart.life.title")}</h2>
+      {!readonly && feedbackTotal > 0 ? <span className="life-feedback-summary">{t(
+        "chart.life.feedbackSummary", { count: feedbackTotal, accurate, inaccurate },
+      )}</span> : null}
+      {writing ? <span className="chart-writing">{t("chart.writing", { count: written })}</span> : null}<p>
       {luck.direction === "forward" ? t("bazi.forward") : t("bazi.backward")}{" · "}
       {t("chart.luck.start", {
         years: luck.start.years, months: luck.start.months, days: luck.start.days,
@@ -119,7 +166,9 @@ function LifeLuckContent({ reading, currentDate, luck }: {
             {labels[index]?.length ? <span className="ln-lab" style={{
               left: position(index),
               top: `${Math.max(LABEL_BAND, plotTop(yp(geometry.points[index]!.y)) - 27)}px`,
-            }}>{labels[index]!.map((label) => <span key={label}>{t(LABEL_KEYS[label])} {reading.periods[index]
+            }}>{labels[index]!.map((label) => <span
+              // 窄屏八列太挤：只留「当前」，最顺、最低见下方逐运表。
+              className={label === "当前" ? undefined : "wide-only"} key={label}>{t(LABEL_KEYS[label])} {reading.periods[index]
               ? consensusText(reading.periods[index]!.average, lang) : "—"}<br /></span>)}</span> : null}
           </> : null}
           <div className={`ln-hit ${selected === cycle.index ? "sel" : ""}`}
@@ -150,7 +199,8 @@ function LifeLuckContent({ reading, currentDate, luck }: {
           <small className="wide-only">{cycle.startYear}–{cycle.endYear}</small>
           <small className="narrow-only">{t("chart.life.fromAge", { age: cycle.startAge })}</small></span>)}
       </div></div>
-      <div className="ln-key"><span><i className="k-line" />{t("chart.life.keyLine")}</span>
+      <div className="ln-key"><span><i className="k-line" />{t(writing
+        ? "chart.keyWrittenAverage" : "chart.life.keyLine")}</span>
         <span><i className="k-range" />{t("chart.life.keyRange")}</span>
         <span><i className="k-ref" />{t("chart.life.keyRef")}</span></div>
       <div className="ln-scroll" ref={scroll} tabIndex={0} aria-label={t("chart.life.tableAria")}>
@@ -188,8 +238,20 @@ function LifeLuckContent({ reading, currentDate, luck }: {
           <strong className={entry?.verdict.includes("吉") ? "ji"
             : entry?.verdict.includes("凶") ? "xiong" : ""}>
             {entry ? verdictText(entry) : gap}<small>{schoolName(key)}</small></strong>
-          <p>{entry ? (entry.note || t("chart.life.noteRemoved")) : gap}</p></div>;
-      })}</div></div>
+          <p>{entry ? (entry.note ? noteText(entry.note) : t("chart.life.noteRemoved")) : gap}</p></div>;
+      })}</div>{!readonly ? <div className="life-period-actions">
+        {active.startYear <= currentYear ? <div className="period-feedback">
+          <span>{t("chart.life.feedbackPrompt")}</span>
+          <button aria-pressed={selectedVote === "accurate"} disabled={feedbackBusy}
+            onClick={() => void setFeedback("accurate")} type="button">{t("chart.life.accurate")}</button>
+          <button aria-pressed={selectedVote === "inaccurate"} disabled={feedbackBusy}
+            onClick={() => void setFeedback("inaccurate")} type="button">{t("chart.life.inaccurate")}</button>
+          {feedbackSaved ? <small>{t("chart.life.feedbackSaved")}</small> : null}
+          {feedbackError ? <small className="error">{feedbackError}</small> : null}
+        </div> : null}
+        {fortuneHref ? <a className="period-fortune-link" href={fortuneHref}>
+          {t("chart.life.fortuneLink")}</a> : null}
+      </div> : null}</div>
     </div>
   </section>;
 }

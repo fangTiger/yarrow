@@ -62,6 +62,30 @@ export const HORIZON_OPTIONS = [
   ["next-year", "明年"],
 ] as const;
 
+export interface HashPrefill {
+  question?: string;
+  choice: EntryChoice;
+}
+
+/** 读取首页链接预填；每个参数独立校验，非法项直接忽略。 */
+export function prefillFromHash(hash: string): HashPrefill | null {
+  if (!hash.startsWith("#/?")) return null;
+  const params = new URLSearchParams(hash.slice(3));
+  const kind = params.get("kind");
+  const horizon = params.get("horizon");
+  const rawQuestion = params.get("q")?.trim();
+  const questionLength = rawQuestion ? [...rawQuestion].length : 0;
+  const validKind = kind && ENTRY_KINDS.includes(kind) ? kind as EntryKind : undefined;
+  const validHorizon = horizon && (/^(today|month|year|next-year)$/u.test(horizon)
+    || /^year:(19|20)\d{2}$/u.test(horizon)) ? horizon : undefined;
+  const question = questionLength >= 4 && questionLength <= 280 ? rawQuestion : undefined;
+  const choice: EntryChoice = {
+    ...(validKind ? { kind: validKind } : {}),
+    ...(validHorizon ? { horizon: validHorizon } : {}),
+  };
+  return question || Object.keys(choice).length ? { ...(question ? { question } : {}), choice } : null;
+}
+
 export function horizonLabel(horizon: string, t: TFunction = zhT): string {
   const keys: Record<string, Parameters<TFunction>[0]> = {
     today: "horizon.today", month: "horizon.month", year: "horizon.year", "next-year": "horizon.nextYear",

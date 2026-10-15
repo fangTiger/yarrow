@@ -3,6 +3,7 @@ import type { AnyPublicReading } from "../lib/api.js";
 import { confidenceEn, schoolEn, verdictEn } from "../lib/result-format.js";
 import { useT } from "../lib/i18n.js";
 import { summaryStatus } from "../lib/reading-state.js";
+import { ReadingProgress } from "./PlainSummaryPanel.js";
 
 type InterpretedReading = Exclude<AnyPublicReading, { kind: "naming" }>;
 
@@ -11,9 +12,7 @@ export function EnglishSummary({ reading }: { reading: InterpretedReading }) {
   const summary = reading.summary;
   const status = summaryStatus(reading, t);
   if (status.kind === "progress") {
-    return <section aria-live="polite" className="panel plain-summary pending">
-      <h2>{t("summary.title")}</h2><p>{status.text}</p>
-    </section>;
+    return <ReadingProgress reading={reading} showHead={false} status={status.text} />;
   }
   if (!summary || summary.status !== "done" || !summary.output) return null;
   const output = summary.output;

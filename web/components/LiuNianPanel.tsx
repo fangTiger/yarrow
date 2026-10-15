@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BAZI_KEYS, BAZI_NAMES, CHART, LABEL_BAND, consensusText, labelLayout, tenthsText, yunLabel, chartGeometry, relationClass, schoolYear, yearGapLabel, yearGroups, type FortuneReading } from "../lib/liunian-chart.js";
 import { useLang, useT } from "../lib/i18n.js";
 import { relationEn, schoolEn, stemBranchEn, tenGodEn, verdictEn } from "../lib/result-format.js";
+import { readingIsWriting, writtenSchoolCount } from "../lib/reading-progress.js";
 /** 走势图直标、年份分组与「起运前」等状态：数据里是中文标识，显示时按语言取词条。 */
 const LABEL_KEYS = { 今年: "chart.liunian.labelNow", 十年最顺: "chart.liunian.labelBest", 回看中最低: "chart.liunian.labelLowestPast" } as const;
 const GROUP_KEYS = { 回看: "chart.liunian.groupPast", 今年: "chart.liunian.groupNow", 展望: "chart.liunian.groupAhead" } as const;
@@ -19,8 +20,12 @@ export function LiuNianPanel({ reading, currentYear }: {
     const god = (value: string) => en ? tenGodEn(value) : value;
     const schoolName = (key: typeof BAZI_KEYS[number]) => en ? schoolEn(key).name : BAZI_NAMES[key];
     const verdictText = (entry: { verdict: string; confidenceTenths: number }) => `${en ? verdictEn(entry.verdict) : entry.verdict} ${tenthsText(entry.confidenceTenths, lang)}`;
+    const noteText = (note: string) => en && /\p{Script=Han}/u.test(note)
+        ? t("chart.noteTranslationPending") : note;
     const luckLabelText = (value: string) => en ? t(LUCK_LABEL_KEYS[value as keyof typeof LUCK_LABEL_KEYS] ?? "chart.luck.notStarted") : value;
     const years = reading.chart.liunian.years;
+    const writing = readingIsWriting(reading);
+    const written = writtenSchoolCount(reading);
     const [selected, setSelected] = useState(reading.chart.liunian.anchorYear);
     const [hover, setHover] = useState<number | null>(null);
     const scroll = useRef<HTMLDivElement>(null);
@@ -38,7 +43,7 @@ export function LiuNianPanel({ reading, currentYear }: {
         observer.observe(plot.current);
         return () => { observer.disconnect(); window.removeEventListener('resize', update); };
     }, []);
-    const labels = labelLayout(reading.years, currentYear, plotWidth);
+    const labels = writing ? [] : labelLayout(reading.years, currentYear, plotWidth);
     const plotTop = (value: number) => LABEL_BAND + value / 100 * (194 - LABEL_BAND);
     const xp = (x: number) => (x - CHART.left) / (CHART.width - CHART.left) * 100;
     const yp = (y: number) => (y - CHART.top) / (CHART.bottom - CHART.top) * 100;
@@ -73,7 +78,7 @@ export function LiuNianPanel({ reading, currentYear }: {
     const selectedConsensus = reading.years.find(item => item?.year === selected);
     const hovered = hover === null ? undefined : years[hover];
     const consensus = hover === null ? undefined : reading.years[hover];
-    return <section className="panel liunian-panel" aria-label={t("bazi.annual")}><header className="panel-head"><h2>{t("bazi.annual")}</h2><p>{t("chart.liunian.note")}</p></header><div className="ln-grid">
+    return <section className="panel liunian-panel" aria-label={t("bazi.annual")}><header className="panel-head"><h2>{t("bazi.annual")}</h2>{writing ? <span className="chart-writing">{t("chart.writing", { count: written })}</span> : null}<p>{t("chart.liunian.note")}</p></header><div className="ln-grid">
  <div className="ln-chart"><div className="ln-y">{[1, 3, 5, 7, 9].map(value => <span style={{ top: `${plotTop((9 - value) / 8 * 100)}px` }} key={value}>{tenthsText(value, lang)}</span>)}</div>
  <div className="ln-plot" ref={plot} role="img" aria-label={t("chart.liunian.plotAria", { from: years[0]?.year ?? '', to: years.at(-1)?.year ?? '' })}>
  {[3, 5, 7].map(value => <i className={value === 5 ? 'ln-ref' : 'ln-grid-y'} style={{ top: `${plotTop((9 - value) / 8 * 100)}px` }} key={value}/>)}
@@ -88,7 +93,7 @@ export function LiuNianPanel({ reading, currentYear }: {
  {geometry.changes.map(change => <i className="ln-yun" style={{ left: `${xp(change.x)}%` }} key={change.date}><span>{yunLabel((to => to ? gz(to) : '—')(years.find(year => year.luckChange?.date === change.date)?.luckChange?.to), change.date, narrow, lang)}</span></i>)}
  {hovered ? <div className="ln-tip" style={{ left: `${Math.max(26, Math.min(74, (hover! + .5) / years.length * 100))}%`, top: '50%' }}><b>{hovered.year} {gz(hovered.ganZhi)}</b><br />{consensus ? `${consensusText(consensus.average, lang)} · ${consensus.min}–${tenthsText(consensus.max, lang)}` : t("chart.liunian.notShown")}</div> : null}
  </div><div className="ln-x" style={{ gridTemplateColumns: `repeat(${years.length},minmax(0,1fr))` }}>{years.map(year => <span className={year.year === currentYear ? 'now' : ''} key={year.year}>{gz(year.ganZhi)}<small>{year.year}</small></span>)}</div></div>
- <div className="ln-key"><span><i className="k-line"/>{t("chart.liunian.keyLine")}</span><span><i className="k-range"/>{t("chart.liunian.keyRange")}</span><span><i className="k-ref"/>{t("chart.liunian.keyRef")}</span></div>
+ <div className="ln-key"><span><i className="k-line"/>{t(writing ? "chart.keyWrittenAverage" : "chart.liunian.keyLine")}</span><span><i className="k-range"/>{t("chart.liunian.keyRange")}</span><span><i className="k-ref"/>{t("chart.liunian.keyRef")}</span></div>
  <div className="ln-scroll" ref={scroll} tabIndex={0} aria-label={t("chart.liunian.tableAria")}><table className="ln-table"><colgroup><col className="ln-axis"/>{years.map(year => <col key={year.year}/>)}</colgroup><thead><tr className="ln-span"><th></th>{yearGroups(years.map(year => year.year), currentYear).map(group => <th scope="colgroup" colSpan={group.count} key={group.label}>{t(GROUP_KEYS[group.label as keyof typeof GROUP_KEYS])}</th>)}</tr><tr><th>{t("bazi.tableYear")}</th>{years.map((year, i) => <th className={year.year === currentYear ? 'now' : ''} key={year.year} ref={cell => {
                 if (cell)
                     cells.current.set(year.year, cell);
@@ -96,6 +101,6 @@ export function LiuNianPanel({ reading, currentYear }: {
                 const entry = row.school ? schoolYear(reading, row.school, year.year) : undefined;
                 return <td className={[year.year === currentYear ? 'now' : '', row.className ?? '', entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''].join(' ')} key={year.year}>{row.render(i)}</td>;
             })}</tr>)}</tbody></table></div>
- <div className="ln-detail"><div className="ln-detail-head"><span>{t("bazi.consensus", { value: selectedConsensus ? consensusText(selectedConsensus.average, lang) : '—' })}</span><b>{selected} {gz(active.ganZhi)}</b><span>{t("bazi.age", { age: active.age })} · {activeLuck} · {god(active.stemGod)}</span></div><div className="ln-detail-rows">{BAZI_KEYS.map(key => { const entry = schoolYear(reading, key, selected); return <div key={key}><span className="seal">{schoolName(key).slice(0, 1)}</span><strong className={entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''}>{entry ? verdictText(entry) : yearGapLabel(reading.schools[key].status, lang)}<small>{schoolName(key)}</small></strong><p>{entry ? (entry.note || t("chart.liunian.noteRemoved")) : yearGapLabel(reading.schools[key].status, lang)}</p></div>; })}</div></div>
+ <div className="ln-detail"><div className="ln-detail-head"><span>{t("bazi.consensus", { value: selectedConsensus ? consensusText(selectedConsensus.average, lang) : '—' })}</span><b>{selected} {gz(active.ganZhi)}</b><span>{t("bazi.age", { age: active.age })} · {activeLuck} · {god(active.stemGod)}</span></div><div className="ln-detail-rows">{BAZI_KEYS.map(key => { const entry = schoolYear(reading, key, selected); return <div key={key}><span className="seal">{schoolName(key).slice(0, 1)}</span><strong className={entry?.verdict.includes('吉') ? 'ji' : entry?.verdict.includes('凶') ? 'xiong' : ''}>{entry ? verdictText(entry) : yearGapLabel(reading.schools[key].status, lang)}<small>{schoolName(key)}</small></strong><p>{entry ? (entry.note ? noteText(entry.note) : t("chart.liunian.noteRemoved")) : yearGapLabel(reading.schools[key].status, lang)}</p></div>; })}</div></div>
  </div></section>;
 }
