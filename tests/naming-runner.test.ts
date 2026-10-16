@@ -381,3 +381,43 @@ test("诗文 mock 不把字典释义中的禁用词带进名字文案", async ()
     assert.deepEqual(auditFamily("shiwen", result.output, ctx), []);
   }
 });
+
+test("英文起名 runner 选择英文提示与放宽 Schema，合参与单家 mock 均一次通过", async () => {
+  const ctx: NamingContext = { ...context, language: "en" };
+  const provider = new MockSchoolsProvider();
+  const outputs: Partial<Record<NamingFamilyKey, NamingFamilyOutput>> = {};
+  for (const family of NAMING_FAMILIES) {
+    const requests: StructuredOutputRequest[] = [];
+    const recording = {
+      ...provider,
+      generateStructured: async <T>(request: StructuredOutputRequest): Promise<T> => {
+        requests.push(request);
+        return provider.generateStructured<T>(request);
+      },
+    };
+    const result = await runNamingFamily({ provider: recording }, { family, ctx });
+    assert.equal(result.status, "done", family.key);
+    assert.equal(result.calls, 1, family.key);
+    assert.match(requests[0]?.systemPrompt ?? "", /international reader.*plain English/isu);
+    const schema = requests[0]?.schema as unknown as {
+      properties: { names: { items: { properties: {
+        chars: { items: { properties: { gloss: { maxLength: number } } } };
+        tags: { items: { maxLength: number } };
+      } } } };
+    };
+    assert.equal(schema.properties.names.items.properties.chars.items.properties.gloss.maxLength, 48);
+    assert.equal(schema.properties.names.items.properties.tags.items.maxLength, 24);
+    if (result.status === "done") outputs[family.key] = result.output;
+  }
+  const summaryResult = await runNamingSummary({ provider }, {
+    target: "person", surname: "张", families: outputs, language: "en",
+  });
+  assert.equal(summaryResult.status, "done");
+  if (summaryResult.status === "done") {
+    assert.doesNotMatch([
+      summaryResult.output.overview,
+      ...summaryResult.output.tips,
+      ...summaryResult.output.picks.map((pick) => pick.reason),
+    ].join("\n"), /\p{Script=Han}/u);
+  }
+});

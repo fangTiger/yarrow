@@ -4,6 +4,7 @@ import type { BaziChart } from "../../calendar/bazi.js";
 import { findRelations, makeNodes } from "../../calendar/bazi-relations.js";
 import type { QiongtongEntry } from "../../calendar/qiongtong.js";
 import type { FortuneHorizon } from "../classify.js";
+import { ENGLISH_OUTPUT_CONVENTIONS } from "../english/prompt.js";
 import type { Fact, FactTable } from "../facts.js";
 export type BaziSchoolKey = "shenxiaozhan" | "yuchuntai" | "rentieqiao";
 export interface BaziSchoolInput {
@@ -18,12 +19,15 @@ export interface BaziSchoolInput {
     label: string;
     facts: FactTable;
   };
+  /** 缺省中文；英文只改变展示字段，事实与 evidence 仍保持中文。 */
+  language?: "zh" | "en";
 }
 export interface BaziSchool {
   key: BaziSchoolKey;
   name: string;
   school: string;
   systemPrompt: string;
+  systemPromptEn: string;
   buildUserPrompt(input: BaziSchoolInput): string;
 }
 const ALLOWED: Record<BaziSchoolKey, readonly string[]> = {
@@ -51,6 +55,27 @@ useGod 只写一句本派所取用神与喜忌，不超过二十字，例如「�
 需要留意的月份或日子写入 timing.window，成立条件写入 timing.condition。
 输出必须严格符合给定 JSON Schema。`;
 
+const LEGACY_DESTINY_RULE_EN = "For destiny, do not output an overall verdict, confidence, annual list, or timing. Write exactly five sections in this order: Character, Career, Wealth, Relationships, Health.";
+
+export const BAZI_BOUNDARIES_EN = `Quote only classical text supplied with the request. Do not add or invent quotations.
+Do not invent chart data or external omens. Any timing statement must include the condition under which it applies.
+Do not give medical, legal, or investment conclusions. For health matters, recommend qualified medical care.
+When the hour pillar is missing, explain the limitation and do not assign a stem-branch pair to the hour pillar, Life Palace, or Body Palace.
+Every evidence.ref must be one of the supplied fact IDs. Every evidence[].claim must remain in Chinese and state only keywords supported by that fact.
+Write useGod as one English sentence naming this school's selected useful element and preferences, no longer than 120 characters. Use a form such as “Fire (Yong Shen) supports the chart; avoid excess Water.” Put the reasoning in reason and sections.
+${LEGACY_DESTINY_RULE_EN}
+The main prose and timing may discuss only the requested time range. Put facts from other years only in that year's note.
+For fortune, answer the requested range and list one years item for every supplied year in ascending order, normally ten years; use the actual clipped window near birth or the supported upper limit.
+Each years item contains year, verdict, confidenceTenths, and note. note is one English sentence, at most 100 characters, explaining how that year's influence interacts with the natal chart and why the result is favorable or unfavorable.
+Judge annual results from this school's selected useful and unfavorable elements. Support for the useful element or restraint of an unfavorable element leans favorable; damage to the useful element or support for an unfavorable element leans unfavorable. Adjust when combinations, clashes, punishments, harms, or breaks activate them.
+Give a favorable or unfavorable verdict when the preference is clear. Use Mixed only when the influences genuinely offset each other.
+Do not list stems, branches, or Ten Gods without explaining their effect. Use only that year's facts and natal facts in each annual note.
+For a whole-year question, the anchor year's verdict and confidenceTenths must equal the overall verdict and confidenceTenths. Today and month questions need not match.
+Favorable and Very favorable use confidence 6–9; Mixed uses 4–6; Unfavorable and Very unfavorable use 1–4, for both the overall reading and each year.
+Put a supported month or date in timing.window and its required condition in timing.condition.
+
+${ENGLISH_OUTPUT_CONVENTIONS}`;
+
 const LEGACY_DESTINY_RULE =
   "命理不得输出吉凶、把握、逐年列表或 timing，"
   + "五分项依次为性格、事业、财运、感情、健康。";
@@ -65,8 +90,30 @@ const DESTINY_PERIOD_RULES = [
   "逐运短评只用该步大运事实（luck:<index>）与原局事实。",
 ].join("\n");
 
+const DESTINY_PERIOD_RULES_EN = [
+  "For destiny, do not output an overall verdict, confidence, annual list, or timing, but do output periods.",
+  "Write exactly five sections in this order: Character, Career, Wealth, Relationships, Health.",
+  "List one periods item for every supplied Da Yun in the supplied order; index must match the list. If no Da Yun is supplied, output an empty array.",
+  "Judge each period from this school's useful and unfavorable elements and from how that Da Yun interacts with the natal chart.",
+  "Give a favorable or unfavorable verdict when the preference is clear; do not make every period Mixed.",
+  "Favorable and Very favorable use confidence 6–9; Mixed uses 4–6; Unfavorable and Very unfavorable use 1–4.",
+  "Each periods[].note is one English sentence, at most 120 characters, stating the period's relation to the natal chart and the reason for its favorable or unfavorable result.",
+  "Each period note may use only that period's fact (luck:<index>) and natal facts.",
+].join("\n");
+
 /** fortune 沿用原系统提示；只有命理请求把旧边界替换为逐运规则。 */
-export function baziSystemPrompt(school: BaziSchool, kind: BaziSchoolInput["kind"]): string {
+export function baziSystemPrompt(
+  school: BaziSchool,
+  kind: BaziSchoolInput["kind"],
+  language: "zh" | "en" = "zh",
+): string {
+  if (language === "en") {
+    if (kind === "fortune") return school.systemPromptEn;
+    if (!school.systemPromptEn.includes(LEGACY_DESTINY_RULE_EN)) {
+      throw new Error("英文命理系统提示缺少既定边界");
+    }
+    return school.systemPromptEn.replace(LEGACY_DESTINY_RULE_EN, DESTINY_PERIOD_RULES_EN);
+  }
   if (kind === "fortune") {
     return school.systemPrompt;
   }

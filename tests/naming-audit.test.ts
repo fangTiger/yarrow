@@ -319,3 +319,78 @@ test("三家首选重名时，各家改取首个尚未推荐的合格名字", ()
   }, "person");
   assert.deepEqual(repaired.output.picks.map(({ given }) => given), ["明泽", "河洲", "知涵"]);
 });
+
+const englishContext: NamingContext = { ...context, language: "en" };
+
+function englishName(given: string, extra: Partial<NamingName> = {}): NamingName {
+  return {
+    given,
+    meaning: "A calm and bright name with a balanced impression.",
+    why: "It follows the family's naming method and reads naturally.",
+    chars: [...given].map((char) => ({
+      char,
+      gloss: "Ze: grace and blessing",
+      sense: "As a name, it suggests warmth and steady purpose.",
+    })),
+    tags: ["Calm", "Bright minded", "Warm"],
+    ...extra,
+  };
+}
+
+test("英文起名保留汉字 given，展示字段按白名单、sense 与 tags 英文规则核对", () => {
+  const valid = { note: "Balance the favorable elements with sound and meaning.",
+    names: [englishName("明泽"), englishName("清宁"), englishName("知涵")] };
+  assert.deepEqual(auditFamily("wuxing", valid, englishContext), []);
+  const bad = { ...valid, names: [englishName("明泽", {
+    meaning: "A bright name with 好运 outside the allowed list.",
+    chars: [
+      { char: "明", gloss: "Ming: bright", sense: "It suggests light." },
+      { char: "泽", gloss: "Ze: grace", sense: "As a name, it suggests grace." },
+    ],
+    tags: ["Calm", "deep lasting sorrow", "Hostile"],
+  }), ...valid.names.slice(1)] };
+  const errors = auditFamily("wuxing", bad, englishContext).join("\n");
+  assert.match(errors, /sense.*As a name, it suggests/iu);
+  assert.match(errors, /tags.*1.*3 words|tags.*negative/iu);
+  assert.match(errors, /outside the allowed list|白名单/u);
+  const nonWords = { ...valid, names: [englishName("明泽", {
+    tags: ["123", "Bright", "Warm"],
+  }), ...valid.names.slice(1)] };
+  assert.match(auditFamily("wuxing", nonWords, englishContext).join("\n"), /English words/u);
+  assert.match(auditFamily("wuxing", {
+    ...valid, note: "Use ritual implements to improve the name.",
+  }, englishContext).join("\n"), /禁用词/u);
+});
+
+test("英文诗文出处 why 可引用候选原句与书名，但须带英文解释", () => {
+  const name = englishName("河洲", {
+    sourceId: "S01",
+    why: "From 《诗经》, ‘关关雎鸠，在河之洲’ gives the name a calm riverside image.",
+  });
+  const value = { note: "Choose both characters from one supplied classical line.", names: [name] };
+  assert.deepEqual(auditFamily("shiwen", value, englishContext), []);
+  assert.match(auditFamily("shiwen", {
+    ...value,
+    names: [{ ...name, why: "取自《诗经》关关雎鸠，在河之洲" }],
+  }, englishContext).join("\n"), /English explanation|英文解释/u);
+  assert.match(auditFamily("shiwen", {
+    ...value,
+    note: "Choose from 关关雎鸠，在河之洲 and explain the image.",
+  }, englishContext).join("\n"), /白名单外汉字/u);
+});
+
+test("英文起名合参仍只推荐合格名字并执行对象边界", () => {
+  const base = {
+    picks: [{ given: "明泽", reason: "It balances sound and meaning." },
+      { given: "河洲", reason: "Its source is clear and fitting." }],
+    overview: "The available families favor positive meaning and readable sound.",
+    tips: ["Read the full name aloud.", "Check for awkward dialect homophones."],
+  };
+  assert.deepEqual(auditNamingSummary(base, ["明泽", "河洲"], {
+    target: "person", language: "en", surname: "张",
+  }), []);
+  assert.match(auditNamingSummary({ ...base, picks: [
+    ...base.picks.slice(0, 1), { given: "云舒", reason: "A new choice." },
+  ] }, ["明泽", "河洲"], { target: "person", language: "en", surname: "张" })
+    .join("\n"), /云舒.*合格名字/u);
+});

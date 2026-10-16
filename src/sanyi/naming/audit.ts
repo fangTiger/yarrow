@@ -8,14 +8,25 @@ import type {
   NamingSummaryOutput,
 } from "./schema.js";
 import { chineseBodyErrors } from "../language-guard.js";
+import { englishBodyErrors, englishForbiddenErrors } from "../english/audit.js";
 
 export const NAMING_FORBIDDEN =
   /开光|法器|符咒|符箓|护身符|转运|化煞|吉祥物|摆件|放生|捐款|供奉|烧香|五格|三才|数理|天格|人格|地格|总格|外格|[\u3041-\u3096\u30a1-\u30fa\u30fb]/gu;
+
+const NAMING_FORBIDDEN_EN = /\b(?:five\s+grids?|three\s+talents?|stroke\s+numerology|stroke\s+fortune|heaven\s+grid|personality\s+grid|earth\s+grid|outer\s+grid|total\s+grid|ritual\s+implements?|luck-changing\s+objects?)\b/giu;
+const NEGATIVE_TAG_EN = /\b(?:cruel|hostile|sorrowful|grieving|lonely|sickly|violent|malicious|gloomy|despairing)\b/iu;
+const ENGLISH_TAG = /^[A-Za-z]+(?:['’-][A-Za-z]+)*(?:\s+[A-Za-z]+(?:['’-][A-Za-z]+)*){0,2}$/u;
 
 const FAMILY_NAMES: Readonly<Record<NamingFamilyKey, string>> = {
   wuxing: "五行补益",
   shiwen: "诗文出处",
   yinyi: "音形字义",
+};
+
+const FAMILY_NAMES_EN: Readonly<Record<NamingFamilyKey, string>> = {
+  wuxing: "Five Elements",
+  shiwen: "Classical Poetry",
+  yinyi: "Sound and Meaning",
 };
 
 const INTERNAL_CANDIDATE_ID = /S\d{2}/gu;
@@ -34,6 +45,11 @@ function repairCandidateReference(value: string): string {
   return value.replace(/S\d{2}\s*原句/gu, "所引原句").replace(INTERNAL_CANDIDATE_ID, "所引原句");
 }
 
+function repairCandidateReferenceEn(value: string): string {
+  return value.replace(/S\d{2}\s*原句/gu, "the cited original line")
+    .replace(INTERNAL_CANDIDATE_ID, "the cited original line");
+}
+
 /** element 仅用于商号五行家在行业未命中时声明自选五行。 */
 export function normalizeFamilyOutput(
   key: NamingFamilyKey,
@@ -49,6 +65,25 @@ function forbiddenWords(text: string): string[] {
   return [...new Set(text.match(NAMING_FORBIDDEN) ?? [])];
 }
 
+function englishNamingForbiddenErrors(text: string): string[] {
+  const words = [...new Set(text.match(NAMING_FORBIDDEN_EN) ?? [])];
+  return [
+    ...englishForbiddenErrors(text),
+    ...(words.length > 0 ? [`英文起名文案含禁用词「${words.join("」「")}」`] : []),
+  ];
+}
+
+/** 与翻译单元一致：姓名、名中字及姓氏可作为英文展示中的汉字白名单。 */
+export function allowedNamingHan(
+  surname: string | undefined,
+  names: ReadonlyArray<{ given: string }>,
+): string[] {
+  return [...new Set(names.flatMap((name) => {
+    const full = `${surname ?? ""}${name.given}`;
+    return [name.given, full, ...name.given, ...full];
+  }))];
+}
+
 function forbiddenError(label: string, texts: readonly string[]): string[] {
   const words = forbiddenWords(texts.join("\n"));
   return words.length > 0 ? [`${label}含禁用词「${words.join("」「")}」`] : [];
@@ -58,21 +93,56 @@ function nameTexts(name: NamingName): string[] {
   return [name.meaning, name.why, ...name.chars.map(({ gloss }) => gloss)];
 }
 
-export function namingFamilyLanguageErrors(output: NamingFamilyOutput): string[] {
-  return chineseBodyErrors([
+export function namingFamilyLanguageErrors(
+  output: NamingFamilyOutput,
+  key?: NamingFamilyKey,
+  ctx?: NamingContext,
+): string[] {
+  const texts = [
     output.note,
     ...output.names.flatMap((name) => [
       name.meaning, name.why,
       ...name.chars.flatMap((char) => [char.gloss, char.sense]),
       ...name.tags,
     ]),
-  ]);
+  ];
+  if (ctx?.language === "en") {
+    const allowed = allowedNamingHan(ctx.surname, output.names);
+    const generalTexts = [
+      output.note,
+      ...output.names.flatMap((name) => [
+        name.meaning,
+        ...name.chars.flatMap((char) => [char.gloss, char.sense]),
+        ...name.tags,
+      ]),
+    ];
+    const whyErrors = output.names.flatMap((name) => {
+      const sourceNumber = key === "shiwen" ? name.sourceId?.match(/^S(\d{2})$/u)?.[1] : undefined;
+      const source = sourceNumber ? ctx.candidates[Number(sourceNumber) - 1] : undefined;
+      return englishBodyErrors(
+        [name.why],
+        source ? [...allowed, source.book, source.title, source.text] : allowed,
+      );
+    });
+    return [
+      ...englishBodyErrors(generalTexts, allowed),
+      ...whyErrors,
+      ...englishNamingForbiddenErrors(texts.join("\n")),
+    ];
+  }
+  return chineseBodyErrors(texts);
 }
 
-export function namingSummaryLanguageErrors(output: NamingSummaryOutput): string[] {
-  return chineseBodyErrors([
+export function namingSummaryLanguageErrors(
+  output: NamingSummaryOutput,
+  options: { language?: "zh" | "en"; surname?: string } = {},
+): string[] {
+  const texts = [
     ...output.picks.map((pick) => pick.reason), output.overview, ...output.tips,
-  ]);
+  ];
+  return options.language === "en"
+    ? englishBodyErrors(texts, allowedNamingHan(options.surname, output.picks))
+    : chineseBodyErrors(texts);
 }
 
 interface CommonNameAudit {
@@ -80,12 +150,25 @@ interface CommonNameAudit {
   repairable: string[];
 }
 
-function validSense(sense: string): boolean {
+function validSense(sense: string, language: "zh" | "en" = "zh"): boolean {
+  if (language === "en") {
+    return sense.length >= 1 && sense.length <= 120
+      && /^As a name, it suggests\b/u.test(sense)
+      && englishNamingForbiddenErrors(sense).length === 0;
+  }
   const length = [...sense].length;
   return length >= 1 && length <= 30 && forbiddenWords(sense).length === 0;
 }
 
-function validTags(tags: readonly string[]): boolean {
+function validTags(tags: readonly string[], language: "zh" | "en" = "zh"): boolean {
+  if (language === "en") {
+    return tags.length >= 3 && tags.length <= 5 && tags.every((tag) => {
+      const words = tag.trim().split(/\s+/u).filter(Boolean);
+      return tag.length >= 1 && tag.length <= 24 && words.length >= 1 && words.length <= 3
+        && ENGLISH_TAG.test(tag.trim())
+        && englishNamingForbiddenErrors(tag).length === 0 && !NEGATIVE_TAG_EN.test(tag);
+    });
+  }
   return tags.length >= 3 && tags.length <= 5 && tags.every((tag) => {
     const length = [...tag].length;
     return length >= 2 && length <= 4
@@ -115,12 +198,21 @@ function commonNameAudit(name: NamingName, ctx: NamingContext): CommonNameAudit 
   }
   for (const item of name.chars) {
     const length = [...item.gloss].length;
-    if (length < 1 || length > 12) {
-      repairable.push(`名字「${name.given}」的 chars 字义须为 1 至 12 字`);
+    const glossLimit = ctx.language === "en" ? 48 : 12;
+    if (length < 1 || length > glossLimit) {
+      repairable.push(`名字「${name.given}」的 chars 字义须为 1 至 ${glossLimit} 字`);
       break;
     }
     const senseLength = [...item.sense].length;
-    if (senseLength < 1 || senseLength > 30) {
+    if (ctx.language === "en") {
+      if (senseLength < 1 || senseLength > 120) {
+        repairable.push(`名字「${name.given}」的 sense 须为 1 至 120 字符`);
+      } else if (!/^As a name, it suggests\b/u.test(item.sense)) {
+        repairable.push(`名字「${name.given}」的 sense 必须以 As a name, it suggests 开头`);
+      } else if (englishNamingForbiddenErrors(item.sense).length > 0) {
+        repairable.push(`名字「${name.given}」的 sense 含英文禁用词`);
+      }
+    } else if (senseLength < 1 || senseLength > 30) {
       repairable.push(`名字「${name.given}」的 sense 须为 1 至 30 字`);
     } else if (forbiddenWords(item.sense).length > 0) {
       repairable.push(`名字「${name.given}」的 sense 含禁用词`);
@@ -131,17 +223,35 @@ function commonNameAudit(name: NamingName, ctx: NamingContext): CommonNameAudit 
   }
   for (const tag of name.tags) {
     const length = [...tag].length;
-    if (length < 2 || length > 4) {
-      repairable.push(`名字「${name.given}」的 tags 每项须为 2 至 4 字`);
-    }
-    if (forbiddenWords(tag).length > 0) {
-      repairable.push(`名字「${name.given}」的 tags 含禁用词`);
-    }
-    if ([...tag].some(isNegativeChar)) {
-      repairable.push(`名字「${name.given}」的 tags 含消极字`);
+    if (ctx.language === "en") {
+      const words = tag.trim().split(/\s+/u).filter(Boolean);
+      if (length < 1 || length > 24 || words.length < 1 || words.length > 3
+        || !ENGLISH_TAG.test(tag.trim())) {
+        repairable.push(`名字「${name.given}」的 tags 每项须为 1 至 3 English words 且不超过 24 字符`);
+      }
+      if (englishNamingForbiddenErrors(tag).length > 0) {
+        repairable.push(`名字「${name.given}」的 tags 含英文禁用词`);
+      }
+      if (NEGATIVE_TAG_EN.test(tag)) {
+        repairable.push(`名字「${name.given}」的 tags 含 negative word`);
+      }
+    } else {
+      if (length < 2 || length > 4) {
+        repairable.push(`名字「${name.given}」的 tags 每项须为 2 至 4 字`);
+      }
+      if (forbiddenWords(tag).length > 0) {
+        repairable.push(`名字「${name.given}」的 tags 含禁用词`);
+      }
+      if ([...tag].some(isNegativeChar)) {
+        repairable.push(`名字「${name.given}」的 tags 含消极字`);
+      }
     }
   }
-  const nameForbidden = forbiddenError(`名字「${name.given}」的文案`, nameTexts(name));
+  const nameForbidden = ctx.language === "en"
+    ? englishNamingForbiddenErrors([
+        ...nameTexts(name), ...name.chars.map(({ sense }) => sense), ...name.tags,
+      ].join("\n"))
+    : forbiddenError(`名字「${name.given}」的文案`, nameTexts(name));
   if (nameForbidden.length > 0) {
     fatal.push(...nameForbidden);
   }
@@ -188,9 +298,16 @@ function familyNameErrors(
     if (!source) {
       return [`名字「${name.given}」所引编号 ${name.sourceId} 不在候选内`];
     }
-    return [...name.given]
+    const errors = [...name.given]
       .filter((char) => !source.text.includes(char))
       .map((char) => `名字「${name.given}」的「${char}」不在所引诗句中`);
+    if (ctx.language === "en") {
+      const englishWords = name.why.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*/gu) ?? [];
+      if (englishWords.length < 5) {
+        errors.push(`名字「${name.given}」的 why 引用原句时必须附 English explanation（英文解释）`);
+      }
+    }
+    return errors;
   }
   if (ctx.target === "person" && allSameTone(ctx.surname, name.given)) {
     return [`名字「${name.given}」与姓氏连读时姓名声调全同`];
@@ -203,9 +320,11 @@ export function auditFamily(
   output: NamingFamilyOutput,
   ctx: NamingContext,
 ): string[] {
-  const errors = namingFamilyLanguageErrors(output);
+  const errors = namingFamilyLanguageErrors(output, key, ctx);
   errors.push(...candidateIdErrors(output));
-  errors.push(...forbiddenError("本家思路", [output.note]));
+  errors.push(...(ctx.language === "en"
+    ? englishNamingForbiddenErrors(output.note)
+    : forbiddenError("本家思路", [output.note])));
   const seen = new Set<string>();
   for (const name of output.names) {
     const common = commonNameAudit(name, ctx);
@@ -234,15 +353,30 @@ export function fallbackSense(char: string, gloss?: string): string {
   return forbiddenWords(meaning).length > 0 ? "取其美好含义" : [...meaning].slice(0, 30).join("");
 }
 
-function repairedChars(name: NamingName): NamingName["chars"] {
+function repairedChars(name: NamingName, language: "zh" | "en" = "zh"): NamingName["chars"] {
   return [...name.given].map((char, index) => {
     const current = name.chars[index];
+    if (language === "en") {
+      const pinyin = charInfo(char)?.pinyin ?? "Character";
+      const gloss = current?.char === char && current.gloss.length >= 1 && current.gloss.length <= 48
+        && englishBodyErrors([current.gloss]).length === 0
+        && englishNamingForbiddenErrors(current.gloss).length === 0
+        ? current.gloss
+        : `${pinyin[0]?.toUpperCase() ?? ""}${pinyin.slice(1)}: a positive meaning`;
+      return {
+        char,
+        gloss,
+        sense: current?.char === char && validSense(current.sense, language)
+          ? current.sense
+          : "As a name, it suggests a positive and steady quality.",
+      };
+    }
     const modelGloss = current?.char === char && [...current.gloss].length >= 1
       && [...current.gloss].length <= 12 && forbiddenWords(current.gloss).length === 0 ? current.gloss : "";
     return {
       char,
       gloss: modelGloss || fallbackGloss(char),
-      sense: current?.char === char && validSense(current.sense)
+      sense: current?.char === char && validSense(current.sense, language)
         ? current.sense : fallbackSense(char, modelGloss),
     };
   });
@@ -256,12 +390,21 @@ const ELEMENT_TAGS = {
   水: ["聪慧", "灵动", "善思", "通达"],
 } as const;
 
-function fallbackTags(given: string): string[] {
+const ELEMENT_TAGS_EN = {
+  木: ["Kind", "Growing", "Full of life"],
+  火: ["Warm", "Courteous", "Bright"],
+  土: ["Steady", "Honest", "Generous"],
+  金: ["Decisive", "Loyal", "Resolute"],
+  水: ["Thoughtful", "Adaptable", "Clear minded"],
+} as const;
+
+function fallbackTags(given: string, language: "zh" | "en" = "zh"): string[] {
   const tags: string[] = [...new Set([...given].flatMap((char) => {
     const element = charInfo(char)?.wuxing;
-    return element ? ELEMENT_TAGS[element] : [];
+    return element ? language === "en" ? ELEMENT_TAGS_EN[element] : ELEMENT_TAGS[element] : [];
   }))];
-  for (const tag of ["温和", "好学", "明朗"]) {
+  for (const tag of language === "en"
+    ? ["Gentle", "Curious", "Bright"] : ["温和", "好学", "明朗"]) {
     if (tags.length >= 3) break;
     if (!tags.includes(tag)) tags.push(tag);
   }
@@ -274,27 +417,39 @@ export function repairFamily(
   ctx: NamingContext,
 ): { output: NamingFamilyOutput; removed: number } {
   const names: NamingName[] = [];
+  const language = ctx.language ?? "zh";
   const seen = new Set<string>();
   for (const name of output.names) {
     const common = commonNameAudit(name, ctx);
     const familyErrors = familyNameErrors(key, name, output, ctx);
-    if (common.fatal.length > 0 || familyErrors.length > 0 || seen.has(name.given)) {
+    const perNameLanguageErrors = language === "en"
+      ? namingFamilyLanguageErrors({ note: "Family method.", names: [name] }, key, ctx)
+      : [];
+    if (common.fatal.length > 0 || familyErrors.length > 0
+      || perNameLanguageErrors.length > 0 || seen.has(name.given)) {
       continue;
     }
     seen.add(name.given);
     const visibleName = {
       ...name,
-      meaning: repairCandidateReference(name.meaning),
-      why: repairCandidateReference(name.why),
+      meaning: language === "en"
+        ? repairCandidateReferenceEn(name.meaning) : repairCandidateReference(name.meaning),
+      why: language === "en"
+        ? repairCandidateReferenceEn(name.why) : repairCandidateReference(name.why),
     };
     names.push(common.repairable.length > 0 ? {
       ...visibleName,
-      chars: repairedChars(name),
-      tags: validTags(name.tags) ? name.tags : fallbackTags(name.given),
+      chars: repairedChars(name, language),
+      tags: validTags(name.tags, language) ? name.tags : fallbackTags(name.given, language),
     } : visibleName);
   }
-  const note = forbiddenWords(output.note).length > 0
-    ? "本家按既定规则取名。" : repairCandidateReference(output.note);
+  const note = language === "en"
+    ? englishBodyErrors([output.note]).length > 0
+      || englishNamingForbiddenErrors(output.note).length > 0
+      ? "This family followed its stated naming method."
+      : repairCandidateReferenceEn(output.note)
+    : forbiddenWords(output.note).length > 0
+      ? "本家按既定规则取名。" : repairCandidateReference(output.note);
   return {
     output: { ...output, note, names },
     removed: output.names.length - names.length,
@@ -337,9 +492,15 @@ export function auditNamingSummary(
   options: {
     target?: "person" | "business";
     sameToneNames?: readonly string[];
+    language?: "zh" | "en";
+    surname?: string;
   } = {},
 ): string[] {
-  const errors: string[] = namingSummaryLanguageErrors(output);
+  const language = options.language ?? "zh";
+  const errors: string[] = namingSummaryLanguageErrors(output, {
+    language,
+    ...(options.surname ? { surname: options.surname } : {}),
+  });
   const allowed = new Set(valid);
   const sameTone = new Set(options.sameToneNames ?? []);
   const withoutSameTone = new Set(valid.filter((given) => !sameTone.has(given)));
@@ -356,21 +517,38 @@ export function auditNamingSummary(
     if (rejectSameTone && sameTone.has(pick.given)) {
       errors.push(`推荐「${pick.given}」有姓名声调全同提示，另有至少两个无此提示的名字，不应优先推荐`);
     }
-    errors.push(...forbiddenError(`推荐「${pick.given}」的理由`, [pick.reason]));
+    errors.push(...(language === "en"
+      ? englishNamingForbiddenErrors(pick.reason)
+      : forbiddenError(`推荐「${pick.given}」的理由`, [pick.reason])));
   }
-  errors.push(...forbiddenError("合参总述", [output.overview]));
-  errors.push(...forbiddenError("挑选提示", output.tips));
+  errors.push(...(language === "en"
+    ? englishNamingForbiddenErrors([output.overview, ...output.tips].join("\n"))
+    : [...forbiddenError("合参总述", [output.overview]),
+        ...forbiddenError("挑选提示", output.tips)]));
   const tips = output.tips.join("\n");
-  if (options.target === "person" && /商标|工商/u.test(tips)) {
+  if (options.target === "person" && (language === "en"
+    ? /\b(?:trademarks?|business registration|company registration)\b/iu.test(tips)
+    : /商标|工商/u.test(tips))) {
     errors.push("人名挑选提示不得提商标或工商");
   }
-  if (options.target === "business" && /重名|户口/u.test(tips)) {
+  if (options.target === "business" && (language === "en"
+    ? /\b(?:duplicate names?|household registration|hukou)\b/iu.test(tips)
+    : /重名|户口/u.test(tips))) {
     errors.push("商号挑选提示不得提重名或户口");
   }
   return errors;
 }
 
-function fixedTips(target: "person" | "business"): string[] {
+function fixedTips(target: "person" | "business", language: "zh" | "en" = "zh"): string[] {
+  if (language === "en") {
+    return [
+      "Read the full name aloud and listen for a natural rhythm.",
+      "Check for awkward homophones in the family's dialects.",
+      target === "person"
+        ? "Check duplicate-name records before household registration."
+        : "Check trademarks and business registration before filing.",
+    ];
+  }
   return [
     "念出全名听听是否顺口",
     "问问家人方言里有无不雅谐音",
@@ -383,6 +561,8 @@ export function repairNamingSummary(
   families: Partial<Record<NamingFamilyKey, string[]>>,
   target: "person" | "business",
   sameToneNames: readonly string[] = [],
+  language: "zh" | "en" = "zh",
+  surname?: string,
 ): { output: NamingSummaryOutput; removed: number } {
   const valid = new Set(Object.values(families).flatMap((names) => names ?? []));
   const sameTone = new Set(sameToneNames);
@@ -390,7 +570,10 @@ export function repairNamingSummary(
   const seen = new Set<string>();
   const picks = output.picks.filter((pick) => {
     const keep = valid.has(pick.given) && !seen.has(pick.given)
-      && forbiddenWords(pick.reason).length === 0
+      && (language === "en"
+        ? englishNamingForbiddenErrors(pick.reason).length === 0
+          && englishBodyErrors([pick.reason], allowedNamingHan(surname, [pick])).length === 0
+        : forbiddenWords(pick.reason).length === 0)
       && !(rejectSameTone && sameTone.has(pick.given));
     if (keep) seen.add(pick.given);
     return keep;
@@ -411,7 +594,9 @@ export function repairNamingSummary(
         !seen.has(name) && !(rejectSameTone && sameTone.has(name))
       ));
       if (given) {
-        picks.push({ given, reason: `${FAMILY_NAMES[key]}首选` });
+        picks.push({ given, reason: language === "en"
+          ? `A leading choice from ${FAMILY_NAMES_EN[key]}.`
+          : `${FAMILY_NAMES[key]}首选` });
         seen.add(given);
         represented.add(key);
       }
@@ -423,22 +608,37 @@ export function repairNamingSummary(
         !seen.has(name) && !(rejectSameTone && sameTone.has(name))
       ));
       if (given) {
-        picks.push({ given, reason: `${FAMILY_NAMES[key]}首选` });
+        picks.push({ given, reason: language === "en"
+          ? `A leading choice from ${FAMILY_NAMES_EN[key]}.`
+          : `${FAMILY_NAMES[key]}首选` });
         seen.add(given);
       }
     }
   }
+  const tipsText = output.tips.join("\n");
   const tipsInvalid = output.tips.length < 2 || output.tips.length > 3
-    || forbiddenWords(output.tips.join("\n")).length > 0
-    || (target === "person" && /商标|工商/u.test(output.tips.join("\n")))
-    || (target === "business" && /重名|户口/u.test(output.tips.join("\n")));
+    || (language === "en"
+      ? englishNamingForbiddenErrors(tipsText).length > 0
+        || englishBodyErrors(output.tips, allowedNamingHan(surname, picks)).length > 0
+        || (target === "person"
+          && /\b(?:trademarks?|business registration|company registration)\b/iu.test(tipsText))
+        || (target === "business"
+          && /\b(?:duplicate names?|household registration|hukou)\b/iu.test(tipsText))
+      : forbiddenWords(tipsText).length > 0
+        || (target === "person" && /商标|工商/u.test(tipsText))
+        || (target === "business" && /重名|户口/u.test(tipsText)));
   return {
     output: {
       picks,
-      overview: forbiddenWords(output.overview).length > 0
-        ? "三家各有侧重，可结合读音、字义与出处挑选。"
-        : output.overview,
-      tips: tipsInvalid ? fixedTips(target) : output.tips,
+      overview: language === "en"
+        ? englishNamingForbiddenErrors(output.overview).length > 0
+          || englishBodyErrors([output.overview], allowedNamingHan(surname, picks)).length > 0
+          ? "The available families differ in emphasis; compare sound, meaning, and source."
+          : output.overview
+        : forbiddenWords(output.overview).length > 0
+          ? "三家各有侧重，可结合读音、字义与出处挑选。"
+          : output.overview,
+      tips: tipsInvalid ? fixedTips(target, language) : output.tips,
     },
     removed,
   };

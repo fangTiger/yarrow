@@ -11,9 +11,14 @@ import type { FactTable } from "./facts.js";
 import { mockEnglishSchoolOutput, mockSchoolOutput } from "./mock-schools.js";
 import { mockEnglishSummaryOutput, mockSummaryOutput } from "./mock-summary.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
-import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
+import { mockBaziSchoolOutput, mockEnglishBaziSchoolOutput } from "./mock-bazi-schools.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
-import { mockNamingFamilyOutput, mockNamingSummaryOutput } from "./naming/mock.js";
+import {
+  mockEnglishNamingFamilyOutput,
+  mockEnglishNamingSummaryOutput,
+  mockNamingFamilyOutput,
+  mockNamingSummaryOutput,
+} from "./naming/mock.js";
 import type { NamingFamilyKey } from "./naming/schema.js";
 import { findZhouyiEnglishReferences } from "../agent/zhouyi-en.js";
 import { glossaryRequirements } from "./translation/prompt.js";
@@ -75,23 +80,34 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
       return mockTranslation(request.userPrompt) as T;
     }
     if (request.taskId === "sanyi/naming/summary") {
-      return mockNamingSummaryOutput(request.userPrompt) as T;
+      return (request.systemPrompt.includes("plain English")
+        ? mockEnglishNamingSummaryOutput(request.userPrompt)
+        : mockNamingSummaryOutput(request.userPrompt)) as T;
     }
     const naming = request.taskId.match(/^sanyi\/naming\/(wuxing|shiwen|yinyi)$/u);
     if (naming) {
-      return mockNamingFamilyOutput(naming[1] as NamingFamilyKey, request.userPrompt) as T;
+      return (request.systemPrompt.includes("plain English")
+        ? mockEnglishNamingFamilyOutput(naming[1] as NamingFamilyKey, request.userPrompt)
+        : mockNamingFamilyOutput(naming[1] as NamingFamilyKey, request.userPrompt)) as T;
     }
     const summary = request.taskId.match(/^sanyi\/summary\/(question|fortune|destiny)$/u);
     if (summary) {
-      if (summary[1] === "question" && request.systemPrompt.includes("plain English")) {
-        return mockEnglishSummaryOutput(request.userPrompt) as T;
+      if (request.systemPrompt.includes("plain English")) {
+        return mockEnglishSummaryOutput(
+          summary[1] as "question" | "fortune" | "destiny",
+          request.userPrompt,
+        ) as T;
       }
       return mockSummaryOutput(summary[1] as "question" | "fortune" | "destiny", request.userPrompt) as T;
     }
     const bazi = request.taskId.match(/^sanyi\/(destiny|fortune)\/(shenxiaozhan|yuchuntai|rentieqiao)$/u);
     if (bazi) {
-      return mockBaziSchoolOutput(bazi[2] as BaziSchoolKey, baziFactsFromPrompt(request.userPrompt),
-        bazi[1] as "destiny" | "fortune") as T;
+      const facts = baziFactsFromPrompt(request.userPrompt);
+      const kind = bazi[1] as "destiny" | "fortune";
+      const key = bazi[2] as BaziSchoolKey;
+      return (request.systemPrompt.includes("plain English")
+        ? mockEnglishBaziSchoolOutput(key, facts, kind)
+        : mockBaziSchoolOutput(key, facts, kind)) as T;
     }
     const key = request.taskId.split("/").at(-1) as QuestionSchoolKey;
     if (!["chengyi", "jingfang", "shaoyong"].includes(key)) {

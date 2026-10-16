@@ -47,17 +47,18 @@ export function mockSummaryOutput(kind: SummaryKind, prompt: string): PlainSumma
   return output;
 }
 
-/** 原生英文问事排练输出，不含盘面术语，稳定通过英文核对。 */
-export function mockEnglishSummaryOutput(prompt: string): PlainSummary {
+/** 原生英文排练输出，不含盘面术语，稳定通过英文核对。 */
+export function mockEnglishSummaryOutput(kind: SummaryKind, prompt: string): PlainSummary {
   const tone = prompt.match(/合议倾向：(顺|中|不顺)/u)?.[1] as SummaryTone | undefined;
   const conclusion = tone === "顺"
     ? "The overall outlook is favorable, so proceed with practical checks."
     : tone === "不顺"
       ? "The outlook is unfavorable, so slow down and prepare a fallback."
       : "The outcome remains mixed, so wait for clearer conditions.";
-  return {
-    tone: tone ?? "中",
-    conclusion,
+  const output: PlainSummary = {
+    conclusion: kind === "destiny"
+      ? "The three readings favor steady growth through practical use of existing strengths."
+      : conclusion,
     agreement: "All three readings favor preparation over haste.",
     difference: "They place different weight on timing and present conditions.",
     explanation: [
@@ -73,4 +74,26 @@ export function mockEnglishSummaryOutput(prompt: string): PlainSummary {
       avoid: ["Do not force an immediate answer."],
     },
   };
+  if (kind !== "destiny") output.tone = tone ?? "中";
+  if (kind === "destiny") {
+    output.portrait = {
+      traits: ["Steady", "Responsible", "Thoughtful"],
+      strengths: [
+        "Plans carefully and follows through on commitments.",
+        "Handles responsibility with patience and consistency.",
+      ],
+      blindSpots: [
+        "May hesitate when too many concerns compete for attention.",
+        "Can hold a position longer than changing conditions warrant.",
+      ],
+      summary: "A steady, duty-minded temperament works best with room to adapt.",
+    };
+    if (prompt.includes("逐运合议：")) {
+      output.outlook = "Earlier periods build the base, while later periods reward selective action.";
+    }
+  }
+  if (kind === "fortune") {
+    output.outlook = "The ten-year pattern is mixed at first and becomes more supportive later.";
+  }
+  return output;
 }

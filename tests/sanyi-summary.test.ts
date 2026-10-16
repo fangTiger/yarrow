@@ -389,3 +389,38 @@ test("mock provider 可直接走英文问事总述路径", async () => {
     assert.doesNotMatch(JSON.stringify(displayOutput), /\p{Script=Han}/u);
   }
 });
+
+test("mock provider 覆盖英文命理画像与运势十年走势，结构规则和 proseErrors 生效", async () => {
+  for (const kind of ["destiny", "fortune"] as const) {
+    let proseChecks = 0;
+    const value: SummaryInput = {
+      ...input,
+      kind,
+      consensus: kind === "destiny" ? null : 5,
+      language: "en",
+      proseErrors: (text) => {
+        proseChecks += 1;
+        return text.includes("Invented Pillar") ? ["英文八字总述编造盘面"] : [];
+      },
+      ...(kind === "destiny" ? { periodConsensus: "第1步 壬午 7–16岁 4.0成" } : {}),
+    };
+    const result = await runSummary({ provider: new MockSchoolsProvider() }, value);
+    assert.equal(result.status, "done", kind);
+    if (result.status === "done") {
+      assert.ok(proseChecks > 0);
+      assert.ok(result.output.outlook);
+      const { tone: _tone, ...display } = result.output;
+      assert.doesNotMatch(JSON.stringify(display), /\p{Script=Han}/u);
+      if (kind === "destiny") {
+        assert.equal(result.output.tone, undefined);
+        assert.ok(result.output.portrait);
+        assert.ok((result.output.portrait?.traits.length ?? 0) >= 3);
+        assert.equal(result.output.portrait?.strengths.length, 2);
+        assert.equal(result.output.portrait?.blindSpots.length, 2);
+      } else {
+        assert.equal(result.output.tone, "中");
+        assert.equal(result.output.portrait, undefined);
+      }
+    }
+  }
+});

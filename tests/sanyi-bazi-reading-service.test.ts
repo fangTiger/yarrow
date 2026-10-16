@@ -44,6 +44,22 @@ test("英文八字存档意图，各家与总述终态通知且通知异常不�
     assert.deepEqual(events.sort(), ["shenxiaozhan", "yuchuntai", "rentieqiao", "summary"].sort());
     const settled = await f.bazi.getReading(created.id);
     assert.equal(settled.status, "done");
+    for (const state of Object.values(settled.schools)) {
+      assert.equal(state.status, "done");
+      if (!state.output) throw new Error("缺八字英文输出");
+      const notes = "years" in state.output
+        ? state.output.years.map((item) => item.note)
+        : state.output.periods?.map((item) => item.note) ?? [];
+      assert.doesNotMatch([
+        state.output.useGod, state.output.headline, state.output.reason,
+        ...state.output.sections.flatMap((item) => [item.title, item.text]),
+        ...state.output.advice, ...notes,
+      ].join("\n"), /\p{Script=Han}/u);
+    }
+    if (settled.summary?.output) {
+      const { tone: _tone, ...displaySummary } = settled.summary.output;
+      assert.doesNotMatch(JSON.stringify(displaySummary), /\p{Script=Han}/u);
+    }
     assert.equal((await f.api.getReading(created.id)).lang, "en");
     await f.store.update<StoredBaziReading>(created.id, (reading) => ({ ...reading, schools: {
       ...reading.schools, yuchuntai: { status: "failed", attempts: 1, retries: 0 },

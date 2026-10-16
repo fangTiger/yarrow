@@ -2,6 +2,7 @@
 import type { FactTable } from "./facts.js";
 import { DESTINY_TITLES, type BaziSchoolOutput, type DestinySchoolOutput, type FortuneSchoolOutput } from "./bazi-schema.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
+import { DESTINY_TITLES_EN } from "./english/schema.js";
 function useGodFor(key: BaziSchoolKey, facts: FactTable): {
     ref: string;
     word: string;
@@ -85,4 +86,57 @@ export function mockBaziSchoolOutput(key: BaziSchoolKey, facts: FactTable, kind:
     if (!anchor)
         throw new Error("逐年 mock 缺少锚年事实");
     return { ...base, headline: `${useGod.word}宜审慎`, verdict: anchor.verdict, confidenceTenths: anchor.confidenceTenths, years };
+}
+
+/** 原生英文排练输出：展示字段为英文，evidence 保留中文事实词。 */
+export function mockEnglishBaziSchoolOutput(
+  key: BaziSchoolKey,
+  facts: FactTable,
+  kind: "destiny" | "fortune",
+): BaziSchoolOutput {
+  const chinese = mockBaziSchoolOutput(key, facts, kind);
+  const base: DestinySchoolOutput = {
+    useGod: "Fire (Yong Shen) supports balance in this chart.",
+    headline: "Build steadily around the chart's strongest support",
+    reason: facts.has("chart:limit")
+      ? "The birth hour is unknown, so this interpretation has clear limits."
+      : "The supplied chart facts favor patience and practical preparation.",
+    sections: DESTINY_TITLES_EN.map((title) => ({
+      title,
+      text: "The supported pattern favors measured action and realistic expectations.",
+    })),
+    advice: ["Keep practical options open while conditions develop."],
+    evidence: chinese.evidence,
+  };
+  if (kind === "destiny" && !("years" in chinese)) {
+    return {
+      ...base,
+      periods: (chinese.periods ?? []).map((item) => ({
+        ...item,
+        note: item.verdict === "吉" || item.verdict === "大吉"
+          ? "This period supports the natal chart, so conditions are favorable."
+          : "This period strains the natal chart, so a cautious approach is better.",
+      })),
+    };
+  }
+  if (!("years" in chinese)) throw new Error("英文运势 mock 缺少逐年输出");
+  return {
+    ...base,
+    sections: [
+      { title: "Useful Influence", text: "The selected useful influence guides the annual reading." },
+      { title: "Chart Dynamics", text: "Support and restraint alternate across the requested window." },
+      { title: "Practical Timing", text: "Act only when the stated practical conditions are present." },
+    ],
+    headline: "Proceed carefully and use the stronger windows well",
+    verdict: chinese.verdict,
+    confidenceTenths: chinese.confidenceTenths,
+    years: chinese.years.map((item) => ({
+      ...item,
+      note: item.verdict === "吉" || item.verdict === "大吉"
+        ? "This year supports the natal chart, so measured progress is favored."
+        : item.verdict === "平"
+          ? "This year brings mixed support, so keep plans flexible."
+          : "This year strains the natal chart, so protect time and resources.",
+    })),
+  };
 }

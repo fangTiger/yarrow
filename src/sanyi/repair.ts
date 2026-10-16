@@ -4,11 +4,16 @@
 import type { BaziChart } from "../calendar/bazi.js";
 import { auditQuestionEvidence, auditQuestionProse } from "./audit.js";
 import {
+  auditBaziEnglishPeriodNote,
+  auditBaziEnglishProse,
+  auditBaziEnglishYearNote,
+  baziEnglishHourLimitErrors,
   auditQuestionEnglishProse,
   englishBodyErrors,
   englishForbiddenErrors,
 } from "./english/audit.js";
 import { VERDICTS_EN } from "./i18n/glossary.js";
+import { DESTINY_TITLES_EN } from "./english/schema.js";
 import { auditBaziEvidence, auditBaziNote, auditBaziPeriodNote, auditBaziProse,
   baziProse } from "./bazi-audit.js";
 import type { BaziSchoolOutput } from "./bazi-schema.js";
@@ -165,27 +170,41 @@ export function repairBazi(
   facts: FactTable,
   chart: BaziChart,
   horizon: FortuneHorizon,
+  language: "zh" | "en" = "zh",
 ): RepairResult<BaziSchoolOutput> {
   let removed = 0;
   let adjusted = 0;
-  const check = (sentence: string) => auditBaziProse(sentence, facts);
+  const check = language === "en"
+    ? (sentence: string) => [
+        ...englishBodyErrors([sentence]),
+        ...auditBaziEnglishProse(sentence, facts),
+        ...englishForbiddenErrors(sentence),
+      ]
+    : (sentence: string) => auditBaziProse(sentence, facts);
   const evidence = output.evidence.filter((item) => auditBaziEvidence(item, facts).length === 0);
   removed += output.evidence.length - evidence.length;
   const text = (value: string) => {
-    const kept = keepValidSentences(value, check);
+    const kept = keepValidSentences(value, check, language);
     removed += kept.removed;
     return kept.text;
   };
-  const useGod = text(output.useGod) || "未定";
+  const useGod = text(output.useGod) || (language === "en"
+    ? "Yong Shen was not determined." : "未定");
   const headline = text(output.headline);
-  const reason = text(output.reason) || REASON_REMOVED;
-  const sections = output.sections.map((section) => {
-    return { title: section.title, text: text(section.text) || "（此段与盘面不符，已删去）" };
+  const reason = text(output.reason) || (language === "en" ? REASON_REMOVED_EN : REASON_REMOVED);
+  const destiny = !("verdict" in output);
+  const sections = output.sections.map((section, index) => {
+    const safeTitle = language === "en" && check(section.title).length > 0
+      ? destiny ? DESTINY_TITLES_EN[index] ?? "Details" : "Details"
+      : section.title;
+    return { title: safeTitle, text: text(section.text) || (language === "en"
+      ? SECTIONS_REMOVED_EN : "（此段与盘面不符，已删去）") };
   });
   const advice = output.advice.map((item) => text(item)).filter((item) => item !== "");
   const base = {
     ...output, useGod, reason, sections, evidence,
-    advice: advice.length > 0 ? advice : ["结合实际情况审慎判断。"],
+    advice: advice.length > 0 ? advice : [language === "en"
+      ? "Use practical judgment before acting." : "结合实际情况审慎判断。"],
   };
   if (!("verdict" in output)) {
     const allowed = new Set(chart.luck?.cycles.map((item) => item.index) ?? []);
@@ -203,9 +222,15 @@ export function repairBazi(
         return [];
       }
       let next = { ...item };
-      if (auditBaziPeriodNote(item, facts).length > 0) {
+      const noteErrors = language === "en"
+        ? [...englishBodyErrors([item.note]), ...auditBaziEnglishPeriodNote(item, facts),
+            ...englishForbiddenErrors(item.note)]
+        : auditBaziPeriodNote(item, facts);
+      if (noteErrors.length > 0) {
         removed += 1;
-        next = { ...next, note: "" };
+        next = { ...next, note: language === "en"
+          ? "This period note was removed because it did not match the chart."
+          : "" };
       }
       const clamped = clampConfidence(next.verdict, next.confidenceTenths);
       if (clamped !== next.confidenceTenths) {
@@ -214,8 +239,9 @@ export function repairBazi(
       }
       return [next];
     });
-    const repaired = { ...base, headline: headline || `取${useGod}`, periods } as BaziSchoolOutput;
-    return finishLimit(repaired, facts, removed, adjusted);
+    const repaired = { ...base, headline: headline || (language === "en"
+      ? `Yong Shen: ${useGod}` : `取${useGod}`), periods } as BaziSchoolOutput;
+    return finishLimit(repaired, facts, removed, adjusted, language);
   }
   const confidenceTenths = clampConfidence(output.verdict, output.confidenceTenths);
   if (confidenceTenths !== output.confidenceTenths) {
@@ -234,9 +260,15 @@ export function repairBazi(
   const anchorYear = chart.liunian.anchorYear;
   const years = output.years.filter((item) => windowYears.has(item.year)).map((item) => {
     let next = { ...item };
-    if (auditBaziNote(item, facts).length > 0) {
+    const noteErrors = language === "en"
+      ? [...englishBodyErrors([item.note]), ...auditBaziEnglishYearNote(item, facts),
+          ...englishForbiddenErrors(item.note)]
+      : auditBaziNote(item, facts);
+    if (noteErrors.length > 0) {
       removed += 1;
-      next = { ...next, note: "" };
+      next = { ...next, note: language === "en"
+        ? "This annual note was removed because it did not match the chart."
+        : "" };
     }
     const clamped = clampConfidence(next.verdict, next.confidenceTenths);
     if (clamped !== next.confidenceTenths) {
@@ -252,7 +284,9 @@ export function repairBazi(
   });
   const repaired = {
     ...base,
-    headline: headline || `${output.verdict}，约${confidenceTenths}成`,
+    headline: headline || (language === "en"
+      ? `${VERDICTS_EN[output.verdict]}, about ${confidenceTenths}/10`
+      : `${output.verdict}，约${confidenceTenths}成`),
     confidenceTenths,
     years,
   } as BaziSchoolOutput & { timing?: unknown };
@@ -261,7 +295,7 @@ export function repairBazi(
   } else {
     delete repaired.timing;
   }
-  return finishLimit(repaired as BaziSchoolOutput, facts, removed, adjusted);
+  return finishLimit(repaired as BaziSchoolOutput, facts, removed, adjusted, language);
 }
 
 /** 缺时柱而正文没说明限制时，在理由前补一句说明。 */
@@ -270,7 +304,19 @@ function finishLimit(
   facts: FactTable,
   removed: number,
   adjusted: number,
+  language: "zh" | "en" = "zh",
 ): RepairResult<BaziSchoolOutput> {
+  if (language === "en") {
+    if (baziEnglishHourLimitErrors(baziProse(output).join("\n"), facts).length > 0) {
+      return {
+        output: { ...output,
+          reason: `The birth hour is unknown, so this interpretation is limited. ${output.reason}` },
+        removed,
+        adjusted: adjusted + 1,
+      };
+    }
+    return { output, removed, adjusted };
+  }
   if (facts.has("chart:limit") && !/缺时柱|时辰未知/u.test(baziProse(output).join("\n"))) {
     return { output: { ...output, reason: `缺时柱，判断存在限制。${output.reason}` }, removed, adjusted: adjusted + 1 };
   }

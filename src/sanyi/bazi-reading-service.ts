@@ -9,6 +9,8 @@ import { buildBaziFacts } from "./bazi-facts.js";
 import { withDestinyLuckRelations } from "./schools/bazi-shared.js";
 import { derivedChart, periodConsensus, yearConsensus } from "./bazi-public.js";
 import { auditBaziSummaryProse } from "./bazi-audit.js";
+import { auditBaziEnglishSummaryProse } from "./english/audit.js";
+import { SCHOOLS_EN } from "./i18n/glossary.js";
 import {
   averageConfidence, runSummaryWithRetry, summaryState, type SummaryInput, type SummarySchool,
 } from "./summary.js";
@@ -247,7 +249,8 @@ export class BaziReadingService {
     return { school, kind: reading.kind, question: reading.question, horizon: reading.context.horizon,
       chart: reading.chart, facts: buildBaziFacts(reading.chart, reading.analysis, reading.tiaohou),
       tiaohou: reading.tiaohou,
-      period: { label: reading.context.label, facts: periodFacts(reading.context, reading.chart) } };
+      period: { label: reading.context.label, facts: periodFacts(reading.context, reading.chart) },
+      ...(reading.lang === "en" ? { language: "en" as const } : {}) };
   }
   private async runOne(reading: StoredBaziReading, school: BaziSchool): Promise<void> {
     let result = await runBaziSchool({ provider: this.deps.provider }, this.input(reading, school));
@@ -349,7 +352,9 @@ export class BaziReadingService {
       }
       const output = state.output;
       const item: SummarySchool = {
-        name: school.name, school: school.school, useGod: output.useGod,
+        name: reading.lang === "en" ? SCHOOLS_EN[school.key].name : school.name,
+        school: reading.lang === "en" ? SCHOOLS_EN[school.key].school : school.school,
+        useGod: output.useGod,
         headline: output.headline, reason: output.reason, sections: output.sections, advice: output.advice,
       };
       if ("verdict" in output) {
@@ -392,7 +397,11 @@ export class BaziReadingService {
           `调候：${reading.tiaohou.useStems.join("、")}（《穷通宝鉴》）`,
         ],
       },
-      proseErrors: (text) => auditBaziSummaryProse(text, facts),
+      proseErrors: (text) => reading.lang === "en"
+        ? auditBaziEnglishSummaryProse(text, facts)
+        : auditBaziSummaryProse(text, facts),
+      ...(reading.lang === "en" ? { language: "en" as const,
+        referenceText: [...facts.values()].map((fact) => fact.label).join("\n") } : {}),
     };
     if (reading.kind === "fortune") {
       input.horizonLabel = reading.context.label;

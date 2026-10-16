@@ -188,6 +188,44 @@ test("起名结果页中英渲染：保留姓名汉字，用结构化字段生�
   }
 });
 
+test("原生英文命理、运势与起名直接渲染英文正文且不依赖 translation", async () => {
+  const bazi = await baziFixture();
+  const naming = await namingFixture();
+  try {
+    for (const [kind, index] of [["destiny", 71], ["fortune", 72]] as const) {
+      const created = await bazi.bazi.create({
+        kind, question: kind === "destiny" ? "Describe my life pattern" : "What is my outlook?",
+        birth, sect: 1, horizon: "year", feeProof: proof(index), lang: "en",
+      });
+      await bazi.bazi.whenSettled(created.id);
+      const reading = publicBaziReading(await bazi.bazi.getReading(created.id));
+      assert.equal("translation" in reading, false);
+      const html = renderIn("en", createElement(BaziReading, {
+        reading, birth: null, onReading: noop,
+      }));
+      assert.match(html, /Yong Shen|Plain-language summary/u);
+      assertNoHan(html);
+    }
+
+    const created = await naming.naming.create({
+      target: "person", surname: "张", gender: "female", length: 2, unborn: false,
+      question: "A calm literary name", birth: namingBirth, feeProof: namingProof(73), lang: "en",
+    });
+    await naming.naming.whenSettled(created.id);
+    const reading = publicNamingReading(await naming.naming.getReading(created.id));
+    assert.equal("translation" in reading, false);
+    const allowed = [reading.surname ?? "", ...Object.values(reading.families).flatMap((family) => (
+      family.output?.names.flatMap((name) => [name.full, name.given,
+        ...name.echoes.map((line) => line.text), name.source?.text ?? ""]) ?? []
+    ))].join("");
+    const html = renderIn("en", createElement(NamingReading, { reading, onReading: noop }));
+    assert.match(html, /Five Elements analysis|Recommended names/u);
+    assertNoHan(html, allowed);
+  } finally {
+    await Promise.all([bazi.close(), naming.close()]);
+  }
+});
+
 test("中文正文已写完但译文未到时，四类英文解读区域只显示英文占位", async () => {
   const questionSchool = {
     status: "done" as const, retries: 0,

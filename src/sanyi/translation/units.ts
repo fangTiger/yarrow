@@ -1,5 +1,6 @@
 import { lineById } from "../naming/classics.js";
 import { echoLines } from "../naming/card.js";
+import { allowedNamingHan } from "../naming/audit.js";
 import type { StoredReading } from "../store.js";
 
 export type TranslationUnitKey =
@@ -125,18 +126,8 @@ function baziUnits(reading: Extract<StoredReading, { kind: "destiny" | "fortune"
   ];
 }
 
-function allowedNamingHan(
-  reading: Extract<StoredReading, { kind: "naming" }>,
-  names: Array<{ given: string }>,
-): string[] {
-  return [...new Set(names.flatMap((name) => {
-    const full = `${reading.surname ?? ""}${name.given}`;
-    return [name.given, full, ...name.given, ...full];
-  }))];
-}
-
 function namingUnits(reading: Extract<StoredReading, { kind: "naming" }>): TranslationUnit[] {
-  const summaryAllowedHan = allowedNamingHan(reading, Object.values(reading.families).flatMap(
+  const summaryAllowedHan = allowedNamingHan(reading.surname, Object.values(reading.families).flatMap(
     (state) => state.output?.names ?? [],
   ));
   const summaryEntries: TranslationEntry[] = [];
@@ -182,7 +173,7 @@ function namingUnits(reading: Extract<StoredReading, { kind: "naming" }>): Trans
       key,
       kind: reading.kind,
       entries,
-      allowedHan: allowedNamingHan(reading, output?.names ?? []),
+      allowedHan: allowedNamingHan(reading.surname, output?.names ?? []),
     };
   };
   return [

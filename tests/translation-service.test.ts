@@ -393,14 +393,17 @@ test("英文下单只在单元终态后启动翻译，中文下单不翻译", as
   }
 });
 
-test("原生英文问事不建立翻译单元，trigger、translate 与 startUnit 均不调用模型", async () => {
+test("四类原生英文不建立翻译单元，trigger、translate 与 startUnit 均不调用模型", async () => {
   const provider = new RecordingProvider();
   const f = await fixture({ provider, dailyUnits: 0 });
   try {
-    await f.store.write({ ...terminalReading(), lang: "en", translateTo: undefined } as never);
-    assert.deepEqual(await f.service.trigger(ID), { lang: "en", units: {} });
-    assert.deepEqual(await f.service.translate(ID), { lang: "en", units: {} });
-    await f.service.startUnit(ID, "chengyi");
+    for (const kind of ["question", "destiny", "fortune", "naming"] as const) {
+      await f.store.write({ ...terminalReading(), kind, lang: "en", translateTo: undefined } as never);
+      assert.deepEqual(await f.service.trigger(ID), { lang: "en", units: {} }, kind);
+      assert.deepEqual(await f.service.translate(ID), { lang: "en", units: {} }, kind);
+      await f.service.startUnit(ID, kind === "naming" ? "wuxing"
+        : kind === "question" ? "chengyi" : "shenxiaozhan");
+    }
     assert.equal(provider.requests.length, 0);
     assert.equal(await f.translationStore.read(ID), undefined);
   } finally {

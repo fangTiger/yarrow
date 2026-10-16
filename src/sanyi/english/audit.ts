@@ -1,5 +1,6 @@
 import { findZhouyiEnglishReferences } from "../../agent/zhouyi-en.js";
 import type { FactTable } from "../facts.js";
+import { isNatalFact } from "../bazi-facts.js";
 import {
   BRANCHES_EN,
   ELEMENTS_EN,
@@ -108,6 +109,23 @@ function allTokens(facts: FactTable): Set<string> {
   return new Set([...facts.values()].flatMap((fact) => [...fact.tokens]));
 }
 
+function auditEnglishTerms(
+  text: string,
+  allowed: ReadonlySet<string>,
+  label: string,
+): string[] {
+  const errors: string[] = [];
+  for (const match of text.matchAll(GANZHI_PAIR)) {
+    const chinese = GANZHI_BY_EN.get(match[1]!)!;
+    if (!allowed.has(chinese)) errors.push(`${label}出现不存在的干支：${match[0]}`);
+  }
+  for (const match of text.matchAll(TEN_GOD)) {
+    const chinese = TEN_GOD_BY_EN.get(match[1]!)!;
+    if (!allowed.has(chinese)) errors.push(`${label}出现不存在的十神：${match[0]}`);
+  }
+  return errors;
+}
+
 function lineTokenSets(facts: FactTable): ReadonlySet<string>[] {
   return [...facts].filter(([id]) => id.startsWith("line:"))
     .map(([, fact]) => fact.tokens);
@@ -126,18 +144,10 @@ function stripEnglishClassics(text: string, facts: FactTable): string {
  * 以及大小写与单复数宽容的「地支 + 五行 + 六亲」组合。
  */
 export function auditQuestionEnglishProse(text: string, facts: FactTable): string[] {
-  const errors: string[] = [];
   const tokens = allTokens(facts);
   const lines = lineTokenSets(facts);
   const prose = stripEnglishClassics(text, facts);
-  for (const match of prose.matchAll(GANZHI_PAIR)) {
-    const chinese = GANZHI_BY_EN.get(match[1]!)!;
-    if (!tokens.has(chinese)) errors.push(`英文正文出现不存在的干支：${match[0]}`);
-  }
-  for (const match of prose.matchAll(TEN_GOD)) {
-    const chinese = TEN_GOD_BY_EN.get(match[1]!)!;
-    if (!tokens.has(chinese)) errors.push(`英文正文出现不存在的十神：${match[0]}`);
-  }
+  const errors = auditEnglishTerms(prose, tokens, "英文正文");
   for (const match of prose.matchAll(QUESTION_COMBINATION)) {
     const branch = BRANCH_BY_EN.get(`${match[1]![0]!.toUpperCase()}${match[1]!.slice(1).toLowerCase()}`);
     const element = ELEMENT_BY_EN.get(match[2]!.toLowerCase());
@@ -148,4 +158,90 @@ export function auditQuestionEnglishProse(text: string, facts: FactTable): strin
     }
   }
   return errors;
+}
+
+function union(facts: FactTable): Set<string> {
+  return new Set([...facts.values()].flatMap((fact) => [...fact.tokens]));
+}
+
+/** 与中文八字 currentTokens 一致：正文不把逐年窗口里的其它年份当作当前事实。 */
+function baziCurrentTokens(facts: FactTable): Set<string> {
+  return union(new Map([...facts].filter(([id]) => !/^year:\d{4}$/u.test(id))));
+}
+
+function natalTokens(facts: FactTable): Set<string> {
+  return union(new Map([...facts].filter(([id, fact]) => isNatalFact(id, fact.label))));
+}
+
+function missingHourAttributionErrors(text: string, facts: FactTable, label: string): string[] {
+  if (!facts.has("chart:limit")) return [];
+  const attribution = /\b(?:hour pillar|life palace|body palace)\b/iu;
+  return text.split(/[.!?;\n]/u).flatMap((sentence) => (
+    attribution.test(sentence) && [...sentence.matchAll(GANZHI_PAIR)].length > 0
+      ? [`${label}缺时柱，不得把干支归给 hour pillar、Life Palace 或 Body Palace`]
+      : []
+  ));
+}
+
+/** 英文八字正文：干支拼音对与十神英译映回中文 token 后，按当前事实核对。 */
+export function auditBaziEnglishProse(text: string, facts: FactTable): string[] {
+  return [
+    ...auditEnglishTerms(text, baziCurrentTokens(facts), "英文正文"),
+    ...missingHourAttributionErrors(text, facts, "英文正文"),
+  ];
+}
+
+/** 英文八字总述可综合逐运或逐年窗口，因此术语范围对应中文 union。 */
+export function auditBaziEnglishSummaryProse(text: string, facts: FactTable): string[] {
+  return [
+    ...auditEnglishTerms(text, union(facts), "英文总述"),
+    ...missingHourAttributionErrors(text, facts, "英文总述"),
+  ];
+}
+
+/** 英文逐年短评只认该年事实与原局事实。 */
+export function auditBaziEnglishYearNote(
+  item: { year: number; note: string },
+  facts: FactTable,
+): string[] {
+  const year = facts.get(`year:${item.year}`);
+  if (!year) return [`${item.year} 年事实不存在`];
+  return [
+    ...auditEnglishTerms(
+      item.note,
+      new Set([...natalTokens(facts), ...year.tokens]),
+      `${item.year} 年英文短评`,
+    ),
+    ...missingHourAttributionErrors(item.note, facts, `${item.year} 年英文短评`),
+  ];
+}
+
+/** 英文逐运短评只认该步大运事实与原局事实。 */
+export function auditBaziEnglishPeriodNote(
+  item: { index: number; note: string },
+  facts: FactTable,
+): string[] {
+  const period = facts.get(`luck:${item.index}`);
+  if (!period) return [`第 ${item.index} 步大运事实不存在`];
+  return [
+    ...auditEnglishTerms(
+      item.note,
+      new Set([...natalTokens(facts), ...period.tokens]),
+      `第 ${item.index} 步大运英文短评`,
+    ),
+    ...missingHourAttributionErrors(item.note, facts, `第 ${item.index} 步大运英文短评`),
+  ];
+}
+
+/** 缺时柱时，英文正文必须明确说明出生时刻未知所带来的判断限制。 */
+export function baziEnglishHourLimitErrors(text: string, facts: FactTable): string[] {
+  if (!facts.has("chart:limit")) return [];
+  const subject = /\b(?:birth hour|hour pillar|time of birth)\b/iu.test(text);
+  const unavailable = /\b(?:unknown|missing|unavailable|not\s+(?:known|provided|recorded|available)|without|absence|lacks?|lacking|no)\b/iu
+    .test(text);
+  const limitation = /\b(?:limit(?:s|ed|ing|ations?)?|uncertain(?:ty)?|cannot|can't|can\s+not|incomplete|less\s+(?:precise|certain|complete)|reduces?\s+(?:precision|certainty)|lower\s+confidence|constrain(?:s|ed|t)?)\b/iu
+    .test(text);
+  return subject && unavailable && limitation
+    ? []
+    : ["缺时柱时英文正文须提及 birth hour、hour pillar 或 time of birth，并说明其未知且判断受限"];
 }

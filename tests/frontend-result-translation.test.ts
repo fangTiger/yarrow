@@ -257,12 +257,13 @@ test("结果页英文数据流自动触发翻译并在翻译期间轮询", () =>
   assert.match(source, /usesTranslationPipeline\(reading, lang\).*translationReady/su);
 });
 
-test("原生英文问事在英文界面直接用原 reading，中文界面显示切换提示", () => {
+test("四类原生英文在英文界面直接用原 reading，中文界面显示切换提示", () => {
   const reading = { kind: "question", lang: "en" } as never;
   assert.equal(isNativeEnglishReading(reading), true);
   assert.equal(isNativeEnglishReading({ kind: "question" } as never), false);
-  assert.equal(isNativeEnglishReading({ kind: "fortune", lang: "en" } as never), false,
-    "N2 前命理与运势仍走翻译兼容路径");
+  for (const kind of ["destiny", "fortune", "naming"] as const) {
+    assert.equal(isNativeEnglishReading({ kind, lang: "en" } as never), true, kind);
+  }
   assert.equal(usesTranslationPipeline(reading, "en"), false);
   assert.equal(usesTranslationPipeline(reading, "zh"), false);
   assert.strictEqual(readingForLanguage(reading, "en"), reading,

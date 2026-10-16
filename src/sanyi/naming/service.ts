@@ -276,6 +276,7 @@ export class NamingReadingService {
         const line = lineById(id);
         return line ? [line] : [];
       }),
+      ...(reading.lang === "en" ? { language: "en" as const } : {}),
     };
   }
 
@@ -381,10 +382,12 @@ export class NamingReadingService {
         ? {
           target: "person", surname: reading.surname ?? "", families,
           favorable: reading.basis.favorable, missing: reading.basis.missing ?? [],
+          ...(reading.lang === "en" ? { language: "en" as const } : {}),
         }
         : {
           target: "business", families,
           favorable: reading.basis.favorable, missing: reading.basis.missing ?? [],
+          ...(reading.lang === "en" ? { language: "en" as const } : {}),
         },
     );
     await this.deps.store.update<StoredNamingReading>(id, (current) => {

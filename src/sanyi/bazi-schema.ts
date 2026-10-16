@@ -2,6 +2,7 @@
 import type { JsonSchema } from "../agent/schemas.js";
 import type { BaziChart } from "../calendar/bazi.js";
 import type { FortuneHorizon } from "./classify.js";
+import { englishBodyErrors } from "./english/audit.js";
 import { chineseBodyErrors } from "./language-guard.js";
 import { QUESTION_SCHOOL_SCHEMA, checkVerdictConsistency, type QuestionSchoolOutput,
   type Verdict } from "./schema.js";
@@ -86,24 +87,29 @@ export const FORTUNE_SCHOOL_SCHEMA = {
   },
 } as const satisfies JsonSchema;
 
-export function baziLanguageErrors(output: BaziSchoolOutput): string[] {
-  return chineseBodyErrors([
+export function baziLanguageErrors(
+  output: BaziSchoolOutput,
+  language: "zh" | "en" = "zh",
+): string[] {
+  const texts = [
     output.useGod, output.headline, output.reason,
     ...output.sections.flatMap((section) => [section.title, section.text]),
     ...output.advice,
     ...("timing" in output && output.timing ? [output.timing.window, output.timing.condition] : []),
     ...("years" in output ? output.years.map((year) => year.note) : []),
     ...("periods" in output ? output.periods?.map((period) => period.note) ?? [] : []),
-  ]);
+  ];
+  return language === "en" ? englishBodyErrors(texts) : chineseBodyErrors(texts);
 }
 
 export function checkBaziConsistency(output: BaziSchoolOutput, chart: BaziChart,
-  horizon: FortuneHorizon): string[] {
-  const errors = baziLanguageErrors(output);
+  horizon: FortuneHorizon, language: "zh" | "en" = "zh"): string[] {
+  const errors = baziLanguageErrors(output, language);
   if (!("years" in output)) {
     const periods = output.periods ?? [];
     for (const item of periods) {
-      errors.push(...checkVerdictConsistency(item).map((error) => `第 ${item.index} 步大运：${error}`));
+      errors.push(...checkVerdictConsistency(item, language)
+        .map((error) => `第 ${item.index} 步大运：${error}`));
     }
     const expected = chart.luck?.cycles.map((item) => item.index) ?? [];
     const actual = periods.map((item) => item.index);
@@ -114,9 +120,10 @@ export function checkBaziConsistency(output: BaziSchoolOutput, chart: BaziChart,
     }
     return errors;
   }
-  errors.push(...checkVerdictConsistency(output));
+  errors.push(...checkVerdictConsistency(output, language));
   for (const item of output.years) {
-    errors.push(...checkVerdictConsistency(item).map((error) => `${item.year} 年：${error}`));
+    errors.push(...checkVerdictConsistency(item, language)
+      .map((error) => `${item.year} 年：${error}`));
   }
   const expected = chart.liunian.years.map((item) => item.year);
   const actual = output.years.map((item) => item.year);

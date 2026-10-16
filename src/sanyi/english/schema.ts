@@ -97,3 +97,71 @@ export const SUMMARY_SCHEMA_EN = {
     outlook: { type: "string", minLength: 1, maxLength: 320 },
   },
 } as const satisfies JsonSchema;
+
+/** 命理英文分项标题；结构与中文五分项一一对应。 */
+export const DESTINY_TITLES_EN = [
+  "Character", "Career", "Wealth", "Relationships", "Health",
+] as const;
+
+const baziUseGodEn = { type: "string", minLength: 1, maxLength: 120 } as const;
+const baziSectionEn = QUESTION_SCHOOL_SCHEMA_EN.properties.sections.items;
+
+/** 命理英文输出字段与必填项不变，只放宽英文长度。 */
+export const DESTINY_SCHOOL_SCHEMA_EN = {
+  type: "object",
+  additionalProperties: false,
+  required: ["useGod", "headline", "reason", "sections", "advice", "evidence", "periods"],
+  properties: {
+    useGod: baziUseGodEn,
+    headline: QUESTION_SCHOOL_SCHEMA_EN.properties.headline,
+    reason: QUESTION_SCHOOL_SCHEMA_EN.properties.reason,
+    advice: QUESTION_SCHOOL_SCHEMA_EN.properties.advice,
+    evidence: QUESTION_SCHOOL_SCHEMA_EN.properties.evidence,
+    sections: {
+      type: "array", minItems: 5, maxItems: 5, additionalItems: false,
+      items: DESTINY_TITLES_EN.map((title) => ({
+        ...baziSectionEn,
+        properties: {
+          ...baziSectionEn.properties,
+          title: { type: "string", const: title },
+        },
+      })),
+    },
+    periods: {
+      type: "array", maxItems: 12,
+      items: {
+        type: "object", additionalProperties: false,
+        required: ["index", "verdict", "confidenceTenths", "note"],
+        properties: {
+          index: { type: "integer", minimum: 1, maximum: 12 },
+          verdict: QUESTION_SCHOOL_SCHEMA_EN.properties.verdict,
+          confidenceTenths: QUESTION_SCHOOL_SCHEMA_EN.properties.confidenceTenths,
+          note: { type: "string", minLength: 1, maxLength: 120 },
+        },
+      },
+    },
+  },
+} as const satisfies JsonSchema;
+
+/** 运势英文输出字段与必填项不变，只放宽英文长度。 */
+export const FORTUNE_SCHOOL_SCHEMA_EN = {
+  ...QUESTION_SCHOOL_SCHEMA_EN,
+  required: [...QUESTION_SCHOOL_SCHEMA_EN.required, "useGod", "years"],
+  properties: {
+    ...QUESTION_SCHOOL_SCHEMA_EN.properties,
+    useGod: baziUseGodEn,
+    years: {
+      type: "array", minItems: 1, maxItems: 10,
+      items: {
+        type: "object", additionalProperties: false,
+        required: ["year", "verdict", "confidenceTenths", "note"],
+        properties: {
+          year: { type: "integer", minimum: 1900, maximum: 2099 },
+          verdict: QUESTION_SCHOOL_SCHEMA_EN.properties.verdict,
+          confidenceTenths: QUESTION_SCHOOL_SCHEMA_EN.properties.confidenceTenths,
+          note: { type: "string", minLength: 1, maxLength: 100 },
+        },
+      },
+    },
+  },
+} as const satisfies JsonSchema;

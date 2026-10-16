@@ -135,6 +135,49 @@ export function mockNamingFamilyOutput(key: NamingFamilyKey, prompt: string): Na
   return yinyiOutput(prompt);
 }
 
+const MOCK_TAGS_EN: Readonly<Record<Element, readonly string[]>> = {
+  木: ["Kind", "Growing", "Full of life"], 火: ["Warm", "Courteous", "Bright"],
+  土: ["Steady", "Honest", "Generous"], 金: ["Decisive", "Loyal", "Resolute"],
+  水: ["Thoughtful", "Adaptable", "Clear minded"],
+};
+
+/** 起名排练的原生英文展示文案；名字与逐字 char 仍保留汉字。 */
+export function mockEnglishNamingFamilyOutput(
+  key: NamingFamilyKey,
+  prompt: string,
+): NamingFamilyOutput {
+  const output = mockNamingFamilyOutput(key, prompt);
+  const note = key === "wuxing"
+    ? "Start with the favorable element, then balance sound, form, and meaning."
+    : key === "shiwen"
+      ? "Choose all characters in each name from one supplied classical line."
+      : "Read surname and given name together, then balance sound, form, and meaning.";
+  return {
+    ...output,
+    note,
+    names: output.names.map((name) => ({
+      ...name,
+      meaning: "A balanced name suggesting clarity, warmth, and steady growth.",
+      why: key === "shiwen"
+        ? "Both characters come from one supplied classical line and form a coherent image."
+        : "The choice follows this family's method and reads naturally as a whole.",
+      chars: name.chars.map(({ char }) => {
+        const raw = charInfo(char)?.pinyin ?? "character";
+        const pinyin = `${raw[0]?.toUpperCase() ?? ""}${raw.slice(1)}`;
+        return {
+          char,
+          gloss: `${pinyin}: a positive quality`,
+          sense: "As a name, it suggests warmth, clarity, and steady purpose.",
+        };
+      }),
+      tags: [...new Set([...name.given].flatMap((char) => {
+        const element = charInfo(char)?.wuxing;
+        return element ? MOCK_TAGS_EN[element] : [];
+      }))].slice(0, 5),
+    })),
+  };
+}
+
 export function mockNamingSummaryOutput(prompt: string): NamingSummaryOutput {
   const families: Array<{ label: string; names: string[] }> = [];
   let current: { label: string; names: string[] } | undefined;
@@ -162,5 +205,33 @@ export function mockNamingSummaryOutput(prompt: string): NamingSummaryOutput {
     overview: `已落笔${countLabel}家都重视正面寓意，分别侧重${families
       .map(({ label }) => label).join("与")}。`,
     tips: ["念出全名听听是否顺口", "问问家人方言里有无不雅谐音"],
+  };
+}
+
+export function mockEnglishNamingSummaryOutput(prompt: string): NamingSummaryOutput {
+  const familyLabels = ["Five Elements", "Classical Poetry", "Sound and Meaning"];
+  const names: string[] = [];
+  let inFamily = false;
+  for (const line of prompt.split("\n")) {
+    if (familyLabels.some((label) => line === `${label}:`)) {
+      inFamily = true;
+      continue;
+    }
+    const name = inFamily ? line.match(/^- ([^｜]+)｜overall score \d+/u)?.[1] : undefined;
+    if (name) {
+      names.push(name);
+      continue;
+    }
+    if (line.includes(" approach:")) inFamily = false;
+  }
+  const picks = [...new Set(names)].slice(0, 2).map((given) => ({
+    given,
+    reason: "It balances the family's method with sound and overall meaning.",
+  }));
+  if (picks.length < 2) throw new Error("英文起名 mock 合格名字不足");
+  return {
+    picks,
+    overview: "The available families share a positive direction while differing in method.",
+    tips: ["Read the full name aloud.", "Check for awkward homophones in family dialects."],
   };
 }

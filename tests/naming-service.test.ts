@@ -65,6 +65,21 @@ test("英文起名存档意图，各流派与合参终态通知且通知异常�
     assert.deepEqual(events.sort(), ["wuxing", "shiwen", "yinyi", "summary"].sort());
     const settled = await f.naming.getReading(created.id);
     assert.equal(settled.status, "done");
+    assert.equal(settled.summary?.status, "done");
+    for (const state of Object.values(settled.families)) {
+      assert.equal(state.status, "done");
+      for (const name of state.output?.names ?? []) {
+        assert.match(name.given, /^\p{Script=Han}+$/u);
+        const display = [name.meaning, name.why, ...name.chars.flatMap((item) => [
+          item.gloss, item.sense,
+        ]), ...name.tags].join("\n");
+        assert.doesNotMatch(display, /\p{Script=Han}/u);
+      }
+    }
+    const summaryText = settled.summary?.output
+      ? [settled.summary.output.overview, ...settled.summary.output.tips,
+        ...settled.summary.output.picks.map((pick) => pick.reason)].join("\n") : "";
+    assert.doesNotMatch(summaryText, /\p{Script=Han}/u);
     assert.equal(publicNamingReading(settled).lang, "en");
     await f.store.update<StoredNamingReading>(created.id, (reading) => ({ ...reading, families: {
       ...reading.families, shiwen: { status: "failed", attempts: 1, retries: 0 },

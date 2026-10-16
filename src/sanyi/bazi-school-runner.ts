@@ -1,7 +1,17 @@
 // src/sanyi/bazi-school-runner.ts
 import { StructuredOutputError, validateStructuredOutput,
   type StructuredOutputProvider } from "../agent/provider.js";
-import { auditBaziOutput } from "./bazi-audit.js";
+import { auditBaziEvidence, auditBaziOutput, baziProse } from "./bazi-audit.js";
+import {
+  auditBaziEnglishPeriodNote,
+  auditBaziEnglishProse,
+  auditBaziEnglishYearNote,
+  baziEnglishHourLimitErrors,
+  englishForbiddenErrors,
+} from "./english/audit.js";
+import { appendEnglishReferenceMaterials } from "./english/prompt.js";
+import { DESTINY_SCHOOL_SCHEMA_EN, FORTUNE_SCHOOL_SCHEMA_EN } from "./english/schema.js";
+import { chineseBodyErrors } from "./language-guard.js";
 import { DESTINY_SCHOOL_SCHEMA, FORTUNE_SCHOOL_SCHEMA, baziLanguageErrors,
   checkBaziConsistency, type BaziSchoolOutput,
   } from "./bazi-schema.js";
@@ -27,17 +37,52 @@ export type BaziSchoolRunResult = {
   calls: number;
 };
 
+function englishAuditErrors(output: BaziSchoolOutput, facts: ReturnType<typeof selectBaziFacts>): string[] {
+  const errors: string[] = [];
+  for (const evidence of output.evidence) {
+    errors.push(...auditBaziEvidence(evidence, facts));
+    errors.push(...chineseBodyErrors([evidence.claim]));
+    if (!/\p{Script=Han}/u.test(evidence.claim)) {
+      errors.push("evidence[].claim 必须包含中文盘面术语");
+    }
+  }
+  const prose = baziProse(output).join("\n");
+  errors.push(...auditBaziEnglishProse(prose, facts));
+  errors.push(...baziEnglishHourLimitErrors(prose, facts));
+  const display = [prose,
+    ...("years" in output ? output.years.map((item) => item.note) : []),
+    ...("periods" in output ? output.periods?.map((item) => item.note) ?? [] : []),
+  ].join("\n");
+  errors.push(...englishForbiddenErrors(display));
+  if ("years" in output) {
+    for (const item of output.years) errors.push(...auditBaziEnglishYearNote(item, facts));
+  } else {
+    for (const item of output.periods ?? []) errors.push(...auditBaziEnglishPeriodNote(item, facts));
+  }
+  return errors;
+}
+
 export async function runBaziSchool(deps: {
   provider: StructuredOutputProvider;
 }, input: BaziSchoolInput & {
   school: BaziSchool;
 }): Promise<BaziSchoolRunResult> {
-  const schema = input.kind === "destiny" ? DESTINY_SCHOOL_SCHEMA : FORTUNE_SCHOOL_SCHEMA;
+  const language = input.language ?? "zh";
+  const schema = input.kind === "destiny"
+    ? language === "en" ? DESTINY_SCHOOL_SCHEMA_EN : DESTINY_SCHOOL_SCHEMA
+    : language === "en" ? FORTUNE_SCHOOL_SCHEMA_EN : FORTUNE_SCHOOL_SCHEMA;
   let calls = 0;
   try {
     const facts = selectBaziFacts(input.school.key, input);
-    const basePrompt = input.school.buildUserPrompt(input);
-    const systemPrompt = baziSystemPrompt(input.school, input.kind);
+    const chinesePrompt = input.school.buildUserPrompt(input);
+    const basePrompt = language === "en"
+      ? appendEnglishReferenceMaterials(
+          chinesePrompt,
+          [...facts.values()].map((fact) => fact.label).join("\n"),
+          input.school.key === "yuchuntai" ? input.tiaohou.quote : "",
+        )
+      : chinesePrompt;
+    const systemPrompt = baziSystemPrompt(input.school, input.kind, language);
     let userPrompt = basePrompt;
     let errors: string[] = [];
     // 最后一次结构合格的输出：三次都不过核对时据此删错留对。
@@ -53,8 +98,10 @@ export async function runBaziSchool(deps: {
         // 不假设 provider 一定做过校验；Schema 失败也进入重写。
         const output = validateStructuredOutput<BaziSchoolOutput>(schema, raw);
         lastValid = output;
-        errors = [...checkBaziConsistency(output, input.chart, input.horizon),
-          ...auditBaziOutput(output, facts).errors];
+        errors = [
+          ...checkBaziConsistency(output, input.chart, input.horizon, language),
+          ...(language === "en" ? englishAuditErrors(output, facts) : auditBaziOutput(output, facts).errors),
+        ];
         if (errors.length === 0) {
           return { status: "done", output, calls, removed: 0, adjusted: 0 };
         }
@@ -65,11 +112,25 @@ export async function runBaziSchool(deps: {
         errors = schemaHints(error);
       }
       userPrompt = [basePrompt, "", "上一次输出未通过核对，请修正后完整重写：",
-        ...errors.map((error) => `- ${error}`)].join("\n");
+        ...errors.map((error) => `- ${error}`),
+        ...(language === "en" ? ["正文仍须用英文，evidence[].claim 仍须用中文。"] : []),
+      ].join("\n");
     }
     if (lastValid) {
-      const repaired = repairBazi(lastValid, facts, input.chart, input.horizon);
-      if (baziLanguageErrors(repaired.output).length === 0) {
+      const repaired = repairBazi(lastValid, facts, input.chart, input.horizon, language);
+      const repairedErrors = language === "en"
+        ? [...checkBaziConsistency(repaired.output, input.chart, input.horizon, language),
+            ...englishAuditErrors(repaired.output, facts)]
+        : baziLanguageErrors(repaired.output);
+      let repairedStructureOk = true;
+      if (language === "en") {
+        try {
+          validateStructuredOutput(schema, repaired.output);
+        } catch {
+          repairedStructureOk = false;
+        }
+      }
+      if (repairedErrors.length === 0 && repairedStructureOk) {
         return {
           status: "done", output: repaired.output, calls,
           removed: repaired.removed, adjusted: repaired.adjusted,

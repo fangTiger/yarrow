@@ -94,6 +94,8 @@ export interface SummaryInput {
   proseErrors(text: string): string[];
   /** 缺省为中文；英文仅改变展示字段，结构枚举保持不变。 */
   language?: "zh" | "en";
+  /** 英文提示所需的完整事实术语材料；缺省沿用盘面要点。 */
+  referenceText?: string;
 }
 
 export const SUMMARY_SCHEMA = {
@@ -278,7 +280,11 @@ export function buildSummaryPrompt(input: SummaryInput): string {
   lines.push(...input.schools.map(schoolBlock));
   const base = lines.join("\n");
   return input.language === "en"
-    ? appendEnglishReferenceMaterials(base, input.chartPoints.join("\n"), input.anchor.lines.join("\n"))
+    ? appendEnglishReferenceMaterials(
+        base,
+        input.referenceText ?? input.chartPoints.join("\n"),
+        input.anchor.lines.join("\n"),
+      )
     : base;
 }
 
