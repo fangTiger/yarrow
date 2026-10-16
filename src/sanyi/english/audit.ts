@@ -95,10 +95,15 @@ const RELATIVE_PATTERN = [...new Set([
 const TEN_GOD_PATTERN = [...TEN_GOD_BY_EN.keys()].sort((a, b) => b.length - a.length)
   .map(escaped).join("|");
 
+// 干支对允许空格、连字符或短破折号相连（模型常写 Ding Si，也常写 Ding-Si）。
 const GANZHI_PAIR = new RegExp(
-  `\\b(${[...GANZHI_BY_EN.keys()].sort((a, b) => b.length - a.length).map(escaped).join("|")})\\b`,
+  `\\b(${[...GANZHI_BY_EN.keys()].sort((a, b) => b.length - a.length)
+    .map((pair) => escaped(pair).replace(" ", "[ \\u2010-\\u2013-]")).join("|")})\\b`,
   "gu",
 );
+function ganzhiOf(matched: string): string {
+  return GANZHI_BY_EN.get(matched.replace(/[\u2010-\u2013-]/u, " "))!;
+}
 const TEN_GOD = new RegExp(`\\b(${TEN_GOD_PATTERN})\\b`, "gu");
 const QUESTION_COMBINATION = new RegExp(
   `\\b(${BRANCH_PATTERN})\\s+(${ELEMENT_PATTERN})\\s+(${RELATIVE_PATTERN})\\b`,
@@ -116,7 +121,7 @@ function auditEnglishTerms(
 ): string[] {
   const errors: string[] = [];
   for (const match of text.matchAll(GANZHI_PAIR)) {
-    const chinese = GANZHI_BY_EN.get(match[1]!)!;
+    const chinese = ganzhiOf(match[1]!);
     if (!allowed.has(chinese)) errors.push(`${label}出现不存在的干支：${match[0]}`);
   }
   for (const match of text.matchAll(TEN_GOD)) {

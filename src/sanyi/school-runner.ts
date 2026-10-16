@@ -66,16 +66,11 @@ function validationErrors(
       ...checkVerdictConsistency(output, language),
       ...output.evidence.flatMap((evidence) => auditQuestionEvidence(evidence, facts)),
       ...chineseBodyErrors(output.evidence.map((evidence) => evidence.claim)),
-      ...output.evidence.flatMap((evidence) => {
-        if (!/\p{Script=Han}/u.test(evidence.claim)) {
-          return ["evidence[].claim 必须包含中文盘面术语"];
-        }
-        const fact = facts.get(evidence.ref);
-        const anchored = fact && [...fact.tokens].some((token) => (
-          /\p{Script=Han}/u.test(token) && evidence.claim.includes(token)
-        ));
-        return anchored ? [] : ["evidence[].claim 必须使用所引事实中的中文盘面术语"];
-      }),
+      // 与中文路径同强度：锚定与关键词核对由 auditQuestionEvidence 完成（它会解析带标签的编号与别名）；
+      // 这里只要求 evidence 确实用中文书写。
+      ...output.evidence.flatMap((evidence) => (
+        /\p{Script=Han}/u.test(evidence.claim) ? [] : ["evidence[].claim 必须包含中文盘面术语"]
+      )),
       ...auditQuestionEnglishProse(prose, facts),
       ...englishForbiddenErrors(display),
     ];

@@ -62,3 +62,12 @@ test("英文禁用词按词边界命中，charm 等正常词不误报", () => {
   assert.deepEqual(englishForbiddenErrors("This is a better option."), []);
   assert.deepEqual(englishForbiddenErrors("Ask for directions to the station."), []);
 });
+
+test("干支对写成连字符或短破折号也要核对", () => {
+  // 样例问事盘里没有丙辰：三种写法都应被拦下。
+  for (const text of ["Bing Chen", "Bing-Chen", "Bing–Chen"]) {
+    assert.match(auditQuestionEnglishProse(`${text} rules the period.`, facts).join("\n"), /Bing.Chen/u, text);
+  }
+  // 地支相连（Hai-Mao）不是干支对，不报。
+  assert.deepEqual(auditQuestionEnglishProse("Hai-Mao join to Wood.", facts), []);
+});
