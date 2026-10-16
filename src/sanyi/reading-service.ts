@@ -14,6 +14,8 @@ import type { StructuredOutputProvider } from "../agent/provider.js";
 import { classifyQuestion, normalizeQuestion, overrideClassification } from "./classify.js";
 import { buildQuestionFacts, type FactTable } from "./facts.js";
 import { auditQuestionProse } from "./audit.js";
+import { auditQuestionEnglishProse } from "./english/audit.js";
+import { SCHOOLS_EN } from "./i18n/glossary.js";
 import {
   averageConfidence, runSummaryWithRetry, summaryState, type SummaryInput, type SummarySchool,
 } from "./summary.js";
@@ -134,6 +136,7 @@ export class ReadingService {
     kind?: "question";
     feeProof: SanyiFeeProof;
     translateTo?: "en";
+    lang?: "en";
   }): Promise<StoredReading> {
     let classification = classifyQuestion(input.question);
     if (input.kind === "question") {
@@ -181,6 +184,7 @@ export class ReadingService {
       castAfterBlock: receipt.blockNumber.toString(),
       castProgressAt: createdAt,
       ...(input.translateTo ? { translateTo: input.translateTo } : {}),
+      ...(input.lang === "en" ? { lang: "en" as const } : {}),
     };
     await this.deps.store.write(reading);
     await incrementMetricSafely(this.metrics, this.deps.logger, "reading_created:question");
@@ -559,7 +563,9 @@ export class ReadingService {
       const output = state.output;
       values.push(output.confidenceTenths);
       schools.push({
-        name: school.name, school: school.school, verdict: output.verdict,
+        name: reading.lang === "en" ? SCHOOLS_EN[school.key].name : school.name,
+        school: reading.lang === "en" ? SCHOOLS_EN[school.key].school : school.school,
+        verdict: output.verdict,
         confidenceTenths: output.confidenceTenths, headline: output.headline, reason: output.reason,
         sections: output.sections, advice: output.advice,
         ...(output.timing ? { timing: output.timing } : {}),
@@ -583,7 +589,10 @@ export class ReadingService {
       schools,
       // 解法心法取本卦《大象传》原文。
       anchor: { title: `《象传》· ${five.primary.name}`, lines: [getDaxiang(five.primary.kingWenNumber)] },
-      proseErrors: (text) => auditQuestionProse(text, context.facts),
+      proseErrors: (text) => reading.lang === "en"
+        ? auditQuestionEnglishProse(text, context.facts)
+        : auditQuestionProse(text, context.facts),
+      ...(reading.lang === "en" ? { language: "en" as const } : {}),
     };
   }
 
@@ -639,6 +648,7 @@ export class ReadingService {
       question: reading.question,
       facts: context.facts,
       originalTexts: context.originalTexts,
+      ...(reading.lang === "en" ? { language: "en" as const } : {}),
     };
     let result = await runSchool({ provider: this.deps.provider }, input);
     if (result.status === "failed") {

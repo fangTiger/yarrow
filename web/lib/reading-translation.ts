@@ -1,5 +1,27 @@
 import type { StoredTranslation, StoredTranslationUnit } from "../../src/sanyi/translation/store.js";
 import type { AnyPublicReading } from "./api.js";
+import { isNativeEnglishKind } from "../../src/sanyi/native-english.js";
+
+/** N1 仅问事已直接写英文；N2 会把命理、运势与起名加入此策略。 */
+export function isNativeEnglishReading(reading: AnyPublicReading): boolean {
+  return isNativeEnglishKind(reading.kind, reading.lang);
+}
+
+/** 是否需要旁路翻译；原生英文问事和中文界面都不进入翻译请求、轮询或面板。 */
+export function usesTranslationPipeline(
+  reading: AnyPublicReading,
+  lang: "zh" | "en",
+): boolean {
+  return lang === "en" && !isNativeEnglishReading(reading);
+}
+
+/** 按界面语言选择结果正文；原生英文保留服务端返回对象。 */
+export function readingForLanguage<T extends AnyPublicReading>(
+  reading: T,
+  lang: "zh" | "en",
+): T {
+  return usesTranslationPipeline(reading, lang) ? applyReadingTranslation(reading) : reading;
+}
 
 export type TranslationViewState =
   | { kind: "pending" | "writing" | "done" }

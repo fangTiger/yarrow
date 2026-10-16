@@ -393,6 +393,21 @@ test("英文下单只在单元终态后启动翻译，中文下单不翻译", as
   }
 });
 
+test("原生英文问事不建立翻译单元，trigger、translate 与 startUnit 均不调用模型", async () => {
+  const provider = new RecordingProvider();
+  const f = await fixture({ provider, dailyUnits: 0 });
+  try {
+    await f.store.write({ ...terminalReading(), lang: "en", translateTo: undefined } as never);
+    assert.deepEqual(await f.service.trigger(ID), { lang: "en", units: {} });
+    assert.deepEqual(await f.service.translate(ID), { lang: "en", units: {} });
+    await f.service.startUnit(ID, "chengyi");
+    assert.equal(provider.requests.length, 0);
+    assert.equal(await f.translationStore.read(ID), undefined);
+  } finally {
+    await f.close();
+  }
+});
+
 test("两个单元并发准备时不会互相覆盖", async () => {
   const provider = new RecordingProvider(undefined, true);
   const f = await fixture({ provider });

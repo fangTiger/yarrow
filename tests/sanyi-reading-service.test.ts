@@ -12,7 +12,7 @@ import { mockSingleFeeReceipt } from "../src/sanyi/mock-provider.js";
 import type { SanyiFeeProof } from "../src/sanyi/fee.js";
 import type { QuestionBlockSource } from "../src/oracle/question-oracle.js";
 import { createSanyiLogger, type SanyiLogger } from "../src/sanyi/log.js";
-import { mockSchoolOutput } from "../src/sanyi/mock-schools.js";
+import { mockEnglishSchoolOutput, mockSchoolOutput } from "../src/sanyi/mock-schools.js";
 import {
   LimitExceededError,
   PaymentAlreadyUsedError,
@@ -118,7 +118,10 @@ class FakeProvider implements StructuredOutputProvider {
       this.throwTimes.set(key, remaining - 1);
       throw new Error("模型暂时超时");
     }
-    const output = mockSchoolOutput(key, factsFromPrompt(request.userPrompt));
+    const facts = factsFromPrompt(request.userPrompt);
+    const output = request.systemPrompt.includes("plain English")
+      ? mockEnglishSchoolOutput(key, facts)
+      : mockSchoolOutput(key, facts);
     if (this.rejectFor === key) {
       return {
         ...output,
@@ -220,9 +223,10 @@ test("英文问事存档意图，并在各家与总述终态通知；重试通�
   try {
     item.provider.throwFor = "chengyi";
     const reading = await item.service.createQuestionReading({
-      question: "这次面试能过吗", feeProof: PROOF, translateTo: "en",
+      question: "这次面试能过吗", feeProof: PROOF, lang: "en",
     });
-    assert.equal(reading.translateTo, "en");
+    assert.equal(reading.lang, "en");
+    assert.equal(reading.translateTo, undefined);
     await castAll(item.service, reading.id);
     assert.deepEqual(events.slice(0, 4).sort(), ["chengyi", "jingfang", "shaoyong", "summary"].sort());
     assert.equal((await item.service.getReading(reading.id)).status, "done");

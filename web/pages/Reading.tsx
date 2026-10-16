@@ -28,7 +28,12 @@ import { ArcVerifyPanel } from "../components/ArcVerify.js";
 import { EnglishQuestionResult } from "../components/EnglishQuestionResult.js";
 import { DisclaimerFooter } from "../components/DisclaimerFooter.js";
 import { useLang, useT } from "../lib/i18n.js";
-import { applyReadingTranslation, translationViewState } from "../lib/reading-translation.js";
+import {
+  isNativeEnglishReading,
+  readingForLanguage,
+  translationViewState,
+  usesTranslationPipeline,
+} from "../lib/reading-translation.js";
 import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
 import { useReadingTitle } from "../lib/reading-progress.js";
 import { schoolEn } from "../lib/result-format.js";
@@ -178,6 +183,16 @@ export function TranslationStatusPanel(props: {
   </section>;
 }
 
+export function NativeEnglishNotice() {
+  const { setLang, t } = useLang();
+  return <section className="panel native-english-notice">
+    <p>{t("nativeEnglish.notice")}</p>
+    <button className="button" onClick={() => setLang("en")} type="button">
+      {t("nativeEnglish.switch")}
+    </button>
+  </section>;
+}
+
 function translationReady(reading: AnyPublicReading): boolean {
   const states = reading.kind === "naming"
     ? Object.values(reading.families) : Object.values(reading.schools);
@@ -213,7 +228,8 @@ export function Reading({ id }: { id: string }) {
   }, [refresh]);
   useEffect(() => {
     if (!reading || !(shouldPollReading(reading)
-      || (lang === "en" && shouldPollTranslation(reading.translation, reading)))) {
+      || (usesTranslationPipeline(reading, lang)
+        && shouldPollTranslation(reading.translation, reading)))) {
       return undefined;
     }
     const timer = window.setInterval(() => void refresh(), 1_000);
@@ -232,7 +248,7 @@ export function Reading({ id }: { id: string }) {
     }
   }, [id, refresh]);
   useEffect(() => {
-    if (lang !== "en" || !reading || !translationReady(reading)) return;
+    if (!reading || !usesTranslationPipeline(reading, lang) || !translationReady(reading)) return;
     const state = translationViewState(reading.translation, reading);
     if (state.kind !== "pending") return;
     const key = `${reading.id}:${Object.values(reading.translation?.units ?? {})
@@ -263,14 +279,17 @@ export function Reading({ id }: { id: string }) {
       </main>
     );
   }
-  const visibleReading = lang === "en" ? applyReadingTranslation(reading) : reading;
-  const translationPanel = lang === "en" ? <TranslationStatusPanel busy={translationBusy}
+  const nativeEnglish = isNativeEnglishReading(reading);
+  const visibleReading = readingForLanguage(reading, lang);
+  const translationPanel = usesTranslationPipeline(reading, lang) ? <TranslationStatusPanel busy={translationBusy}
     onRetry={() => void requestTranslation()} requestFailed={translationRequestFailed}
     reading={reading} translation={reading.translation} /> : null;
+  const nativeEnglishNotice = lang === "zh" && nativeEnglish ? <NativeEnglishNotice /> : null;
   if (visibleReading.kind === "naming") {
     return (
       <main className="page">
         <ReadingTopbar />
+        {nativeEnglishNotice}
         {translationPanel}
         <NamingReading reading={visibleReading} onReading={setReading} />
         <ArcVerifyPanel paymentHash={visibleReading.payment.firstHash} />
@@ -282,6 +301,7 @@ export function Reading({ id }: { id: string }) {
     return (
       <main className="page">
         <ReadingTopbar />
+        {nativeEnglishNotice}
         {lang === "zh" ? <ShikongBar data={toView(visibleReading.almanac)} /> : null}
         {translationPanel}
         <BaziReading reading={visibleReading} onReading={setReading} />
@@ -295,6 +315,7 @@ export function Reading({ id }: { id: string }) {
   return (
     <main className="page">
       <ReadingTopbar />
+      {nativeEnglishNotice}
       {lang === "zh" && view ? <ShikongBar data={view} /> : null}
       {translationPanel}
       {lang === "zh" && visibleReading.chart?.month.boundaryUncertain ? <p className="boundary-tag">月建 · 近交节</p> : null}

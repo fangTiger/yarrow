@@ -245,6 +245,8 @@ export const zh = {
   "translation.failed": "部分英文译文暂未生成。",
   "translation.retry": "免费重试英文翻译",
   "translation.retrying": "正在重试…",
+  "nativeEnglish.notice": "本卦以英文生成",
+  "nativeEnglish.switch": "切换到英文界面",
   "summary.title": "白话总述",
   "summary.question": "所问：{question}",
   "summary.agreement": "三家一致",

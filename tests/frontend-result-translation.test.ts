@@ -6,10 +6,13 @@ import type { StoredTranslation } from "../src/sanyi/translation/store.js";
 import { extractUnits } from "../src/sanyi/translation/units.js";
 import {
   applyReadingTranslation,
+  isNativeEnglishReading,
+  readingForLanguage,
   translationViewState,
+  usesTranslationPipeline,
 } from "../web/lib/reading-translation.js";
 import { shouldPollTranslation } from "../web/lib/reading-state.js";
-import { TranslationStatusPanel } from "../web/pages/Reading.js";
+import { NativeEnglishNotice, TranslationStatusPanel } from "../web/pages/Reading.js";
 import { createApiClient } from "../web/lib/api.js";
 import { renderIn } from "./helpers/render-in.js";
 
@@ -248,7 +251,27 @@ test("结果页英文数据流自动触发翻译并在翻译期间轮询", () =>
   assert.match(source, /api\.getReading\(id, lang\)/u);
   assert.match(source, /api\.translateReading\(id\)/u);
   assert.match(source, /shouldPollTranslation\(reading\.translation, reading\)/u);
-  assert.match(source, /applyReadingTranslation\(reading\)/u);
+  assert.match(source, /readingForLanguage\(reading, lang\)/u);
+  assert.match(source, /isNativeEnglishReading\(reading\)/u);
+  assert.match(source, /usesTranslationPipeline\(reading, lang\).*shouldPollTranslation/su);
+  assert.match(source, /usesTranslationPipeline\(reading, lang\).*translationReady/su);
+});
+
+test("原生英文问事在英文界面直接用原 reading，中文界面显示切换提示", () => {
+  const reading = { kind: "question", lang: "en" } as never;
+  assert.equal(isNativeEnglishReading(reading), true);
+  assert.equal(isNativeEnglishReading({ kind: "question" } as never), false);
+  assert.equal(isNativeEnglishReading({ kind: "fortune", lang: "en" } as never), false,
+    "N2 前命理与运势仍走翻译兼容路径");
+  assert.equal(usesTranslationPipeline(reading, "en"), false);
+  assert.equal(usesTranslationPipeline(reading, "zh"), false);
+  assert.strictEqual(readingForLanguage(reading, "en"), reading,
+    "原生英文不得克隆或套用旁路译文");
+  assert.equal(usesTranslationPipeline({ kind: "question" } as never, "en"), true,
+    "中文问事在英文界面的旧翻译路径保持不变");
+  const html = renderIn("zh", createElement(NativeEnglishNotice));
+  assert.match(html, /本卦以英文生成/u);
+  assert.match(html, /切换到英文界面/u);
 });
 
 test("付款按钮的普通请求与起名请求都携带当前界面语言", () => {

@@ -32,3 +32,25 @@ export function mockSchoolOutput(
     evidence: [{ ref: fact.id, claim: [...fact.tokens].join(" ") }],
   };
 }
+
+export function mockEnglishSchoolOutput(
+  key: QuestionSchoolKey,
+  facts: FactTable,
+): QuestionSchoolOutput {
+  const setting = SETTINGS[key];
+  const fact = facts.get(setting.ref);
+  if (!fact) throw new Error(`mock 缺少事实：${setting.ref}`);
+  return {
+    verdict: setting.verdict,
+    confidenceTenths: setting.confidenceTenths,
+    headline: "Wait for clearer conditions",
+    reason: "The available signs favor preparation before commitment.",
+    sections: [
+      { title: "Basis", text: "The supplied chart fact sets the main constraint." },
+      { title: "Judgment", text: "The conditions are not fully settled yet." },
+      { title: "Action", text: "Keep a practical fallback and verify new information." },
+    ],
+    advice: ["Leave room to adjust."],
+    evidence: [{ ref: fact.id, claim: fact.label }],
+  };
+}

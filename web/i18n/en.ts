@@ -249,6 +249,8 @@ export const en: Record<keyof typeof zh, string> = {
   "translation.failed": "Part of the English translation is unavailable.",
   "translation.retry": "Retry translation (free)",
   "translation.retrying": "Retrying...",
+  "nativeEnglish.notice": "This reading was written in English",
+  "nativeEnglish.switch": "Switch to the English interface",
   "summary.title": "Plain-language summary",
   "summary.question": "Question: {question}",
   "summary.agreement": "Where the three agree",

@@ -37,11 +37,14 @@ test("英文八字存档意图，各家与总述终态通知且通知异常不�
   } });
   try {
     const created = await f.bazi.create({ kind: "fortune", question: "今年运势如何", birth,
-      sect: 1, horizon: "year", feeProof: proof(81), translateTo: "en" });
-    assert.equal(created.translateTo, "en");
+      sect: 1, horizon: "year", feeProof: proof(81), lang: "en" });
+    assert.equal(created.lang, "en");
+    assert.equal(created.translateTo, undefined);
     await f.bazi.whenSettled(created.id);
     assert.deepEqual(events.sort(), ["shenxiaozhan", "yuchuntai", "rentieqiao", "summary"].sort());
-    assert.equal((await f.bazi.getReading(created.id)).status, "done");
+    const settled = await f.bazi.getReading(created.id);
+    assert.equal(settled.status, "done");
+    assert.equal((await f.api.getReading(created.id)).lang, "en");
     await f.store.update<StoredBaziReading>(created.id, (reading) => ({ ...reading, schools: {
       ...reading.schools, yuchuntai: { status: "failed", attempts: 1, retries: 0 },
     } }));

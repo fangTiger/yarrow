@@ -8,8 +8,8 @@ import type {
   StructuredOutputRequest,
 } from "../agent/provider.js";
 import type { FactTable } from "./facts.js";
-import { mockSchoolOutput } from "./mock-schools.js";
-import { mockSummaryOutput } from "./mock-summary.js";
+import { mockEnglishSchoolOutput, mockSchoolOutput } from "./mock-schools.js";
+import { mockEnglishSummaryOutput, mockSummaryOutput } from "./mock-summary.js";
 import type { QuestionSchoolKey } from "./schools/index.js";
 import { mockBaziSchoolOutput } from "./mock-bazi-schools.js";
 import type { BaziSchoolKey } from "./schools/bazi-shared.js";
@@ -83,6 +83,9 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
     }
     const summary = request.taskId.match(/^sanyi\/summary\/(question|fortune|destiny)$/u);
     if (summary) {
+      if (summary[1] === "question" && request.systemPrompt.includes("plain English")) {
+        return mockEnglishSummaryOutput(request.userPrompt) as T;
+      }
       return mockSummaryOutput(summary[1] as "question" | "fortune" | "destiny", request.userPrompt) as T;
     }
     const bazi = request.taskId.match(/^sanyi\/(destiny|fortune)\/(shenxiaozhan|yuchuntai|rentieqiao)$/u);
@@ -94,7 +97,10 @@ export class MockSchoolsProvider implements StructuredOutputProvider {
     if (!["chengyi", "jingfang", "shaoyong"].includes(key)) {
       throw new Error(`mock provider 不支持任务：${request.taskId}`);
     }
-    return mockSchoolOutput(key, factsFromPrompt(request.userPrompt)) as T;
+    const facts = factsFromPrompt(request.userPrompt);
+    return (request.systemPrompt.includes("plain English")
+      ? mockEnglishSchoolOutput(key, facts)
+      : mockSchoolOutput(key, facts)) as T;
   }
 }
 

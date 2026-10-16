@@ -5,6 +5,7 @@ import type { StructuredOutputProvider } from "../../agent/provider.js";
 import type { SanyiLogger } from "../log.js";
 import { GLOSSARY_VERSION } from "../i18n/glossary.js";
 import type { ReadingStore, StoredReading } from "../store.js";
+import { isNativeEnglishKind } from "../native-english.js";
 import { checkTranslation, type TranslationOutput } from "./check.js";
 import {
   buildTranslationPrompt,
@@ -132,9 +133,10 @@ export class TranslationService {
   }
 
   async read(id: string): Promise<StoredTranslation | undefined> {
+    const reading = await this.deps.store.read<StoredReading>(id);
+    if (isNativeEnglishKind(reading.kind, reading.lang)) return undefined;
     const stored = await this.translationStore.read(id);
     if (!stored) return undefined;
-    const reading = await this.deps.store.read<StoredReading>(id);
     const visible: StoredTranslation = { lang: "en", units: { ...stored.units } };
     for (const unit of extractUnits(reading)) {
       const state = stored.units[unit.key];
@@ -150,6 +152,8 @@ export class TranslationService {
 
   /** 等待本次可翻译单元完成；API 使用 trigger 只触发、不等待。 */
   async translate(id: string): Promise<StoredTranslation> {
+    const reading = await this.deps.store.read<StoredReading>(id);
+    if (isNativeEnglishKind(reading.kind, reading.lang)) return { lang: "en", units: {} };
     const existing = this.readingJobs.get(id);
     if (existing) return existing;
     const job = this.run(id);
@@ -162,6 +166,8 @@ export class TranslationService {
   }
 
   async trigger(id: string): Promise<StoredTranslation> {
+    const reading = await this.deps.store.read<StoredReading>(id);
+    if (isNativeEnglishKind(reading.kind, reading.lang)) return { lang: "en", units: {} };
     const existing = this.readingJobs.get(id);
     if (existing) return await this.translationStore.read(id) ?? { lang: "en", units: {} };
     const starting = this.triggerStarts.get(id);
@@ -240,11 +246,14 @@ export class TranslationService {
   }
 
   private async startUnitRequest(id: string, unitKey: TranslationUnitKey): Promise<void> {
+    const currentReading = await this.deps.store.read<StoredReading>(id);
+    if (isNativeEnglishKind(currentReading.kind, currentReading.lang)) return;
     let prepared: Awaited<ReturnType<TranslationService["prepare"]>>;
     let claim: { document: StoredTranslation; claimed: TranslationUnit[] } | undefined;
     do {
       prepared = await this.prepare(id, [unitKey], (reading, units) => (
-        reading.translateTo === "en" && units.length === 1 && isUnitTerminal(reading, units[0]!)
+        (reading.translateTo === "en" || reading.lang === "en")
+          && units.length === 1 && isUnitTerminal(reading, units[0]!)
       ));
       if (!prepared) return;
       claim = await this.claimPreparedUnits(id, prepared.units);

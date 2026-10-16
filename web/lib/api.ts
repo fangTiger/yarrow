@@ -10,6 +10,7 @@ export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
 export type AnyPublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
 export type PublicReading = Extract<AnyPublicReading, { kind: "question" }>;
 export type ThrowResult = PublicReading["throws"][number];
+export type ReadingLanguage = "zh" | "en";
 export interface CreateReadingInput {
   question: string;
   kind: Classification["kind"];
@@ -23,7 +24,7 @@ export interface CreateReadingInput {
   length?: 1 | 2 | 3 | 4;
   unborn?: boolean;
   feeProof: SanyiFeeProof;
-  lang?: "zh" | "en";
+  lang?: ReadingLanguage;
 }
 export class ApiError extends Error {
   constructor(
@@ -81,7 +82,7 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
     continueCasting: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/cast`, {}),
     retrySummary: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/summary/retry`, {}),
-    getReading: (id: string, lang?: "zh" | "en") => request<AnyPublicReading>(
+    getReading: (id: string, lang?: ReadingLanguage) => request<AnyPublicReading>(
       `/api/readings/${id}${lang === "en" ? "?lang=en" : ""}`,
     ),
     translateReading: (id: string) => request<import("../../src/sanyi/translation/store.js").StoredTranslation>(

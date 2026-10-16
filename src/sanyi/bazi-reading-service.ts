@@ -89,6 +89,7 @@ export class BaziReadingService {
     horizon: FortuneHorizon;
     feeProof: SanyiFeeProof;
     translateTo?: "en";
+    lang?: "en";
   }): Promise<StoredBaziReading> {
     // 付款核验先于排盘；API 仅先做请求格式校验，不生成命盘。
     const receipt = await this.deps.feeVerifier.verify(input.feeProof);
@@ -110,7 +111,8 @@ export class BaziReadingService {
       tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
       almanac: almanacAt(BigInt(Math.floor(now.getTime() / 1_000))),
       changes: 0, status: "writing", schools: schools(now.toISOString()),
-      ...(input.translateTo ? { translateTo: input.translateTo } : {}) };
+      ...(input.translateTo ? { translateTo: input.translateTo } : {}),
+      ...(input.lang === "en" ? { lang: "en" as const } : {}) };
     await this.deps.store.write(reading);
     await incrementMetricSafely(this.metrics, this.deps.logger, `reading_created:${input.kind}`);
     this.start(id, input.kind, () => this.runAll(reading, true), true);

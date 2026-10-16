@@ -1,7 +1,7 @@
 import { deriveFiveHexagrams } from "../../src/oracle/liuyao-chart.js";
 import type { AnyPublicReading } from "./api.js";
 import type { Lang, TFunction } from "./i18n.js";
-import { applyReadingTranslation } from "./reading-translation.js";
+import { applyReadingTranslation, isNativeEnglishReading } from "./reading-translation.js";
 import {
   confidenceEn, hexagramEn, schoolEn, stemBranchEn, verdictEn,
 } from "./result-format.js";
@@ -158,7 +158,7 @@ export function buildShareCard(
   options: ShareCardBuildOptions = {},
 ): ShareCardModel {
   // 正式英文结果带 translation；无此字段的是已由调用方准备好的英文示例或测试视图。
-  const visibleReading = (lang === "en" && reading.translation
+  const visibleReading = (lang === "en" && reading.translation && !isNativeEnglishReading(reading)
     ? applyReadingTranslation(reading) : reading) as ShareReading;
   const output = summaryOutput(visibleReading);
   if (visibleReading.kind !== "question" && !visibleReading.chart) {

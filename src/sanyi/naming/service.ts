@@ -53,6 +53,7 @@ export interface NamingCreateInput {
   birth?: unknown;
   feeProof: SanyiFeeProof;
   translateTo?: "en";
+  lang?: "en";
 }
 
 function initialFamilies(startedAt: string): StoredNamingReading["families"] {
@@ -225,6 +226,7 @@ export class NamingReadingService {
       candidateIds: candidates.map(({ id: candidateId }) => candidateId),
       families: initialFamilies(now.toISOString()),
       ...(input.translateTo ? { translateTo: input.translateTo } : {}),
+      ...(input.lang === "en" ? { lang: "en" as const } : {}),
     };
     await this.deps.store.write(reading);
     await incrementMetricSafely(this.metrics, this.deps.logger, "reading_created:naming");

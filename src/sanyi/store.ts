@@ -85,7 +85,9 @@ export interface StoredQuestionReading {
   almanac?: AlmanacResult;
   qimen?: QimenResult;
   terminalMetric?: TerminalMetricClaim;
-  /** 英文界面下单时由服务端逐单元后台翻译；中文下单不保存。 */
+  /** 英文下单才保存；缺省即中文。 */
+  lang?: "en";
+  /** 兼容旧英文订单的翻译意图；新订单改用 lang。 */
   translateTo?: "en";
 }
 
@@ -131,7 +133,9 @@ export interface StoredBaziReading {
     periods: Record<string, { vote: PeriodFeedbackVote; at: string }>;
   };
   terminalMetric?: TerminalMetricClaim;
-  /** 英文界面下单时由服务端逐单元后台翻译；中文下单不保存。 */
+  /** 英文下单才保存；缺省即中文。 */
+  lang?: "en";
+  /** 兼容旧英文订单的翻译意图；新订单改用 lang。 */
   translateTo?: "en";
 }
 
@@ -190,7 +194,9 @@ export interface StoredNamingReading {
   families: Record<import("./naming/schema.js").NamingFamilyKey, NamingFamilyState>;
   summary?: NamingSummaryState;
   terminalMetric?: TerminalMetricClaim;
-  /** 英文界面下单时由服务端逐单元后台翻译；中文下单不保存。 */
+  /** 英文下单才保存；缺省即中文。 */
+  lang?: "en";
+  /** 兼容旧英文订单的翻译意图；新订单改用 lang。 */
   translateTo?: "en";
 }
 

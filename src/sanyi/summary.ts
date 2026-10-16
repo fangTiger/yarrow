@@ -7,6 +7,9 @@ import {
 import type { JsonSchema } from "../agent/schemas.js";
 import { splitSentences } from "./repair.js";
 import { chineseBodyErrors } from "./language-guard.js";
+import { englishBodyErrors, englishForbiddenErrors } from "./english/audit.js";
+import { ENGLISH_OUTPUT_CONVENTIONS, appendEnglishReferenceMaterials } from "./english/prompt.js";
+import { SUMMARY_SCHEMA_EN } from "./english/schema.js";
 import { schemaHints } from "./schema-hints.js";
 import type { SummaryState } from "./store.js";
 
@@ -89,6 +92,8 @@ export interface SummaryInput {
   anchor: SummaryAnchor;
   /** 正文盘面核对：返回中文错误；问事与八字各用自己的核对器。 */
   proseErrors(text: string): string[];
+  /** 缺省为中文；英文仅改变展示字段，结构枚举保持不变。 */
+  language?: "zh" | "en";
 }
 
 export const SUMMARY_SCHEMA = {
@@ -186,6 +191,24 @@ export const SUMMARY_SYSTEM_PROMPT = `你是「三易」的白话总述执笔人
 - 自称只说「三易」，语气平实，不渲染恐惧，也不打包票。
 输出必须严格符合给定 JSON Schema。`;
 
+export const SUMMARY_SYSTEM_PROMPT_EN = `You write Yarrow's plain-language synthesis and are not one of the three readers.
+Combine the three readings of the same question into clear, plain English and answer the question directly.
+- Use only the supplied school readings and chart points. Do not add a conclusion none of the schools made, or invent stems, branches, hexagrams, Ten Gods, or relationships.
+- On first use, explain specialist terms in parentheses. For a question, Yong Shen means the key line representing the matter. For destiny or fortune, Yong Shen means the element most helpful to the chart, and Da Yun means a ten-year luck period.
+- conclusion must answer directly in one sentence. tone must match the supplied consensus tendency, and the wording of the conclusion must match it.
+- agreement states where the schools agree. difference states where they differ and must be omitted when they fully agree.
+- explanation contains two to four paragraphs, one reason per paragraph.
+- remedy answers what the reader can do. principle explains the practical lesson of the supplied anchor without copying it. plan contains two or three steps: action says what to do, basis cites a chart point or school statement, and timing says when when relevant. avoid contains one or two things not to do.
+- Only destiny includes portrait, based solely on the schools' character sections and existing useful-element judgments. traits has three to five short labels; strengths and blindSpots have exactly two items each; summary gives one overall sentence.
+- Advice must be practical. Do not recommend colors, directions, numbers, wearable objects, consecrated objects, ritual implements, talismans, amulets, mascots, ornaments, releasing animals, donations, offerings, or incense.
+- watch must include both a time window and the condition under which it applies; omit it when there is no supported timing.
+- Fortune must include outlook as a one-sentence ten-year overview.
+- Destiny has no tone or overall fortune rating. It must include outlook when period consensus is supplied and omit outlook otherwise.
+- For health questions, recommend qualified medical care. Do not give medical, legal, or investment conclusions.
+- Refer to yourself only as Yarrow. Keep the tone calm, avoid fear, and never guarantee an outcome.
+
+${ENGLISH_OUTPUT_CONVENTIONS}`;
+
 const KIND_LABELS: Record<SummaryKind, string> = { question: "问事", fortune: "运势", destiny: "命理" };
 
 /** 合议倾向：六成以上偏顺，四成以下偏不顺，其余为中。 */
@@ -199,9 +222,14 @@ export function expectedTone(consensus: number): SummaryTone {
   return "中";
 }
 
-function toneConclusion(consensus: number): string {
+function toneConclusion(consensus: number, language: "zh" | "en" = "zh"): string {
   const tone = expectedTone(consensus);
   const value = consensus.toFixed(1);
+  if (language === "en") {
+    if (tone === "顺") return `The consensus is ${value}/10, so the outlook is mostly favorable.`;
+    if (tone === "不顺") return `The consensus is ${value}/10, so the outlook is unfavorable; proceed carefully.`;
+    return `The consensus is ${value}/10, so the outcome remains mixed.`;
+  }
   if (tone === "顺") {
     return `合议约${value}成，整体偏顺。`;
   }
@@ -248,13 +276,17 @@ export function buildSummaryPrompt(input: SummaryInput): string {
   lines.push(`心法依据（${input.anchor.title}）：`, ...input.anchor.lines.map((line) => `- ${line}`));
   lines.push("盘面要点：", ...input.chartPoints.map((point) => `- ${point}`), "三家断语：");
   lines.push(...input.schools.map(schoolBlock));
-  return lines.join("\n");
+  const base = lines.join("\n");
+  return input.language === "en"
+    ? appendEnglishReferenceMaterials(base, input.chartPoints.join("\n"), input.anchor.lines.join("\n"))
+    : base;
 }
 
 /** 解法与总述都不得出现的民俗器物、供奉与趋避用语。 */
 export const REMEDY_FORBIDDEN = /开光|法器|符咒|符箓|护身符|转运|化煞|吉祥物|摆件|放生|捐款|供奉|烧香|幸运色|幸运数字|吉位/gu;
 
-function forbiddenErrors(text: string): string[] {
+function forbiddenErrors(text: string, language: "zh" | "en" = "zh"): string[] {
+  if (language === "en") return englishForbiddenErrors(text);
   const words = [...new Set(text.match(REMEDY_FORBIDDEN) ?? [])];
   if (words.length === 0) {
     return [];
@@ -263,7 +295,12 @@ function forbiddenErrors(text: string): string[] {
 }
 
 /** 把心法原文按逗号、分号、句号切成短句，从正文中删去，避免原文用字被盘面核对误判。 */
-function stripAnchor(text: string, anchor: SummaryAnchor): string {
+function stripAnchor(
+  text: string,
+  anchor: SummaryAnchor,
+  language: "zh" | "en" = "zh",
+): string {
+  if (language === "en") return text;
   const clauses = anchor.lines
     .flatMap((line) => line.split(/[，；。、：]/u))
     .map((clause) => clause.trim())
@@ -274,7 +311,11 @@ function stripAnchor(text: string, anchor: SummaryAnchor): string {
 
 /** 单段文字的核对：盘面核对（剔除心法原文后）加禁用词。 */
 function textErrors(text: string, input: SummaryInput): string[] {
-  return [...input.proseErrors(stripAnchor(text, input.anchor)), ...forbiddenErrors(text)];
+  const language = input.language ?? "zh";
+  return [
+    ...input.proseErrors(stripAnchor(text, input.anchor, language)),
+    ...forbiddenErrors(text, language),
+  ];
 }
 
 function baseSummaryTexts(output: PlainSummary): string[] {
@@ -307,13 +348,22 @@ function summaryTexts(output: PlainSummary): string[] {
   return [...baseSummaryTexts(output), ...portraitTexts(output.portrait)];
 }
 
-export function summaryLanguageErrors(output: PlainSummary): string[] {
-  return chineseBodyErrors(summaryTexts(output));
+export function summaryLanguageErrors(
+  output: PlainSummary,
+  language: "zh" | "en" = "zh",
+): string[] {
+  return language === "en"
+    ? englishBodyErrors(summaryTexts(output))
+    : chineseBodyErrors(summaryTexts(output));
 }
 
 /** 总述的业务核对：倾向与合议一致、命理与运势的字段要求、正文不得编造盘面。 */
 export function checkSummary(output: PlainSummary, input: SummaryInput): string[] {
-  const errors: string[] = summaryLanguageErrors(output);
+  const language = input.language ?? "zh";
+  const languageErrors = (texts: readonly string[]) => language === "en"
+    ? englishBodyErrors(texts)
+    : chineseBodyErrors(texts);
+  const errors: string[] = summaryLanguageErrors(output, language);
   if (input.kind === "destiny") {
     if (output.tone !== undefined) {
       errors.push("命理不写倾向（tone）");
@@ -356,12 +406,12 @@ export function checkSummary(output: PlainSummary, input: SummaryInput): string[
   errors.push(...textErrors(baseSummaryTexts(output).join("\n"), input));
   if (output.portrait) {
     for (const trait of output.portrait.traits) {
-      errors.push(...chineseBodyErrors([trait]), ...forbiddenErrors(trait));
+      errors.push(...languageErrors([trait]), ...forbiddenErrors(trait, language));
     }
     for (const text of [
       ...output.portrait.strengths, ...output.portrait.blindSpots, output.portrait.summary,
     ]) {
-      errors.push(...chineseBodyErrors([text]), ...textErrors(text, input));
+      errors.push(...languageErrors([text]), ...textErrors(text, input));
     }
   }
   return errors;
@@ -378,9 +428,14 @@ export interface SummaryRepair {
 export function repairSummary(output: PlainSummary, input: SummaryInput): SummaryRepair {
   let removed = 0;
   let adjusted = 0;
+  const language = input.language ?? "zh";
+  const languageErrors = (texts: readonly string[]) => language === "en"
+    ? englishBodyErrors(texts)
+    : chineseBodyErrors(texts);
   const keep = (text: string): string => {
-    const kept = splitSentences(text).filter((sentence) => {
-      if (textErrors(sentence, input).length === 0) {
+    const kept = splitSentences(text, language).filter((sentence) => {
+      const perSentenceLanguageErrors = language === "en" ? languageErrors([sentence]) : [];
+      if (perSentenceLanguageErrors.length === 0 && textErrors(sentence, input).length === 0) {
         return true;
       }
       removed += 1;
@@ -389,17 +444,28 @@ export function repairSummary(output: PlainSummary, input: SummaryInput): Summar
     return kept.join("").trim();
   };
   const explanation = output.explanation.map(keep).filter((text) => text !== "");
+  if (language === "en") {
+    const fallbacks = [
+      "Parts that did not match the chart were removed; see the three readings below.",
+      "Only the points supported by the supplied readings remain.",
+    ];
+    while (explanation.length < 2) explanation.push(fallbacks[explanation.length]!);
+  }
   const repaired: PlainSummary = {
     conclusion: keep(output.conclusion),
-    agreement: keep(output.agreement) || "三家的具体说法见下方依据。",
-    explanation: explanation.length > 0 ? explanation : ["与盘面不符的解释已删去，详见三家依据。"],
-    remedy: repairRemedy(output.remedy, input.kind, keep),
+    agreement: keep(output.agreement) || (language === "en"
+      ? "The three detailed readings appear below."
+      : "三家的具体说法见下方依据。"),
+    explanation: explanation.length > 0 ? explanation : [language === "en"
+      ? "Parts that did not match the chart were removed; see the three readings below."
+      : "与盘面不符的解释已删去，详见三家依据。"],
+    remedy: repairRemedy(output.remedy, input.kind, keep, language),
   };
   if (input.kind === "destiny" && output.portrait) {
     const keepPortrait = (value: string, trait: boolean): string => {
       const errors = trait
-        ? [...chineseBodyErrors([value]), ...forbiddenErrors(value)]
-        : [...chineseBodyErrors([value]), ...textErrors(value, input)];
+        ? [...languageErrors([value]), ...forbiddenErrors(value, language)]
+        : [...languageErrors([value]), ...textErrors(value, input)];
       if (errors.length === 0) {
         return value;
       }
@@ -430,26 +496,37 @@ export function repairSummary(output: PlainSummary, input: SummaryInput): Summar
     }
   }
   if (input.kind === "fortune") {
-    repaired.outlook = (output.outlook ? keep(output.outlook) : "") || "十年走势见下方流年运势。";
+    repaired.outlook = (output.outlook ? keep(output.outlook) : "") || (language === "en"
+      ? "See the annual outlook below for the ten-year trend."
+      : "十年走势见下方流年运势。");
   }
   if (input.kind === "destiny" && input.periodConsensus) {
-    repaired.outlook = (output.outlook ? keep(output.outlook) : "") || "一生大运起伏见「一生运势」。";
+    repaired.outlook = (output.outlook ? keep(output.outlook) : "") || (language === "en"
+      ? "See Life Outlook for the pattern across the ten-year periods."
+      : "一生大运起伏见「一生运势」。");
   }
   if (input.kind !== "destiny" && input.consensus !== null) {
     const tone = expectedTone(input.consensus);
     repaired.tone = tone;
     if (output.tone !== tone || !repaired.conclusion) {
       adjusted += 1;
-      repaired.conclusion = toneConclusion(input.consensus);
+      repaired.conclusion = toneConclusion(input.consensus, language);
     }
   }
   if (!repaired.conclusion) {
-    repaired.conclusion = "三家看法见下方依据。";
+    repaired.conclusion = language === "en"
+      ? "See the three readings below for their conclusions."
+      : "三家看法见下方依据。";
   }
   return { output: repaired, removed, adjusted };
 }
 
-function repairRemedy(remedy: Remedy | undefined, kind: SummaryKind, keep: (text: string) => string): Remedy {
+function repairRemedy(
+  remedy: Remedy | undefined,
+  kind: SummaryKind,
+  keep: (text: string) => string,
+  language: "zh" | "en" = "zh",
+): Remedy {
   // 一步的做法被删则整步去掉，不再核对其依据。
   const steps = (remedy?.plan ?? []).flatMap((step): RemedyStep[] => {
     const action = keep(step.action);
@@ -466,9 +543,21 @@ function repairRemedy(remedy: Remedy | undefined, kind: SummaryKind, keep: (text
   const avoid = (remedy?.avoid ?? []).map(keep).filter((text) => text !== "");
   const principle = remedy ? keep(remedy.principle) : "";
   return {
-    principle: principle || (kind === "question" ? "按上方原文之意，守正而行。" : "按三家取用之意，扬长避短。"),
-    plan: steps.length > 0 ? steps : [{ action: "对照下方三家依据，择其稳妥者先行", basis: "三家断语" }],
-    avoid: avoid.length > 0 ? avoid : ["不要据此做重大财务或医疗决定"],
+    principle: principle || (language === "en"
+      ? kind === "question"
+        ? "Act with integrity and follow the practical lesson of the anchor above."
+        : "Use the three readings to build on strengths and limit weaknesses."
+      : kind === "question" ? "按上方原文之意，守正而行。" : "按三家取用之意，扬长避短。"),
+    plan: language === "en"
+      ? [
+          ...steps,
+          { action: "Start with the safest practical step from the readings", basis: "The three readings" },
+          { action: "Review the situation before committing", basis: "The supported points that remain" },
+        ].slice(0, Math.max(2, steps.length))
+      : steps.length > 0 ? steps : [{ action: "对照下方三家依据，择其稳妥者先行", basis: "三家断语" }],
+    avoid: avoid.length > 0 ? avoid : [language === "en"
+      ? "Do not use this reading as a medical or financial decision."
+      : "不要据此做重大财务或医疗决定"],
   };
 }
 
@@ -483,6 +572,7 @@ export async function runSummary(
   deps: { provider: StructuredOutputProvider },
   input: SummaryInput,
 ): Promise<SummaryRunResult> {
+  const language = input.language ?? "zh";
   const basePrompt = buildSummaryPrompt(input);
   let userPrompt = basePrompt;
   let calls = 0;
@@ -493,13 +583,16 @@ export async function runSummary(
     try {
       const raw = await deps.provider.generateStructured<unknown>({
         taskId: `sanyi/summary/${input.kind}`,
-        systemPrompt: SUMMARY_SYSTEM_PROMPT,
+        systemPrompt: language === "en" ? SUMMARY_SYSTEM_PROMPT_EN : SUMMARY_SYSTEM_PROMPT,
         cacheSystemPrompt: true,
         userPrompt,
-        schema: SUMMARY_SCHEMA,
+        schema: language === "en" ? SUMMARY_SCHEMA_EN : SUMMARY_SCHEMA,
         effort: "medium",
       });
-      const output = validateStructuredOutput<PlainSummary>(SUMMARY_SCHEMA, raw);
+      const output = validateStructuredOutput<PlainSummary>(
+        language === "en" ? SUMMARY_SCHEMA_EN : SUMMARY_SCHEMA,
+        raw,
+      );
       // 命理不分倾向：模型偶尔多写 tone，直接去掉，不为此重写。
       if (input.kind === "destiny" && output.tone !== undefined) {
         delete output.tone;
@@ -516,11 +609,24 @@ export async function runSummary(
       errors = schemaHints(error);
     }
     userPrompt = [basePrompt, "", "上一次输出未通过核对，请修正后完整重写：",
-      ...errors.map((error) => `- ${error}`)].join("\n");
+      ...errors.map((error) => `- ${error}`),
+      ...(language === "en" ? ["正文仍须用英文；如有 evidence 字段，claim 仍须用中文。"] : []),
+    ].join("\n");
   }
   if (lastValid) {
     const repaired = repairSummary(lastValid, input);
-    if (summaryLanguageErrors(repaired.output).length === 0) {
+    const repairedErrors = language === "en"
+      ? checkSummary(repaired.output, input)
+      : summaryLanguageErrors(repaired.output);
+    let repairedStructureOk = true;
+    if (language === "en") {
+      try {
+        validateStructuredOutput(SUMMARY_SCHEMA_EN, repaired.output);
+      } catch {
+        repairedStructureOk = false;
+      }
+    }
+    if (repairedErrors.length === 0 && repairedStructureOk) {
       return {
         status: "done", output: repaired.output, calls,
         removed: repaired.removed, adjusted: repaired.adjusted,

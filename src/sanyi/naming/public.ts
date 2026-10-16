@@ -166,6 +166,7 @@ export function publicNamingReading(reading: StoredNamingReading) {
     id: reading.id,
     kind: "naming" as const,
     createdAt: reading.createdAt,
+    ...(reading.lang === "en" ? { lang: "en" as const } : {}),
     target: reading.target,
     question: reading.question,
     ...(reading.surname ? { surname: reading.surname } : {}),

@@ -136,6 +136,41 @@ test("公开 reading 保留复算材料但移除内部字段", async () => {
   assert.equal(value.castTime, "1790770501");
   assert.doesNotMatch(text, /attempts|payer|transactionHashes|claimKey/);
 });
+
+test("英文问事下单传 lang 并公开返回，且不再写 translateTo", async () => {
+  const { api, calls } = fixture();
+  await api.createReading({
+    question: "Will I get this job?", kind: "question", subjectKey: "career",
+    lang: "en", feeProof: PROOF,
+  });
+  const call = calls.find((item) => item.startsWith("create:"));
+  assert.ok(call);
+  const input = JSON.parse(call.slice("create:".length)) as Record<string, unknown>;
+  assert.equal(input.lang, "en");
+  assert.equal("translateTo" in input, false);
+
+  const stored = { ...reading(), lang: "en" as const };
+  const service = {
+    async createQuestionReading() { return stored; },
+    async continueCasting() { return stored; },
+    async retrySummary() { return stored; },
+    async getReading() { return stored; },
+    async retrySchool() { return stored; },
+    async changeSubject() { return stored; },
+  };
+  const visible = await createSanyiApi(service).getReading(ID);
+  assert.equal(visible.lang, "en");
+});
+
+test("中文下单不向服务传 lang", async () => {
+  const { api, calls } = fixture();
+  await api.createReading({ question: "这次面试能过吗", kind: "question", feeProof: PROOF });
+  const call = calls.find((item) => item.startsWith("create:"));
+  assert.ok(call);
+  const input = JSON.parse(call.slice("create:".length)) as Record<string, unknown>;
+  assert.equal("lang" in input, false);
+  assert.equal("translateTo" in input, false);
+});
 test("存档 ENOENT 转换为 NotFoundError", async () => {
   const { api } = fixture();
   await assert.rejects(

@@ -1,6 +1,7 @@
 // src/sanyi/schema.ts
 import type { JsonSchema } from "../agent/schemas.js";
 import { chineseBodyErrors } from "./language-guard.js";
+import { englishBodyErrors } from "./english/audit.js";
 export type Verdict = "大吉" | "吉" | "平" | "凶" | "大凶";
 export interface QuestionSchoolOutput {
   verdict: Verdict;
@@ -63,21 +64,27 @@ export const QUESTION_SCHOOL_SCHEMA = {
 
 export function questionLanguageErrors(
   output: Partial<Pick<QuestionSchoolOutput, "headline" | "reason" | "sections" | "timing" | "advice">>,
+  language: "zh" | "en" = "zh",
+  allowedHan: readonly string[] = [],
 ): string[] {
-  return output.headline === undefined ? [] : chineseBodyErrors([
+  if (output.headline === undefined) return [];
+  const texts = [
     output.headline,
     output.reason ?? "",
     ...(output.sections ?? []).flatMap((section) => [section.title, section.text]),
     ...(output.timing ? [output.timing.window, output.timing.condition] : []),
     ...(output.advice ?? []),
-  ]);
+  ];
+  return language === "en" ? englishBodyErrors(texts, allowedHan) : chineseBodyErrors(texts);
 }
 
 export function checkVerdictConsistency(
   output: Pick<QuestionSchoolOutput, "verdict" | "confidenceTenths">
     & Partial<Pick<QuestionSchoolOutput, "headline" | "reason" | "sections" | "timing" | "advice">>,
+  language: "zh" | "en" = "zh",
+  allowedHan: readonly string[] = [],
 ): string[] {
-  const errors = questionLanguageErrors(output);
+  const errors = questionLanguageErrors(output, language, allowedHan);
   const { verdict, confidenceTenths } = output;
   if ((verdict === "大吉" || verdict === "吉") && confidenceTenths < 6) {
     errors.push(`${verdict}对应的把握不得低于六成`);

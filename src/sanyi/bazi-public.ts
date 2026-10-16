@@ -82,6 +82,7 @@ function common(reading: StoredBaziReading) {
     return visible;
   })() : undefined;
   return { id: reading.id, createdAt: reading.createdAt, question: reading.question,
+    ...(reading.lang === "en" ? { lang: "en" as const } : {}),
     status: reading.status, payment: { firstHash: reading.payment.transactionHash },
     chart: derivedChart(reading.chart), analysis: reading.analysis, tiaohou: reading.tiaohou,
     correction: reading.correction, context: reading.context, almanac: reading.almanac,

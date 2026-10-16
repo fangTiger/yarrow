@@ -12,6 +12,7 @@ export interface QuestionSchool {
   name: string;
   school: string;
   systemPrompt: string;
+  systemPromptEn: string;
   buildUserPrompt(input: SchoolInput): string;
 }
 

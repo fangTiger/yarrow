@@ -15,6 +15,13 @@ test("按句号、问号、叹号、分号与换行切句，保留标点", () =>
   assert.deepEqual(splitSentences(""), []);
 });
 
+test("英文按点号、问号、叹号、分号与换行切句，但不切断小数", () => {
+  assert.deepEqual(
+    splitSentences("Confidence is 6.5. Wait! Check? Yes; Next\nDone", "en"),
+    ["Confidence is 6.5. ", "Wait! ", "Check? ", "Yes; ", "Next\n", "Done"],
+  );
+});
+
 test("问事删错留对：删不符的句子与引证，直断删空用吉凶几成代替，把握夹回合法范围", () => {
   // 样例盘面二爻为寅木官鬼，盘面没有午火官鬼。
   const bad: QuestionSchoolOutput = {
@@ -66,6 +73,26 @@ test("问事详断全删空时保留一段说明，理由删空时给出说明",
   assert.match(output.sections[0]?.text ?? "", /已删去/);
   assert.match(output.reason, /已删去/);
   assert.deepEqual(auditOutput(output, facts).errors, []);
+});
+
+test("英文问事删错留对使用英文提示并经英文盘面核对复核", () => {
+  const bad: QuestionSchoolOutput = {
+    ...baseOutput,
+    headline: "Bing Chen is decisive.",
+    reason: "Bing Chen is not present.",
+    sections: [
+      { title: "Basis", text: "Zi Water Wealth is present." },
+      { title: "Timing", text: "Bing Chen would change the result." },
+      { title: "Action", text: "Keep a practical fallback." },
+    ],
+    advice: ["Keep a practical fallback."],
+  };
+  const repaired = repairQuestion(bad, facts, "en");
+  assert.equal(repaired.output.headline, "Mixed, about 5/10");
+  assert.equal(repaired.output.reason,
+    "Parts of this reasoning that did not match the chart were removed.");
+  assert.ok(repaired.output.sections.every((section) => !section.text.includes("Bing Chen")));
+  assert.match(JSON.stringify(repaired.output), /Parts of this reasoning that did not match the chart were removed/u);
 });
 
 test("运势删错留对：删不符正文、短评与引证，缺年不补，锚年对齐总断，把握夹回", () => {

@@ -51,6 +51,25 @@ const portrait = {
   summary: "重承诺也重秩序，稳中带着韧劲。",
 };
 
+const englishGood: PlainSummary = {
+  tone: "中",
+  conclusion: "The outcome remains mixed, so wait for clearer conditions.",
+  agreement: "All three readings favor preparation over haste.",
+  difference: "Jing Fang is more cautious about the timing.",
+  explanation: [
+    "The helpful and limiting signs are both present.",
+    "A practical fallback will reduce the cost of waiting.",
+  ],
+  remedy: {
+    principle: "Stay steady and act when the conditions become clear.",
+    plan: [
+      { action: "Improve the application", basis: "All three favor preparation", timing: "This week" },
+      { action: "Keep another option open", basis: "The outcome remains mixed" },
+    ],
+    avoid: ["Do not force an immediate answer."],
+  },
+};
+
 test("倾向由合议决定：六成以上偏顺，四成以下偏不顺，其余为中", () => {
   assert.equal(expectedTone(6), "顺");
   assert.equal(expectedTone(7.3), "顺");
@@ -168,6 +187,12 @@ test("删错留对：删去编造盘面的句子，倾向不符时改为合议�
   assert.equal(removed, 3);
   assert.equal(adjusted, 1);
   assert.deepEqual(checkSummary(output, input), []);
+});
+
+test("中文删错留对不新增逐句语言过滤", () => {
+  const mixed = { ...good, agreement: "AI workflow" };
+  const repaired = repairSummary(mixed, input);
+  assert.equal(repaired.output.agreement, "AI workflow");
 });
 
 test("解法禁用词：开光、法器、放生之类与颜色方位趋避判为不符", () => {
@@ -301,5 +326,66 @@ test("mock 总述按合议倾向生成并通过核对（问事、运势、命理
       assert.equal(result.calls, 1, kind);
       assert.deepEqual(checkSummary(result.output, value), [], kind);
     }
+  }
+});
+
+test("英文总述使用英文提示与 Schema，且合议 tone 结构规则仍生效", async () => {
+  const englishInput: SummaryInput = { ...input, language: "en", proseErrors: () => [] };
+  const provider = new Fake([{ ...englishGood, tone: "顺" }, englishGood]);
+  const result = await runSummary({ provider }, englishInput);
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 2);
+  assert.match(provider.requests[0]?.systemPrompt ?? "", /plain English/u);
+  assert.match(provider.requests[0]?.userPrompt ?? "", /本盘术语英文对照/u);
+  assert.match(provider.requests[0]?.userPrompt ?? "", /古文英译/u);
+  const schema = provider.requests[0]?.schema as unknown as {
+    properties: { conclusion: { maxLength?: number } };
+  };
+  assert.equal(schema.properties.conclusion.maxLength, 160);
+  assert.match(provider.requests[1]?.userPrompt ?? "", /tone/u);
+});
+
+test("英文总述禁用词触发重写", async () => {
+  const englishInput: SummaryInput = { ...input, language: "en", proseErrors: () => [] };
+  const provider = new Fake([{ ...englishGood, explanation: ["Place a bet on the outcome.", englishGood.explanation[1]!] }, englishGood]);
+  const result = await runSummary({ provider }, englishInput);
+  assert.equal(result.status, "done");
+  assert.equal(result.calls, 2);
+  assert.match(provider.requests[1]?.userPrompt ?? "", /bet/u);
+});
+
+test("英文总述三次重写仍有坏句时删错留对并保持 Schema 最小条数", async () => {
+  const englishInput: SummaryInput = { ...input, language: "en", proseErrors: () => [] };
+  const stubborn: PlainSummary = {
+    ...englishGood,
+    conclusion: "Place a bet.",
+    agreement: "Use an amulet.",
+    difference: "Make a donation.",
+    explanation: ["Choose a lucky direction.", "Release animals."],
+    remedy: {
+      principle: "Use a talisman.",
+      plan: [
+        { action: "Wear an ornament.", basis: "Use incense." },
+        { action: "Gamble on the outcome.", basis: "Ask for compensation." },
+      ],
+      avoid: ["Use a mascot."],
+    },
+  };
+  const result = await runSummary({ provider: new Fake([stubborn, stubborn, stubborn]) }, englishInput);
+  assert.equal(result.status, "done");
+  if (result.status === "done") {
+    assert.equal(result.calls, 3);
+    assert.ok(result.output.explanation.length >= 2);
+    assert.ok((result.output.remedy?.plan.length ?? 0) >= 2);
+  }
+});
+
+test("mock provider 可直接走英文问事总述路径", async () => {
+  const englishInput: SummaryInput = { ...input, language: "en", proseErrors: () => [] };
+  const result = await runSummary({ provider: new MockSchoolsProvider() }, englishInput);
+  assert.equal(result.status, "done");
+  if (result.status === "done") {
+    const { tone: _tone, ...displayOutput } = result.output;
+    assert.doesNotMatch(JSON.stringify(displayOutput), /\p{Script=Han}/u);
   }
 });

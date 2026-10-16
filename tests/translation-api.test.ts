@@ -66,17 +66,18 @@ test("API 触发英文翻译，GET lang=en 才附带旁路译文", async () => {
   await assert.rejects(() => api.translateReading(ID, { lang: "zh" }), /只支持英文翻译/);
 });
 
-test("创建接口校验 lang，并把英文意图传给四类服务且不公开内部字段", async () => {
-  const received: Array<{ kind: string; translateTo?: string }> = [];
+test("创建接口校验 lang，并把英文意图传给四类服务且不再写 translateTo", async () => {
+  const received: Array<{ kind: string; lang?: string; translateTo?: string }> = [];
   const question = reading();
   const api = createSanyiApi({ ...serviceBoundary(), createQuestionReading: async (input: unknown) => {
-    received.push({ kind: "question", ...(input as { translateTo?: string }) });
-    return { ...question, ...(input as { translateTo?: string }) } as never;
+    received.push({ kind: "question", ...(input as { lang?: string; translateTo?: string }) });
+    return { ...question, ...(input as { lang?: "en"; translateTo?: "en" }) } as never;
   } } as never, { bazi: { create: async (input: unknown) => {
-    received.push({ kind: (input as { kind: string }).kind, ...(input as { translateTo?: string }) });
+    received.push({ kind: (input as { kind: string }).kind,
+      ...(input as { lang?: string; translateTo?: string }) });
     throw new Error("已记录八字请求");
   } } as never, naming: { create: async (input: unknown) => {
-    received.push({ kind: "naming", ...(input as { translateTo?: string }) });
+    received.push({ kind: "naming", ...(input as { lang?: string; translateTo?: string }) });
     throw new Error("已记录起名请求");
   } } as never });
   const feeProof = { payer: `0x${"11".repeat(20)}`, transactionHash: `0x${"33".repeat(32)}` };
@@ -109,15 +110,16 @@ test("创建接口校验 lang，并把英文意图传给四类服务且不公开
   await assert.rejects(() => api.createReading({ kind: "naming", target: "business",
     question: "coffee shop", gender: "any", length: 2, unborn: false, lang: "en", feeProof }),
   /已记录起名请求/u);
-  assert.deepEqual(received.map(({ kind, translateTo }) => ({ kind, translateTo })), [
-    { kind: "question", translateTo: undefined },
-    { kind: "question", translateTo: undefined },
-    { kind: "question", translateTo: "en" },
-    { kind: "destiny", translateTo: "en" },
-    { kind: "fortune", translateTo: "en" },
-    { kind: "naming", translateTo: "en" },
+  assert.deepEqual(received.map(({ kind, lang, translateTo }) => ({ kind, lang, translateTo })), [
+    { kind: "question", lang: undefined, translateTo: undefined },
+    { kind: "question", lang: undefined, translateTo: undefined },
+    { kind: "question", lang: "en", translateTo: undefined },
+    { kind: "destiny", lang: "en", translateTo: undefined },
+    { kind: "fortune", lang: "en", translateTo: undefined },
+    { kind: "naming", lang: "en", translateTo: undefined },
   ]);
   assert.equal("translateTo" in questionView, false);
+  assert.equal(questionView.lang, "en");
 });
 
 function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {

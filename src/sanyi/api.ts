@@ -22,6 +22,7 @@ import type { NamingFamilyKey } from "./naming/schema.js";
 import { isSurname } from "./naming/lexicon.js";
 import type { TranslationService } from "./translation/service.js";
 import type { StoredTranslation } from "./translation/store.js";
+import { isNativeEnglishKind } from "./native-english.js";
 type ServiceBoundary = Pick<
   ReadingService,
   "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject" | "retrySummary"
@@ -186,7 +187,7 @@ export function createSanyiApi(
     async createReading(input) {
       const body = record(input);
       const lang = languageFrom(body.lang);
-      const translationIntent = lang === "en" ? { translateTo: "en" as const } : {};
+      const languageIntent = lang === "en" ? { lang: "en" as const } : {};
       const createNaming = async (suggestedTarget?: "person" | "business") => {
         if (!options.naming) throw new Error("起名服务尚未配置");
         if (typeof body.question !== "string") throw new SanyiInputError("起名期望必须是字符串");
@@ -235,7 +236,7 @@ export function createSanyiApi(
           length,
           unborn: body.unborn,
           ...(body.birth === undefined || body.birth === null ? {} : { birth: body.birth }),
-          ...translationIntent,
+          ...languageIntent,
           feeProof: feeProofFrom(body.feeProof, paymentRequirements()),
         }));
       };
@@ -268,7 +269,7 @@ export function createSanyiApi(
         }
         return publicBaziReading(await options.bazi.create({ kind: classification.kind,
           question: classification.question, birth: body.birth, sect,
-          horizon: classification.horizon ?? "year", ...translationIntent,
+          horizon: classification.horizon ?? "year", ...languageIntent,
           feeProof: feeProofFrom(body.feeProof, paymentRequirements()) }));
       }
       if (classification.kind !== "question") {
@@ -278,7 +279,7 @@ export function createSanyiApi(
       const reading = await service.createQuestionReading({
         question: classification.question,
         ...(body.kind === "question" ? { kind: "question" as const } : {}),
-        ...translationIntent,
+        ...languageIntent,
         feeProof: feeProofFrom(body.feeProof, paymentRequirements()),
         ...(subjectKey === undefined ? {} : { subjectKey }),
       });
@@ -315,6 +316,7 @@ export function createSanyiApi(
       const visible = reading.kind === "question"
         ? publicReading(reading)
         : reading.kind === "naming" ? publicNamingReading(reading) : publicBaziReading(reading);
+      if (isNativeEnglishKind(visible.kind, visible.lang)) return visible;
       if (lang !== "en" || !options.translation) return visible;
       const translation = await options.translation.read(id);
       return translation ? { ...visible, translation } : visible;

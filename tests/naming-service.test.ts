@@ -58,11 +58,14 @@ test("英文起名存档意图，各流派与合参终态通知且通知异常�
   try {
     const created = await f.naming.create({ target: "person", surname: "张", gender: "female",
       length: 2, unborn: false, question: "温和有书卷气", birth: namingBirth,
-      feeProof: namingProof(81), translateTo: "en" });
-    assert.equal(created.translateTo, "en");
+      feeProof: namingProof(81), lang: "en" });
+    assert.equal(created.lang, "en");
+    assert.equal(created.translateTo, undefined);
     await f.naming.whenSettled(created.id);
     assert.deepEqual(events.sort(), ["wuxing", "shiwen", "yinyi", "summary"].sort());
-    assert.equal((await f.naming.getReading(created.id)).status, "done");
+    const settled = await f.naming.getReading(created.id);
+    assert.equal(settled.status, "done");
+    assert.equal(publicNamingReading(settled).lang, "en");
     await f.store.update<StoredNamingReading>(created.id, (reading) => ({ ...reading, families: {
       ...reading.families, shiwen: { status: "failed", attempts: 1, retries: 0 },
     } }));

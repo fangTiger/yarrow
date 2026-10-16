@@ -87,6 +87,24 @@ test("问事分享模型含本卦、之卦、六爻动爻与三家判断，但�
   }
 });
 
+test("原生英文问事分享卡直接使用原文，不套用残留翻译", () => {
+  const reading = clone(englishSample("question"));
+  assert.equal(reading.kind, "question");
+  reading.lang = "en";
+  const expected = reading.summary?.output?.conclusion;
+  reading.translation = {
+    lang: "en",
+    units: {
+      summary: {
+        status: "done", sourceHash: "stale", attempts: 1, failures: 0,
+        texts: Array(20).fill("残留译文"),
+      },
+    },
+  };
+  const model = buildShareCard(reading, "en", enT);
+  assert.equal(model.headline, expected);
+});
+
 test("运势分享模型含所问、结论、十年逐年走势与走势概括", () => {
   for (const [lang, reading, t] of [
     ["zh", sample("fortune.zh"), zhT],

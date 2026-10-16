@@ -46,3 +46,31 @@ export function mockSummaryOutput(kind: SummaryKind, prompt: string): PlainSumma
   }
   return output;
 }
+
+/** 原生英文问事排练输出，不含盘面术语，稳定通过英文核对。 */
+export function mockEnglishSummaryOutput(prompt: string): PlainSummary {
+  const tone = prompt.match(/合议倾向：(顺|中|不顺)/u)?.[1] as SummaryTone | undefined;
+  const conclusion = tone === "顺"
+    ? "The overall outlook is favorable, so proceed with practical checks."
+    : tone === "不顺"
+      ? "The outlook is unfavorable, so slow down and prepare a fallback."
+      : "The outcome remains mixed, so wait for clearer conditions.";
+  return {
+    tone: tone ?? "中",
+    conclusion,
+    agreement: "All three readings favor preparation over haste.",
+    difference: "They place different weight on timing and present conditions.",
+    explanation: [
+      "Helpful and limiting signs are both present.",
+      "A practical fallback reduces the cost of waiting.",
+    ],
+    remedy: {
+      principle: "Stay steady and act when the conditions become clear.",
+      plan: [
+        { action: "Verify the practical conditions", basis: "The three readings agree", timing: "Soon" },
+        { action: "Keep another option open", basis: "The outcome remains mixed" },
+      ],
+      avoid: ["Do not force an immediate answer."],
+    },
+  };
+}
