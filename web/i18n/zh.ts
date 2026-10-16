@@ -87,6 +87,7 @@ export const zh = {
   "unsupported.default": "这类问题即将开放，可点选「问事」照常起卦",
   "subject.field": "事项",
   "subject.auto": "自动识别",
+  "subject.choose": "请选择事项",
   "subject.autoDetected": "自动识别（{subject}）",
   "subject.relationshipNote": "传统上以官鬼为用神；问妻子或女友请选择钱财。",
   "subject.career": "工作／官职",

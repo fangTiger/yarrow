@@ -19,6 +19,7 @@ import { PaymentButton } from "./PaymentButton.js";
 import { SubjectSelect } from "./SubjectSelect.js";
 import { useLang, useT } from "../lib/i18n.js";
 import { FundingGuide } from "./FundingGuide.js";
+import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
 import { ARC_NETWORK } from "../lib/wagmi.js";
 
 function initialBirthValues(): BirthFormValues {
@@ -164,9 +165,12 @@ export function QuestionForm() {
     <form className="home-form" onSubmit={(event) => event.preventDefault()}>
       <h1 className="ask-title">{t("home.title")}</h1>
       <KindOptions onChange={(kind) => setChoice((current) => ({ ...current, kind }))}
-        onExample={(kind, example) => {
+        onExample={(kind, example, subjectKey) => {
           setQuestion(example);
-          setChoice((current) => ({ ...current, kind }));
+          const subject = QUESTION_SUBJECTS.find(({ key }) => key === subjectKey);
+          setChoice((current) => ({
+            ...current, kind, ...(subject ? { subjectKey: subject.key, subject: subject.label } : {}),
+          }));
           setView(undefined);
           setClassifying(false);
           setError("");

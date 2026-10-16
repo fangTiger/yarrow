@@ -826,8 +826,22 @@ html:lang(en) .luopan-trigram-label { font-size: 9px !important; }
   gap: 10px;
 }
 .kind-card { display: grid; align-content: start; gap: 9px; min-width: 0; padding: 12px;
-  border: 1px solid var(--line); background: rgb(21 24 22 / .72); }
-.kind-card:has(.kind-option[aria-checked="true"]) { border-color: var(--line-strong); background: var(--gold-soft); }
+  border: 1px solid var(--line); background: rgb(21 24 22 / .72); cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.kind-card:has(.kind-option[aria-checked="true"]) { border-color: var(--gold); background: var(--gold-soft);
+  box-shadow: inset 3px 0 0 var(--gold); }
+/* 悬停：边框与标题转金，微微上浮，提示整张卡可点；只在有指针悬停的设备上生效。 */
+@media (hover: hover) {
+  .kind-card:hover { border-color: var(--line-strong); background: rgb(33 36 31 / .9);
+    box-shadow: 0 6px 18px rgb(0 0 0 / .28); }
+  .kind-card:hover .kind-option { color: var(--gold); }
+  .kind-card:has(.kind-option[aria-checked="true"]):hover { border-color: var(--gold);
+    background: var(--gold-soft); box-shadow: inset 3px 0 0 var(--gold), 0 6px 18px rgb(0 0 0 / .28); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .kind-card:hover { transform: translateY(-2px); }
+}
+.kind-option:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
 .kind-option {
   min-height: 36px;
   padding: 0;
@@ -868,6 +882,8 @@ html:lang(en) .luopan-trigram-label { font-size: 9px !important; }
   background: var(--panel-2);
   color: var(--paper);
 }
+.detail-row.needs-choice .detail-label { color: var(--gold); }
+.detail-row.needs-choice .detail-select { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold-soft); }
 .subject-note { flex-basis: 100%; margin-left: calc(2.5em + 12px); color: var(--dim); line-height: 1.5; }
 .chips {
   display: flex;

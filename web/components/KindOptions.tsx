@@ -1,12 +1,12 @@
 // web/components/KindOptions.tsx
-import { KIND_OPTIONS, type EntryKind } from "../lib/home-entry.js";
+import { KIND_OPTIONS, exampleSubject, type EntryKind } from "../lib/home-entry.js";
 import { useT } from "../lib/i18n.js";
 
-/** 命理 / 问事 / 运势 / 起名四个类型选项（单选组）。 */
+/** 命理 / 问事 / 运势 / 起名四个类型选项（单选组）；整张卡可点，标题按钮供键盘操作。 */
 export function KindOptions(props: {
   value: EntryKind;
   onChange(kind: EntryKind): void;
-  onExample?(kind: EntryKind, question: string): void;
+  onExample?(kind: EntryKind, question: string, subjectKey?: string): void;
 }) {
   const t = useT();
   const examples = (kind: EntryKind) => (
@@ -14,14 +14,16 @@ export function KindOptions(props: {
       {([1, 2] as const).map((index) => {
         const question = t(`kind.${kind}.example${index}`);
         return <button data-example-kind={kind} key={index}
-          onClick={() => props.onExample?.(kind, question)} type="button">{question}</button>;
+          onClick={() => props.onExample?.(kind, question, exampleSubject(kind, index))}
+          type="button">{question}</button>;
       })}
     </div>
   );
   return (
     <div className="kind-picker">
       <div aria-label={t("kind.label")} className="kind-options" role="radiogroup">
-        {KIND_OPTIONS.map(([kind]) => <article className="kind-card" data-kind-card={kind} key={kind}>
+        {KIND_OPTIONS.map(([kind]) => <article className="kind-card" data-kind-card={kind} key={kind}
+          onClick={() => props.onChange(kind)}>
           <button aria-checked={props.value === kind} className="kind-option"
             onClick={() => props.onChange(kind)} role="radio" type="button">{t(`kind.${kind}`)}</button>
           <p>{t(`kind.${kind}.description`)}</p>

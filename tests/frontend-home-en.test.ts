@@ -6,7 +6,7 @@ import { renderIn } from "./helpers/render-in.js";
 import { en } from "../web/i18n/en.js";
 import { createT } from "../web/lib/i18n.js";
 import {
-  DEFAULT_ENTRY, applyClassification, deriveEntry, entryGate, type ClassificationView,
+  DEFAULT_ENTRY, applyClassification, deriveEntry, entryGate, exampleSubject, type ClassificationView,
 } from "../web/lib/home-entry.js";
 import { KindOptions } from "../web/components/KindOptions.js";
 import { SubjectSelect } from "../web/components/SubjectSelect.js";
@@ -96,6 +96,35 @@ test("英文默认 Destiny；高亮的类型即所选，不跑中文关键词分
   }, t, english), { ready: true, reason: "" });
   assert.equal(deriveEntry(fortune, { kind: "destiny" }, t, "en").kind, "destiny");
   assert.equal(applyClassification(DEFAULT_ENTRY, fortune, t).kind, "fortune");
+});
+
+test("英文问事未选事项时提示「Choose a subject」并高亮；示例问题一并选好事项", () => {
+  const empty = renderIn("en", createElement(SubjectSelect, {
+    value: "", detected: "", onChange: () => {}, required: true,
+  }));
+  assert.match(empty, /<option value="" selected="">Choose a subject<\/option>/u);
+  assert.match(empty, /class="detail-row needs-choice"/u);
+  assert.doesNotMatch(empty, /Suggested/u);
+  const chosen = renderIn("en", createElement(SubjectSelect, {
+    value: "career", detected: "", onChange: () => {}, required: true,
+  }));
+  assert.match(chosen, /class="detail-row"/u);
+  const zh = renderIn("zh", createElement(SubjectSelect, {
+    value: "", detected: "career", onChange: () => {},
+  }));
+  assert.match(zh, /自动识别（工作／官职）/u);
+  assert.doesNotMatch(zh, /needs-choice/u);
+
+  assert.equal(exampleSubject("question", 1), "career");
+  assert.equal(exampleSubject("question", 2), "documents");
+  assert.equal(exampleSubject("destiny", 1), undefined);
+});
+
+test("类型卡整卡可点，悬停有高亮反馈，选中卡金边", () => {
+  const css = readFileSync(new URL("../web/styles/components.css", import.meta.url), "utf8");
+  assert.match(css, /\.kind-card \{[^}]*cursor: pointer/u);
+  assert.match(css, /@media \(hover: hover\) \{[\s\S]*?\.kind-card:hover \{[^}]*border-color/u);
+  assert.match(css, /\.kind-card:has\(\.kind-option\[aria-checked="true"\]\) \{[^}]*border-color: var\(--gold\)/u);
 });
 
 test("中英文感情事项口径只在选中 relationship 时显示", () => {

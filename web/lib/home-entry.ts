@@ -185,6 +185,15 @@ export interface GateInput {
   birthShown?: boolean;
 }
 
+/** 问事两条示例问题对应的事项（求职、签合同），点示例时一并选好。 */
+const EXAMPLE_SUBJECTS: Partial<Record<EntryKind, Record<1 | 2, string>>> = {
+  question: { 1: "career", 2: "documents" },
+};
+
+export function exampleSubject(kind: EntryKind, index: 1 | 2): string | undefined {
+  return EXAMPLE_SUBJECTS[kind]?.[index];
+}
+
 /** 问卦按钮是否可用，不可用时给出就地说明。 */
 export function entryGate(
   input: GateInput,

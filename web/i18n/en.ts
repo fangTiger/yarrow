@@ -89,6 +89,7 @@ export const en: Record<keyof typeof zh, string> = {
   "unsupported.default": "That reading is coming soon. Choose Ask to continue.",
   "subject.field": "Subject",
   "subject.auto": "Suggested automatically",
+  "subject.choose": "Choose a subject",
   "subject.autoDetected": "Suggested: {subject} — choose one",
   "subject.relationshipNote": "Traditionally the Officer line is read for a partner; "
     + "to ask about a wife or girlfriend, choose Wealth.",

@@ -13,11 +13,14 @@ export function SubjectSelect(props: {
   const t = useT();
   const { lang } = useLang();
   const detected = props.detected ? subjectLabel(props.detected, t, props.detected) : "";
-  const auto = detected ? t("subject.autoDetected", { subject: detected }) : t("subject.auto");
+  // 英文不自动识别事项，空选项改为「请选择」并高亮，避免误以为已自动选好。
+  const needsChoice = Boolean(props.required) && !props.value;
+  const auto = props.required ? t("subject.choose")
+    : detected ? t("subject.autoDetected", { subject: detected }) : t("subject.auto");
   const showRelationshipNote = props.value === "relationship"
     || (lang === "zh" && !props.value && props.detected === "relationship");
   return (
-    <label className="detail-row">
+    <label className={needsChoice ? "detail-row needs-choice" : "detail-row"}>
       <span className="detail-label">{t("subject.field")}</span>
       <select
         aria-label={t("subject.field")}

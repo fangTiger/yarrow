@@ -28,6 +28,7 @@
     "replay:ablation": "node --import tsx scripts/run-ablation.ts",
     "frontend:build": "node --env-file-if-exists=.env --import tsx scripts/build-frontend.ts",
     "vercel:build": "npm run frontend:build && node --import tsx scripts/build-vercel.ts",
+    "vercel:prune": "node --import tsx scripts/prune-vercel-deployments.ts",
     "brand:icons": "node --import tsx scripts/build-brand-icons.ts",
     "frontend:dev": "npm run frontend:build && node --env-file=.env --import tsx src/frontend/server.ts",
     "frontend:start": "node --env-file=.env --import tsx src/frontend/server.ts",
