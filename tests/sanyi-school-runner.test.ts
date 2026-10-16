@@ -121,7 +121,7 @@ test("英文路径选英文提示、英文 Schema 与附加术语及古文材料
   assert.match(request.userPrompt, /本盘术语英文对照/u);
   assert.match(request.userPrompt, /古文英译/u);
   const schema = request.schema as unknown as { properties: { headline: { maxLength?: number } } };
-  assert.equal(schema.properties.headline.maxLength, 90);
+  assert.equal(schema.properties.headline.maxLength, 140);
 });
 
 test("英文 headline 混入汉字时重写，末尾再次强调正文英文、evidence 中文", async () => {

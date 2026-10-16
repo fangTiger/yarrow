@@ -164,7 +164,7 @@ function validTags(tags: readonly string[], language: "zh" | "en" = "zh"): boole
   if (language === "en") {
     return tags.length >= 3 && tags.length <= 5 && tags.every((tag) => {
       const words = tag.trim().split(/\s+/u).filter(Boolean);
-      return tag.length >= 1 && tag.length <= 24 && words.length >= 1 && words.length <= 3
+      return tag.length >= 1 && tag.length <= 32 && words.length >= 1 && words.length <= 3
         && ENGLISH_TAG.test(tag.trim())
         && englishNamingForbiddenErrors(tag).length === 0 && !NEGATIVE_TAG_EN.test(tag);
     });

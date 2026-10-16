@@ -1,7 +1,7 @@
 import { hashJson, hashText } from "./audit.js";
 import {
   StructuredOutputError,
-  validateStructuredOutput,
+  validateWithSalvage,
   type ProviderAttemptAudit,
   type ProviderUsage,
   type StructuredOutputProvider,
@@ -194,7 +194,7 @@ export class DeepSeekProvider implements StructuredOutputProvider {
       }
 
       try {
-        const output = validateStructuredOutput<T>(request.schema, value);
+        const output = validateWithSalvage<T>(request, value);
         await request.recordAttempt?.({
           attempt,
           result: "valid",

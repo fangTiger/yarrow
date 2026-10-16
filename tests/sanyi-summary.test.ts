@@ -341,7 +341,7 @@ test("英文总述使用英文提示与 Schema，且合议 tone 结构规则仍�
   const schema = provider.requests[0]?.schema as unknown as {
     properties: { conclusion: { maxLength?: number } };
   };
-  assert.equal(schema.properties.conclusion.maxLength, 160);
+  assert.equal(schema.properties.conclusion.maxLength, 240);
   assert.match(provider.requests[1]?.userPrompt ?? "", /tone/u);
 });
 

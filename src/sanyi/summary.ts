@@ -1,6 +1,7 @@
 // src/sanyi/summary.ts
 // 白话总述：三家落笔之后，用普通人能懂的现代汉语把三家的结论合起来讲清楚（设计文档 21.3）；
 // 同一次调用给出解法：心法、怎么做、别做什么（设计文档 22.2、22.3）。
+import { salvageEnglishOutput, schemaHintsEn } from "./english/salvage.js";
 import {
   StructuredOutputError, validateStructuredOutput, type StructuredOutputProvider,
 } from "../agent/provider.js";
@@ -594,6 +595,7 @@ export async function runSummary(
         userPrompt,
         schema: language === "en" ? SUMMARY_SCHEMA_EN : SUMMARY_SCHEMA,
         effort: "medium",
+        ...(language === "en" ? { salvage: salvageEnglishOutput } : {}),
       });
       const output = validateStructuredOutput<PlainSummary>(
         language === "en" ? SUMMARY_SCHEMA_EN : SUMMARY_SCHEMA,
@@ -612,7 +614,7 @@ export async function runSummary(
       if (!(error instanceof StructuredOutputError)) {
         return { status: "failed", error: "白话总述暂未生成，请稍后重试", calls };
       }
-      errors = schemaHints(error);
+      errors = language === "en" ? schemaHintsEn(error) : schemaHints(error);
     }
     userPrompt = [basePrompt, "", "上一次输出未通过核对，请修正后完整重写：",
       ...errors.map((error) => `- ${error}`),

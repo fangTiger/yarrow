@@ -32,6 +32,7 @@ const COMMON_BOUNDARIES_EN = `Shared requirements:
 - Every chars[].sense is English, begins exactly with “As a name, it suggests”, and explains the character's sense in this name, at most 120 characters.
 - tags contains three to five positive English labels. Each tag has one to three words and no more than 24 characters. Do not use negative personality words.
 - given contains only the name. meaning gives the overall meaning in English; why gives this family's reason in English; note summarizes this family's method in English.
+- Be concise: every maxLength in the JSON Schema counts characters, not words. Do not add fields the schema does not define.
 - Give exactly three distinct names. Output must strictly follow the provided JSON Schema.`;
 
 const WUXING_SYSTEM_PROMPT = `你是「三易」起名三家中的五行补益家。

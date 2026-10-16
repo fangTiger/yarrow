@@ -7,6 +7,7 @@ When a specialist term first appears, write it as “pinyin (English gloss)”; 
 Every evidence[].claim must be written in Chinese, cite a supplied fact ID, and use Chinese chart terms. Evidence is only for programmatic checking and is not displayed.
 Every other output field must contain no Chinese characters.
 For health questions, recommend seeking qualified medical care. Do not give medical, legal, or investment conclusions. Do not mention betting, wagers, gambling, or compensation.
+Be concise. Every maxLength in the JSON Schema counts characters, not words: a headline is one short sentence (under 15 words); a reason or a note is one or two sentences; a section is two to four sentences. Do not add fields the schema does not define.
 Output must strictly follow the provided JSON Schema.`;
 
 export function appendEnglishReferenceMaterials(

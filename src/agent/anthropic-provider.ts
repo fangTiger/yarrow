@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import {
   StructuredOutputError,
-  validateStructuredOutput,
+  validateWithSalvage,
   type StructuredOutputProvider,
   type StructuredOutputRequest,
 } from "./provider.js";
@@ -82,7 +82,7 @@ export class AnthropicProvider implements StructuredOutputProvider {
         throw new StructuredOutputError("Anthropic 结构化响应不是有效 JSON", [], { cause: error });
       }
       try {
-        const output = validateStructuredOutput<T>(request.schema, value);
+        const output = validateWithSalvage<T>(request, value);
         await request.recordAttempt?.({ attempt: 1, result: "valid", rawOutput: text, rawOutputHash: hashText(text) });
         return output;
       } catch (error) {

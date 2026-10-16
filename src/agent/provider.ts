@@ -13,6 +13,11 @@ export interface StructuredOutputRequest {
   schema: JsonSchema;
   effort: ProviderEffort;
   recordAttempt?: (attempt: ProviderAttemptAudit) => Promise<void>;
+  /**
+   * 可选的结构抢救：输出不合 Schema 时先交给它修补（如截短超长字段、删去多余字段），
+   * 修补后仍须通过 Schema。返回 undefined 表示无法抢救，按原逻辑重试。
+   */
+  salvage?: (value: unknown, errors: readonly ErrorObject[]) => unknown;
 }
 
 export interface ProviderUsage {
@@ -61,6 +66,21 @@ export class StructuredOutputError extends Error {
 const ajv = new Ajv({ allErrors: true, strict: true });
 const validators = new WeakMap<JsonSchema, ValidateFunction>();
 
+/** 先按 Schema 校验；不合格且请求提供了 salvage 时，用修补结果再校验一次。 */
+export function validateWithSalvage<T>(
+  request: Pick<StructuredOutputRequest, "schema" | "salvage">,
+  value: unknown,
+): T {
+  try {
+    return validateStructuredOutput<T>(request.schema, value);
+  } catch (error) {
+    if (!(error instanceof StructuredOutputError) || !request.salvage) throw error;
+    const repaired = request.salvage(value, error.validationErrors);
+    if (repaired === undefined) throw error;
+    return validateStructuredOutput<T>(request.schema, repaired);
+  }
+}
+
 export function validateStructuredOutput<T>(schema: JsonSchema, value: unknown): T {
   const cached = validators.get(schema);
   const validate: ValidateFunction = cached ?? ajv.compile(schema);
@@ -99,7 +119,7 @@ export class DeterministicMockProvider implements StructuredOutputProvider {
     const value = typeof fixture === "function" ? await fixture(request, callIndex) : fixture;
     const rawOutput = canonicalJson(value);
     try {
-      const validated = validateStructuredOutput<T>(request.schema, value);
+      const validated = validateWithSalvage<T>(request, value);
       await request.recordAttempt?.({
         attempt: callIndex + 1,
         result: "valid",

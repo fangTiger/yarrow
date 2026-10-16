@@ -1,4 +1,5 @@
 // src/sanyi/bazi-school-runner.ts
+import { salvageEnglishOutput, schemaHintsEn } from "./english/salvage.js";
 import { StructuredOutputError, validateStructuredOutput,
   type StructuredOutputProvider } from "../agent/provider.js";
 import { auditBaziEvidence, auditBaziOutput, baziProse } from "./bazi-audit.js";
@@ -94,6 +95,7 @@ export async function runBaziSchool(deps: {
           taskId: `sanyi/${input.kind}/${input.school.key}`,
           systemPrompt, cacheSystemPrompt: true,
           userPrompt, schema, effort: "medium",
+        ...(language === "en" ? { salvage: salvageEnglishOutput } : {}),
         });
         // 不假设 provider 一定做过校验；Schema 失败也进入重写。
         const output = validateStructuredOutput<BaziSchoolOutput>(schema, raw);
@@ -109,7 +111,7 @@ export async function runBaziSchool(deps: {
         if (!(error instanceof StructuredOutputError)) {
           return { status: "failed", error: "模型调用失败，请稍后重试", calls };
         }
-        errors = schemaHints(error);
+        errors = language === "en" ? schemaHintsEn(error) : schemaHints(error);
       }
       userPrompt = [basePrompt, "", "上一次输出未通过核对，请修正后完整重写：",
         ...errors.map((error) => `- ${error}`),

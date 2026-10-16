@@ -116,8 +116,8 @@ const charMeaningSchemaEn = {
   required: ["char", "gloss", "sense"],
   properties: {
     char: { type: "string", minLength: 1, maxLength: 1 },
-    gloss: { type: "string", minLength: 1, maxLength: 48 },
-    sense: { type: "string", minLength: 1, maxLength: 120 },
+    gloss: { type: "string", minLength: 1, maxLength: 64 },
+    sense: { type: "string", minLength: 1, maxLength: 160 },
   },
 } as const;
 
@@ -127,13 +127,13 @@ const nameSchemaEn = {
   required: ["given", "meaning", "why", "chars", "tags"],
   properties: {
     given: { type: "string", minLength: 1, maxLength: 4 },
-    meaning: { type: "string", minLength: 1, maxLength: 200 },
-    why: { type: "string", minLength: 1, maxLength: 240 },
+    meaning: { type: "string", minLength: 1, maxLength: 280 },
+    why: { type: "string", minLength: 1, maxLength: 320 },
     sourceId: { type: "string", minLength: 1, maxLength: 12 },
     chars: { type: "array", minItems: 1, maxItems: 4, items: charMeaningSchemaEn },
     tags: {
       type: "array", minItems: 3, maxItems: 5,
-      items: { type: "string", minLength: 1, maxLength: 24 },
+      items: { type: "string", minLength: 1, maxLength: 32 },
     },
   },
 } as const;
@@ -162,7 +162,7 @@ export const NAMING_SUMMARY_SCHEMA_EN = {
         type: "object", additionalProperties: false, required: ["given", "reason"],
         properties: {
           given: { type: "string", minLength: 1, maxLength: 4 },
-          reason: { type: "string", minLength: 1, maxLength: 240 },
+          reason: { type: "string", minLength: 1, maxLength: 320 },
         },
       },
     },

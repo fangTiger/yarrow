@@ -8,8 +8,8 @@ export const QUESTION_SCHOOL_SCHEMA_EN = {
   properties: {
     verdict: { type: "string", enum: ["大吉", "吉", "平", "凶", "大凶"] },
     confidenceTenths: { type: "integer", minimum: 1, maximum: 9 },
-    headline: { type: "string", minLength: 1, maxLength: 90 },
-    reason: { type: "string", minLength: 1, maxLength: 240 },
+    headline: { type: "string", minLength: 1, maxLength: 140 },
+    reason: { type: "string", minLength: 1, maxLength: 400 },
     sections: {
       type: "array", minItems: 3, maxItems: 5,
       items: {
@@ -48,7 +48,7 @@ export const SUMMARY_SCHEMA_EN = {
   required: ["conclusion", "agreement", "explanation", "remedy"],
   properties: {
     tone: { type: "string", enum: ["顺", "中", "不顺"] },
-    conclusion: { type: "string", minLength: 1, maxLength: 160 },
+    conclusion: { type: "string", minLength: 1, maxLength: 240 },
     agreement: { type: "string", minLength: 1, maxLength: 600 },
     difference: { type: "string", minLength: 1, maxLength: 600 },
     explanation: {
@@ -79,7 +79,7 @@ export const SUMMARY_SCHEMA_EN = {
       required: ["traits", "strengths", "blindSpots", "summary"],
       properties: {
         traits: { type: "array", minItems: 3, maxItems: 5,
-          items: { type: "string", minLength: 1, maxLength: 28 } },
+          items: { type: "string", minLength: 1, maxLength: 32 } },
         strengths: { type: "array", minItems: 2, maxItems: 2,
           items: { type: "string", minLength: 1, maxLength: 160 } },
         blindSpots: { type: "array", minItems: 2, maxItems: 2,
@@ -103,7 +103,7 @@ export const DESTINY_TITLES_EN = [
   "Character", "Career", "Wealth", "Relationships", "Health",
 ] as const;
 
-const baziUseGodEn = { type: "string", minLength: 1, maxLength: 120 } as const;
+const baziUseGodEn = { type: "string", minLength: 1, maxLength: 160 } as const;
 const baziSectionEn = QUESTION_SCHOOL_SCHEMA_EN.properties.sections.items;
 
 /** 命理英文输出字段与必填项不变，只放宽英文长度。 */
@@ -136,7 +136,7 @@ export const DESTINY_SCHOOL_SCHEMA_EN = {
           index: { type: "integer", minimum: 1, maximum: 12 },
           verdict: QUESTION_SCHOOL_SCHEMA_EN.properties.verdict,
           confidenceTenths: QUESTION_SCHOOL_SCHEMA_EN.properties.confidenceTenths,
-          note: { type: "string", minLength: 1, maxLength: 120 },
+          note: { type: "string", minLength: 1, maxLength: 180 },
         },
       },
     },
@@ -159,7 +159,7 @@ export const FORTUNE_SCHOOL_SCHEMA_EN = {
           year: { type: "integer", minimum: 1900, maximum: 2099 },
           verdict: QUESTION_SCHOOL_SCHEMA_EN.properties.verdict,
           confidenceTenths: QUESTION_SCHOOL_SCHEMA_EN.properties.confidenceTenths,
-          note: { type: "string", minLength: 1, maxLength: 100 },
+          note: { type: "string", minLength: 1, maxLength: 160 },
         },
       },
     },

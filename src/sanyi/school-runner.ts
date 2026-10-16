@@ -1,4 +1,5 @@
 // src/sanyi/school-runner.ts
+import { salvageEnglishOutput, schemaHintsEn } from "./english/salvage.js";
 import {
   StructuredOutputError,
   validateStructuredOutput,
@@ -109,6 +110,7 @@ export async function runSchool(
         userPrompt,
         schema: language === "en" ? QUESTION_SCHOOL_SCHEMA_EN : QUESTION_SCHOOL_SCHEMA,
         effort: "medium",
+        ...(language === "en" ? { salvage: salvageEnglishOutput } : {}),
       });
       lastValid = output;
       errors = validationErrors(output, input.facts, language);
@@ -121,7 +123,7 @@ export async function runSchool(
         return { status: "failed", error: `模型调用失败：${message}`, calls };
       }
       // 结构不合 Schema 时带具体字段提示重写，不当作调用失败。
-      errors = schemaHints(error);
+      errors = language === "en" ? schemaHintsEn(error) : schemaHints(error);
     }
     userPrompt = [
       basePrompt,

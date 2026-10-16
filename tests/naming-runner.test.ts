@@ -405,8 +405,8 @@ test("英文起名 runner 选择英文提示与放宽 Schema，合参与单家 m
         tags: { items: { maxLength: number } };
       } } } };
     };
-    assert.equal(schema.properties.names.items.properties.chars.items.properties.gloss.maxLength, 48);
-    assert.equal(schema.properties.names.items.properties.tags.items.maxLength, 24);
+    assert.equal(schema.properties.names.items.properties.chars.items.properties.gloss.maxLength, 64);
+    assert.equal(schema.properties.names.items.properties.tags.items.maxLength, 32);
     if (result.status === "done") outputs[family.key] = result.output;
   }
   const summaryResult = await runNamingSummary({ provider }, {

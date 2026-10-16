@@ -1,3 +1,4 @@
+import { salvageEnglishOutput, schemaHintsEn } from "../english/salvage.js";
 import {
   StructuredOutputError,
   validateStructuredOutput,
@@ -61,6 +62,7 @@ export async function runNamingFamily(
         userPrompt,
         schema: language === "en" ? NAMING_FAMILY_SCHEMA_EN : NAMING_FAMILY_SCHEMA,
         effort: "medium",
+        ...(language === "en" ? { salvage: salvageEnglishOutput } : {}),
       });
       const output = validateStructuredOutput<NamingFamilyOutput>(
         language === "en" ? NAMING_FAMILY_SCHEMA_EN : NAMING_FAMILY_SCHEMA,
@@ -80,7 +82,7 @@ export async function runNamingFamily(
       if (!(error instanceof StructuredOutputError)) {
         return { status: "failed", error: "起名本家暂未落笔，请稍后重试", calls };
       }
-      errors = schemaHints(error);
+      errors = language === "en" ? schemaHintsEn(error) : schemaHints(error);
     }
     userPrompt = [
       basePrompt,
@@ -250,6 +252,7 @@ export async function runNamingSummary(
         userPrompt,
         schema: language === "en" ? NAMING_SUMMARY_SCHEMA_EN : NAMING_SUMMARY_SCHEMA,
         effort: "medium",
+        ...(language === "en" ? { salvage: salvageEnglishOutput } : {}),
       });
       const output = validateStructuredOutput<NamingSummaryOutput>(
         language === "en" ? NAMING_SUMMARY_SCHEMA_EN : NAMING_SUMMARY_SCHEMA,
@@ -269,7 +272,7 @@ export async function runNamingSummary(
       if (!(error instanceof StructuredOutputError)) {
         return { status: "failed", error: "三家合参暂未生成，请稍后重试", calls };
       }
-      errors = schemaHints(error);
+      errors = language === "en" ? schemaHintsEn(error) : schemaHints(error);
     }
     userPrompt = [
       basePrompt,
