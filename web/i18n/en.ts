@@ -85,7 +85,6 @@ export const en: Record<keyof typeof zh, string> = {
   "gate.namingBirth": "Complete the birth details for naming: {problem}",
   "gate.ownerBirth": "Complete the owner's birth details: {problem}",
   "gate.surname": "Enter a supported Chinese surname.",
-  "gate.kindRequired": "Choose a reading type.",
   "gate.subjectRequired": "Choose one of the seven subjects.",
   "unsupported.default": "That reading is coming soon. Choose Ask to continue.",
   "subject.field": "Subject",

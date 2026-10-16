@@ -83,7 +83,6 @@ export const zh = {
   "gate.namingBirth": "请先填好起名生辰：{problem}",
   "gate.ownerBirth": "请填好店主生辰：{problem}",
   "gate.surname": "请填写 1–2 个汉字的姓氏",
-  "gate.kindRequired": "请选择一种类型。",
   "gate.subjectRequired": "请从七项事项中选择一项。",
   "unsupported.default": "这类问题即将开放，可点选「问事」照常起卦",
   "subject.field": "事项",

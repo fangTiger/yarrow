@@ -6,7 +6,7 @@ import {
   type BirthFormValues,
 } from "../lib/birth-profile.js";
 import {
-  DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint, classificationHint,
+  DEFAULT_NAMING_FORM, NAMING_PLACEHOLDERS, PLACEHOLDERS, autoHint,
   deriveEntry, entryGate, fromClassification, namingBirthProblem, namingGate, namingRequest,
   paymentClassification, prefillFromHash, submissionQuestion,
   type ClassificationView, type EntryChoice, type HashPrefill, type NamingFormValues,
@@ -75,6 +75,8 @@ export function QuestionForm() {
   });
   const length = [...question.trim()].length;
   const valid = length >= 4 && length <= 280;
+  // 分类规则只认中文关键词；英文不自动分类，页面高亮的类型就是所选类型。
+  const autoClassify = lang === "zh";
   useEffect(() => {
     if (!hashPrefill.clear || typeof history === "undefined" || typeof location === "undefined") return;
     history.replaceState(history.state, "", `${location.pathname}${location.search}#/`);
@@ -91,7 +93,7 @@ export function QuestionForm() {
     });
   }, []);
   useEffect(() => {
-    if (!valid) {
+    if (!valid || !autoClassify) {
       return undefined;
     }
     let active = true;
@@ -116,7 +118,7 @@ export function QuestionForm() {
       active = false;
       clearTimeout(timer);
     };
-  }, [question, t, valid]);
+  }, [autoClassify, question, t, valid]);
   const entry = deriveEntry(view, choice, t, lang);
   const naming = { ...namingValues, target: entry.target };
   const problem = birthProblem(birthValues, t);
@@ -128,14 +130,14 @@ export function QuestionForm() {
     ? namingGate({ questionLength: length, value: naming, birthProblem: namingProblem }, t)
     : entryGate({
         questionLength: length, classified: view !== undefined, entry, birthProblem: problem, birthShown,
-      }, t, { requireManualKind: lang === "en", requireQuestionSubject: lang === "en" });
+      }, t, { autoClassify, requireQuestionSubject: !autoClassify });
   // 分类结果一到就显示结果，不再停留在「识别中」。
   let status = "";
   if (entry.unsupported) {
     status = entry.unsupported;
-  } else if (view) {
-    status = lang === "en" ? classificationHint(view, t) : autoHint(entry, t) ?? "";
-  } else if (classifying) {
+  } else if (view && autoClassify) {
+    status = autoHint(entry, t) ?? "";
+  } else if (classifying && autoClassify) {
     status = t("status.classifying");
   }
   const needsBirth = entry.kind === "fortune" || entry.kind === "destiny";
@@ -171,7 +173,7 @@ export function QuestionForm() {
         }} value={entry.kind} />
       {entry.kind === "question" ? (
         <SubjectSelect
-          detected={view?.subjectKey ?? ""}
+          detected={autoClassify ? view?.subjectKey ?? "" : ""}
           onChange={(subjectKey, subject) => setChoice((current) => ({
             ...current, subjectKey, subject,
           }))}

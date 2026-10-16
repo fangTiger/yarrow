@@ -195,16 +195,20 @@ test("命理首页空问题直达默认问题，写了问题仍走原分类规�
   assert.equal(home.DEFAULT_ENTRY.kind, "destiny");
   assert.deepEqual(home.entryGate({
     questionLength: 0, classified: false, entry: home.DEFAULT_ENTRY, birthProblem: null,
-  }, createT(en), { requireManualKind: true, requireQuestionSubject: true }), { ready: true, reason: "" });
+  }, createT(en), { autoClassify: false, requireQuestionSubject: true }), { ready: true, reason: "" });
   assert.deepEqual(home.entryGate({
     questionLength: 0, classified: false, entry: home.DEFAULT_ENTRY,
     birthProblem: "Enter your birth date.",
-  }, createT(en), { requireManualKind: true, requireQuestionSubject: true }), {
+  }, createT(en), { autoClassify: false, requireQuestionSubject: true }), {
     ready: false, reason: "Complete your birth details: Enter your birth date.",
   });
+  // 中文写了问题要等分类结果；英文不分类，默认的命理直接可付款。
   assert.equal(home.entryGate({
-    questionLength: 8, classified: true, entry: home.DEFAULT_ENTRY, birthProblem: null,
-  }, createT(en), { requireManualKind: true }).ready, false);
+    questionLength: 8, classified: false, entry: home.DEFAULT_ENTRY, birthProblem: null,
+  }).ready, false);
+  assert.equal(home.entryGate({
+    questionLength: 8, classified: false, entry: home.DEFAULT_ENTRY, birthProblem: null,
+  }, createT(en), { autoClassify: false }).ready, true);
   assert.equal(home.submissionQuestion(home.DEFAULT_ENTRY, "", createT(en)),
     "How will my life unfold, and what is my character like?");
   assert.equal(home.submissionQuestion(home.DEFAULT_ENTRY, "  我想看性格  "), "我想看性格");

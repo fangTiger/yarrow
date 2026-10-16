@@ -176,23 +176,6 @@ export function autoHint(state: EntryState, t: TFunction = zhT): string | null {
   return t("status.detected.destiny");
 }
 
-/** 英文首页只把分类结果作为建议，不替用户改变类型或事项。 */
-export function classificationHint(view: ClassificationView, t: TFunction): string {
-  if (view.kind === "question") {
-    const subject = subjectLabel(view.subjectKey ?? "", t, view.subject);
-    return subject ? t("status.detected.subject", { subject }) : t("status.detected.question");
-  }
-  if (view.kind === "fortune") {
-    return t("status.detected.fortune", { horizon: horizonLabel(entryHorizon(view.horizon), t) });
-  }
-  if (view.kind === "naming") {
-    return t("status.detected.naming", {
-      target: t(view.target === "business" ? "naming.business" : "naming.person"),
-    });
-  }
-  return t("status.detected.destiny");
-}
-
 export interface GateInput {
   questionLength: number;
   classified: boolean;
@@ -206,19 +189,21 @@ export interface GateInput {
 export function entryGate(
   input: GateInput,
   t: TFunction = zhT,
-  options: { requireManualKind?: boolean; requireQuestionSubject?: boolean } = {},
+  options: {
+    /** 是否按中文关键词规则自动分类；英文模式为 false，高亮的类型即所选类型。 */
+    autoClassify?: boolean;
+    requireQuestionSubject?: boolean;
+  } = {},
 ): { ready: boolean; reason: string } {
+  const autoClassify = options.autoClassify ?? true;
   const emptyDestiny = input.entry.kind === "destiny" && input.questionLength === 0;
   if (!emptyDestiny && input.questionLength < 4) {
     return { ready: false, reason: t("gate.questionLength") };
   }
-  if (!emptyDestiny && options.requireManualKind && !input.entry.manual) {
-    return { ready: false, reason: t("gate.kindRequired") };
-  }
   if (options.requireQuestionSubject && input.entry.kind === "question" && !input.entry.subjectKey) {
     return { ready: false, reason: t("gate.subjectRequired") };
   }
-  if (!emptyDestiny && !input.classified && !input.entry.manual) {
+  if (autoClassify && !emptyDestiny && !input.classified && !input.entry.manual) {
     return { ready: false, reason: t("status.classifying") };
   }
   if (input.entry.unsupported) {

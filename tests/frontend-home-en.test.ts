@@ -75,23 +75,25 @@ test("手机类型卡保持 2×2 并只在卡片组下展示选中项详情", ()
     /@media\s*\(max-width:\s*560px\)[\s\S]*?\.home-luopan[^}]*min\(140px,\s*40vw\)/u);
 });
 
-test("英文默认 Destiny；写问题后仍必须手选，分类关键词只提示而不自动改类型或事项", () => {
+test("英文默认 Destiny；高亮的类型即所选，不跑中文关键词分类；问事必须手选事项", () => {
   const t = createT(en);
+  const english = { autoClassify: false, requireQuestionSubject: true };
   assert.equal(deriveEntry(fortune, {}, t, "en").kind, "destiny");
-  assert.equal(deriveEntry(fortune, {}, t, "en").manual, false);
   assert.equal(deriveEntry(career, { kind: "question" }, t, "en").subjectKey, "");
+  // 用户没点类型卡、也没等分类：默认高亮的 Destiny 写了问题即可付款。
   assert.deepEqual(entryGate({
-    questionLength: 20, classified: true,
-    entry: deriveEntry(career, {}, t, "en"), birthProblem: null,
-  }, t, { requireManualKind: true, requireQuestionSubject: true }), {
-    ready: false, reason: "Choose a reading type.",
-  });
+    questionLength: 24, classified: false,
+    entry: deriveEntry(undefined, {}, t, "en"), birthProblem: null,
+  }, t, english), { ready: true, reason: "" });
   assert.deepEqual(entryGate({
-    questionLength: 20, classified: true,
-    entry: deriveEntry(career, { kind: "question" }, t, "en"), birthProblem: null,
-  }, t, { requireManualKind: true, requireQuestionSubject: true }), {
-    ready: false, reason: "Choose one of the seven subjects.",
-  });
+    questionLength: 20, classified: false,
+    entry: deriveEntry(undefined, { kind: "question" }, t, "en"), birthProblem: null,
+  }, t, english), { ready: false, reason: "Choose one of the seven subjects." });
+  assert.deepEqual(entryGate({
+    questionLength: 20, classified: false,
+    entry: deriveEntry(undefined, { kind: "question", subjectKey: "career", subject: "" }, t, "en"),
+    birthProblem: null,
+  }, t, english), { ready: true, reason: "" });
   assert.equal(deriveEntry(fortune, { kind: "destiny" }, t, "en").kind, "destiny");
   assert.equal(applyClassification(DEFAULT_ENTRY, fortune, t).kind, "fortune");
 });
