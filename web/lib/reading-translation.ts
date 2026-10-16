@@ -7,13 +7,29 @@ export type TranslationViewState =
 
 export function translationViewState(
   translation: StoredTranslation | undefined,
+  reading?: AnyPublicReading,
 ): TranslationViewState {
   const entries = translation ? Object.entries(translation.units) : [];
   if (entries.length === 0) return { kind: "pending" };
+  if (reading) {
+    const terminalKeys = terminalUnitKeys(reading);
+    if (terminalKeys.some((key) => !translation?.units[key])) return { kind: "pending" };
+  }
   if (entries.some(([, unit]) => unit.status === "writing")) return { kind: "writing" };
   if (entries.some(([, unit]) => unit.status === "pending")) return { kind: "pending" };
   const failedUnits = entries.filter(([, unit]) => unit.status === "failed").map(([key]) => key);
   return failedUnits.length > 0 ? { kind: "failed", failedUnits } : { kind: "done" };
+}
+
+function terminalUnitKeys(reading: AnyPublicReading): string[] {
+  const terminal = (status: string) => status === "done" || status === "failed" || status === "rejected";
+  const keys: string[] = [];
+  if (reading.summary && terminal(reading.summary.status)) keys.push("summary");
+  const states = reading.kind === "naming" ? reading.families : reading.schools;
+  for (const [key, state] of Object.entries(states)) {
+    if (terminal(state.status)) keys.push(key);
+  }
+  return keys;
 }
 
 type MutableRecord = Record<string, unknown>;
@@ -200,24 +216,44 @@ function unitPaths(reading: MutableRecord): Record<string, string[]> {
   };
 }
 
-function applyUnit(root: MutableRecord, unit: StoredTranslationUnit | undefined, paths: string[]): void {
-  if (unit?.status !== "done" || !unit.texts) return;
-  // 译文按位置对应路径：条数不符（如旧译文早于翻译范围调整）时整单元跳过，宁可显示中文也不错位。
-  if (unit.texts.length !== paths.length) return;
+function applyUnit(root: MutableRecord, unit: StoredTranslationUnit | undefined, paths: string[]): boolean {
+  if (unit?.status !== "done" || !unit.texts) return false;
+  // 译文按位置对应路径：条数不符（如旧译文早于翻译范围调整）时整单元按未译处理，绝不把中文带到英文页。
+  if (unit.texts.length !== paths.length) return false;
   paths.forEach((path, index) => {
     const text = unit.texts?.[index];
     if (text !== undefined) setPath(root, path, text);
   });
+  return true;
 }
 
-/** 将已完成单元叠加到公开视图；未完成与失败单元保留中文作为即时回退。 */
+function stateForUnit(root: MutableRecord, key: string): MutableRecord | undefined {
+  if (key === "summary") return root.summary as MutableRecord | undefined;
+  const group = root.kind === "naming" ? root.families : root.schools;
+  return (group as MutableRecord | undefined)?.[key] as MutableRecord | undefined;
+}
+
+function maskTerminalUnit(root: MutableRecord, key: string, paths: string[]): void {
+  const state = stateForUnit(root, key);
+  if (!state || !["done", "failed", "rejected"].includes(String(state.status))) return;
+  // 个别路径（如起名的 favorableNote）不在 output 内，也必须显式清空。
+  paths.forEach((path) => setPath(root, path, ""));
+  if (state.output !== undefined) {
+    delete state.output;
+    state.status = "writing";
+    state.translationPending = true;
+  }
+}
+
+/** 生成英文专用视图；已终态但未译好的正文只显示英文占位，绝不回退中文。 */
 export function applyReadingTranslation<T extends AnyPublicReading>(reading: T): T {
   const translation = reading.translation;
-  if (!translation) return reading;
   const translated = clone(reading) as unknown as MutableRecord;
   const paths = unitPaths(reading as unknown as MutableRecord);
-  Object.entries(paths).forEach(([key, unitPathsForKey]) => (
-    applyUnit(translated, translation.units[key], unitPathsForKey)
-  ));
+  Object.entries(paths).forEach(([key, unitPathsForKey]) => {
+    if (!applyUnit(translated, translation?.units[key], unitPathsForKey)) {
+      maskTerminalUnit(translated, key, unitPathsForKey);
+    }
+  });
   return translated as unknown as T;
 }

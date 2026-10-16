@@ -31,6 +31,8 @@ interface Dependencies {
   logger: SanyiLogger;
   metrics?: MetricsRecorder;
   clock: () => Date;
+  /** 解读单元进入终态后的旁路通知；失败不得影响解读流程。 */
+  onUnitSettled?: (id: string, unitKey: BaziSchoolKey | "summary") => void | Promise<void>;
 }
 function schools(startedAt: string, previous?: StoredBaziReading["schools"]): StoredBaziReading["schools"] {
   function state(key: BaziSchoolKey): BaziSchoolState {
@@ -86,6 +88,7 @@ export class BaziReadingService {
     sect: 1 | 2;
     horizon: FortuneHorizon;
     feeProof: SanyiFeeProof;
+    translateTo?: "en";
   }): Promise<StoredBaziReading> {
     // 付款核验先于排盘；API 仅先做请求格式校验，不生成命盘。
     const receipt = await this.deps.feeVerifier.verify(input.feeProof);
@@ -106,7 +109,8 @@ export class BaziReadingService {
       chart, correction, context, analysis: analyzeBazi(chart),
       tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
       almanac: almanacAt(BigInt(Math.floor(now.getTime() / 1_000))),
-      changes: 0, status: "writing", schools: schools(now.toISOString()) };
+      changes: 0, status: "writing", schools: schools(now.toISOString()),
+      ...(input.translateTo ? { translateTo: input.translateTo } : {}) };
     await this.deps.store.write(reading);
     await incrementMetricSafely(this.metrics, this.deps.logger, `reading_created:${input.kind}`);
     this.start(id, input.kind, () => this.runAll(reading, true), true);
@@ -268,6 +272,7 @@ export class BaziReadingService {
       }
       return { ...current, schools: { ...current.schools, [school.key]: state } };
     });
+    await this.notifyUnitSettled(reading.id, school.key);
   }
   private async runAll(reading: StoredBaziReading, countTerminal: boolean): Promise<void> {
     await Promise.all(BAZI_SCHOOLS.map((school) => this.runOne(reading, school)));
@@ -311,6 +316,7 @@ export class BaziReadingService {
           attempts: previous?.attempts ?? 0, retries: previous?.retries ?? 0,
         },
       }));
+      await this.notifyUnitSettled(id, "summary");
       return;
     }
     const basis = input.schools.length;
@@ -328,6 +334,7 @@ export class BaziReadingService {
       ...current,
       summary: { ...summaryState(current.summary, result, basis, true), anchor: input.anchor },
     }));
+    await this.notifyUnitSettled(id, "summary");
   }
 
   private summaryInput(reading: StoredBaziReading): SummaryInput | null {
@@ -459,5 +466,17 @@ export class BaziReadingService {
         this.background.delete(id);
       }
     });
+  }
+  private async notifyUnitSettled(id: string, unitKey: BaziSchoolKey | "summary"): Promise<void> {
+    if (!this.deps.onUnitSettled) return;
+    try {
+      await this.deps.onUnitSettled(id, unitKey);
+    } catch {
+      try {
+        await this.deps.logger.write("英文翻译通知失败", { readingId: id, unit: unitKey });
+      } catch {
+        // 旁路通知与日志均不得影响中文解读。
+      }
+    }
   }
 }

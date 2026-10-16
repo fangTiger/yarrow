@@ -17,7 +17,10 @@ export function proof(index = 1) {
   return { payer: `0x${"11".repeat(20)}` as `0x${string}`,
     transactionHash: `0x${index.toString(16).padStart(64, "0")}` as `0x${string}` };
 }
-export async function baziFixture(provider: StructuredOutputProvider = new MockSchoolsProvider()) {
+export async function baziFixture(
+  provider: StructuredOutputProvider = new MockSchoolsProvider(),
+  options: { onUnitSettled?: (id: string, unitKey: import("../../src/sanyi/schools/bazi-shared.js").BaziSchoolKey | "summary") => void | Promise<void> } = {},
+) {
   const root = await mkdtemp(join(tmpdir(), "sanyi-b5-"));
   const store = new ReadingStore(root);
   const calls = { payments: 0 };
@@ -33,7 +36,8 @@ export async function baziFixture(provider: StructuredOutputProvider = new MockS
     } },
   };
   const question = new ReadingService(deps);
-  const bazi = new BaziReadingService(deps);
+  const bazi = new BaziReadingService({ ...deps,
+    ...(options.onUnitSettled ? { onUnitSettled: options.onUnitSettled } : {}) });
   const api = createSanyiApi(question, { now: clock, bazi });
   return { root, store, calls, bazi, question, api,
     close: async () => rm(root, { recursive: true, force: true }) };

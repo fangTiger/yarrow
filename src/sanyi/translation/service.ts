@@ -16,7 +16,7 @@ import {
   type StoredTranslation,
   type StoredTranslationUnit,
 } from "./store.js";
-import { extractUnits, type TranslationUnit } from "./units.js";
+import { extractUnits, type TranslationUnit, type TranslationUnitKey } from "./units.js";
 
 const TRANSLATION_SCHEMA = {
   type: "object",
@@ -82,7 +82,8 @@ export function sourceHash(unit: TranslationUnit): string {
 function isTerminal(reading: StoredReading): boolean {
   const parts = reading.kind === "naming" ? Object.values(reading.families) : Object.values(reading.schools);
   const summary = reading.summary;
-  return parts.every((state) => state.status === "done" || state.status === "failed")
+  return parts.every((state) => state.status === "done" || state.status === "failed"
+    || state.status === "rejected")
     && summary !== undefined
     && summary.status !== "writing";
 }
@@ -93,7 +94,7 @@ function isUnitTerminal(reading: StoredReading, unit: TranslationUnit): boolean 
   }
   if (reading.kind === "question") {
     const state = reading.schools[unit.key as keyof typeof reading.schools];
-    return state?.status === "done" || state?.status === "failed";
+    return state?.status === "done" || state?.status === "failed" || state?.status === "rejected";
   }
   if (reading.kind === "naming") {
     const state = reading.families[unit.key as keyof typeof reading.families];
@@ -116,7 +117,10 @@ export class TranslationService {
   private readonly maximumDailyUnits: number;
   private readonly readingJobs = new Map<string, Promise<StoredTranslation>>();
   private readonly triggerStarts = new Map<string, Promise<StoredTranslation>>();
-  private readonly unitJobs = new Map<string, Promise<void>>();
+  private readonly unitStarts = new Map<string, Promise<void>>();
+  private readonly unitClaims = new Set<string>();
+  private readonly unitJobs = new Map<string, { sourceHash: string; promise: Promise<void> }>();
+  private readonly preparationQueues = new Map<string, Promise<unknown>>();
   private budgetDate = "";
   private budgetUsed = 0;
 
@@ -171,14 +175,44 @@ export class TranslationService {
     }
   }
 
+  /** 英文下单的单个解读单元到终态后立即旁路翻译；任何失败都只记日志。 */
+  async startUnit(id: string, unitKey: TranslationUnitKey): Promise<void> {
+    try {
+      const requestKey = `${id}:${unitKey}`;
+      const existing = this.unitStarts.get(requestKey);
+      if (existing) {
+        await existing;
+        return await this.startUnit(id, unitKey);
+      }
+      let start: Promise<void>;
+      const work = this.startUnitRequest(id, unitKey).catch(async (error: unknown) => {
+        await this.logSafely(error instanceof TranslationBudgetError
+          ? "英文翻译单元额度已用完"
+          : "英文翻译单元启动失败", { readingId: id, unit: unitKey });
+      });
+      start = work.finally(() => {
+        if (this.unitStarts.get(requestKey) === start) this.unitStarts.delete(requestKey);
+      });
+      this.unitStarts.set(requestKey, start);
+      keepAlive(start);
+      await start;
+    } catch (error) {
+      await this.logSafely(error instanceof TranslationBudgetError
+        ? "英文翻译单元额度已用完"
+        : "英文翻译单元启动失败", { readingId: id, unit: unitKey });
+    }
+  }
+
   private async startTrigger(id: string): Promise<StoredTranslation> {
-    const reading = await this.deps.store.read<StoredReading>(id);
-    if (!isTerminal(reading)) throw new NotReadyError();
-    const units = extractUnits(reading);
-    const prepared = await this.prepare(id, units);
-    const count = this.translatableCount(prepared, units);
-    this.reserveBudget(count);
-    const job = this.process(id, units);
+    let prepared: Awaited<ReturnType<TranslationService["prepare"]>>;
+    let claim: { document: StoredTranslation; claimed: TranslationUnit[] } | undefined;
+    do {
+      prepared = await this.prepare(id, undefined, (reading) => isTerminal(reading));
+      if (!prepared) throw new NotReadyError();
+      claim = await this.claimPreparedUnits(id, prepared.units);
+    } while (!claim);
+    const claimed = claim.claimed;
+    const job = this.process(id, prepared.units).finally(() => this.releaseClaims(id, claimed));
     this.readingJobs.set(id, job);
     keepAlive(job);
     void job.catch(async () => {
@@ -186,50 +220,152 @@ export class TranslationService {
     }).finally(() => {
       if (this.readingJobs.get(id) === job) this.readingJobs.delete(id);
     });
-    return prepared;
+    return claim.document;
   }
 
   private async run(id: string): Promise<StoredTranslation> {
-    const reading = await this.deps.store.read<StoredReading>(id);
-    if (!isTerminal(reading)) throw new NotReadyError();
-    const units = extractUnits(reading);
-    const prepared = await this.prepare(id, units);
-    this.reserveBudget(this.translatableCount(prepared, units));
-    return this.process(id, units);
-  }
-
-  private async prepare(id: string, units: readonly TranslationUnit[]): Promise<StoredTranslation> {
-    const previous = await this.translationStore.read(id) ?? { lang: "en" as const, units: {} };
-    const now = this.clock().getTime();
-    const next: StoredTranslation = { lang: "en", units: { ...previous.units } };
-    for (const unit of units) {
-      const hash = sourceHash(unit);
-      const state = previous.units[unit.key];
-      if (state?.sourceHash === hash) {
-        next.units[unit.key] = state;
-      } else {
-        next.units[unit.key] = { status: "pending", sourceHash: hash, attempts: 0, failures: 0 };
-      }
-      const current = next.units[unit.key]!;
-      if (unit.entries.length === 0 && current.status !== "done") {
-        next.units[unit.key] = { ...current, status: "done", texts: [], failures: 0 };
-      } else if (current.cooldownUntil && Date.parse(current.cooldownUntil) <= now) {
-        const { cooldownUntil: _cooldown, ...rest } = current;
-        next.units[unit.key] = rest;
-      }
+    let prepared: Awaited<ReturnType<TranslationService["prepare"]>>;
+    let claim: { document: StoredTranslation; claimed: TranslationUnit[] } | undefined;
+    do {
+      prepared = await this.prepare(id, undefined, (reading) => isTerminal(reading));
+      if (!prepared) throw new NotReadyError();
+      claim = await this.claimPreparedUnits(id, prepared.units);
+    } while (!claim);
+    const claimed = claim.claimed;
+    try {
+      return await this.process(id, prepared.units);
+    } finally {
+      this.releaseClaims(id, claimed);
     }
-    await this.translationStore.write(id, next);
-    return next;
   }
 
-  private translatableCount(document: StoredTranslation, units: readonly TranslationUnit[]): number {
+  private async startUnitRequest(id: string, unitKey: TranslationUnitKey): Promise<void> {
+    let prepared: Awaited<ReturnType<TranslationService["prepare"]>>;
+    let claim: { document: StoredTranslation; claimed: TranslationUnit[] } | undefined;
+    do {
+      prepared = await this.prepare(id, [unitKey], (reading, units) => (
+        reading.translateTo === "en" && units.length === 1 && isUnitTerminal(reading, units[0]!)
+      ));
+      if (!prepared) return;
+      claim = await this.claimPreparedUnits(id, prepared.units);
+    } while (!claim);
+    const unit = prepared.units[0]!;
+    const claimed = claim.claimed;
+    if (claimed.length === 0) return;
+    const job = this.runUnit(id, unit).finally(() => this.releaseClaims(id, claimed));
+    keepAlive(job);
+    void job.catch(async () => {
+      await this.logSafely("英文翻译单元后台任务异常", { readingId: id, unit: unit.key });
+    });
+  }
+
+  private async claimPreparedUnits(
+    id: string,
+    units: readonly TranslationUnit[],
+  ): Promise<{ document: StoredTranslation; claimed: TranslationUnit[] } | undefined> {
+    const document = await this.translationStore.read(id) ?? { lang: "en", units: {} };
+    // 最后一次 await 后同步核对、认领并扣预算，避免新原文已落盘却仍拿旧快照占额度。
+    const reading = await this.deps.store.read<StoredReading>(id);
+    const keys = new Set(units.map((unit) => unit.key));
+    const current = extractUnits(reading).filter((unit) => keys.has(unit.key));
+    const expectedHashes = units.map((unit) => `${unit.key}:${sourceHash(unit)}`).join("|");
+    const currentHashes = current.map((unit) => `${unit.key}:${sourceHash(unit)}`).join("|");
+    if (expectedHashes !== currentHashes) return undefined;
+    const claimed = this.claimTranslatableUnits(id, document, units);
+    try {
+      this.reserveBudget(claimed.length);
+    } catch (error) {
+      this.releaseClaims(id, claimed);
+      throw error;
+    }
+    return { document, claimed };
+  }
+
+  private async prepare(
+    id: string,
+    unitKeys: readonly TranslationUnitKey[] | undefined,
+    eligible: (reading: StoredReading, units: readonly TranslationUnit[]) => boolean,
+  ): Promise<{ document: StoredTranslation; units: TranslationUnit[] } | undefined> {
+    const keys = unitKeys ? new Set<TranslationUnitKey>(unitKeys) : undefined;
+    const select = (reading: StoredReading) => (
+      extractUnits(reading).filter((unit) => !keys || keys.has(unit.key))
+    );
+    while (true) {
+      // 同一解读的「重读当前原文 + 原子准备译文」按调用顺序执行，旧通知不能越过新通知写回。
+      const previous = this.preparationQueues.get(id) ?? Promise.resolve();
+      const task = previous.catch(() => undefined).then(async () => {
+        const reading = await this.deps.store.read<StoredReading>(id);
+        const units = select(reading);
+        if (!eligible(reading, units)) return undefined;
+        const now = this.clock().getTime();
+        const document = await this.translationStore.update(id, (stored) => {
+          const next: StoredTranslation = { ...stored, units: { ...stored.units } };
+          for (const unit of units) {
+            const hash = sourceHash(unit);
+            const state = stored.units[unit.key];
+            next.units[unit.key] = state?.sourceHash === hash
+              ? state
+              : { status: "pending", sourceHash: hash, attempts: 0, failures: 0 };
+            const current = next.units[unit.key]!;
+            if (unit.entries.length === 0 && current.status !== "done") {
+              next.units[unit.key] = { ...current, status: "done", texts: [], failures: 0 };
+            } else if (current.cooldownUntil && Date.parse(current.cooldownUntil) <= now) {
+              const { cooldownUntil: _cooldown, ...rest } = current;
+              next.units[unit.key] = rest;
+            }
+          }
+          return next;
+        });
+        return { document, units };
+      });
+      this.preparationQueues.set(id, task);
+      let prepared: Awaited<typeof task>;
+      try {
+        prepared = await task;
+      } finally {
+        if (this.preparationQueues.get(id) === task) this.preparationQueues.delete(id);
+      }
+      if (!prepared) return undefined;
+      // 准备期间原文若再次变化，先循环到最新版，再允许预算和 provider 调用。
+      const currentReading = await this.deps.store.read<StoredReading>(id);
+      const currentUnits = select(currentReading);
+      if (!eligible(currentReading, currentUnits)) return undefined;
+      const preparedHashes = prepared.units.map((unit) => `${unit.key}:${sourceHash(unit)}`).join("|");
+      const currentHashes = currentUnits.map((unit) => `${unit.key}:${sourceHash(unit)}`).join("|");
+      if (preparedHashes === currentHashes) return prepared;
+    }
+  }
+
+  private claimTranslatableUnits(
+    id: string,
+    document: StoredTranslation,
+    units: readonly TranslationUnit[],
+  ): TranslationUnit[] {
     const now = this.clock().getTime();
-    return units.filter((unit) => {
+    const claimed = units.filter((unit) => {
       const state = document.units[unit.key]!;
+      const requestKey = this.unitRequestKey(id, unit);
+      const running = this.unitJobs.get(this.unitWorkKey(id, unit));
       return unit.entries.length > 0
         && state.status !== "done"
-        && (!state.cooldownUntil || Date.parse(state.cooldownUntil) <= now);
-    }).length;
+        && (!state.cooldownUntil || Date.parse(state.cooldownUntil) <= now)
+        && !this.unitClaims.has(requestKey)
+        && running?.sourceHash !== state.sourceHash;
+    });
+    for (const unit of claimed) this.unitClaims.add(this.unitRequestKey(id, unit));
+    return claimed;
+  }
+
+  private releaseClaims(id: string, units: readonly TranslationUnit[]): void {
+    for (const unit of units) this.unitClaims.delete(this.unitRequestKey(id, unit));
+  }
+
+  private unitWorkKey(id: string, unit: TranslationUnit): string {
+    return `${id}:${unit.key}`;
+  }
+
+  private unitRequestKey(id: string, unit: TranslationUnit): string {
+    return `${this.unitWorkKey(id, unit)}:${sourceHash(unit)}`;
   }
 
   private reserveBudget(count: number): void {
@@ -251,15 +387,26 @@ export class TranslationService {
   }
 
   private async runUnit(id: string, unit: TranslationUnit): Promise<void> {
-    const key = `${id}:${unit.key}`;
+    const key = this.unitWorkKey(id, unit);
+    const hash = sourceHash(unit);
     const existing = this.unitJobs.get(key);
-    if (existing) return existing;
-    const job = this.translateUnit(id, unit);
-    this.unitJobs.set(key, job);
+    if (existing?.sourceHash === hash) return existing.promise;
+    const job = (async () => {
+      if (existing) {
+        try {
+          await existing.promise;
+        } catch {
+          // 前一版原文的任务失败，也要继续处理最新原文。
+        }
+      }
+      await this.translateUnit(id, unit);
+    })();
+    const record = { sourceHash: hash, promise: job };
+    this.unitJobs.set(key, record);
     try {
       await job;
     } finally {
-      if (this.unitJobs.get(key) === job) this.unitJobs.delete(key);
+      if (this.unitJobs.get(key) === record) this.unitJobs.delete(key);
     }
   }
 
@@ -267,8 +414,11 @@ export class TranslationService {
     const before = await this.translationStore.read(id);
     const state = before?.units[unit.key];
     if (!state || state.status === "done" || unit.entries.length === 0) return;
+    if (state.sourceHash !== sourceHash(unit)) return;
     if (state.cooldownUntil && Date.parse(state.cooldownUntil) > this.clock().getTime()) return;
-    await this.setState(id, unit.key, { ...state, status: "writing" });
+    if (!await this.setStateForHash(id, unit.key, state.sourceHash, {
+      ...state, status: "writing",
+    })) return;
     let attempts = state.attempts;
     try {
       const initial = await this.generate(unit, false);
@@ -277,6 +427,23 @@ export class TranslationService {
         ? initial.texts.slice(0, unit.entries.length)
         : [];
       let checked = checkTranslation(unit, { texts });
+      if (checked.acceptable && checked.warnings.length > 0) {
+        if (!await this.hashStillCurrent(id, unit)) return;
+        const stored = await this.setStateForHash(id, unit.key, state.sourceHash, {
+          status: "done", sourceHash: state.sourceHash, texts,
+          attempts, failures: 0, warnings: checked.warnings.slice(0, 20),
+        });
+        if (!stored) return;
+        await this.logSafely("英文翻译单元先采用含警告译文", {
+          readingId: id, unit: unit.key, warnings: checked.warnings.length,
+        });
+        const improvement = this.improveSoftWarnings(id, unit, state.sourceHash, texts, attempts, checked);
+        keepAlive(improvement);
+        void improvement.catch(async () => {
+          await this.logSafely("英文翻译单元后台补译异常", { readingId: id, unit: unit.key });
+        });
+        return;
+      }
       if (!checked.ok) {
         const repairUnit: TranslationUnit = {
           ...unit,
@@ -310,16 +477,63 @@ export class TranslationService {
         return;
       }
       if (!await this.hashStillCurrent(id, unit)) return;
-      await this.setState(id, unit.key, {
+      const stored = await this.setStateForHash(id, unit.key, state.sourceHash, {
         status: "done", sourceHash: state.sourceHash, texts,
         attempts, failures: 0,
         ...(checked.warnings.length ? { warnings: checked.warnings.slice(0, 20) } : {}),
       });
+      if (!stored) return;
       await this.deps.logger.write("英文翻译单元完成", { readingId: id, unit: unit.key, attempts });
     } catch (error) {
       await this.failUnit(id, unit, state, attempts + 1,
         error instanceof Error ? error.name : "TranslationError");
     }
+  }
+
+  private async improveSoftWarnings(
+    id: string,
+    unit: TranslationUnit,
+    expectedHash: string,
+    originalTexts: string[],
+    attempts: number,
+    originalCheck: ReturnType<typeof checkTranslation>,
+  ): Promise<void> {
+    const indexes = originalCheck.invalidIndexes;
+    if (indexes.length === 0) return;
+    const repairUnit: TranslationUnit = {
+      ...unit,
+      entries: indexes.map((index) => unit.entries[index]!),
+    };
+    const repair = await this.generate(repairUnit, true);
+    const candidates = Array.isArray(repair.texts) ? repair.texts : [];
+    const improved = [...originalTexts];
+    let replacements = 0;
+    indexes.forEach((originalIndex, repairIndex) => {
+      const candidate = candidates[repairIndex];
+      if (typeof candidate !== "string") return;
+      const entry = unit.entries[originalIndex]!;
+      const singleUnit = { ...unit, entries: [entry] };
+      const before = checkTranslation(singleUnit, { texts: [originalTexts[originalIndex]] });
+      const after = checkTranslation(singleUnit, { texts: [candidate] });
+      if (after.acceptable && after.warnings.length < before.warnings.length) {
+        improved[originalIndex] = candidate;
+        replacements += 1;
+      }
+    });
+    if (!await this.hashStillCurrent(id, unit)) return;
+    const checked = checkTranslation(unit, { texts: improved });
+    await this.translationStore.update(id, (document) => {
+      const current = document.units[unit.key];
+      if (!current || current.sourceHash !== expectedHash || current.status !== "done") return document;
+      return { ...document, units: { ...document.units, [unit.key]: {
+        status: "done", sourceHash: expectedHash, texts: improved,
+        attempts: attempts + 1, failures: 0,
+        ...(checked.warnings.length ? { warnings: checked.warnings.slice(0, 20) } : {}),
+      } } };
+    });
+    await this.logSafely("英文翻译单元后台补译完成", {
+      readingId: id, unit: unit.key, replacements,
+    });
   }
 
   private generate(unit: TranslationUnit, repair: boolean): Promise<TranslationOutput> {
@@ -338,8 +552,12 @@ export class TranslationService {
     const current = extractUnits(reading).find((item) => item.key === unit.key);
     if (current && sourceHash(current) === sourceHash(unit)) return true;
     if (current) {
-      await this.setState(id, unit.key, {
-        status: "pending", sourceHash: sourceHash(current), attempts: 0, failures: 0,
+      await this.translationStore.update(id, (document) => {
+        const state = document.units[unit.key];
+        if (state && state.sourceHash !== sourceHash(unit)) return document;
+        return { ...document, units: { ...document.units, [unit.key]: {
+          status: "pending", sourceHash: sourceHash(current), attempts: 0, failures: 0,
+        } } };
       });
     }
     return false;
@@ -357,23 +575,38 @@ export class TranslationService {
     const cooldownUntil = failures >= 3
       ? new Date(this.clock().getTime() + 10 * 60_000).toISOString()
       : undefined;
-    await this.setState(id, unit.key, {
+    const stored = await this.setStateForHash(id, unit.key, previous.sourceHash, {
       status: "failed", sourceHash: previous.sourceHash, attempts, failures, error,
       ...(cooldownUntil ? { cooldownUntil } : {}),
     });
+    if (!stored) return;
     await this.deps.logger.write("英文翻译单元失败", {
       readingId: id, unit: unit.key, failures,
     });
   }
 
-  private async setState(
+  private async setStateForHash(
     id: string,
     key: TranslationUnit["key"],
+    expectedHash: string,
     state: StoredTranslationUnit,
+  ): Promise<boolean> {
+    const updated = await this.translationStore.update(id, (document) => {
+      if (document.units[key]?.sourceHash !== expectedHash) return document;
+      return { ...document, units: { ...document.units, [key]: state } };
+    });
+    const current = updated.units[key];
+    return current?.sourceHash === expectedHash && current.status === state.status;
+  }
+
+  private async logSafely(
+    message: string,
+    fields: Readonly<Record<string, string | number | boolean>>,
   ): Promise<void> {
-    await this.translationStore.update(id, (document) => ({
-      ...document,
-      units: { ...document.units, [key]: state },
-    }));
+    try {
+      await this.deps.logger.write(message, fields);
+    } catch {
+      // 旁路日志失败不得影响解读或翻译状态。
+    }
   }
 }

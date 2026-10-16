@@ -9,7 +9,7 @@ import { saveRecentReading } from "../lib/recent-readings.js";
 import { useFeePayment } from "../lib/use-fee-payment.js";
 import type { ClassificationView } from "../lib/home-entry.js";
 import type { NamingRequest } from "../lib/home-entry.js";
-import { useT } from "../lib/i18n.js";
+import { useLang, useT } from "../lib/i18n.js";
 import { paymentFailure } from "../lib/payment-error.js";
 import { WalletPaymentGuide } from "./WalletPaymentGuide.js";
 import { track } from "../lib/metrics.js";
@@ -21,6 +21,7 @@ export function PaymentButton(props: {
   onMissingBirth?(): void;
 }) {
   const t = useT();
+  const { lang } = useLang();
   const { pay, payment, estimatedGasWei18, connectionMessage } = useFeePayment();
   const [paidProof, setPaidProof] = useState<SanyiFeeProof>();
   const [busy, setBusy] = useState(false);
@@ -35,7 +36,7 @@ export function PaymentButton(props: {
       const feeProof = paidProof ?? await pay();
       setPaidProof(feeProof);
       const reading = await api.createReading(props.naming
-        ? { ...props.naming, feeProof }
+        ? { ...props.naming, feeProof, lang }
         : {
             question: props.question,
             kind: props.classification.kind as "question" | "destiny" | "fortune",
@@ -43,6 +44,7 @@ export function PaymentButton(props: {
             ...(props.classification.horizon ? { horizon: props.classification.horizon } : {}),
             ...(props.classification.subjectKey ? { subjectKey: props.classification.subjectKey } : {}),
             feeProof,
+            lang,
           });
       saveRecentReading({
         id: reading.id,

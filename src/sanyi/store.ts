@@ -85,6 +85,8 @@ export interface StoredQuestionReading {
   almanac?: AlmanacResult;
   qimen?: QimenResult;
   terminalMetric?: TerminalMetricClaim;
+  /** 英文界面下单时由服务端逐单元后台翻译；中文下单不保存。 */
+  translateTo?: "en";
 }
 
 export interface BaziSchoolState {
@@ -129,6 +131,8 @@ export interface StoredBaziReading {
     periods: Record<string, { vote: PeriodFeedbackVote; at: string }>;
   };
   terminalMetric?: TerminalMetricClaim;
+  /** 英文界面下单时由服务端逐单元后台翻译；中文下单不保存。 */
+  translateTo?: "en";
 }
 
 export interface NamingFamilyState {
@@ -186,6 +190,8 @@ export interface StoredNamingReading {
   families: Record<import("./naming/schema.js").NamingFamilyKey, NamingFamilyState>;
   summary?: NamingSummaryState;
   terminalMetric?: TerminalMetricClaim;
+  /** 英文界面下单时由服务端逐单元后台翻译；中文下单不保存。 */
+  translateTo?: "en";
 }
 
 export type StoredReading = StoredQuestionReading | StoredBaziReading | StoredNamingReading;

@@ -41,6 +41,14 @@ function unexpectedHan(text: string, allowed: readonly string[], sourceText = ""
   return [...new Set(rest.match(/\p{Script=Han}/gu) ?? [])];
 }
 
+function normalizedEnglish(value: string): string {
+  return value.toLowerCase()
+    .replace(/favour/gu, "favor")
+    .replace(/\b([a-z]{3,})ies\b/gu, "$1y")
+    .replace(/\b([a-z]+(?:ch|sh|x|z|ss))es\b/gu, "$1")
+    .replace(/\b([a-z]{4,})s\b/gu, "$1");
+}
+
 /** 四项确定性核对；invalidIndexes 可直接作为一次补译的最小输入。 */
 export function checkTranslation(unit: TranslationUnit, output: unknown): TranslationCheck {
   const texts = output && typeof output === "object" && !Array.isArray(output)
@@ -82,12 +90,13 @@ export function checkTranslation(unit: TranslationUnit, output: unknown): Transl
       if (tenths) continue;
       fail(index, `${entry.path} 未保留数字 ${token}`, /^\d{4}$/u.test(token));
     }
-    const lower = translated.toLowerCase();
+    const lower = normalizedEnglish(translated);
     for (const term of glossaryRequirements(entry.text, unit.allowedHan)) {
       // 只查强制术语；写出拼音、完整译名或英文释义之一即可，不分大小写。
       if (!term.enforced) continue;
-      const accepted = [term.english, term.display, ...(term.alternatives ?? [])];
-      if (!accepted.some((item) => lower.includes(item.toLowerCase()))) {
+      const accepted = [term.english, term.display, ...(term.alternatives ?? [])]
+        .flatMap((item) => [item, item.split(",", 1)[0] ?? item]);
+      if (!accepted.some((item) => lower.includes(normalizedEnglish(item)))) {
         fail(index, `${entry.path} 术语「${term.source}」宜用 ${term.display}`, false);
       }
     }

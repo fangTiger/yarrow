@@ -78,7 +78,7 @@ function baziReading(kind: "destiny" | "fortune") {
   };
 }
 
-test("英文译文按总述清单顺序覆盖，未完成单元保留中文", () => {
+test("英文译文按总述清单顺序覆盖，未完成单元改为翻译占位且不保留中文", () => {
   const reading = {
     id: "abcdefghijklmnopqrstuvwxyz",
     kind: "question",
@@ -108,7 +108,16 @@ test("英文译文按总述清单顺序覆盖，未完成单元保留中文", ()
     ...reading,
     translation: translation("writing"),
   } as never) as unknown as typeof reading;
-  assert.equal(pending.summary.output.conclusion, "中文结论");
+  assert.equal(pending.summary.status, "writing");
+  assert.equal(pending.summary.output, undefined);
+  assert.doesNotMatch(JSON.stringify(pending), /中文结论|中文解释/u);
+
+  const failed = applyReadingTranslation({
+    ...reading,
+    translation: translation("failed"),
+  } as never) as unknown as typeof reading;
+  assert.equal(failed.summary.output, undefined);
+  assert.doesNotMatch(JSON.stringify(failed.summary), /中文结论|中文解释/u);
 });
 
 test("服务端抽取与前端回填在命理、运势夹具上路径和顺序逐条一致", () => {
@@ -175,16 +184,39 @@ test("翻译状态覆盖未就绪、翻译中、完成与失败可重试", () =>
   assert.equal(shouldPollTranslation(translation("failed")), false);
 });
 
-test("翻译状态面板显示中文回退、翻译中与失败免费重试", () => {
+test("中文终态单元在翻译存档中缺失时仍视为 pending 并继续轮询", () => {
+  const reading = {
+    kind: "question",
+    schools: {
+      chengyi: { status: "done" }, jingfang: { status: "writing" }, shaoyong: { status: "writing" },
+    },
+    summary: { status: "writing" },
+  } as never;
+  const partial = translation("done", []);
+  assert.deepEqual(translationViewState(partial, reading), { kind: "pending" });
+  assert.equal(shouldPollTranslation(partial, reading), true);
+});
+
+test("翻译状态面板显示翻译占位与失败免费重试，不承诺回退中文", () => {
   assert.match(renderIn("en", createElement(TranslationStatusPanel, {
     translation: undefined, busy: false, onRetry() {},
-  })), /Translating….*Chinese is shown for now/su);
+  })), /Translating…/u);
+  assert.doesNotMatch(renderIn("en", createElement(TranslationStatusPanel, {
+    translation: undefined, busy: false, onRetry() {},
+  })), /Chinese is shown/u);
   assert.match(renderIn("en", createElement(TranslationStatusPanel, {
     translation: translation("writing"), busy: false, onRetry() {},
   })), /Translating…/u);
   assert.match(renderIn("en", createElement(TranslationStatusPanel, {
     translation: translation("failed"), busy: false, onRetry() {},
-  })), /Part of the English translation is unavailable.*Retry translation \(free\)/su);
+  })), /Part of the English translation is unavailable.*Plain-language summary.*Retry translation \(free\)/su);
+  assert.match(renderIn("en", createElement(TranslationStatusPanel, {
+    translation: { lang: "en", units: {
+      summary: translation("failed").units.summary!,
+      chengyi: { status: "writing", sourceHash: "school-hash", attempts: 1, failures: 0 },
+    } },
+    busy: false, onRetry() {},
+  })), /Part of the English translation is unavailable.*Plain-language summary.*Retry translation \(free\)/su);
   assert.match(renderIn("en", createElement(TranslationStatusPanel, {
     translation: undefined, requestFailed: true, busy: false, onRetry() {},
   })), /Part of the English translation is unavailable.*Retry translation \(free\)/su);
@@ -215,21 +247,27 @@ test("结果页英文数据流自动触发翻译并在翻译期间轮询", () =>
   const source = readFileSync(new URL("../web/pages/Reading.tsx", import.meta.url), "utf8");
   assert.match(source, /api\.getReading\(id, lang\)/u);
   assert.match(source, /api\.translateReading\(id\)/u);
-  assert.match(source, /shouldPollTranslation\(reading\.translation\)/u);
+  assert.match(source, /shouldPollTranslation\(reading\.translation, reading\)/u);
   assert.match(source, /applyReadingTranslation\(reading\)/u);
 });
 
-test("译文条数与当前路径对不上时整单元跳过，保留中文，绝不错位", () => {
+test("付款按钮的普通请求与起名请求都携带当前界面语言", () => {
+  const source = readFileSync(new URL("../web/components/PaymentButton.tsx", import.meta.url), "utf8");
+  assert.match(source, /const \{ lang \} = useLang\(\)/u);
+  assert.match(source, /\{ \.\.\.props\.naming, feeProof, lang \}/u);
+  assert.match(source, /feeProof,\s*lang,/u);
+});
+
+test("译文条数与当前路径对不上时整单元显示占位，既不错位也不露中文", () => {
   // 旧译文缺了后来加入翻译范围的应期两条：按位置回填会把建议译文填进应期。
   const reading = JSON.parse(readFileSync(new URL("../web/samples/fortune.en.json", import.meta.url), "utf8"));
-  const school = reading.schools.shenxiaozhan.output;
-  const original = { timing: school.timing.window, advice: school.advice[0] };
   const unit = reading.translation.units.shenxiaozhan;
   const shortened = { ...reading, translation: { ...reading.translation, units: {
     ...reading.translation.units, shenxiaozhan: { ...unit, texts: unit.texts.slice(0, -2) },
   } } };
   const applied = applyReadingTranslation(shortened);
   const output = applied.schools.shenxiaozhan.output;
-  assert.equal(output.timing.window, original.timing);
-  assert.equal(output.advice[0], original.advice);
+  assert.equal(output, undefined);
+  assert.equal(applied.schools.shenxiaozhan.status, "writing");
+  assert.doesNotMatch(JSON.stringify(applied.schools.shenxiaozhan), /春|建议|宜/u);
 });

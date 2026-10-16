@@ -2,6 +2,7 @@
 import type { AnyPublicReading, PublicReading } from "./api.js";
 import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
 import { type TFunction, zhT } from "./i18n.js";
+import { translationViewState } from "./reading-translation.js";
 
 export type ReadingStage = "awaiting-throws" | "charting" | "writing" | "done" | "failed";
 type Schools = PublicReading["schools"];
@@ -42,7 +43,11 @@ export function shouldPollReading(reading: AnyPublicReading): boolean {
 }
 
 /** 英译未出现、排队或生成中时沿用结果页轮询；失败为终态，等待用户免费重试。 */
-export function shouldPollTranslation(translation: StoredTranslation | undefined): boolean {
+export function shouldPollTranslation(
+  translation: StoredTranslation | undefined,
+  reading?: AnyPublicReading,
+): boolean {
+  if (reading && translationViewState(translation, reading).kind === "pending") return true;
   if (!translation || Object.keys(translation.units).length === 0) return true;
   return Object.values(translation.units).some(({ status }) => (
     status === "pending" || status === "writing"
@@ -88,6 +93,9 @@ export function summaryStatus(reading: AnyPublicReading, t: TFunction = zhT): Su
     return { kind: "progress", text: "排盘中" };
   }
   const summary = reading.summary;
+  if ((summary as { translationPending?: boolean } | undefined)?.translationPending) {
+    return { kind: "progress", text: t("translation.pending") };
+  }
   if (summary?.status === "writing") {
     return { kind: "progress", text: t("wait.summary") };
   }

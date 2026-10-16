@@ -19,7 +19,10 @@ export function namingProof(index = 1) {
   };
 }
 
-export async function namingFixture(provider: StructuredOutputProvider = new MockSchoolsProvider()) {
+export async function namingFixture(
+  provider: StructuredOutputProvider = new MockSchoolsProvider(),
+  options: { onUnitSettled?: (id: string, unitKey: import("../../src/sanyi/naming/schema.js").NamingFamilyKey | "summary") => void | Promise<void> } = {},
+) {
   const root = await mkdtemp(join(tmpdir(), "sanyi-naming-"));
   const store = new ReadingStore(root);
   const calls = { payments: 0 };
@@ -35,6 +38,7 @@ export async function namingFixture(provider: StructuredOutputProvider = new Moc
         return mockSingleFeeReceipt(value);
       },
     },
+    ...(options.onUnitSettled ? { onUnitSettled: options.onUnitSettled } : {}),
   });
   return {
     root, store, calls, clock, naming,

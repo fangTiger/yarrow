@@ -31,6 +31,7 @@ import { useLang, useT } from "../lib/i18n.js";
 import { applyReadingTranslation, translationViewState } from "../lib/reading-translation.js";
 import type { StoredTranslation } from "../../src/sanyi/translation/store.js";
 import { useReadingTitle } from "../lib/reading-progress.js";
+import { schoolEn } from "../lib/result-format.js";
 const SCHOOL_KEYS = ["chengyi", "jingfang", "shaoyong"] as const;
 const SUBJECT_LABELS: Record<string, string> = Object.fromEntries(
   QUESTION_SUBJECTS.map(({ key, label }) => [key, label]),
@@ -148,19 +149,28 @@ export function QuestionResult(props: {
 
 export function TranslationStatusPanel(props: {
   translation: StoredTranslation | undefined;
+  reading?: AnyPublicReading;
   requestFailed?: boolean;
   busy: boolean;
   onRetry(): void;
 }) {
   const t = useT();
-  const state = translationViewState(props.translation);
+  const state = translationViewState(props.translation, props.reading);
   if (state.kind === "done" && !props.requestFailed) return null;
-  if (state.kind === "failed" || props.requestFailed) {
+  const failedUnits = Object.entries(props.translation?.units ?? {})
+    .filter(([, unit]) => unit.status === "failed").map(([unit]) => unit);
+  if (failedUnits.length > 0 || props.requestFailed) {
     return <section aria-live="polite" className="panel translation-status failed">
       <p>{t("translation.failed")}</p>
-      <button className="button" disabled={props.busy} onClick={props.onRetry} type="button">
+      {failedUnits.length > 0 ? <ul>{failedUnits.map((unit) => <li key={unit}>
+        <span>{unit === "summary" ? t("summary.title") : schoolEn(unit).name}</span>{" "}
+        <button className="button" disabled={props.busy} onClick={props.onRetry} type="button">
+          {props.busy ? t("translation.retrying") : t("translation.retry")}
+        </button>
+      </li>)}</ul> : <button className="button" disabled={props.busy}
+        onClick={props.onRetry} type="button">
         {props.busy ? t("translation.retrying") : t("translation.retry")}
-      </button>
+      </button>}
     </section>;
   }
   return <section aria-live="polite" className="panel translation-status pending">
@@ -203,7 +213,7 @@ export function Reading({ id }: { id: string }) {
   }, [refresh]);
   useEffect(() => {
     if (!reading || !(shouldPollReading(reading)
-      || (lang === "en" && shouldPollTranslation(reading.translation)))) {
+      || (lang === "en" && shouldPollTranslation(reading.translation, reading)))) {
       return undefined;
     }
     const timer = window.setInterval(() => void refresh(), 1_000);
@@ -223,7 +233,7 @@ export function Reading({ id }: { id: string }) {
   }, [id, refresh]);
   useEffect(() => {
     if (lang !== "en" || !reading || !translationReady(reading)) return;
-    const state = translationViewState(reading.translation);
+    const state = translationViewState(reading.translation, reading);
     if (state.kind !== "pending") return;
     const key = `${reading.id}:${Object.values(reading.translation?.units ?? {})
       .map((unit) => `${unit.sourceHash}:${unit.status}`).join("|") || "new"}`;
@@ -256,7 +266,7 @@ export function Reading({ id }: { id: string }) {
   const visibleReading = lang === "en" ? applyReadingTranslation(reading) : reading;
   const translationPanel = lang === "en" ? <TranslationStatusPanel busy={translationBusy}
     onRetry={() => void requestTranslation()} requestFailed={translationRequestFailed}
-    translation={reading.translation} /> : null;
+    reading={reading} translation={reading.translation} /> : null;
   if (visibleReading.kind === "naming") {
     return (
       <main className="page">

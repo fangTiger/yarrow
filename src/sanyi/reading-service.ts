@@ -62,6 +62,8 @@ export interface ReadingServiceDependencies {
   autoCast?: boolean;
   /** 自动起卦取区块失败时的退避重试：累计等待超过 maxWaitMs 即暂停，等待「继续起卦」。 */
   castRetry?: { maxWaitMs?: number; sleep?: (ms: number) => Promise<void> };
+  /** 解读单元进入终态后的旁路通知；失败不得影响解读流程。 */
+  onUnitSettled?: (id: string, unitKey: QuestionSchoolKey | "summary") => void | Promise<void>;
 }
 
 interface RebuiltContext {
@@ -131,6 +133,7 @@ export class ReadingService {
     subjectKey?: QuestionSubjectKey;
     kind?: "question";
     feeProof: SanyiFeeProof;
+    translateTo?: "en";
   }): Promise<StoredReading> {
     let classification = classifyQuestion(input.question);
     if (input.kind === "question") {
@@ -177,6 +180,7 @@ export class ReadingService {
       status: "awaiting-throws",
       castAfterBlock: receipt.blockNumber.toString(),
       castProgressAt: createdAt,
+      ...(input.translateTo ? { translateTo: input.translateTo } : {}),
     };
     await this.deps.store.write(reading);
     await incrementMetricSafely(this.metrics, this.deps.logger, "reading_created:question");
@@ -523,6 +527,7 @@ export class ReadingService {
           attempts: previous?.attempts ?? 0, retries: previous?.retries ?? 0,
         },
       }));
+      await this.notifyUnitSettled(id, "summary");
       return;
     }
     const basis = input.schools.length;
@@ -540,6 +545,7 @@ export class ReadingService {
       ...current,
       summary: { ...summaryState(current.summary, result, basis, true), anchor: input.anchor },
     }));
+    await this.notifyUnitSettled(id, "summary");
   }
 
   private summaryInput(reading: StoredReading, context: RebuiltContext): SummaryInput | null {
@@ -651,6 +657,7 @@ export class ReadingService {
         ),
       },
     }));
+    await this.notifyUnitSettled(id, school.key);
   }
 
   private schoolState(
@@ -708,6 +715,19 @@ export class ReadingService {
     }
     if (countTerminal && failed?.terminalMetric?.token === token) {
       await incrementMetricSafely(this.metrics, this.deps.logger, "reading_failed:question");
+    }
+  }
+
+  private async notifyUnitSettled(id: string, unitKey: QuestionSchoolKey | "summary"): Promise<void> {
+    if (!this.deps.onUnitSettled) return;
+    try {
+      await this.deps.onUnitSettled(id, unitKey);
+    } catch {
+      try {
+        await this.deps.logger.write("英文翻译通知失败", { readingId: id, unit: unitKey });
+      } catch {
+        // 旁路通知与日志均不得影响中文解读。
+      }
     }
   }
 }

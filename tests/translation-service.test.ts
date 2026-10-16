@@ -9,13 +9,19 @@ import type {
   StructuredOutputRequest,
 } from "../src/agent/provider.js";
 import type { SanyiLogger } from "../src/sanyi/log.js";
-import { ReadingStore, type StoredQuestionReading } from "../src/sanyi/store.js";
+import {
+  ReadingStore,
+  type StoredQuestionReading,
+  type StoredReading as AnyStoredReading,
+} from "../src/sanyi/store.js";
 import {
   NotReadyError,
+  sourceHash,
   TranslationBudgetError,
   TranslationService,
 } from "../src/sanyi/translation/service.js";
 import { TranslationStore } from "../src/sanyi/translation/store.js";
+import { extractUnits } from "../src/sanyi/translation/units.js";
 
 const ID = "abcdefghijklmnopqrstuvwxyz";
 const SECOND_ID = "bcdefghijklmnopqrstuvwxyza";
@@ -115,9 +121,11 @@ async function fixture(input: {
   now?: Date;
   concurrency?: number;
   dailyUnits?: number;
+  logger?: SanyiLogger;
+  makeStore?: (root: string) => ReadingStore;
 } = {}) {
   const root = await mkdtemp(join(tmpdir(), "sanyi-translation-"));
-  const store = new ReadingStore(root);
+  const store = input.makeStore?.(root) ?? new ReadingStore(root);
   const translationStore = new TranslationStore(root);
   let now = input.now ?? new Date("2026-10-13T08:00:00.000Z");
   const provider = input.provider ?? new RecordingProvider();
@@ -125,7 +133,7 @@ async function fixture(input: {
     store,
     translationStore,
     provider,
-    logger: silentLogger,
+    logger: input.logger ?? silentLogger,
     clock: () => now,
     ...(input.concurrency === undefined ? {} : { concurrency: input.concurrency }),
     ...(input.dailyUnits === undefined ? {} : { dailyUnits: input.dailyUnits }),
@@ -135,6 +143,14 @@ async function fixture(input: {
     setNow(value: Date) { now = value; },
     async close() { await rm(root, { recursive: true, force: true }); },
   };
+}
+
+async function waitFor(check: () => Promise<boolean>): Promise<void> {
+  for (let index = 0; index < 100; index += 1) {
+    if (await check()) return;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  throw new Error("等待后台翻译超时");
 }
 
 test("漏译时只补译缺项一次并写入旁路文件", async () => {
@@ -350,6 +366,266 @@ test("每日单元额度耗尽后抛出 translation-budget", async () => {
       error instanceof TranslationBudgetError && error.code === "translation-budget"
     ));
   } finally {
+    await f.close();
+  }
+});
+
+test("英文下单只在单元终态后启动翻译，中文下单不翻译", async () => {
+  const provider = new RecordingProvider();
+  const f = await fixture({ provider });
+  try {
+    const english = { ...terminalReading(), translateTo: "en" as const };
+    await f.store.write({ ...english, schools: { ...english.schools,
+      chengyi: { ...english.schools.chengyi, status: "writing" as const } } } as never);
+    await f.service.startUnit(ID, "chengyi");
+    assert.equal(provider.requests.length, 0);
+
+    await f.store.write(english as never);
+    await f.service.startUnit(ID, "chengyi");
+    await waitFor(async () => (await f.translationStore.read(ID))?.units.chengyi?.status === "done");
+    assert.equal(provider.requests.length, 1);
+
+    await f.store.write({ ...terminalReading(SECOND_ID), translateTo: undefined } as never);
+    await f.service.startUnit(SECOND_ID, "chengyi");
+    assert.equal(provider.requests.length, 1);
+  } finally {
+    await f.close();
+  }
+});
+
+test("两个单元并发准备时不会互相覆盖", async () => {
+  const provider = new RecordingProvider(undefined, true);
+  const f = await fixture({ provider });
+  try {
+    await f.store.write({ ...terminalReading(), translateTo: "en" } as never);
+    await Promise.all([
+      f.service.startUnit(ID, "chengyi"),
+      f.service.startUnit(ID, "jingfang"),
+    ]);
+    const prepared = await f.translationStore.read(ID);
+    assert.ok(prepared?.units.chengyi);
+    assert.ok(prepared?.units.jingfang);
+    await waitFor(async () => {
+      const stored = await f.translationStore.read(ID);
+      return stored?.units.chengyi?.status === "done" && stored.units.jingfang?.status === "done";
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+test("同一单元并发通知只启动一次且只扣一次预算", async () => {
+  const messages: string[] = [];
+  const provider = new RecordingProvider(undefined, true);
+  const f = await fixture({ provider, dailyUnits: 1, logger: {
+    write: async (message) => { messages.push(message); },
+  } });
+  try {
+    await f.store.write({ ...terminalReading(), translateTo: "en" } as never);
+    await Promise.all([
+      f.service.startUnit(ID, "chengyi"),
+      f.service.startUnit(ID, "chengyi"),
+      f.service.startUnit(ID, "chengyi"),
+    ]);
+    await waitFor(async () => (await f.translationStore.read(ID))?.units.chengyi?.status === "done");
+    assert.equal(provider.requests.length, 1);
+    assert.ok(!messages.some((message) => message.includes("额度")));
+  } finally {
+    await f.close();
+  }
+});
+
+test("翻译中原文变更时为新 sourceHash 排队并最终写入新译文", async () => {
+  let releaseFirst!: () => void;
+  let markFirstStarted!: () => void;
+  const firstStarted = new Promise<void>((resolve) => { markFirstStarted = resolve; });
+  const firstGate = new Promise<void>((resolve) => { releaseFirst = resolve; });
+  let chengyiCalls = 0;
+  const provider = new RecordingProvider(async (request) => {
+    const entries = entriesFrom(request.userPrompt);
+    if (!request.taskId.endsWith("/chengyi")) {
+      return { texts: entries.map(() => "English text.") };
+    }
+    chengyiCalls += 1;
+    if (chengyiCalls === 1) {
+      markFirstStarted();
+      await firstGate;
+      return { texts: entries.map(() => "Old English text.") };
+    }
+    return { texts: entries.map(() => "New English text.") };
+  });
+  const f = await fixture({ provider });
+  try {
+    await f.store.write({ ...terminalReading(), translateTo: "en" } as never);
+    await f.service.startUnit(ID, "chengyi");
+    await firstStarted;
+    await f.store.update<StoredQuestionReading>(ID, (reading) => ({
+      ...reading,
+      schools: { ...reading.schools, chengyi: {
+        ...reading.schools.chengyi,
+        output: { ...reading.schools.chengyi.output!, headline: "重试后的新判断" },
+      } },
+    }));
+    await f.service.startUnit(ID, "chengyi");
+    releaseFirst();
+    await waitFor(async () => chengyiCalls === 2
+      && (await f.translationStore.read(ID))?.units.chengyi?.status === "done");
+    const current = await f.store.read<StoredQuestionReading>(ID);
+    const currentUnit = extractUnits(current).find((unit) => unit.key === "chengyi")!;
+    const translated = (await f.translationStore.read(ID))!.units.chengyi!;
+    assert.equal(translated.sourceHash, sourceHash(currentUnit));
+    assert.ok(translated.texts?.every((text) => text === "New English text."));
+  } finally {
+    releaseFirst();
+    await f.close();
+  }
+});
+
+test("旧通知在 prepare 前被新原文超车时不会把 sourceHash 倒退", async () => {
+  let releaseFirstRead!: () => void;
+  let markFirstRead!: () => void;
+  const firstRead = new Promise<void>((resolve) => { markFirstRead = resolve; });
+  const readGate = new Promise<void>((resolve) => { releaseFirstRead = resolve; });
+  class DelayedFirstReadStore extends ReadingStore {
+    private delayed = false;
+    override async read<T extends AnyStoredReading = StoredQuestionReading>(id: string): Promise<T> {
+      const value = await super.read<T>(id);
+      if (!this.delayed) {
+        this.delayed = true;
+        markFirstRead();
+        await readGate;
+      }
+      return value;
+    }
+  }
+  const provider = new RecordingProvider(undefined, true);
+  const messages: string[] = [];
+  const f = await fixture({ provider, dailyUnits: 1,
+    logger: { write: async (message) => { messages.push(message); } },
+    makeStore: (root) => new DelayedFirstReadStore(root) });
+  try {
+    await f.store.write({ ...terminalReading(), translateTo: "en" } as never);
+    const older = f.service.startUnit(ID, "chengyi");
+    await firstRead;
+    await f.store.update<StoredQuestionReading>(ID, (reading) => ({
+      ...reading,
+      schools: { ...reading.schools, chengyi: {
+        ...reading.schools.chengyi,
+        output: { ...reading.schools.chengyi.output!, headline: "更新后的判断" },
+      } },
+    }));
+    const newer = f.service.startUnit(ID, "chengyi");
+    releaseFirstRead();
+    await Promise.all([older, newer]);
+    await waitFor(async () => (await f.translationStore.read(ID))?.units.chengyi?.status === "done");
+    const current = await f.store.read<StoredQuestionReading>(ID);
+    const unit = extractUnits(current).find((item) => item.key === "chengyi")!;
+    assert.equal((await f.translationStore.read(ID))?.units.chengyi?.sourceHash, sourceHash(unit));
+    assert.equal(provider.requests.length, 1);
+    assert.ok(!messages.some((message) => message.includes("额度")));
+  } finally {
+    releaseFirstRead();
+    await f.close();
+  }
+});
+
+test("整卦触发读取旧快照时由新单元通知收敛到最新 sourceHash", async () => {
+  let releaseFirstRead!: () => void;
+  let markFirstRead!: () => void;
+  const firstRead = new Promise<void>((resolve) => { markFirstRead = resolve; });
+  const readGate = new Promise<void>((resolve) => { releaseFirstRead = resolve; });
+  class DelayedFirstReadStore extends ReadingStore {
+    private delayed = false;
+    override async read<T extends AnyStoredReading = StoredQuestionReading>(id: string): Promise<T> {
+      const value = await super.read<T>(id);
+      if (!this.delayed) {
+        this.delayed = true;
+        markFirstRead();
+        await readGate;
+      }
+      return value;
+    }
+  }
+  const provider = new RecordingProvider(undefined, true);
+  const f = await fixture({ provider, dailyUnits: 4,
+    makeStore: (root) => new DelayedFirstReadStore(root) });
+  try {
+    await f.store.write({ ...terminalReading(), translateTo: "en" } as never);
+    const whole = f.service.trigger(ID);
+    await firstRead;
+    await f.store.update<StoredQuestionReading>(ID, (reading) => ({
+      ...reading,
+      schools: { ...reading.schools, chengyi: {
+        ...reading.schools.chengyi,
+        output: { ...reading.schools.chengyi.output!, headline: "整卦竞态后的新判断" },
+      } },
+    }));
+    const eager = f.service.startUnit(ID, "chengyi");
+    releaseFirstRead();
+    await Promise.all([whole, eager]);
+    await f.service.translate(ID);
+    const current = await f.store.read<StoredQuestionReading>(ID);
+    const unit = extractUnits(current).find((item) => item.key === "chengyi")!;
+    const translated = (await f.translationStore.read(ID))!.units.chengyi!;
+    assert.equal(translated.status, "done");
+    assert.equal(translated.sourceHash, sourceHash(unit));
+    assert.equal(provider.requests.length, 4);
+  } finally {
+    releaseFirstRead();
+    await f.close();
+  }
+});
+
+test("按单元启动遇到每日预算超额只记日志", async () => {
+  const messages: string[] = [];
+  const f = await fixture({ dailyUnits: 0, logger: {
+    write: async (message) => { messages.push(message); },
+  } });
+  try {
+    await f.store.write({ ...terminalReading(), translateTo: "en" } as never);
+    await f.service.startUnit(ID, "chengyi");
+    assert.equal((f.provider as RecordingProvider).requests.length, 0);
+    assert.ok(messages.some((message) => message.includes("额度")));
+  } finally {
+    await f.close();
+  }
+});
+
+test("只有软性警告时先写 done，再后台补译且仅在警告变少时替换", async () => {
+  let releaseRepair!: () => void;
+  let repairStarted!: () => void;
+  const repairing = new Promise<void>((resolve) => { repairStarted = resolve; });
+  const gate = new Promise<void>((resolve) => { releaseRepair = resolve; });
+  const provider = new RecordingProvider(async (request) => {
+    const entries = entriesFrom(request.userPrompt);
+    if (request.taskId.endsWith("summary")) {
+      return { texts: entries.map(() => "The key factor is strong.") };
+    }
+    if (request.taskId.endsWith("summary/repair")) {
+      repairStarted();
+      await gate;
+      return { texts: entries.map(() => "Yong Shen is strong.") };
+    }
+    return { texts: entries.map(() => "English text.") };
+  });
+  const f = await fixture({ provider });
+  try {
+    const reading = terminalReading();
+    reading.summary!.output!.conclusion = "用神得力";
+    await f.store.write(reading as never);
+    const translating = f.service.translate(ID);
+    await repairing;
+    const immediate = await f.translationStore.read(ID);
+    assert.equal(immediate?.units.summary?.status, "done");
+    assert.deepEqual(immediate?.units.summary?.texts, ["The key factor is strong.",
+      ...immediate.units.summary.texts!.slice(1)]);
+    assert.ok((immediate?.units.summary?.warnings?.length ?? 0) > 0);
+    releaseRepair();
+    await translating;
+    await waitFor(async () => (await f.translationStore.read(ID))?.units.summary?.warnings === undefined);
+    assert.equal((await f.translationStore.read(ID))?.units.summary?.texts?.[0], "Yong Shen is strong.");
+  } finally {
+    releaseRepair();
     await f.close();
   }
 });

@@ -44,10 +44,13 @@ export function createSanyiRuntime(options: SanyiRuntimeOptions) {
     logger,
     clock,
   });
-  const bazi = new BaziReadingService({ store, logger, feeVerifier, metrics,
+  const onUnitSettled = (id: string, unitKey: Parameters<TranslationService["startUnit"]>[1]) => (
+    translation.startUnit(id, unitKey)
+  );
+  const bazi = new BaziReadingService({ store, logger, feeVerifier, metrics, onUnitSettled,
     // 八字运势含十年逐年断语，输出较长，放宽输出上限与单次超时。
     provider: longProvider, clock });
-  const naming = new NamingReadingService({ store, logger, feeVerifier, metrics,
+  const naming = new NamingReadingService({ store, logger, feeVerifier, metrics, onUnitSettled,
     provider: longProvider, clock });
   const service = new ReadingService({
     feeVerifier,
@@ -65,6 +68,7 @@ export function createSanyiRuntime(options: SanyiRuntimeOptions) {
     store,
     logger,
     metrics,
+    onUnitSettled,
   });
   const api = createSanyiApi(service, { recipient, chainId: network.chainId, bazi, naming, translation });
   return { api, service, network, recipient, metrics, statsToken: env.STATS_TOKEN ?? "" };

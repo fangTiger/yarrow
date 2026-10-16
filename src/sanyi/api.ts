@@ -29,7 +29,7 @@ type ServiceBoundary = Pick<
 type SubjectKey = StoredReading["subject"]["finalKey"];
 export interface PublicQuestionReading extends Omit<
   StoredReading,
-  "payment" | "schools" | "summary" | "castProgressAt" | "terminalMetric"
+  "payment" | "schools" | "summary" | "castProgressAt" | "terminalMetric" | "translateTo"
 > {
   payment: { firstHash: StoredReading["payment"]["transactionHash"] };
   schools: Record<
@@ -90,6 +90,11 @@ function subjectFrom(value: unknown): SubjectKey | undefined {
   }
   return option.key;
 }
+function languageFrom(value: unknown): "zh" | "en" {
+  if (value === undefined) return "zh";
+  if (value === "zh" || value === "en") return value;
+  throw new SanyiInputError("语言只支持 zh 或 en", "invalid-language");
+}
 function feeProofFrom(value: unknown, requirements: PaymentRequirements): SanyiFeeProof {
   // 完全没带付款凭证：请求其余部分已校验通过，以 402 告知价格与收款方；带了但格式不对仍是 400。
   if (value === undefined || value === null) {
@@ -115,6 +120,7 @@ function publicReading(reading: StoredReading): PublicQuestionReading {
   const {
     castProgressAt: _castProgressAt,
     terminalMetric: _terminalMetric,
+    translateTo: _translateTo,
     summary,
     ...visibleReading
   } = reading;
@@ -179,6 +185,8 @@ export function createSanyiApi(
     },
     async createReading(input) {
       const body = record(input);
+      const lang = languageFrom(body.lang);
+      const translationIntent = lang === "en" ? { translateTo: "en" as const } : {};
       const createNaming = async (suggestedTarget?: "person" | "business") => {
         if (!options.naming) throw new Error("起名服务尚未配置");
         if (typeof body.question !== "string") throw new SanyiInputError("起名期望必须是字符串");
@@ -227,6 +235,7 @@ export function createSanyiApi(
           length,
           unborn: body.unborn,
           ...(body.birth === undefined || body.birth === null ? {} : { birth: body.birth }),
+          ...translationIntent,
           feeProof: feeProofFrom(body.feeProof, paymentRequirements()),
         }));
       };
@@ -259,7 +268,8 @@ export function createSanyiApi(
         }
         return publicBaziReading(await options.bazi.create({ kind: classification.kind,
           question: classification.question, birth: body.birth, sect,
-          horizon: classification.horizon ?? "year", feeProof: feeProofFrom(body.feeProof, paymentRequirements()) }));
+          horizon: classification.horizon ?? "year", ...translationIntent,
+          feeProof: feeProofFrom(body.feeProof, paymentRequirements()) }));
       }
       if (classification.kind !== "question") {
         throw new SanyiInputError(classification.suggestion ?? "请改为一件具体的事来问");
@@ -268,6 +278,7 @@ export function createSanyiApi(
       const reading = await service.createQuestionReading({
         question: classification.question,
         ...(body.kind === "question" ? { kind: "question" as const } : {}),
+        ...translationIntent,
         feeProof: feeProofFrom(body.feeProof, paymentRequirements()),
         ...(subjectKey === undefined ? {} : { subjectKey }),
       });

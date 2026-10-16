@@ -65,6 +65,19 @@ test("专业术语写出拼音即通过，不分大小写，不要求每次带�
   assert.equal(checkTranslation(unit("用神得力"), { texts: ["The yong shen is effective."] }).ok, true);
 });
 
+test("专业术语接受释义首短语、单复数与英式拼写", () => {
+  assert.equal(checkTranslation(unit("日主得助"), { texts: ["The day master receives support."] }).ok, true);
+  assert.equal(checkTranslation(unit("喜用元素明确"), {
+    texts: ["The favourable elements are clear."],
+  }).ok, true);
+  assert.equal(checkTranslation(unit("旬空入卦"), {
+    texts: ["A void branch appears in the hexagram."],
+  }).ok, true);
+  assert.equal(checkTranslation(unit("忌神受制"), {
+    texts: ["The unfavourable element is restrained."],
+  }).ok, true);
+});
+
 test("日常用词里的单字术语、六亲与吉凶不强制译名", () => {
   const everyday = unit("孩子的金钱运势平稳，兄弟和睦，离开前心情愉快，吉祥如意");
   const result = checkTranslation(everyday, {

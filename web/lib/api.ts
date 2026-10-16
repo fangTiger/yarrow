@@ -23,6 +23,7 @@ export interface CreateReadingInput {
   length?: 1 | 2 | 3 | 4;
   unborn?: boolean;
   feeProof: SanyiFeeProof;
+  lang?: "zh" | "en";
 }
 export class ApiError extends Error {
   constructor(

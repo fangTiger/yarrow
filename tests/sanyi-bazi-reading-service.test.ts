@@ -29,6 +29,37 @@ test("缺生辰入口返回中文 400，非法生辰不调用付款", async () =
     await f.close();
   }
 });
+test("英文八字存档意图，各家与总述终态通知且通知异常不影响完成", async () => {
+  const events: string[] = [];
+  const f = await baziFixture(new MockSchoolsProvider(), { onUnitSettled: async (_id, unitKey) => {
+    events.push(unitKey);
+    throw new Error("旁路通知失败");
+  } });
+  try {
+    const created = await f.bazi.create({ kind: "fortune", question: "今年运势如何", birth,
+      sect: 1, horizon: "year", feeProof: proof(81), translateTo: "en" });
+    assert.equal(created.translateTo, "en");
+    await f.bazi.whenSettled(created.id);
+    assert.deepEqual(events.sort(), ["shenxiaozhan", "yuchuntai", "rentieqiao", "summary"].sort());
+    assert.equal((await f.bazi.getReading(created.id)).status, "done");
+    await f.store.update<StoredBaziReading>(created.id, (reading) => ({ ...reading, schools: {
+      ...reading.schools, yuchuntai: { status: "failed", attempts: 1, retries: 0 },
+    } }));
+    events.length = 0;
+    await f.bazi.retrySchool(created.id, "yuchuntai");
+    await f.bazi.whenSettled(created.id);
+    assert.deepEqual(events, ["yuchuntai", "summary"]);
+    await f.store.update<StoredBaziReading>(created.id, (reading) => ({ ...reading,
+      summary: { status: "failed", basis: 3, attempts: 1, retries: 0 },
+    }));
+    events.length = 0;
+    await f.bazi.retrySummary(created.id);
+    await f.bazi.whenSettled(created.id);
+    assert.deepEqual(events, ["summary"]);
+  } finally {
+    await f.close();
+  }
+});
 test("付款核验在排盘模型之前；跨三类型及重启后付款不可复用", async () => {
   const f = await baziFixture();
   try {

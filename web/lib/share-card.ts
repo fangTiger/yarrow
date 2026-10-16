@@ -157,7 +157,9 @@ export function buildShareCard(
   t: TFunction,
   options: ShareCardBuildOptions = {},
 ): ShareCardModel {
-  const visibleReading = (lang === "en" ? applyReadingTranslation(reading) : reading) as ShareReading;
+  // 正式英文结果带 translation；无此字段的是已由调用方准备好的英文示例或测试视图。
+  const visibleReading = (lang === "en" && reading.translation
+    ? applyReadingTranslation(reading) : reading) as ShareReading;
   const output = summaryOutput(visibleReading);
   if (visibleReading.kind !== "question" && !visibleReading.chart) {
     throw new ShareCardUnavailableError();

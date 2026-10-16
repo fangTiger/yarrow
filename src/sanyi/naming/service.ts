@@ -39,6 +39,8 @@ interface Dependencies {
   logger: SanyiLogger;
   metrics?: MetricsRecorder;
   clock: () => Date;
+  /** 解读单元进入终态后的旁路通知；失败不得影响解读流程。 */
+  onUnitSettled?: (id: string, unitKey: NamingFamilyKey | "summary") => void | Promise<void>;
 }
 
 export interface NamingCreateInput {
@@ -50,6 +52,7 @@ export interface NamingCreateInput {
   unborn: boolean;
   birth?: unknown;
   feeProof: SanyiFeeProof;
+  translateTo?: "en";
 }
 
 function initialFamilies(startedAt: string): StoredNamingReading["families"] {
@@ -221,6 +224,7 @@ export class NamingReadingService {
       basis: { ...chart, ...favorable, unborn: input.unborn },
       candidateIds: candidates.map(({ id: candidateId }) => candidateId),
       families: initialFamilies(now.toISOString()),
+      ...(input.translateTo ? { translateTo: input.translateTo } : {}),
     };
     await this.deps.store.write(reading);
     await incrementMetricSafely(this.metrics, this.deps.logger, "reading_created:naming");
@@ -293,6 +297,7 @@ export class NamingReadingService {
       }
       return { ...current, families: { ...current.families, [family.key]: state } };
     });
+    await this.notifyUnitSettled(reading.id, family.key);
   }
 
   private async runAll(reading: StoredNamingReading, countTerminal: boolean): Promise<void> {
@@ -354,6 +359,7 @@ export class NamingReadingService {
           retries: previous?.retries ?? 0, error: "三家均未落笔，暂无合参",
         },
       }));
+      await this.notifyUnitSettled(id, "summary");
       return;
     }
     const startedAt = this.deps.clock().toISOString();
@@ -395,6 +401,7 @@ export class NamingReadingService {
       }
       return { ...current, summary: state };
     });
+    await this.notifyUnitSettled(id, "summary");
   }
 
   async retrySummary(id: string): Promise<StoredNamingReading> {
@@ -459,5 +466,17 @@ export class NamingReadingService {
     void task.then(() => {
       if (this.background.get(id) === task) this.background.delete(id);
     });
+  }
+  private async notifyUnitSettled(id: string, unitKey: NamingFamilyKey | "summary"): Promise<void> {
+    if (!this.deps.onUnitSettled) return;
+    try {
+      await this.deps.onUnitSettled(id, unitKey);
+    } catch {
+      try {
+        await this.deps.logger.write("英文翻译通知失败", { readingId: id, unit: unitKey });
+      } catch {
+        // 旁路通知与日志均不得影响中文解读。
+      }
+    }
   }
 }

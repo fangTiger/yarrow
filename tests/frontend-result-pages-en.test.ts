@@ -187,3 +187,60 @@ test("起名结果页中英渲染：保留姓名汉字，用结构化字段生�
     await fixture.close();
   }
 });
+
+test("中文正文已写完但译文未到时，四类英文解读区域只显示英文占位", async () => {
+  const questionSchool = {
+    status: "done" as const, retries: 0,
+    output: { ...baseOutput, headline: "中文判断", reason: "中文理由",
+      sections: [{ title: "重点", text: "中文正文" }], advice: ["中文建议"], evidence: [] },
+  };
+  const question = applyReadingTranslation({
+    id: "abcdefghijklmnopqrstuvwxyz", kind: "question", createdAt: TIME.toString(), status: "done",
+    question: "Will I get this job?", payment: { firstHash: `0x${"1".repeat(64)}` },
+    throws: [], lines: LINES, chart,
+    subject: { suggestedKey: "career", finalKey: "career", overridden: false, changes: 0 },
+    schools: { chengyi: questionSchool, jingfang: questionSchool, shaoyong: questionSchool },
+    summary: { status: "done", basis: 3, retries: 0, output: {
+      conclusion: "中文结论", agreement: "中文共识", explanation: ["中文解释"],
+      remedy: { principle: "中文心法", plan: [], avoid: ["中文禁忌"] },
+    } },
+    translation: { lang: "en", units: {} },
+  } as never);
+  const questionHtml = renderIn("en", createElement(QuestionResult, {
+    reading: question as never, onReading: noop,
+  }));
+  assert.match(questionHtml, /Translating|Writing in English/u);
+  assertNoHan(questionHtml);
+
+  const bazi = await baziFixture();
+  const naming = await namingFixture();
+  try {
+    const destinyCreated = await bazi.bazi.create({ kind: "destiny", question: "My destiny", birth,
+      sect: 1, horizon: "year", feeProof: proof(91) });
+    const fortuneCreated = await bazi.bazi.create({ kind: "fortune", question: "My fortune", birth,
+      sect: 1, horizon: "year", feeProof: proof(92) });
+    const namingCreated = await naming.naming.create({ target: "person", surname: "张", gender: "female",
+      length: 2, unborn: false, question: "A calm name", birth: namingBirth, feeProof: namingProof(93) });
+    await Promise.all([bazi.bazi.whenSettled(destinyCreated.id), bazi.bazi.whenSettled(fortuneCreated.id),
+      naming.naming.whenSettled(namingCreated.id)]);
+    for (const id of [destinyCreated.id, fortuneCreated.id]) {
+      const stored = await bazi.bazi.getReading(id);
+      const view = applyReadingTranslation({ ...publicBaziReading(stored),
+        translation: { lang: "en", units: {} } } as never);
+      const html = renderIn("en", createElement(BaziReading, { reading: view as never,
+        birth: null, onReading: noop }));
+      assert.match(html, /Translating|Writing in English/u);
+      assertNoHan(html);
+    }
+    const storedNaming = await naming.naming.getReading(namingCreated.id);
+    const namingView = applyReadingTranslation({ ...publicNamingReading(storedNaming),
+      translation: { lang: "en", units: {} } } as never);
+    const namingHtml = renderIn("en", createElement(NamingReading, {
+      reading: namingView as never, onReading: noop,
+    }));
+    assert.match(namingHtml, /Translating|Writing in English/u);
+    assertNoHan(namingHtml, storedNaming.surname ?? "");
+  } finally {
+    await Promise.all([bazi.close(), naming.close()]);
+  }
+});

@@ -6,6 +6,7 @@ import { MockSchoolsProvider } from "../src/sanyi/mock-provider.js";
 import { publicNamingReading } from "../src/sanyi/naming/public.js";
 import { statusForError } from "../src/sanyi/http-errors.js";
 import { namingBirth, namingFixture, namingProof } from "./helpers/naming-service.js";
+import type { StoredNamingReading } from "../src/sanyi/store.js";
 
 async function directoryText(path: string): Promise<string> {
   const names = await readdir(path);
@@ -43,6 +44,39 @@ test("人名付款后排四柱，三家与合参依次从 writing 到 done", asy
     ));
     assert.ok(reading.basis.pillars?.year);
     assert.ok(reading.basis.pillars?.time);
+  } finally {
+    await f.close();
+  }
+});
+
+test("英文起名存档意图，各流派与合参终态通知且通知异常不影响完成", async () => {
+  const events: string[] = [];
+  const f = await namingFixture(new MockSchoolsProvider(), { onUnitSettled: async (_id, unitKey) => {
+    events.push(unitKey);
+    throw new Error("旁路通知失败");
+  } });
+  try {
+    const created = await f.naming.create({ target: "person", surname: "张", gender: "female",
+      length: 2, unborn: false, question: "温和有书卷气", birth: namingBirth,
+      feeProof: namingProof(81), translateTo: "en" });
+    assert.equal(created.translateTo, "en");
+    await f.naming.whenSettled(created.id);
+    assert.deepEqual(events.sort(), ["wuxing", "shiwen", "yinyi", "summary"].sort());
+    assert.equal((await f.naming.getReading(created.id)).status, "done");
+    await f.store.update<StoredNamingReading>(created.id, (reading) => ({ ...reading, families: {
+      ...reading.families, shiwen: { status: "failed", attempts: 1, retries: 0 },
+    } }));
+    events.length = 0;
+    await f.naming.retryFamily(created.id, "shiwen");
+    await f.naming.whenSettled(created.id);
+    assert.deepEqual(events, ["shiwen", "summary"]);
+    await f.store.update<StoredNamingReading>(created.id, (reading) => ({ ...reading,
+      summary: { status: "failed", basis: 3, attempts: 1, retries: 0 },
+    }));
+    events.length = 0;
+    await f.naming.retrySummary(created.id);
+    await f.naming.whenSettled(created.id);
+    assert.deepEqual(events, ["summary"]);
   } finally {
     await f.close();
   }

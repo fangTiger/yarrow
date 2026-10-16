@@ -20,7 +20,7 @@ if (!key || !/^0x[0-9a-fA-F]{64}$/u.test(key)) {
   throw new Error("请设置 AGENT_PRIVATE_KEY（付款钱包私钥，只从环境变量读取）");
 }
 const account = privateKeyToAccount(key as Hex);
-const request = { kind: "question", question, subjectKey: "career" };
+const request = { kind: "question", question, subjectKey: "career", lang: "en" };
 // 写接口有跨站请求防护：服务端之间调用须带站点 Origin 头。
 const headers = { "content-type": "application/json", origin: base };
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));

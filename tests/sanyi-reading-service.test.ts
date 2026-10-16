@@ -22,7 +22,7 @@ import {
 import type { QuestionSchoolOutput } from "../src/sanyi/schema.js";
 import type { FactTable } from "../src/sanyi/facts.js";
 import type { QuestionSchoolKey } from "../src/sanyi/schools/index.js";
-import { ReadingStore } from "../src/sanyi/store.js";
+import { ReadingStore, type StoredQuestionReading as StoredReading } from "../src/sanyi/store.js";
 import { ArcUnavailableError } from "../src/sanyi/throws.js";
 
 const TX = `0x${"22".repeat(32)}` as const;
@@ -143,6 +143,7 @@ async function fixture(input: {
   root?: string;
   calendarThrows?: boolean;
   paymentHash?: SanyiFeeProof["transactionHash"];
+  onUnitSettled?: (id: string, unitKey: QuestionSchoolKey | "summary") => void | Promise<void>;
 } = {}): Promise<Fixture> {
   const root = input.root ?? await mkdtemp(join(tmpdir(), "sanyi-service-"));
   const store = new ReadingStore(root);
@@ -162,6 +163,7 @@ async function fixture(input: {
     clock: () => new Date("2026-09-30T12:15:00.000Z"),
     // 这些用例测逐掷取区块的底层机制，关掉自动起卦，由测试手动逐掷。
     autoCast: false,
+    ...(input.onUnitSettled ? { onUnitSettled: input.onUnitSettled } : {}),
     waitOptions: {
       timeoutMs: 3,
       pollMs: 1,
@@ -204,6 +206,39 @@ test("创建后为 awaiting-throws", async () => {
   const item = await fixture();
   try {
     assert.equal((await create(item.service)).status, "awaiting-throws");
+  } finally {
+    await rm(item.root, { recursive: true, force: true });
+  }
+});
+
+test("英文问事存档意图，并在各家与总述终态通知；重试通知失败不影响结果", async () => {
+  const events: string[] = [];
+  const item = await fixture({ onUnitSettled: async (_id, unitKey) => {
+    events.push(unitKey);
+    throw new Error("旁路通知失败");
+  } });
+  try {
+    item.provider.throwFor = "chengyi";
+    const reading = await item.service.createQuestionReading({
+      question: "这次面试能过吗", feeProof: PROOF, translateTo: "en",
+    });
+    assert.equal(reading.translateTo, "en");
+    await castAll(item.service, reading.id);
+    assert.deepEqual(events.slice(0, 4).sort(), ["chengyi", "jingfang", "shaoyong", "summary"].sort());
+    assert.equal((await item.service.getReading(reading.id)).status, "done");
+    item.provider.throwFor = null;
+    await item.service.retrySchool(reading.id, "chengyi");
+    await item.service.whenSettled(reading.id);
+    assert.deepEqual(events.slice(-2), ["chengyi", "summary"]);
+    assert.equal((await item.service.getReading(reading.id)).schools.chengyi.status, "done");
+    await item.store.update<StoredReading>(reading.id, (current) => ({
+      ...current,
+      summary: { status: "failed", basis: 3, attempts: 1, retries: 0 },
+    }));
+    events.length = 0;
+    await item.service.retrySummary(reading.id);
+    await item.service.whenSettled(reading.id);
+    assert.deepEqual(events, ["summary"]);
   } finally {
     await rm(item.root, { recursive: true, force: true });
   }
