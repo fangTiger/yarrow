@@ -4,9 +4,10 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderIn } from "./helpers/render-in.js";
 import { en } from "../web/i18n/en.js";
-import { createT } from "../web/lib/i18n.js";
+import { createT, zhT } from "../web/lib/i18n.js";
 import {
-  DEFAULT_ENTRY, applyClassification, deriveEntry, entryGate, exampleSubject, type ClassificationView,
+  DEFAULT_ENTRY, applyClassification, autoHint, deriveEntry, entryGate, exampleSubject, fromClassification,
+  type ClassificationView,
 } from "../web/lib/home-entry.js";
 import { KindOptions } from "../web/components/KindOptions.js";
 import { SubjectSelect } from "../web/components/SubjectSelect.js";
@@ -75,45 +76,55 @@ test("手机类型卡保持 2×2 并只在卡片组下展示选中项详情", ()
     /@media\s*\(max-width:\s*560px\)[\s\S]*?\.home-luopan[^}]*min\(140px,\s*40vw\)/u);
 });
 
-test("英文默认 Destiny；高亮的类型即所选，不跑中文关键词分类；问事必须手选事项", () => {
+test("英文与中文一致：按分类自动切换类型与事项，手点的类型优先", () => {
   const t = createT(en);
-  const english = { autoClassify: false, requireQuestionSubject: true };
-  assert.equal(deriveEntry(fortune, {}, t, "en").kind, "destiny");
-  assert.equal(deriveEntry(career, { kind: "question" }, t, "en").subjectKey, "");
-  // 用户没点类型卡、也没等分类：默认高亮的 Destiny 写了问题即可付款。
+  assert.equal(deriveEntry(fortune, {}, t).kind, "fortune");
+  assert.equal(deriveEntry(career, {}, t).kind, "question");
+  assert.equal(deriveEntry(career, {}, t).subjectKey, "career");
+  assert.equal(deriveEntry(fortune, { kind: "destiny" }, t).kind, "destiny");
+  assert.equal(autoHint(deriveEntry(career, {}, t), t), "Auto-detected: Ask · Career");
   assert.deepEqual(entryGate({
-    questionLength: 24, classified: false,
-    entry: deriveEntry(undefined, {}, t, "en"), birthProblem: null,
-  }, t, english), { ready: true, reason: "" });
-  assert.deepEqual(entryGate({
-    questionLength: 20, classified: false,
-    entry: deriveEntry(undefined, { kind: "question" }, t, "en"), birthProblem: null,
-  }, t, english), { ready: false, reason: "Choose one of the seven subjects." });
-  assert.deepEqual(entryGate({
-    questionLength: 20, classified: false,
-    entry: deriveEntry(undefined, { kind: "question", subjectKey: "career", subject: "" }, t, "en"),
-    birthProblem: null,
-  }, t, english), { ready: true, reason: "" });
-  assert.equal(deriveEntry(fortune, { kind: "destiny" }, t, "en").kind, "destiny");
+    questionLength: 20, classified: true, entry: deriveEntry(career, {}, t), birthProblem: null,
+  }, t), { ready: true, reason: "" });
   assert.equal(applyClassification(DEFAULT_ENTRY, fortune, t).kind, "fortune");
 });
 
-test("英文问事未选事项时提示「Choose a subject」并高亮；示例问题一并选好事项", () => {
+test("识别不到事项时默认人际／同辈并提示可改选，按钮不置灰；手选事项后提示消失", () => {
+  const t = createT(en);
+  const unknown: ClassificationView = {
+    question: "Should I move to Berlin next spring?", kind: "question", supported: true,
+    subjectKey: "peers", subject: "人际／同辈", subjectFallback: true,
+  };
+  const entry = deriveEntry(unknown, { kind: "question" }, t);
+  assert.equal(entry.subjectKey, "peers");
+  assert.equal(autoHint(entry, t),
+    "Couldn't tell the subject, so it's set to Peers or competition. Change it above if another fits better.");
+  assert.deepEqual(entryGate({ questionLength: 36, classified: true, entry, birthProblem: null }, t),
+    { ready: true, reason: "" });
+  const picked = deriveEntry(unknown, { kind: "question", subjectKey: "career", subject: "工作／官职" }, t);
+  assert.equal(picked.subjectFallback, undefined);
+  assert.equal(autoHint(picked, t), null);
+  assert.equal(autoHint(deriveEntry(unknown, {}, zhT), zhT), "没认出具体事项，暂按「人际／同辈」，可在上方改选");
+  assert.deepEqual(fromClassification({
+    question: "x", kind: "question", supported: true, needsBirth: false,
+    subject: { key: "peers", label: "人际／同辈", fallback: true },
+  } as unknown as Parameters<typeof fromClassification>[0]).subjectFallback, true);
+});
+
+test("事项下拉的空选项显示自动识别结果；示例问题一并选好事项", () => {
   const empty = renderIn("en", createElement(SubjectSelect, {
-    value: "", detected: "", onChange: () => {}, required: true,
+    value: "", detected: "career", onChange: () => {},
   }));
-  assert.match(empty, /<option value="" selected="">Choose a subject<\/option>/u);
-  assert.match(empty, /class="detail-row needs-choice"/u);
-  assert.doesNotMatch(empty, /Suggested/u);
-  const chosen = renderIn("en", createElement(SubjectSelect, {
-    value: "career", detected: "", onChange: () => {}, required: true,
+  assert.match(empty, /<option value="" selected="">Auto-detected: Career<\/option>/u);
+  assert.doesNotMatch(empty, /Suggested|Choose a subject/u);
+  const fallback = renderIn("en", createElement(SubjectSelect, {
+    value: "", detected: "peers", fallback: true, onChange: () => {},
   }));
-  assert.match(chosen, /class="detail-row"/u);
+  assert.match(fallback, /<option value="" selected="">Default: Peers or competition<\/option>/u);
   const zh = renderIn("zh", createElement(SubjectSelect, {
     value: "", detected: "career", onChange: () => {},
   }));
   assert.match(zh, /自动识别（工作／官职）/u);
-  assert.doesNotMatch(zh, /needs-choice/u);
 
   assert.equal(exampleSubject("question", 1), "career");
   assert.equal(exampleSubject("question", 2), "documents");
@@ -129,13 +140,13 @@ test("类型卡整卡可点，悬停有高亮反馈，选中卡金边", () => {
 
 test("中英文感情事项口径只在选中 relationship 时显示", () => {
   const career = renderIn("en", createElement(SubjectSelect, {
-    value: "career", detected: "career", onChange: () => {}, required: true,
+    value: "career", detected: "career", onChange: () => {},
   }));
   assert.equal((career.match(/<option/gu) ?? []).length, 8);
   assert.doesNotMatch(career, /Traditionally the Officer line is read for a partner/u);
 
   const relationship = renderIn("en", createElement(SubjectSelect, {
-    value: "relationship", detected: "", onChange: () => {}, required: true,
+    value: "relationship", detected: "", onChange: () => {},
   }));
   assert.match(relationship,
     /Traditionally the Officer line is read for a partner; to ask about a wife or girlfriend, choose Wealth/u);

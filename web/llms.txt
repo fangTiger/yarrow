@@ -24,7 +24,7 @@ Write requests must send `Content-Type: application/json` and `Origin: https://y
 
 ## Request bodies
 
-- **I Ching question.** Pass `kind` and `subjectKey`, because the server's keyword classifier is tuned for Chinese.
+- **I Ching question.** Pass `kind` and `subjectKey`. The server's keyword classifier recognizes common English and Chinese wording, but anything it can't place falls back to `peers`, so an explicit `subjectKey` is more reliable.
   `{"kind": "question", "question": "Will my new business partnership work out this year?", "subjectKey": "career"}`
   `subjectKey` is one of `career`, `wealth`, `documents`, `wellbeing`, `illness`, `peers`, `relationship`.
 - **BaZi destiny (life luck cycles and character).**

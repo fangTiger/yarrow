@@ -17,7 +17,7 @@ import { KindOptions } from "./KindOptions.js";
 import { NamingFields } from "./NamingFields.js";
 import { PaymentButton } from "./PaymentButton.js";
 import { SubjectSelect } from "./SubjectSelect.js";
-import { useLang, useT } from "../lib/i18n.js";
+import { useT } from "../lib/i18n.js";
 import { FundingGuide } from "./FundingGuide.js";
 import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
 import { ARC_NETWORK } from "../lib/wagmi.js";
@@ -60,7 +60,6 @@ export function observeHashPrefill(
 /** 首页中间的问卦表单：类型选项、细项、问题框、生辰行与问卦按钮。 */
 export function QuestionForm() {
   const t = useT();
-  const { lang } = useLang();
   const initialHash = typeof location === "undefined" ? "" : location.hash;
   const [hashPrefill] = useState({
     clear: initialHash.startsWith("#/?"), value: prefillFromHash(initialHash),
@@ -76,8 +75,6 @@ export function QuestionForm() {
   });
   const length = [...question.trim()].length;
   const valid = length >= 4 && length <= 280;
-  // 分类规则只认中文关键词；英文不自动分类，页面高亮的类型就是所选类型。
-  const autoClassify = lang === "zh";
   useEffect(() => {
     if (!hashPrefill.clear || typeof history === "undefined" || typeof location === "undefined") return;
     history.replaceState(history.state, "", `${location.pathname}${location.search}#/`);
@@ -94,7 +91,7 @@ export function QuestionForm() {
     });
   }, []);
   useEffect(() => {
-    if (!valid || !autoClassify) {
+    if (!valid) {
       return undefined;
     }
     let active = true;
@@ -119,8 +116,8 @@ export function QuestionForm() {
       active = false;
       clearTimeout(timer);
     };
-  }, [autoClassify, question, t, valid]);
-  const entry = deriveEntry(view, choice, t, lang);
+  }, [question, t, valid]);
+  const entry = deriveEntry(view, choice, t);
   const naming = { ...namingValues, target: entry.target };
   const problem = birthProblem(birthValues, t);
   const namingProblem = namingBirthProblem(naming.birth, naming.unborn, t);
@@ -131,14 +128,14 @@ export function QuestionForm() {
     ? namingGate({ questionLength: length, value: naming, birthProblem: namingProblem }, t)
     : entryGate({
         questionLength: length, classified: view !== undefined, entry, birthProblem: problem, birthShown,
-      }, t, { autoClassify, requireQuestionSubject: !autoClassify });
+      }, t);
   // 分类结果一到就显示结果，不再停留在「识别中」。
   let status = "";
   if (entry.unsupported) {
     status = entry.unsupported;
-  } else if (view && autoClassify) {
+  } else if (view) {
     status = autoHint(entry, t) ?? "";
-  } else if (classifying && autoClassify) {
+  } else if (classifying) {
     status = t("status.classifying");
   }
   const needsBirth = entry.kind === "fortune" || entry.kind === "destiny";
@@ -177,12 +174,12 @@ export function QuestionForm() {
         }} value={entry.kind} />
       {entry.kind === "question" ? (
         <SubjectSelect
-          detected={autoClassify ? view?.subjectKey ?? "" : ""}
+          detected={view?.subjectKey ?? ""}
+          fallback={view?.subjectFallback === true}
           onChange={(subjectKey, subject) => setChoice((current) => ({
             ...current, subjectKey, subject,
           }))}
           value={choice.subjectKey ?? ""}
-          required={lang === "en"}
         />
       ) : null}
       {entry.kind === "fortune" ? (

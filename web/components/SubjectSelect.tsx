@@ -1,31 +1,28 @@
 // web/components/SubjectSelect.tsx
 import { QUESTION_SUBJECTS } from "../../src/oracle/question-classifier.js";
 import { subjectLabel } from "../lib/home-entry.js";
-import { useLang, useT } from "../lib/i18n.js";
+import { useT } from "../lib/i18n.js";
 
 /** 问事的事项下拉：默认自动识别，也可手选；事项决定六爻用神。 */
 export function SubjectSelect(props: {
   value: string;
   detected: string;
-  required?: boolean;
+  /** 识别不到事项、按默认值给出时为 true。 */
+  fallback?: boolean;
   onChange(key: string, label: string): void;
 }) {
   const t = useT();
-  const { lang } = useLang();
   const detected = props.detected ? subjectLabel(props.detected, t, props.detected) : "";
-  // 英文不自动识别事项，空选项改为「请选择」并高亮，避免误以为已自动选好。
-  const needsChoice = Boolean(props.required) && !props.value;
-  const auto = props.required ? t("subject.choose")
-    : detected ? t("subject.autoDetected", { subject: detected }) : t("subject.auto");
+  const auto = !detected ? t("subject.auto")
+    : t(props.fallback ? "subject.default" : "subject.autoDetected", { subject: detected });
   const showRelationshipNote = props.value === "relationship"
-    || (lang === "zh" && !props.value && props.detected === "relationship");
+    || (!props.value && props.detected === "relationship");
   return (
-    <label className={needsChoice ? "detail-row needs-choice" : "detail-row"}>
+    <label className="detail-row">
       <span className="detail-label">{t("subject.field")}</span>
       <select
         aria-label={t("subject.field")}
         className="detail-select"
-        required={props.required}
         onChange={(event) => {
           const item = QUESTION_SUBJECTS.find(({ key }) => key === event.target.value);
           props.onChange(item?.key ?? "", item?.label ?? "");

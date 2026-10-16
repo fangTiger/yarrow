@@ -882,8 +882,6 @@ html:lang(en) .luopan-trigram-label { font-size: 9px !important; }
   background: var(--panel-2);
   color: var(--paper);
 }
-.detail-row.needs-choice .detail-label { color: var(--gold); }
-.detail-row.needs-choice .detail-select { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold-soft); }
 .subject-note { flex-basis: 100%; margin-left: calc(2.5em + 12px); color: var(--dim); line-height: 1.5; }
 .chips {
   display: flex;

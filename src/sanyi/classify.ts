@@ -26,19 +26,35 @@ export interface QuestionClassification {
   suggestion?: string;
 }
 
+// 每类先中文、后常见英文说法；按此顺序判断，先命中者为准。
 const RULES: ReadonlyArray<[Exclude<QuestionKind, "question" | "other">, RegExp]> = [
-  ["naming", /起名|取名|名字/],
-  ["compatibility", /合婚|合不合|八字合/],
-  ["date-selection", /择日|哪天|吉日|搬家.*日/],
+  ["naming", /起名|取名|名字|\b(?:names?|naming)\b/i],
+  ["compatibility", /合婚|合不合|八字合|\bcompatib\w*/i],
+  ["date-selection", /择日|哪天|吉日|搬家.*日|\b(?:auspicious|lucky|best) (?:day|date)s?\b|\bwhich day\b/i],
   [
     "zodiac",
     new RegExp(
       "星座|星盘|白羊|金牛|双子|巨蟹|狮子|处女|天秤|"+
-      "天蝎|射手|摩羯|水瓶|双鱼",
+      "天蝎|射手|摩羯|水瓶|双鱼|"+
+      // 英文星座名去掉与疾病、人名冲突的 cancer、leo。
+      "\\b(?:zodiac|horoscope|astrology|star sign|aries|taurus|gemini|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)\\b",
+      "i",
     ),
   ],
-  ["fortune", /运势|运气|流年|财运/],
-  ["destiny", /八字|命里|命格|适合做什么|性格|一生命运/],
+  [
+    "fortune",
+    new RegExp(
+      "运势|运气|流年|财运|"+
+      "\\b(?:fortune|luck|outlook|forecast)\\b|hold for me|"+
+      "\\b(?:what does|how will|how is) (?:this|next|the coming|my) (?:day|week|month|year)\\b|"+
+      "\\bhow will .+ go (?:today|this|next)\\b",
+      "i",
+    ),
+  ],
+  [
+    "destiny",
+    /八字|命里|命格|适合做什么|性格|一生命运|\b(?:bazi|four pillars|destiny|fate|my life|life path|personality|character|suited (?:for|to))\b/i,
+  ],
 ];
 const UNSUPPORTED: Record<Exclude<QuestionKind, "question" | "destiny" | "fortune" | "naming">, string> = {
   "date-selection": "择日即将开放。也可以把候选日期当作一件事来问。",
@@ -46,7 +62,11 @@ const UNSUPPORTED: Record<Exclude<QuestionKind, "question" | "destiny" | "fortun
   compatibility: "合婚即将开放。也可以把这段关系改为一件事来问。",
   other: "暂时无法识别这个问题，请改写成一件具体的事来问。",
 };
-const BUSINESS_NAMING = /公司|店|品牌|商号|字号|工作室|餐厅|咖啡|茶馆|门店|企业/u;
+const BUSINESS_NAMING = new RegExp(
+  "公司|店|品牌|商号|字号|工作室|餐厅|咖啡|茶馆|门店|企业|"
+    + "\\b(?:company|shop|store|brand|business|studio|restaurant|caf[eé]|coffee|tea ?house|bakery|bar|firm|startup)\\b",
+  "iu",
+);
 function namingTarget(question: string): "person" | "business" {
   return BUSINESS_NAMING.test(question) ? "business" : "person";
 }
@@ -58,11 +78,11 @@ export function normalizeQuestion(value: string): string {
   return question;
 }
 function horizonFor(question: string): FortuneHorizon {
-  const year = question.match(/(20\d{2})年/)?.[1];
+  const year = question.match(/(20\d{2})年/)?.[1] ?? question.match(/\b(20\d{2})\b/)?.[1];
   if (year) return `year:${Number(year)}`;
-  if (/今天|今日/.test(question)) return "today";
-  if (/本月|这个月/.test(question)) return "month";
-  if (/明年/.test(question)) return "next-year";
+  if (/今天|今日|\b(?:today|tonight)\b/i.test(question)) return "today";
+  if (/本月|这个月|\bthis month\b/i.test(question)) return "month";
+  if (/明年|\bnext year\b/i.test(question)) return "next-year";
   return "year";
 }
 

@@ -16,6 +16,8 @@ export interface ClassificationView {
   supported: boolean;
   subjectKey?: string;
   subject?: string;
+  /** 事项没识别出来，是按人际／同辈给的默认值。 */
+  subjectFallback?: boolean;
   horizon?: string;
   suggestion?: string;
   target?: NamingTarget;
@@ -30,6 +32,8 @@ export interface EntryState {
   horizon: string;
   target: NamingTarget;
   unsupported?: string;
+  /** 当前事项是识别不到时的默认值，需提示用户核对。 */
+  subjectFallback?: boolean;
 }
 
 export const DEFAULT_ENTRY: EntryState = {
@@ -98,13 +102,16 @@ export function horizonLabel(horizon: string, t: TFunction = zhT): string {
 const ENTRY_KINDS: readonly string[] = ["question", "fortune", "destiny", "naming"];
 
 export function fromClassification(value: Classification): ClassificationView {
-  const item = value as Classification & { subject?: { key?: string; label?: string }; horizon?: string };
+  const item = value as Classification & {
+    subject?: { key?: string; label?: string; fallback?: boolean }; horizon?: string;
+  };
   return {
     question: item.question,
     kind: item.kind,
     supported: item.supported,
     ...(item.subject?.key ? { subjectKey: item.subject.key } : {}),
     ...(item.subject?.label ? { subject: item.subject.label } : {}),
+    ...(item.subject?.fallback === true ? { subjectFallback: true } : {}),
     ...(item.horizon ? { horizon: item.horizon } : {}),
     ...(item.suggestion ? { suggestion: item.suggestion } : {}),
     ...(item.target === "person" || item.target === "business" ? { target: item.target } : {}),
@@ -122,6 +129,8 @@ export function applyClassification(
   if (view.subjectKey && view.subject) {
     next.subjectKey = view.subjectKey;
     next.subject = view.subject;
+    if (view.subjectFallback) next.subjectFallback = true;
+    else delete next.subjectFallback;
   }
   if (view.kind === "fortune") {
     next.horizon = entryHorizon(view.horizon);
@@ -156,7 +165,14 @@ export function subjectLabel(key: string, t: TFunction = zhT, fallback = ""): st
 }
 
 export function autoHint(state: EntryState, t: TFunction = zhT): string | null {
-  if (state.manual || state.unsupported) {
+  if (state.unsupported) {
+    return null;
+  }
+  // 事项没认出来时，即使类型是手点的也要提示，免得用户以为已按所问之事取用神。
+  if (state.kind === "question" && state.subjectFallback) {
+    return t("status.detected.fallback", { subject: subjectLabel(state.subjectKey, t, state.subject) });
+  }
+  if (state.manual) {
     return null;
   }
   if (state.kind === "question") {
@@ -198,21 +214,12 @@ export function exampleSubject(kind: EntryKind, index: 1 | 2): string | undefine
 export function entryGate(
   input: GateInput,
   t: TFunction = zhT,
-  options: {
-    /** 是否按中文关键词规则自动分类；英文模式为 false，高亮的类型即所选类型。 */
-    autoClassify?: boolean;
-    requireQuestionSubject?: boolean;
-  } = {},
 ): { ready: boolean; reason: string } {
-  const autoClassify = options.autoClassify ?? true;
   const emptyDestiny = input.entry.kind === "destiny" && input.questionLength === 0;
   if (!emptyDestiny && input.questionLength < 4) {
     return { ready: false, reason: t("gate.questionLength") };
   }
-  if (options.requireQuestionSubject && input.entry.kind === "question" && !input.entry.subjectKey) {
-    return { ready: false, reason: t("gate.subjectRequired") };
-  }
-  if (autoClassify && !emptyDestiny && !input.classified && !input.entry.manual) {
+  if (!emptyDestiny && !input.classified && !input.entry.manual) {
     return { ready: false, reason: t("status.classifying") };
   }
   if (input.entry.unsupported) {
@@ -260,17 +267,17 @@ export function deriveEntry(
   view: ClassificationView | undefined,
   choice: EntryChoice,
   t: TFunction = zhT,
-  lang: "zh" | "en" = "zh",
 ): EntryState {
   let state = DEFAULT_ENTRY;
   if (choice.kind) {
     state = chooseKind(state, choice.kind);
   }
-  if (view && lang === "zh") {
+  if (view) {
     state = applyClassification(state, view, t);
   }
   if (choice.subjectKey !== undefined) {
     state = { ...state, subjectKey: choice.subjectKey, subject: choice.subject ?? "" };
+    delete state.subjectFallback;
   }
   if (choice.horizon) {
     state = { ...state, horizon: choice.horizon };

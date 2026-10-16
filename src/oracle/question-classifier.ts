@@ -12,6 +12,8 @@ export interface QuestionSubjectOption {
 
 export interface QuestionSubjectSuggestion extends QuestionSubjectOption {
   reason: string;
+  /** 没有命中任何事项词、按人际／同辈给出的默认值；页面据此提示用户核对。 */
+  fallback?: true;
 }
 
 export interface ConfirmedQuestionSubject extends QuestionSubjectSuggestion {
@@ -59,22 +61,37 @@ const SHORT_BOUNDARY = /今天|今日|明天|\d+\s*(?:小时|分钟)/;
 const SUBJECT_SIGNALS: ReadonlyArray<{
   key: QuestionSubjectKey;
   pattern: RegExp;
+  /** 常见英文说法；与中文规则同序判断，先命中者为准。 */
+  english: RegExp;
   reason: string;
 }> = [
-  { key: "documents", pattern: /房产|房屋|房子|车船|车辆|土地|单位|文书|合同|契约|文件|证件|衣物/, reason: "问题涉及房产、载具、单位或文书契约。" },
-  { key: "illness", pattern: /疾病|生病|病情|病因|健康|疼痛|症状|忧虑|焦虑/, reason: "问题直接涉及疾病、健康或忧虑。" },
-  { key: "wellbeing", pattern: /技术|艺术|医药|药物|医生|治疗|解忧|避灾|福气|娱乐|游戏|子女|孩子|儿子|女儿/, reason: "问题涉及技术、医药、解忧或子女。" },
-  { key: "wealth", pattern: /钱财|钱|财运|物价|价格|器具|货品|商品|债务|欠款|还款|收款|收入|工资|薪资|到账/, reason: "问题涉及钱财、货品、价格或债务。" },
-  { key: "peers", pattern: /兄弟|姐妹|朋友|同事|同僚|同行|竞争者|竞争对手|队友|同学/, reason: "问题涉及同辈、人际或竞争关系。" },
+  { key: "documents", pattern: /房产|房屋|房子|车船|车辆|土地|单位|文书|合同|契约|文件|证件|衣物/,
+    english: /\b(?:house|home|apartment|flat|property|real estate|land|car|vehicle|boat|landlord|lease|rent|contract|deed|documents?|paperwork|visa|permit|passport|licen[cs]e|certificate|clothes|clothing)\b/i,
+    reason: "问题涉及房产、载具、单位或文书契约。" },
+  { key: "illness", pattern: /疾病|生病|病情|病因|健康|疼痛|症状|忧虑|焦虑/,
+    english: /\b(?:sick|sickness|ill|illness|disease|cancer|tumou?rs?|health|healthy|symptoms?|pain|diagnos\w*|surgery|recover(?:y)?|anxiety|anxious|worr(?:y|ied))\b/i,
+    reason: "问题直接涉及疾病、健康或忧虑。" },
+  { key: "wellbeing", pattern: /技术|艺术|医药|药物|医生|治疗|解忧|避灾|福气|娱乐|游戏|子女|孩子|儿子|女儿/,
+    english: /\b(?:skills?|craft|technique|art|artist|music|medicine|medication|doctor|treatment|therapy|cure|relief|games?|gaming|child|children|kids?|son|daughter|baby|pregnan\w*)\b/i,
+    reason: "问题涉及技术、医药、解忧或子女。" },
+  { key: "wealth", pattern: /钱财|钱|财运|物价|价格|器具|货品|商品|债务|欠款|还款|收款|收入|工资|薪资|到账|比特币|股票|基金|投资|理财|币价|加密货币/,
+    english: /\b(?:money|cash|wealth|rich|income|salary|wages?|raise|price|prices|cost|debts?|loans?|repay\w*|pay|paid|invest\w*|stocks?|shares|crypto\w*|bitcoin|btc|eth|trading|profit|goods|products?|sell|selling|buy|buying|refund)\b/i,
+    reason: "问题涉及钱财、货品、价格或债务。" },
+  { key: "peers", pattern: /兄弟|姐妹|朋友|同事|同僚|同行|竞争者|竞争对手|队友|同学/,
+    english: /\b(?:friends?|friendship|colleagues?|co-?workers?|teammates?|classmates?|siblings?|brothers?|sisters?|competitors?|competition|rivals?|peers?)\b/i,
+    reason: "问题涉及同辈、人际或竞争关系。" },
   {
     key: "career",
     pattern: new RegExp(
       "面试|求职|应聘|跳槽|辞职|离职|工作|职业|事业|岗位|"
         + "官职|功名|升职|入职|offer|录取|丈夫|老公|先生|盗贼|小偷",
     ),
+    english: /\b(?:jobs?|interviews?|hired?|hiring|careers?|work(?!\s+out)|working|promot\w*|boss|manager|employer|offer|position|resign\w*|quit|fired|lay ?off|laid off|business|startup|exams?|admission|admitted|husband|thief|stolen|theft)\b/i,
     reason: "问题涉及求职、工作、官职或功名。",
   },
-  { key: "relationship", pattern: /感情|恋爱|伴侣|对象|男友|女友|喜欢|爱不爱|和好|结婚|分手/, reason: "问题泛指感情或伴侣；古法随所问对象有不同取法，请在确认卡核对。" },
+  { key: "relationship", pattern: /感情|恋爱|伴侣|对象|男友|女友|喜欢|爱不爱|和好|结婚|分手/,
+    english: /\b(?:love|relationships?|partner|boyfriend|girlfriend|wife|crush|dating|marry|marriage|married|wedding|break ?up|ex|romance|soulmate)\b/i,
+    reason: "问题泛指感情或伴侣；古法随所问对象有不同取法，请在确认卡核对。" },
 ];
 
 function normalizeQuestion(question: string): string {
@@ -89,11 +106,12 @@ function subjectOption(key: QuestionSubjectKey): QuestionSubjectOption {
 
 /** 只读问题文字的确定性主题建议；不接收卦象、身份、概率或链上状态。 */
 export function classifyQuestionSubject(question: string): QuestionSubjectSuggestion {
-  const matched = SUBJECT_SIGNALS.find((item) => item.pattern.test(question));
+  const matched = SUBJECT_SIGNALS.find((item) => item.pattern.test(question) || item.english.test(question));
   if (matched) return { ...subjectOption(matched.key), reason: matched.reason };
   return {
     ...subjectOption("peers"),
     reason: "没有命中明确事项词，暂按人际／同辈给出低置信建议；请在起卦前改选更贴切的主题。",
+    fallback: true,
   };
 }
 

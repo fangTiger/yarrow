@@ -14,17 +14,17 @@
 
 ### Requirement: 类型卡与示例问题
 
-四个类型 MUST 各有一句说明与 2–3 个可点选填入的示例问题。英文模式下 MUST 不做关键词分类（分类规则只认中文）：页面高亮的类型即所选类型，默认命理，用户可点选改为其它类型；问事的事项 MUST 由用户手选，不默认任何事项；未选时事项框 MUST 显示「Choose a subject」并高亮。点问事的示例问题 MUST 同时选好对应事项（求职 → 工作，签合同 → 房产／文书）。类型卡 MUST 整卡可点；有指针的设备上悬停 MUST 有高亮反馈，且与选中态（金边与左侧金条）区分。
+四个类型 MUST 各有一句说明与 2–3 个可点选填入的示例问题。英文模式 MUST 与中文一致：按关键词自动识别类型与细项，用户手点的类型优先；识别不到事项时默认 Peers 并提示可改选，付款按钮 MUST 不因事项未选而置灰。点问事的示例问题 MUST 同时选好对应事项（求职 → 工作，签合同 → 房产／文书）。类型卡 MUST 整卡可点；有指针的设备上悬停 MUST 有高亮反馈，且与选中态（金边与左侧金条）区分。
 
 #### Scenario: 英文问事
 
-- **WHEN** 英文模式下选 Ask 并输入「Will I get this job?」
-- **THEN** 类型保持 Ask，不显示自动识别提示；事项不预选，用户选定事项后才能付款
+- **WHEN** 英文模式下输入「Will I get this job?」
+- **THEN** 自动切到 Ask，事项为 Career，提示「Auto-detected: Ask · Career」，可直接付款
 
-#### Scenario: 英文点示例问题
+#### Scenario: 英文识别不到事项
 
-- **WHEN** 英文模式下点 Ask 的示例「Will I get this job?」
-- **THEN** 类型切到 Ask，事项选好 Career，填入问题后即可付款
+- **WHEN** 英文模式下选 Ask 并输入「Should I move to Berlin next spring?」
+- **THEN** 事项默认 Peers or competition，提示没认出具体事项、可在上方改选，付款按钮可用
 
 #### Scenario: 英文默认命理
 

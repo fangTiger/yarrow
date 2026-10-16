@@ -117,12 +117,9 @@ test("英文问题可从首页进入付款，直接可见文案不含汉字", as
   t.mock.timers.tick(400);
   await Promise.resolve();
   children = childrenOf(harness.render());
-  assert.ok(!children.some((child) => child.type === PaymentButton));
-  children.find((child) => child.type === KindOptions)!.props.onChange("question");
-  children = childrenOf(harness.render());
-  children.find((child) => child.type === SubjectSelect)!.props.onChange("career", "Career");
-  children = childrenOf(harness.render());
+  // 英文与中文一致：识别出问事 · 工作后直接可付款，无需再手点类型与事项。
   assert.ok(children.some((child) => child.type === PaymentButton));
+  assert.match(textOf(children), /Auto-detected: Ask · Career/u);
   assert.match(textOf(children), /What do you seek\?/u);
   assert.doesNotMatch(textOf(children), /[\u3400-\u9fff]/u);
 });
