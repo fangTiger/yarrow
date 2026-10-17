@@ -318,6 +318,7 @@ export const en: Record<keyof typeof zh, string> = {
   "question.judgement": "Judgement",
   "question.image": "Image",
   "question.translationCredit": "Translation by Yarrow",
+  "question.showOriginal": "Show the original Chinese text",
   "question.lineYang": "Line {line} · Yang",
   "question.lineYin": "Line {line} · Yin",
   "question.allYang": "All Yang (Yong Jiu)",

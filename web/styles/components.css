@@ -1942,3 +1942,10 @@ html:lang(en) .daily-almanac-kicker { font-family: var(--serif); letter-spacing:
 html:lang(en) .daily-almanac-badge { width: auto; min-width: 0; padding: 0 12px; border-radius: 999px; white-space: nowrap; }
 html:lang(en) .daily-almanac-activities { grid-template-columns: 6.2em minmax(0, 1fr); }
 html:lang(en) .daily-almanac-badge { justify-self: start; height: 30px; }
+
+/* 英文问事：中文原文收在页尾，可展开，字号与颜色退后，不抢英译的位置。 */
+.classic-originals { margin-top: 14px; color: var(--dim); font-size: 13px; }
+.classic-originals summary { width: fit-content; cursor: pointer; color: var(--gold); }
+.classic-originals dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 10px 0 0; }
+.classic-originals dt { color: var(--muted); }
+.classic-originals dd { margin: 0; color: var(--paper); line-height: 1.7; }

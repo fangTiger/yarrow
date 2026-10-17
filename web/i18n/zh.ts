@@ -314,6 +314,7 @@ export const zh = {
   "question.judgement": "卦辞",
   "question.image": "大象",
   "question.translationCredit": "Translation by Yarrow",
+  "question.showOriginal": "查看原文",
   "question.lineYang": "第 {line} 爻 · 阳",
   "question.lineYin": "第 {line} 爻 · 阴",
   "question.allYang": "用九",

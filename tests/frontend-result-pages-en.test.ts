@@ -67,7 +67,8 @@ function completedTranslation(reading: StoredReading): StoredTranslation {
 function visibleEnglish(html: string): string {
   return html
     .replace(/<details[^>]*class="[^"]*traditional-chart[^"]*"[^>]*>[\s\S]*?<\/details>/gu, "")
-    .replace(/<[^>]*class="classic-original"[^>]*>[\s\S]*?<\/[^>]+>/gu, "");
+    // 古文原文收在默认收起的「原文」折叠区，展开前不可见。
+    .replace(/<details[^>]*class="[^"]*classic-originals[^"]*"[^>]*>[\s\S]*?<\/details>/gu, "");
 }
 
 function assertNoHan(html: string, allowed = ""): void {
@@ -109,7 +110,9 @@ test("问事结果页中英渲染：英文用术语与离线古文，隐藏 evid
   assert.match(en, /Career &amp; status/u);
   assert.match(en, /Favorable · A clear opening/u);
   assert.match(en, /Translation by Yarrow/u);
-  assert.match(en, new RegExp(figures.primary.judgement, "u"));
+  // 原文仍可查：收在默认收起的折叠区里。
+  assert.match(en, new RegExp(`<details class="classic-originals"><summary>Show the original Chinese text</summary>[\\s\\S]*${figures.primary.judgement}`, "u"));
+  assert.doesNotMatch(en, /<details class="classic-originals" open/u);
   assert.doesNotMatch(en, /绝不显示/u);
   assertNoHan(en);
 

@@ -34,6 +34,8 @@ export function EnglishQuestionResult(props: {
   const classic = getZhouyiEnglish(primary.kingWenNumber);
   const chineseClassic = getHexagramText(primary.kingWenNumber);
   const moving = reading.lines.flatMap((value, index) => [6, 9].includes(value) ? [index + 1] : []);
+  const allYang = reading.lines.every((line) => line === 9) && Boolean(chineseClassic.extras[0]);
+  const allYin = reading.lines.every((line) => line === 6) && Boolean(chineseClassic.extras[0]);
   const retry = async (key: typeof SCHOOL_KEYS[number]) => {
     try {
       const value = await api.retrySchool(reading.id, key);
@@ -64,23 +66,32 @@ export function EnglishQuestionResult(props: {
             lines: moving.length ? moving.join(", ") : t("question.none"),
             derived: hexagramEn(figures.derived.kingWenNumber),
           })}</p></div></div>
-      <div className="classic-pair"><p><b>{t("question.judgement")}:</b> 
-        <span className="classic-original">{primary.judgement}</span></p>
-        <p>{classic.judgement}</p><small>{t("question.translationCredit")}</small></div>
-      <div className="classic-pair"><p><b>{t("question.image")}:</b> 
-        <span className="classic-original">{DAXIANG[primary.kingWenNumber - 1]}</span></p>
-        <p>{classic.image}</p><small>{t("question.translationCredit")}</small></div>
+      {/* 英文界面以英译为主；中文原文收进可展开的「原文」，不打扰看不懂中文的读者。 */}
+      <div className="classic-pair"><p><b>{t("question.judgement")}:</b> {classic.judgement}</p>
+        <small>{t("question.translationCredit")}</small></div>
+      <div className="classic-pair"><p><b>{t("question.image")}:</b> {classic.image}</p>
+        <small>{t("question.translationCredit")}</small></div>
       {moving.map((line) => <div className="classic-pair" key={line}>
         <h3>{t(reading.lines![line - 1]! % 2 === 1 ? "question.lineYang" : "question.lineYin", { line })}</h3>
-        <p className="classic-original">{chineseClassic.lines[line - 1]?.text}</p>
         <p>{getZhouyiLineEnglish(primary.kingWenNumber, line)}</p>
         <small>{t("question.translationCredit")}</small></div>)}
-      {reading.lines.every((line) => line === 9) && chineseClassic.extras[0] ? <div className="classic-pair">
-        <h3>{t("question.allYang")}</h3><p className="classic-original">{chineseClassic.extras[0].text}</p>
+      {allYang ? <div className="classic-pair"><h3>{t("question.allYang")}</h3>
         <p>{classic.extras[0]}</p><small>{t("question.translationCredit")}</small></div> : null}
-      {reading.lines.every((line) => line === 6) && chineseClassic.extras[0] ? <div className="classic-pair">
-        <h3>{t("question.allYin")}</h3><p className="classic-original">{chineseClassic.extras[0].text}</p>
+      {allYin ? <div className="classic-pair"><h3>{t("question.allYin")}</h3>
         <p>{classic.extras[0]}</p><small>{t("question.translationCredit")}</small></div> : null}
+      <details className="classic-originals"><summary>{t("question.showOriginal")}</summary>
+        <dl lang="zh">
+          <dt>{t("question.judgement")}</dt><dd>{primary.judgement}</dd>
+          <dt>{t("question.image")}</dt><dd>{DAXIANG[primary.kingWenNumber - 1]}</dd>
+          {moving.map((line) => [
+            <dt key={`t${line}`}>{t(reading.lines![line - 1]! % 2 === 1 ? "question.lineYang" : "question.lineYin",
+              { line })}</dt>,
+            <dd key={`d${line}`}>{chineseClassic.lines[line - 1]?.text}</dd>,
+          ])}
+          {allYang || allYin ? <><dt>{t(allYang ? "question.allYang" : "question.allYin")}</dt>
+            <dd>{chineseClassic.extras[0]!.text}</dd></> : null}
+        </dl>
+      </details>
     </section>
     <section className="panel"><header className="panel-head"><h2>{t("question.chart")}</h2></header>
       <div className="chart-scroll"><table><thead><tr>
