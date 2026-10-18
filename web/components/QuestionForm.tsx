@@ -1,5 +1,5 @@
 // web/components/QuestionForm.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../lib/api.js";
 import {
   EMPTY_BIRTH, birthProblem, fromBirthInput, loadBirthProfile, saveBirthProfile, toBirthInput,
@@ -75,10 +75,25 @@ export function QuestionForm() {
   });
   const length = [...question.trim()].length;
   const valid = length >= 4 && length <= 280;
+  const formRef = useRef<HTMLFormElement>(null);
+  // 预填次数：黄历「看看你今天的运势」、大运「细看这十年」等入口每触发一次加一，用来滚到表单并闪一下。
+  const [prefillTick, setPrefillTick] = useState(hashPrefill.value ? 1 : 0);
   useEffect(() => {
     if (!hashPrefill.clear || typeof history === "undefined" || typeof location === "undefined") return;
     history.replaceState(history.state, "", `${location.pathname}${location.search}#/`);
   }, [hashPrefill.clear]);
+  useEffect(() => {
+    const form = formRef.current;
+    if (prefillTick === 0 || !form || typeof window === "undefined") return undefined;
+    // 表单常在首屏之下：预填后滚过去，否则用户看不到任何变化。
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    form.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    form.classList.remove("prefilled");
+    void form.offsetWidth;
+    form.classList.add("prefilled");
+    const timer = window.setTimeout(() => form.classList.remove("prefilled"), 1_600);
+    return () => window.clearTimeout(timer);
+  }, [prefillTick]);
   useEffect(() => {
     if (typeof window === "undefined" || typeof location === "undefined"
       || typeof history === "undefined") return undefined;
@@ -88,6 +103,7 @@ export function QuestionForm() {
       setView(undefined);
       setClassifying(false);
       setError("");
+      setPrefillTick((tick) => tick + 1);
     });
   }, []);
   useEffect(() => {
@@ -159,7 +175,7 @@ export function QuestionForm() {
     />
   );
   return (
-    <form className="home-form" onSubmit={(event) => event.preventDefault()}>
+    <form className="home-form" onSubmit={(event) => event.preventDefault()} ref={formRef}>
       <h1 className="ask-title">{t("home.title")}</h1>
       <KindOptions onChange={(kind) => setChoice((current) => ({ ...current, kind }))}
         onExample={(kind, example, subjectKey) => {

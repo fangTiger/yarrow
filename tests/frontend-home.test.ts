@@ -72,6 +72,12 @@ function formHarness(t?: TFunction) {
           : next;
       }];
     },
+    useRef(initial: unknown) {
+      // 与 useState 共用槽位序号，保证每次渲染拿到同一个 ref 对象。
+      const index = stateIndex++;
+      if (!(index in states)) states[index] = { current: initial };
+      return states[index];
+    },
     useEffect(callback: () => (() => void) | undefined, deps: unknown[]) {
       const index = effectIndex++;
       const previous = effects[index];

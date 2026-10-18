@@ -1949,3 +1949,13 @@ html:lang(en) .daily-almanac-badge { justify-self: start; height: 30px; }
 .classic-originals dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 10px 0 0; }
 .classic-originals dt { color: var(--muted); }
 .classic-originals dd { margin: 0; color: var(--paper); line-height: 1.7; }
+
+/* 从黄历或大运入口预填后，表单闪一下金色边，告诉用户内容已经填好。 */
+.home-form { scroll-margin-top: 16px; }
+@keyframes prefilled-glow {
+  0% { box-shadow: 0 0 0 0 rgb(201 168 102 / 0); }
+  25% { box-shadow: 0 0 0 3px rgb(201 168 102 / .45); }
+  100% { box-shadow: 0 0 0 0 rgb(201 168 102 / 0); }
+}
+.home-form.prefilled { animation: prefilled-glow 1.6s ease-out; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .home-form.prefilled { animation: none; outline: 1px solid var(--gold); } }
