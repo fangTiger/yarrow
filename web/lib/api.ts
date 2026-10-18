@@ -4,6 +4,7 @@ import type { SanyiApi } from "../../src/sanyi/api.js";
 import type { QuestionSchoolKey } from "../../src/sanyi/schools/index.js";
 import type { NamingFamilyKey } from "../../src/sanyi/naming/schema.js";
 import type { TFunction } from "./i18n.js";
+import type { DailyHexagram } from "../../src/sanyi/daily-hexagram.js";
 export type PaymentConfiguration = Awaited<ReturnType<SanyiApi["payment"]>>;
 export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
 export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
@@ -78,6 +79,7 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
   return {
     getPayment: () => request<PaymentConfiguration>("/api/payment"),
     getNow: () => request<NowResponse>("/api/now"),
+    getDailyHexagram: () => request<DailyHexagram>("/api/daily-hexagram"),
     classify: (question: string) => request<Classification>("/api/classify", { question }),
     createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
     continueCasting: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/cast`, {}),

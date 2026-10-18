@@ -12,7 +12,7 @@ import { SubjectSelect } from "../web/components/SubjectSelect.js";
 import { en } from "../web/i18n/en.js";
 import { zh } from "../web/i18n/zh.js";
 import { I18nError, createT, detectLang, zhT } from "../web/lib/i18n.js";
-import { paymentFailure } from "../web/lib/payment-error.js";
+import { isFormValidationFailure, paymentFailure } from "../web/lib/payment-error.js";
 import { ApiError } from "../web/lib/api.js";
 import { EMPTY_BIRTH } from "../web/lib/birth-profile.js";
 import { DEFAULT_NAMING_FORM } from "../web/lib/home-entry.js";
@@ -120,4 +120,10 @@ test("英文付款凭证复用显示英文错误并保留已有卦入口", () =>
     readingId: "abcdefghijklmnopqrstuvwxyz",
     missingBirth: false,
   });
+});
+
+test("表单校验错误标记为不计付款失败，付款与服务错误仍可计", () => {
+  assert.equal(isFormValidationFailure(new ApiError("缺生辰", 400, undefined, "birth-required")), true);
+  assert.equal(isFormValidationFailure(new ApiError("问题无效", 400, undefined, "invalid-question")), true);
+  assert.equal(isFormValidationFailure(new ApiError("付款无效", 400, undefined, "payment-invalid")), false);
 });

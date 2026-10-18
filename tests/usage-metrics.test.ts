@@ -74,10 +74,13 @@ test("指标按北京时间日期原子累加，并只接受事件白名单", as
     counts: { home_view: 20, "sample_view:naming": 1 },
   });
   for (const event of ["home_view", "sample_view:question", "sample_view:destiny",
-    "sample_view:fortune", "sample_view:naming", "wallet_connect_click", "pay_click"]) {
+    "sample_view:fortune", "sample_view:naming", "wallet_connect_click", "pay_click",
+    "pay_failed:rejected", "pay_failed:insufficient", "pay_failed:wrong-chain",
+    "pay_failed:claim", "pay_failed:other"]) {
     assert.equal(isFrontendMetricEvent(event), true, event);
   }
-  for (const event of ["sample_view:other", "reading_done:question", "home_view:0x1234", ""]) {
+  for (const event of ["sample_view:other", "reading_done:question", "home_view:0x1234",
+    "pay_failed:timeout", "pay_failed:", ""]) {
     assert.equal(isFrontendMetricEvent(event), false, event);
   }
 });
@@ -171,6 +174,9 @@ test("事件接口沿用安全边界、丢弃额外字段，统计接口校验�
 
   assert.equal((await request("/api/events", {
     method: "POST", body: { event: "reading_done:question" },
+  })).status, 400);
+  assert.equal((await request("/api/events", {
+    method: "POST", body: { event: "pay_failed:timeout" },
   })).status, 400);
   assert.equal((await request("/api/events", {
     method: "POST", body: {}, headers: { origin: "" },

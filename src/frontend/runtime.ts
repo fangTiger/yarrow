@@ -3,6 +3,7 @@ import { resolveArcNetwork } from "../arc-network.js";
 import { createDefaultProvider } from "../agent/default-provider.js";
 import { createSanyiApi } from "../sanyi/api.js";
 import { createSanyiPublicClient } from "../sanyi/arc-client.js";
+import { DailyHexagramService } from "../sanyi/daily-hexagram.js";
 import { BaziReadingService } from "../sanyi/bazi-reading-service.js";
 import { ArcFeeVerifier, feeRecipientFromEnv } from "../sanyi/fee.js";
 import type { SanyiLogger } from "../sanyi/log.js";
@@ -33,6 +34,12 @@ export function createSanyiRuntime(options: SanyiRuntimeOptions) {
   const recipient = feeRecipientFromEnv(env);
   const publicClient = createSanyiPublicClient(network);
   const { backend, logger } = options;
+  const dailyHexagram = new DailyHexagramService({
+    backend,
+    client: publicClient,
+    chainId: network.chainId,
+    clock,
+  });
   const metrics = new DocumentUsageMetrics({ backend, logger, clock });
   const store = new ReadingStore(backend);
   const feeVerifier = new ArcFeeVerifier(publicClient, recipient);
@@ -71,5 +78,6 @@ export function createSanyiRuntime(options: SanyiRuntimeOptions) {
     onUnitSettled,
   });
   const api = createSanyiApi(service, { recipient, chainId: network.chainId, bazi, naming, translation });
-  return { api, service, network, recipient, metrics, statsToken: env.STATS_TOKEN ?? "" };
+  return { api, service, network, recipient, metrics, dailyHexagram,
+    statsToken: env.STATS_TOKEN ?? "" };
 }

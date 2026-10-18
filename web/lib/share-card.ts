@@ -1,4 +1,6 @@
 import { deriveFiveHexagrams } from "../../src/oracle/liuyao-chart.js";
+import type { DailyHexagram } from "../../src/sanyi/daily-hexagram.js";
+import type { DailyAlmanacView } from "../components/DailyAlmanac.js";
 import type { AnyPublicReading } from "./api.js";
 import type { Lang, TFunction } from "./i18n.js";
 import { applyReadingTranslation, isNativeEnglishReading } from "./reading-translation.js";
@@ -46,8 +48,62 @@ export interface ShareCardModel {
   sample: boolean;
 }
 
+export interface AlmanacShareCardModel {
+  lang: Lang;
+  brand: string;
+  title: string;
+  dateLine: readonly string[];
+  goodLabel: string;
+  suitable: readonly string[];
+  avoidLabel: string;
+  avoid: readonly string[];
+  clash?: string | undefined;
+  directions?: string | undefined;
+  hexagramLabel?: string | undefined;
+  hexagram?: string | undefined;
+  /** 今日一卦的本卦与之卦图；有空间时画在卡片下半部。 */
+  chart?: HexagramChart | undefined;
+  footer: string;
+}
+
 export interface ShareCardBuildOptions {
   sample?: boolean | undefined;
+}
+
+/** 黄历已在页面层完成中英转换；这里只组装不会泄露另一语言的分享模型。 */
+export function buildAlmanacShareCard(
+  view: DailyAlmanacView,
+  lang: Lang,
+  dailyHexagram?: DailyHexagram,
+): AlmanacShareCardModel {
+  const figures = dailyHexagram ? deriveFiveHexagrams(dailyHexagram.lines) : undefined;
+  const figure = figures?.primary;
+  const nameOf = (item: { name: string; kingWenNumber: number }) => (
+    lang === "zh" ? item.name : hexagramEn(item.kingWenNumber)
+  );
+  return {
+    lang,
+    brand: lang === "zh" ? "三易" : "Yarrow",
+    title: lang === "zh" ? "今日黄历" : "Today's Almanac",
+    dateLine: view.dateLine,
+    goodLabel: lang === "zh" ? "宜" : "Good for",
+    suitable: view.suitable,
+    avoidLabel: lang === "zh" ? "忌" : "Avoid",
+    avoid: view.avoid,
+    ...(view.clash ? { clash: `${lang === "zh" ? "冲煞" : "Clash"}: ${view.clash}` } : {}),
+    ...(view.directions ? { directions: `${lang === "zh" ? "吉神方位" : "Fortune directions"}: ${view.directions}` } : {}),
+    ...(figure ? {
+      hexagramLabel: lang === "zh" ? "今日一卦" : "Today's hexagram",
+      hexagram: nameOf(figure),
+      chart: {
+        kind: "hexagram" as const,
+        primary: { name: nameOf(figures!.primary), lines: [...figures!.primary.yangLines] },
+        changed: { name: nameOf(figures!.derived), lines: [...figures!.derived.yangLines] },
+        moving: dailyHexagram!.lines.flatMap((value, index) => (value === 6 || value === 9 ? [index + 1] : [])),
+      },
+    } : {}),
+    footer: "yarrow-six.vercel.app",
+  };
 }
 
 const QUESTION_SCHOOLS = ["chengyi", "jingfang", "shaoyong"] as const;
@@ -441,6 +497,88 @@ export interface ShareCardLayout {
   blocks: ShareCardLayoutBlock[];
 }
 
+/** 黄历专用的 4:5 版式；文字仍统一经过 wrapText 的避头尾与截断规则。 */
+export function layoutAlmanacShareCard(
+  model: AlmanacShareCardModel,
+  measure: ShareCardMeasure,
+): ShareCardLayout {
+  // 黄历内容比解读少：从大字号往下试，取能放进页脚线以上的最大一档，避免下半张空着。
+  // 先试带卦图的各档，放不下再试只写卦名的各档（英文行数多，常走第二轮）。
+  const ladder = [1.3, 1.2, 1.1, 1, 0.9] as const;
+  for (const withChart of model.chart ? [true, false] : [false]) {
+    for (const scale of ladder) {
+      const layout = almanacLayoutAt(model, measure, scale, withChart);
+      if (layout) return layout;
+    }
+  }
+  // 极端长文案：收紧每段行数（超出加省略号），保证卦名仍在、不压页脚。
+  return almanacLayoutAt(model, measure, 0.9, false, true)
+    ?? almanacLayoutAt(model, measure, 0.8, false, true, true)!;
+}
+
+const ALMANAC_CONTENT_BOTTOM = 1196;
+
+function almanacLayoutAt(
+  model: AlmanacShareCardModel,
+  measure: ShareCardMeasure,
+  scale: number,
+  withChart: boolean,
+  compact = false,
+  force = false,
+): ShareCardLayout | undefined {
+  const left = 88;
+  const width = SHARE_CARD_WIDTH - left * 2;
+  const latin = model.lang === "en";
+  const px = (value: number) => Math.round(value * scale);
+  const blocks: ShareCardLayoutBlock[] = [
+    { kind: "frame", role: "frame", x: 32, y: 32, width: SHARE_CARD_WIDTH - 64, height: SHARE_CARD_HEIGHT - 64 },
+    { kind: "seal", role: "brand-mark", x: left, y: 78, width: 92, height: 92,
+      inset: { x: left + 7, y: 85, width: 78, height: 78 },
+      mark: { text: "易", x: left + 46, y: 142, size: 52, font: "brush" } },
+    { kind: "text", role: "brand", x: left + 118, y: 92, width: 640, height: 64,
+      size: 50, color: "gold", font: latin ? "latin" : "brush", lines: [model.brand], lineYs: [144] },
+    { kind: "rule", role: "header-rule", x: left, y: 206, width, height: 1 },
+  ];
+  const addText = (role: string, text: string, y: number, size: number, maxLines: number,
+    color: ShareCardColor = "paper", font: ShareCardFont = "body") => {
+    const lines = wrapText(text, width, (value) => measure(value, size, font), maxLines);
+    const lineHeight = Math.round(size * 1.42);
+    blocks.push({ kind: "text", role, x: left, y, width, height: lines.length * lineHeight,
+      size, color, font, lines,
+      lineYs: lines.map((_, index) => y + (index + 1) * lineHeight - Math.round(size * .3)) });
+    return y + lines.length * lineHeight;
+  };
+  // 方位、冲煞允许折行，不再截成省略号。
+  const factLines = compact ? 1 : 2;
+  const activityLines = compact ? 2 : 4;
+  let y = addText("title", model.title, 246, px(72), 1, "gold", latin ? "latin" : "brush") + px(20);
+  y = addText("date", model.dateLine.join(" · "), y, px(32), compact ? 1 : 2, "muted", latin ? "latin" : "body") + px(34);
+  if (model.clash) y = addText("clash", model.clash, y, px(30), factLines) + px(12);
+  if (model.directions) y = addText("directions", model.directions, y, px(30), compact ? 1 : 3) + px(28);
+  y = addText("good-label", model.goodLabel, y, px(38), 1, "gold", latin ? "latin" : "brush") + px(8);
+  y = addText("good", model.suitable.join(model.lang === "zh" ? "、" : ", "), y, px(32), activityLines) + px(26);
+  y = addText("avoid-label", model.avoidLabel, y, px(38), 1, "red", latin ? "latin" : "brush") + px(8);
+  y = addText("avoid", model.avoid.join(model.lang === "zh" ? "、" : ", "), y, px(32), activityLines) + px(28);
+  if (model.hexagram && model.hexagramLabel) {
+    y = addText("hexagram-label", model.hexagramLabel, y, px(28), 1, "muted", latin ? "latin" : "body") + 4;
+    if (withChart && model.chart) {
+      const chartBox = { x: left, y, width, height: Math.max(300, ALMANAC_CONTENT_BOTTOM - y) };
+      if (y + 300 > ALMANAC_CONTENT_BOTTOM) return undefined;
+      blocks.push({ kind: "hexagram", role: "chart", ...chartBox, ...layoutHexagram(model.chart, chartBox) });
+      y = chartBox.y + chartBox.height;
+    } else {
+      y = addText("hexagram", model.hexagram, y, px(38), 1, "gold", latin ? "latin" : "body");
+    }
+  }
+  if (y > ALMANAC_CONTENT_BOTTOM && !(force && compact)) return undefined;
+  blocks.push({ kind: "rule", role: "footer-rule", x: left, y: 1222, width, height: 1 });
+  const footerLines = wrapText(model.footer, width, (value) => measure(value, 26, "latin"), 2);
+  blocks.push({ kind: "text", role: "footer", x: left, y: 1240, width,
+    height: footerLines.length * 36, size: 26, color: "muted", font: "latin",
+    lines: footerLines, lineYs: footerLines.map((_, index) => 1274 + index * 36) });
+  return { width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT, blocks };
+}
+
 export type ShareCardMeasure = (text: string, size: number, font?: ShareCardFont) => number;
 
 function layoutTrend(chart: TrendChart, block: LayoutBox): {
@@ -773,6 +911,15 @@ export function drawShareCard(
     ctx.font = fontFor(fonts, font ?? "body", size);
     return ctx.measureText(text).width;
   });
+  drawShareCardLayout(ctx, layout, fonts, assets);
+}
+
+function drawShareCardLayout(
+  ctx: CanvasRenderingContext2D,
+  layout: ShareCardLayout,
+  fonts: ShareCardFonts,
+  assets: { mark?: CanvasImageSource | undefined },
+): void {
   for (const block of layout.blocks) {
     if (block.kind === "text") {
       ctx.fillStyle = COLORS[block.color];
@@ -815,4 +962,21 @@ export function drawShareCard(
       drawHexagram(ctx, block, fonts);
     }
   }
+}
+
+export function drawAlmanacShareCard(
+  ctx: CanvasRenderingContext2D,
+  model: AlmanacShareCardModel,
+  fonts: ShareCardFonts = {},
+  assets: { mark?: CanvasImageSource | undefined } = {},
+): void {
+  ctx.canvas.width = SHARE_CARD_WIDTH;
+  ctx.canvas.height = SHARE_CARD_HEIGHT;
+  ctx.fillStyle = "#0F1110";
+  ctx.fillRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
+  const layout = layoutAlmanacShareCard(model, (text, size, font) => {
+    ctx.font = fontFor(fonts, font ?? "body", size);
+    return ctx.measureText(text).width;
+  });
+  drawShareCardLayout(ctx, layout, fonts, assets);
 }

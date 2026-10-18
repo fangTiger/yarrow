@@ -14,6 +14,9 @@ if (backend instanceof FileBackend) {
 }
 // 后台任务交给 waitUntil，响应返回后继续起卦与落笔。
 setBackgroundKeepAlive(waitUntil);
-const { api, metrics, statsToken } = createSanyiRuntime({ backend, logger: createConsoleLogger() });
+const { api, metrics, dailyHexagram, statsToken } = createSanyiRuntime({
+  backend,
+  logger: createConsoleLogger(),
+});
 
-export default createFrontendHandler({ api, metrics, statsToken });
+export default createFrontendHandler({ api, metrics, dailyHexagram, statsToken });

@@ -13,6 +13,9 @@ import {
 } from "../lib/almanac-en.js";
 import { api, type NowResponse } from "../lib/api.js";
 import { useLang, type Lang } from "../lib/i18n.js";
+import type { DailyHexagram } from "../../src/sanyi/daily-hexagram.js";
+import { buildAlmanacShareCard, drawAlmanacShareCard } from "../lib/share-card.js";
+import { ShareImageButton } from "./ShareImageButton.js";
 
 export interface DailyAlmanacView {
   solarDate: string;
@@ -134,11 +137,13 @@ export async function loadDailyAlmanac(
 
 export function DailyAlmanac(props: {
   data?: NowResponse | null;
+  hexagram?: DailyHexagram | null;
   defaultExpanded?: boolean;
 }) {
   const { lang, t } = useLang();
   const [value, setValue] = useState<NowResponse | null | undefined>(props.data);
   const [expanded, setExpanded] = useState(props.defaultExpanded ?? false);
+  const [hexagram, setHexagram] = useState<DailyHexagram | null | undefined>(props.hexagram);
   const bodyId = useId();
   const titleId = useId();
 
@@ -154,8 +159,21 @@ export function DailyAlmanac(props: {
     return () => { active = false; };
   }, [props.data]);
 
+  useEffect(() => {
+    if (props.hexagram !== undefined) {
+      setHexagram(props.hexagram);
+      return undefined;
+    }
+    let active = true;
+    void api.getDailyHexagram().then((result) => { if (active) setHexagram(result); }).catch(() => {
+      if (active) setHexagram(null);
+    });
+    return () => { active = false; };
+  }, [props.hexagram]);
+
   if (!value) return null;
   const view = buildDailyAlmanacView(value, lang);
+  const shareModel = buildAlmanacShareCard(view, lang, hexagram ?? undefined);
   const facts = [
     [t("daily.officer"), view.officer],
     [t("daily.clash"), view.clash],
@@ -187,7 +205,20 @@ export function DailyAlmanac(props: {
           <ActivityRow kind="good" label={t("daily.goodFor")} values={view.suitable} />
           <ActivityRow kind="bad" label={t("daily.avoid")} values={view.avoid} />
         </div>
-        <a className="daily-almanac-cta" href={view.href}>{t("daily.cta")}</a>
+        <div className="daily-almanac-actions">
+          <a className="daily-almanac-cta" href={view.href}>{t("daily.cta")}</a>
+          <ShareImageButton key={`${lang}-${value.solar.text}-${hexagram?.block.hash ?? "pending"}`}
+            busyLabel={t("share.generating")} closeLabel={t("share.close")}
+            dialogTitle={t("daily.shareDialog")} downloadLabel={t("share.download")}
+            fileName={`yarrow-almanac-${value.solar.text.slice(0, 10)}.png`}
+            generateFailed={t("share.generateFailed")} previewAlt={t("daily.sharePreview")}
+            shareFailed={t("share.shareFailed")} shareLabel={t("share.share")}
+            triggerLabel={t("daily.share")}
+            draw={(context, assets) => drawAlmanacShareCard(context, shareModel, {
+              brush: '"Ma Shan Zheng Subset", "Kaiti SC", "STKaiti", "KaiTi", serif',
+              body: '"Songti SC", "STSong", Georgia, serif', latin: "Georgia, serif",
+            }, assets)} />
+        </div>
       </div>
     </section>
   );

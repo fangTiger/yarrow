@@ -2,9 +2,11 @@ import type { SanyiLogger } from "./log.js";
 import type { DocumentBackend } from "./storage.js";
 
 export const READING_KINDS = ["question", "destiny", "fortune", "naming"] as const;
+export const PAYMENT_FAILURE_KINDS = ["rejected", "insufficient", "wrong-chain", "claim", "other"] as const;
+export type PaymentFailureKind = typeof PAYMENT_FAILURE_KINDS[number];
 export type ReadingKind = typeof READING_KINDS[number];
 export type FrontendMetricEvent = "home_view" | "wallet_connect_click" | "pay_click"
-  | `sample_view:${ReadingKind}`;
+  | `sample_view:${ReadingKind}` | `pay_failed:${PaymentFailureKind}`;
 export type MetricEvent = FrontendMetricEvent
   | `reading_created:${ReadingKind}`
   | `reading_done:${ReadingKind}`
@@ -28,6 +30,7 @@ const FRONTEND_EVENTS = new Set<string>([
   "wallet_connect_click",
   "pay_click",
   ...READING_KINDS.map((kind) => `sample_view:${kind}`),
+  ...PAYMENT_FAILURE_KINDS.map((kind) => `pay_failed:${kind}`),
 ]);
 
 const ALL_EVENTS = new Set<string>([

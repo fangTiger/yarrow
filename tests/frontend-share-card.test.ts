@@ -6,12 +6,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { EnglishSummary } from "../web/components/EnglishReadingSections.js";
 import { PlainSummaryPanel } from "../web/components/PlainSummaryPanel.js";
 import { ShareCard } from "../web/components/ShareCard.js";
+import { buildDailyAlmanacView } from "../web/components/DailyAlmanac.js";
 import type { AnyPublicReading } from "../web/lib/api.js";
+import { almanacAt } from "../src/calendar/almanac.js";
+import type { DailyHexagram } from "../src/sanyi/daily-hexagram.js";
 import { enT, zhT } from "../web/lib/i18n.js";
 import { stemBranchEn } from "../web/lib/result-format.js";
 import { localizedSampleReading } from "../web/pages/SampleReading.js";
 import {
-  buildShareCard, layoutShareCard, wrapText, type ShareCardModel,
+  buildAlmanacShareCard, buildShareCard, layoutAlmanacShareCard, layoutShareCard, wrapText,
+  type ShareCardModel,
 } from "../web/lib/share-card.js";
 import { renderIn } from "./helpers/render-in.js";
 
@@ -308,5 +312,67 @@ test("内容多时自动收紧：中英文三类卡片的正文都不压到卡�
       assert.ok(trend.points[0]!.x >= trend.x + 40, `${file} 走势首点贴边`);
       assert.ok(trend.points.at(-1)!.x <= trend.x + trend.width - 40, `${file} 走势末点贴边`);
     }
+  }
+});
+
+const almanac = almanacAt(BigInt(Date.parse("2026-10-16T12:00:00+08:00") / 1_000));
+const dailyHexagram: DailyHexagram = {
+  date: "2026-10-16",
+  block: { number: "123", hash: `0x${"12".repeat(32)}`, timestamp: "1792123200" },
+  lines: [8, 6, 7, 7, 8, 7],
+  chainId: 5_042,
+};
+
+test("黄历分享模型含日期农历、宜忌、冲煞、方位、今日卦名、品牌与网址", () => {
+  const zh = buildAlmanacShareCard(buildDailyAlmanacView(almanac, "zh"), "zh", dailyHexagram);
+  const text = JSON.stringify(zh);
+  for (const expected of ["2026年10月16日", "农历二〇二六年九月初七", "宜", "忌",
+    "冲（丁巳）蛇", "喜神东南", "今日一卦", "三易", "yarrow-six.vercel.app"]) {
+    assert.ok(text.includes(expected), expected);
+  }
+  const withoutHexagram = buildAlmanacShareCard(buildDailyAlmanacView(almanac, "zh"), "zh");
+  assert.equal(withoutHexagram.hexagram, undefined);
+});
+
+test("英文黄历分享模型除绘制阶段品牌印外无汉字", () => {
+  const model = buildAlmanacShareCard(buildDailyAlmanacView(almanac, "en"), "en", dailyHexagram);
+  const text = JSON.stringify(model);
+  assert.match(text, /October 16, 2026/u);
+  assert.match(text, /Ninth lunar month/u);
+  assert.match(text, /Good for/u);
+  assert.match(text, /Avoid/u);
+  assert.match(text, /Today's hexagram/u);
+  assert.match(text, /Yarrow/u);
+  assert.doesNotMatch(text, /\p{Script=Han}/u);
+});
+
+test("黄历分享布局沿用 1080×1350 画布并约束全部区块", () => {
+  for (const lang of ["zh", "en"] as const) {
+    const model = buildAlmanacShareCard(buildDailyAlmanacView(almanac, lang), lang, dailyHexagram);
+    const layout = layoutAlmanacShareCard(model, (text, size) => text.length * size * 0.7);
+    assert.deepEqual({ width: layout.width, height: layout.height }, { width: 1080, height: 1350 });
+    assert.ok(layout.blocks.every((block) => block.x >= 0 && block.y >= 0));
+    assert.ok(layout.blocks.every((block) => block.x + block.width <= layout.width));
+    assert.ok(layout.blocks.every((block) => block.y + block.height <= layout.height));
+  }
+});
+
+test("黄历长文案会收紧截断但不会丢掉已取得的今日卦名", () => {
+  const base = buildAlmanacShareCard(buildDailyAlmanacView(almanac, "en"), "en", dailyHexagram);
+  const long = "A deliberately long translated almanac phrase that must wrap safely without hiding the hexagram";
+  const model = {
+    ...base,
+    dateLine: [long, long],
+    clash: `${long} ${long}`,
+    directions: `${long} ${long}`,
+    suitable: Array(8).fill(long),
+    avoid: Array(8).fill(long),
+  };
+  const layout = layoutAlmanacShareCard(model, (text, size) => text.length * size * .52);
+  const footerRule = layout.blocks.find((block) => block.role === "footer-rule")!;
+  assert.ok(layout.blocks.some((block) => block.role === "hexagram"));
+  for (const block of layout.blocks) {
+    if (["frame", "footer", "footer-rule"].includes(block.role)) continue;
+    assert.ok(block.y + block.height <= footerRule.y, `${block.role} 压到卡尾`);
   }
 });

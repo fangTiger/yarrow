@@ -18,6 +18,13 @@ test("付款钩子使用服务器配置与单笔写合约并等待回执", async
   assert.match(source, /walletErrorMessage\(/u);
   assert.doesNotMatch(source, /sendCalls|forceAtomic|deposit|allowance|approve/u);
 });
+
+test("付款按钮只对非表单校验失败上报分类且不拼接错误原文", async () => {
+  const source = await readFile("web/components/PaymentButton.tsx", "utf8");
+  assert.match(source, /if \(!failure\.missingBirth\)[\s\S]*track\(`pay_failed:\$\{kind\}`\)/u);
+  assert.match(source, /!isFormValidationFailure\(caught\)/u);
+  assert.doesNotMatch(source, /pay_failed:[^`]*message|pay_failed:[^`]*transactionHash/u);
+});
 test("首页与结果页均放置钱包栏且付款区承载测试币引导", async () => {
   const [home, reading, button, bar, guide, styles] = await Promise.all([
     readFile("web/pages/Home.tsx", "utf8"), readFile("web/components/ReadingTopbar.tsx", "utf8"),

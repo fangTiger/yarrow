@@ -10,6 +10,7 @@ import { useT } from "../lib/i18n.js";
 import { ARC_NETWORK } from "../lib/wagmi.js";
 import { Luopan } from "../components/Luopan.js";
 import { DailyAlmanac } from "../components/DailyAlmanac.js";
+import { DailyHexagram } from "../components/DailyHexagram.js";
 import { track } from "../lib/metrics.js";
 
 export function HomeContent() {
@@ -27,6 +28,7 @@ export function HomeContent() {
       </div>
     </section>
     <DailyAlmanac />
+    <DailyHexagram />
     <section aria-label={t("home.sectionLabel")} className="home-main"><QuestionForm /></section>
   </>;
 }

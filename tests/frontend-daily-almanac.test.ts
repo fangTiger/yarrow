@@ -143,6 +143,11 @@ test("接口拒绝时加载器返回空终态", async () => {
   assert.equal(await load!(() => Promise.reject(new Error("接口不可用"))), null);
 });
 
+test("黄历卡提供中英文分享入口", () => {
+  assert.match(rendered("zh"), />分享今日黄历<\/button>/u);
+  assert.match(rendered("en"), />Share today&#x27;s almanac<\/button>/u);
+});
+
 test("首页内点击运势入口后，hashchange 把问题、类型与 today 应用到表单", async () => {
   const formModule = await import("../web/components/QuestionForm.js");
   type Prefill = { question?: string; choice: { kind?: string; horizon?: string } };

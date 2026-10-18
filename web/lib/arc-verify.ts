@@ -1,5 +1,6 @@
 // web/lib/arc-verify.ts
 import { encodePacked, keccak256, type Hex } from "viem";
+import { deriveDailyLines, type DailyHexagram } from "../../src/sanyi/daily-hexagram.js";
 
 /** Arc 上 USDC 的 ERC-20 接口地址（主网与测试网相同）。 */
 export const ARC_USDC = "0x3600000000000000000000000000000000000000";
@@ -25,6 +26,16 @@ export interface ArcReader {
     logs: ReadonlyArray<{ address: string; topics: readonly string[]; data: string }>;
   }>;
   getBlock(blockNumber: bigint): Promise<{ hash: string | null; timestamp: bigint }>;
+}
+
+export interface DailyBlockReader {
+  getBlock(blockNumber: bigint): Promise<{ hash: string | null; timestamp: bigint }>;
+}
+
+export interface DailyHexagramCheck {
+  ok: boolean;
+  hashOk: boolean;
+  lines: readonly number[];
 }
 
 export interface PaymentCheck {
@@ -143,4 +154,18 @@ export async function verifyOnArc(reader: ArcReader, input: {
     ? await checkThrows(reader, input.paymentTxHash, payment.blockNumber, input.question, input.throws)
     : [];
   return { ok: payment.ok && throws.every((item) => item.ok), payment, throws };
+}
+
+/** 浏览器直读每日卦区块，核对区块哈希后按公开公式复算六爻。 */
+export async function verifyDailyHexagram(
+  reader: DailyBlockReader,
+  value: DailyHexagram,
+): Promise<DailyHexagramCheck> {
+  const block = await reader.getBlock(BigInt(value.block.number));
+  const chainHash = block.hash?.toLowerCase();
+  const hashOk = Boolean(chainHash) && chainHash === value.block.hash.toLowerCase();
+  const lines = chainHash ? deriveDailyLines(chainHash as Hex, value.date) : [];
+  const linesOk = lines.length === value.lines.length
+    && lines.every((line, index) => line === value.lines[index]);
+  return { ok: hashOk && linesOk, hashOk, lines };
 }

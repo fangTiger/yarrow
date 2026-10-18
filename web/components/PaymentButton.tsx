@@ -10,7 +10,7 @@ import { useFeePayment } from "../lib/use-fee-payment.js";
 import type { ClassificationView } from "../lib/home-entry.js";
 import type { NamingRequest } from "../lib/home-entry.js";
 import { useLang, useT } from "../lib/i18n.js";
-import { paymentFailure } from "../lib/payment-error.js";
+import { isFormValidationFailure, paymentFailure, paymentFailureKind } from "../lib/payment-error.js";
 import { WalletPaymentGuide } from "./WalletPaymentGuide.js";
 import { track } from "../lib/metrics.js";
 export function PaymentButton(props: {
@@ -32,8 +32,10 @@ export function PaymentButton(props: {
     setBusy(true);
     setError("");
     setExistingReadingId(undefined);
+    let hasPaymentProof = Boolean(paidProof);
     try {
       const feeProof = paidProof ?? await pay();
+      hasPaymentProof = true;
       setPaidProof(feeProof);
       const reading = await api.createReading(props.naming
         ? { ...props.naming, feeProof, lang }
@@ -57,6 +59,12 @@ export function PaymentButton(props: {
       const failure = paymentFailure(caught, t);
       if (failure.missingBirth) {
         props.onMissingBirth?.();
+      }
+      if (!failure.missingBirth) {
+        if (!isFormValidationFailure(caught)) {
+          const kind = paymentFailureKind(caught, { hasPaymentProof });
+          track(`pay_failed:${kind}`);
+        }
       }
       setError(failure.message);
       setExistingReadingId(failure.readingId);

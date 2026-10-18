@@ -10,6 +10,7 @@ import { planFeePayment, PREFLIGHT_GAS_UNITS } from "./fee-plan.js";
 import { walletErrorMessage } from "./wallet-errors.js";
 import { ARC_CHAIN_ID, arcChain } from "./wagmi.js";
 import { useT } from "./i18n.js";
+import { PaymentFlowError } from "./payment-error.js";
 
 export function useFeePayment() {
   const t = useT();
@@ -66,7 +67,11 @@ export function useFeePayment() {
       }
       setConnectionMessage("");
       if (getAccount(config).chainId !== ARC_CHAIN_ID) {
-        await switchChainAsync({ chainId: ARC_CHAIN_ID });
+        try {
+          await switchChainAsync({ chainId: ARC_CHAIN_ID });
+        } catch (error) {
+          throw new PaymentFlowError("wrong-chain", { cause: error });
+        }
       }
       if (!publicClient) {
         throw new Error(t("payment.walletNotReady"));
@@ -82,7 +87,7 @@ export function useFeePayment() {
       setEstimatedGasWei18(gasPrice * PREFLIGHT_GAS_UNITS);
       const planned = planFeePayment({ erc20Balance, nativeBalance, gasPrice });
       if (planned.shortfall.missingErc20Usdc6 || planned.shortfall.missingNativeWei18) {
-        throw new Error(t("errors.walletBalance"));
+        throw new PaymentFlowError("insufficient");
       }
       // 切网和连接完成后重新取得钱包，避免使用旧网络的客户端。
       const walletClient = await getWalletClient(config, { chainId: ARC_CHAIN_ID });

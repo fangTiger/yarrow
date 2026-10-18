@@ -21,6 +21,7 @@ import {
   type UsageMetrics,
 } from "../sanyi/metrics.js";
 import { PaymentAlreadyUsedError } from "../sanyi/reading-service.js";
+import type { DailyHexagram } from "../sanyi/daily-hexagram.js";
 import type { BaziSchoolKey } from "../sanyi/schools/bazi-shared.js";
 import type { QuestionSchoolKey } from "../sanyi/schools/index.js";
 import type { NamingFamilyKey } from "../sanyi/naming/schema.js";
@@ -32,6 +33,7 @@ interface FrontendServerOptions {
   api?: SanyiApi;
   metrics?: UsageMetrics;
   statsToken?: string;
+  dailyHexagram?: { get(): Promise<DailyHexagram> };
 }
 const CONTENT_TYPES: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -64,9 +66,9 @@ export function resolveStaticPath(publicDir: string, pathname: string): string |
   const fromRoot = relative(resolve(publicDir), candidate);
   return fromRoot.startsWith("..") || isAbsolute(fromRoot) ? null : candidate;
 }
-function json(response: ServerResponse, status: number, payload: unknown): void {
+function json(response: ServerResponse, status: number, payload: unknown, cacheControl = "no-store"): void {
   response.writeHead(status, {
-    "cache-control": "no-store",
+    "cache-control": cacheControl,
     "content-type": "application/json; charset=utf-8",
   });
   response.end(JSON.stringify(payload));
@@ -184,6 +186,10 @@ export function createFrontendHandler(options: FrontendServerOptions = {}): Fron
         json(response, 200, { days: await metrics.recentDays(days) });
         return;
       }
+      if (request.method === "GET" && url.pathname === "/api/daily-hexagram" && options.dailyHexagram) {
+        json(response, 200, await options.dailyHexagram.get(), "public, max-age=300");
+        return;
+      }
       if (request.method === "GET" && url.pathname === "/api/payment" && api) {
         json(response, 200, await api.payment());
         return;
@@ -277,14 +283,14 @@ export function createFrontendServer(options: FrontendServerOptions = {}): Serve
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const clock = () => new Date();
-  const { api, service, network, recipient, metrics, statsToken } = createSanyiRuntime({
+  const { api, service, network, recipient, metrics, dailyHexagram, statsToken } = createSanyiRuntime({
     backend: backendFromEnv(process.env),
     logger: createSanyiLogger("log", clock),
     clock,
   });
   const port = Number(process.env.FRONTEND_PORT ?? "4173");
   const host = process.env.FRONTEND_HOST ?? "127.0.0.1";
-  createFrontendServer({ api, metrics, statsToken }).listen(port, host, () => {
+  createFrontendServer({ api, metrics, dailyHexagram, statsToken }).listen(port, host, () => {
     console.log(`三易服务已启动：http://${host}:${port}（${network.name}）`);
     console.log(`三易收款地址：${recipient}`);
     console.log("问事卦金：0.05 USDC；付款后自动六掷，三家依同一卦独立落笔");
