@@ -61,7 +61,8 @@ export function resolveStaticPath(publicDir: string, pathname: string): string |
   if (decoded.includes("\0")) {
     return null;
   }
-  const requested = decoded === "/" ? "/index.html" : decoded;
+  const requested = decoded === "/" ? "/index.html"
+    : decoded.endsWith("/") ? `${decoded}index.html` : decoded;
   const candidate = resolve(publicDir, `.${requested}`);
   const fromRoot = relative(resolve(publicDir), candidate);
   return fromRoot.startsWith("..") || isAbsolute(fromRoot) ? null : candidate;

@@ -26,7 +26,7 @@
     "replay:deepseek:full": "node --env-file=.env --import tsx scripts/run-deepseek-replay.ts --mode=full",
     "replay:deepseek:ablation": "node --env-file=.env --import tsx scripts/run-deepseek-ablation.ts",
     "replay:ablation": "node --import tsx scripts/run-ablation.ts",
-    "frontend:build": "node --env-file-if-exists=.env --import tsx scripts/build-frontend.ts",
+    "frontend:build": "node --env-file-if-exists=.env --import tsx scripts/build-frontend.ts && node --import tsx scripts/build-hexagram-pages.ts",
     "vercel:build": "npm run frontend:build && node --import tsx scripts/build-vercel.ts",
     "vercel:prune": "node --import tsx scripts/prune-vercel-deployments.ts",
     "brand:icons": "node --import tsx scripts/build-brand-icons.ts",

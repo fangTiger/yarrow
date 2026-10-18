@@ -42,6 +42,8 @@ test("中英文首页渲染一句话、三步、示例入口且免责声明只�
   assert.match(english, /Arc testnet.*no real money/isu);
   assert.match(english, /See a sample reading/u);
   assert.equal((english.match(/For reference and self-reflection only/gu) ?? []).length, 1);
+  assert.match(english, /href="\/hexagram\/"[^>]*>I Ching hexagrams</u);
+  assert.doesNotMatch(zh, /href="\/hexagram\/"/u);
   const visible = english.replace(/<[^>]+>/gu, " ").replaceAll("问", "");
   assert.doesNotMatch(visible, /[\p{Script=Han}]/u);
 });

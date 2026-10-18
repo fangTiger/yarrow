@@ -9,6 +9,7 @@ import { api } from "../lib/api.js";
 import {
   elementEn, hexagramEn, relativeEn, spiritEn, stemBranchEn, strengthEn, subjectEn,
 } from "../lib/result-format.js";
+import { hexagramPath } from "../lib/hexagram-path.js";
 import { useT } from "../lib/i18n.js";
 import { AlmanacPanel } from "./AlmanacPanel.js";
 import { EnglishRemedy, EnglishSchoolArticle, EnglishSummary } from "./EnglishReadingSections.js";
@@ -61,7 +62,8 @@ export function EnglishQuestionResult(props: {
         label={`${hexagramEn(primary.kingWenNumber)}; ${moving.join(", ")}`}
         lines={primary.yangLines} moving={moving} />
         <div className="hexagram-title"><span className="label">{t("question.primary")}</span>
-          <h1 id="hexagram-title">{hexagramEn(primary.kingWenNumber)}</h1>
+          <h1 id="hexagram-title"><a href={hexagramPath(primary.kingWenNumber)}>
+            {hexagramEn(primary.kingWenNumber)}</a></h1>
           <p>{t("question.moving", {
             lines: moving.length ? moving.join(", ") : t("question.none"),
             derived: hexagramEn(figures.derived.kingWenNumber),

@@ -6,7 +6,7 @@ import { WalletBar } from "../components/WalletBar.js";
 import { loadRecentReadings } from "../lib/recent-readings.js";
 import { LangToggle } from "../components/LangToggle.js";
 import { TopbarBrand } from "../components/TopbarBrand.js";
-import { useT } from "../lib/i18n.js";
+import { useLang } from "../lib/i18n.js";
 import { ARC_NETWORK } from "../lib/wagmi.js";
 import { Luopan } from "../components/Luopan.js";
 import { DailyAlmanac } from "../components/DailyAlmanac.js";
@@ -14,7 +14,7 @@ import { DailyHexagram } from "../components/DailyHexagram.js";
 import { track } from "../lib/metrics.js";
 
 export function HomeContent() {
-  const t = useT();
+  const { lang, t } = useLang();
   return <>
     <section aria-label={t("home.stepsLabel")} className="home-intro">
       <div className="home-luopan"><Luopan home /></div>
@@ -30,6 +30,9 @@ export function HomeContent() {
     <DailyAlmanac />
     <DailyHexagram />
     <section aria-label={t("home.sectionLabel")} className="home-main"><QuestionForm /></section>
+    {lang === "en" ? <footer className="hexagram-index-entry">
+      <a href="/hexagram/">I Ching hexagrams</a>
+    </footer> : null}
   </>;
 }
 

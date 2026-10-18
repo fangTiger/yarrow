@@ -241,7 +241,8 @@ function kingWenNumber(yangLines: readonly boolean[]): number {
   return number;
 }
 
-function yangLinesFromKingWen(number: number): readonly boolean[] {
+/** 按文王序返回自初爻至上爻的阴阳位；静态卦页与六爻排盘共用同一映射。 */
+export function getHexagramYangLines(number: number): readonly boolean[] {
   const index = KING_WEN.indexOf(number);
   if (index < 0) throw new Error(`文王卦序 ${number} 没有阴阳位映射`);
   return Array.from({ length: 6 }, (_, position) => (index & (1 << position)) !== 0);
@@ -339,7 +340,8 @@ export function deriveSolarMonth(timestamp: bigint): SolarMonth {
   };
 }
 
-function trigramName(lines: readonly boolean[]): PalaceName {
+/** 按自下而上的三爻返回八卦名。 */
+export function getTrigramName(lines: readonly boolean[]): PalaceName {
   const index = lines.reduce((value, yang, position) => value | (yang ? 1 << position : 0), 0);
   return TRIGRAM_BY_INDEX[index]!;
 }
@@ -383,8 +385,8 @@ function relationFor(palaceElement: FiveElement, lineElement: FiveElement): SixR
 }
 
 function rawNajia(yangLines: readonly boolean[]): readonly string[] {
-  const lower = trigramName(yangLines.slice(0, 3));
-  const upper = trigramName(yangLines.slice(3, 6));
+  const lower = getTrigramName(yangLines.slice(0, 3));
+  const upper = getTrigramName(yangLines.slice(3, 6));
   return [...NAJIA[lower].inner, ...NAJIA[upper].outer];
 }
 
@@ -463,15 +465,15 @@ export function buildLiuyaoChart(input: {
   validateLines(input.lines);
   const five = deriveFiveHexagrams(input.lines);
   const palace = palaceFor(five.primary.kingWenNumber);
-  const lowerTrigram = trigramName(five.primary.yangLines.slice(0, 3));
-  const upperTrigram = trigramName(five.primary.yangLines.slice(3, 6));
+  const lowerTrigram = getTrigramName(five.primary.yangLines.slice(0, 3));
+  const upperTrigram = getTrigramName(five.primary.yangLines.slice(3, 6));
   const day = deriveSexagenaryDay(input.timestamp);
   const month = deriveSolarMonth(input.timestamp);
   const primaryNajia = rawNajia(five.primary.yangLines).map((item) => decorateNajia(item, palace.element, day.voidBranches, month));
   const changedNajia = rawNajia(five.derived.yangLines).map((item) => decorateNajia(item, palace.element, day.voidBranches, month));
   const visibleRelations = new Set(primaryNajia.map((item) => item.relation));
   const palaceRootNumber = PALACES.find((item) => item.name === palace.name)!.kingWenNumbers[0]!;
-  const palaceRootNajia = rawNajia(yangLinesFromKingWen(palaceRootNumber)).map((item) => decorateNajia(item, palace.element, [], month));
+  const palaceRootNajia = rawNajia(getHexagramYangLines(palaceRootNumber)).map((item) => decorateNajia(item, palace.element, [], month));
   const spiritStart = SPIRIT_START_BY_STEM[day.stem];
   if (spiritStart === undefined) throw new Error(`日干 ${day.stem} 没有六神起法`);
   const shiPosition = SHI_POSITIONS[palace.index]!;

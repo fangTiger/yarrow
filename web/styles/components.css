@@ -216,6 +216,7 @@ html:lang(en) .luopan-trigram-label { font-size: 9px !important; }
   font-family: var(--brush);
   font-size: clamp(44px, 6vw, 60px);
 }
+.hexagram-title h1 a { color: inherit; text-decoration-color: var(--line-strong); text-underline-offset: 5px; }
 .hexagram-title b {
   color: var(--gold);
   font-family: var(--brush);
@@ -807,6 +808,7 @@ html:lang(en) .luopan-trigram-label { font-size: 9px !important; }
 .home-steps span { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--gold);
   border-radius: 50%; color: var(--gold); font-family: var(--sans); font-size: 12px; }
 .result-footer { margin: 22px auto 0; color: var(--dim); font-size: 12px; text-align: center; }
+.hexagram-index-entry { margin: 24px auto 0; font-size: 13px; text-align: center; }
 .home-form {
   display: grid;
   gap: 16px;

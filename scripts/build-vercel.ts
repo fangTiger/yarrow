@@ -23,7 +23,8 @@ await mkdir(functionDir, { recursive: true });
 
 const STATIC_ENTRIES = [
   "index.html", "favicon.ico", "favicon.svg", "apple-touch-icon.png", "llms.txt",
-  "dist", "brand", "samples", "fonts/mashanzheng-subset.woff2", "fonts/OFL.txt",
+  "dist", "brand", "samples", "hexagram", "sitemap.xml", "robots.txt",
+  "fonts/mashanzheng-subset.woff2", "fonts/OFL.txt",
 ];
 for (const entry of STATIC_ENTRIES) {
   await cp(resolve(rootDir, "web", entry), resolve(staticDir, entry), { recursive: true });

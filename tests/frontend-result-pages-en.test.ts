@@ -8,6 +8,7 @@ import { sourceHash } from "../src/sanyi/translation/service.js";
 import type { StoredTranslation } from "../src/sanyi/translation/store.js";
 import { extractUnits } from "../src/sanyi/translation/units.js";
 import { deriveFiveHexagrams } from "../src/oracle/liuyao-chart.js";
+import { hexagramPath } from "../web/lib/hexagram-path.js";
 import { BaziReading } from "../web/pages/BaziReading.js";
 import { NamingReading } from "../web/pages/NamingReading.js";
 import { QuestionResult } from "../web/pages/Reading.js";
@@ -110,6 +111,7 @@ test("问事结果页中英渲染：英文用术语与离线古文，隐藏 evid
   assert.match(en, /Career &amp; status/u);
   assert.match(en, /Favorable · A clear opening/u);
   assert.match(en, /Translation by Yarrow/u);
+  assert.match(en, new RegExp(`href="${hexagramPath(figures.primary.kingWenNumber)}"`, "u"));
   // 原文仍可查：收在默认收起的折叠区里。
   assert.match(en, new RegExp(`<details class="classic-originals"><summary>Show the original Chinese text</summary>[\\s\\S]*${figures.primary.judgement}`, "u"));
   assert.doesNotMatch(en, /<details class="classic-originals" open/u);
