@@ -127,6 +127,7 @@ function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
     payment: async () => ({}) as never,
     now: async () => ({}) as never,
     classify: async () => ({}) as never,
+    dayMaster: async () => ({ stem: "癸", element: "水", yinYang: "yin", slug: "gui-water" }),
     createReading: async () => reading() as never,
     continueCasting: async () => reading() as never,
     retrySummary: async () => reading() as never,

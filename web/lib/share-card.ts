@@ -3,6 +3,7 @@ import type { DailyHexagram } from "../../src/sanyi/daily-hexagram.js";
 import type { DailyAlmanacView } from "../components/DailyAlmanac.js";
 import type { AnyPublicReading } from "./api.js";
 import type { Lang, TFunction } from "./i18n.js";
+import type { DayMasterProfile } from "../../src/content/day-masters.js";
 import { applyReadingTranslation, isNativeEnglishReading } from "./reading-translation.js";
 import {
   confidenceEn, hexagramEn, schoolEn, stemBranchEn, verdictEn,
@@ -36,7 +37,7 @@ export interface HexagramChart {
 }
 
 export interface ShareCardModel {
-  kind: ShareReading["kind"];
+  kind: ShareReading["kind"] | "day-master";
   brand: string;
   title: string;
   question?: string | undefined;
@@ -46,6 +47,30 @@ export interface ShareCardModel {
   chart?: TrendChart | HexagramChart | undefined;
   footer: string;
   sample: boolean;
+}
+
+/** 日主卡只接收公开短介绍，不接收生辰，因此绘制链路无法带入出生资料。 */
+export function buildDayMasterShareCard(
+  profile: DayMasterProfile,
+  lang: Lang,
+): ShareCardModel {
+  const copy = profile[lang];
+  return {
+    kind: "day-master",
+    brand: lang === "zh" ? "三易" : "Yarrow",
+    title: lang === "zh" ? "我的日主" : "My Day Master",
+    headline: copy.name,
+    // 优势与需留意填满卡片下半部；仍只用公开短介绍，不含任何生辰。
+    lines: [
+      `${copy.yinYang} · ${copy.image}`,
+      copy.summary,
+      `${lang === "zh" ? "优势：" : "Strengths: "}${copy.strengths.join(lang === "zh" ? "；" : "; ")}`,
+      `${lang === "zh" ? "需留意：" : "Keep in mind: "}${copy.watch.join(lang === "zh" ? "；" : "; ")}`,
+    ],
+    chips: [...copy.keywords],
+    footer: "yarrow-six.vercel.app",
+    sample: false,
+  };
 }
 
 export interface AlmanacShareCardModel {
@@ -714,7 +739,12 @@ export function layoutShareCard(model: ShareCardModel, measure: ShareCardMeasure
       });
       return y + lines.length * lineHeight;
     };
-    let y = addText("title", model.title, contentTop + offset, 72, 1, "gold", latin ? "latin" : "brush", 1.3) + 22;
+    const dayMaster = model.kind === "day-master";
+    let y = addText("title", model.title, contentTop + offset, dayMaster ? 42 : 72, 1,
+      "gold", latin ? "latin" : "brush", 1.3) + 22;
+    if (dayMaster) {
+      y = addText("headline", model.headline, y, 104, 2, "paper", latin ? "latin" : "brush", 1.18) + 28;
+    }
     if (model.question) {
       y = addText("question-label", model.question, y, 32, 2, "muted") + 20;
     }
@@ -747,11 +777,13 @@ export function layoutShareCard(model: ShareCardModel, measure: ShareCardMeasure
       y += rows + 30;
     }
     // 结论排不下时先缩字号再截断：英文总评常比中文长一倍。
-    const headlineSize = model.kind === "question" ? 46 : 48;
-    const fitsAt = (size: number) => wrapText(model.headline, width, (value) => measure(value, size, "body"),
-      fit.headline + 1).length <= fit.headline;
-    const headlineFinal = fitsAt(headlineSize) ? headlineSize : fitsAt(40) ? 40 : headlineSize - 6;
-    y = addText("headline", model.headline, y, headlineFinal, fit.headline) + 26;
+    if (!dayMaster) {
+      const headlineSize = model.kind === "question" ? 46 : 48;
+      const fitsAt = (size: number) => wrapText(model.headline, width, (value) => measure(value, size, "body"),
+        fit.headline + 1).length <= fit.headline;
+      const headlineFinal = fitsAt(headlineSize) ? headlineSize : fitsAt(40) ? 40 : headlineSize - 6;
+      y = addText("headline", model.headline, y, headlineFinal, fit.headline) + 26;
+    }
     if (model.chart) {
       const chartBox = { x: left, y, width, height: chartHeight };
       if (model.chart.kind === "trend") {
@@ -762,7 +794,10 @@ export function layoutShareCard(model: ShareCardModel, measure: ShareCardMeasure
       y += chartHeight + 26;
     }
     for (const [index, line] of model.lines.entries()) {
-      y = addText(`line-${index}`, line, y, 30, model.kind === "question" ? 2 : fit.lines) + 14;
+      // 日主卡没有图表，保留足够行数完整呈现一句短介绍；其他卡仍按紧凑档位收缩。
+      const maxLines = dayMaster ? (index === 0 ? 2 : 10)
+        : model.kind === "question" ? 2 : fit.lines;
+      y = addText(`line-${index}`, line, y, 30, maxLines) + 14;
     }
     return { blocks, end: y };
   };

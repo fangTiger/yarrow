@@ -23,6 +23,8 @@ import { isSurname } from "./naming/lexicon.js";
 import type { TranslationService } from "./translation/service.js";
 import type { StoredTranslation } from "./translation/store.js";
 import { isNativeEnglishKind } from "./native-english.js";
+import { buildBirthChart } from "./birth-chart.js";
+import { dayMasterByStem, type DayMasterElement, type DayMasterYinYang } from "../content/day-masters.js";
 type ServiceBoundary = Pick<
   ReadingService,
   "createQuestionReading" | "continueCasting" | "getReading" | "retrySchool" | "changeSubject" | "retrySummary"
@@ -47,10 +49,17 @@ export interface PaymentConfiguration {
   token: Address;
   chainId: number;
 }
+export interface DayMasterResponse {
+  stem: string;
+  element: DayMasterElement;
+  yinYang: DayMasterYinYang;
+  slug: string;
+}
 export interface SanyiApi {
   payment(): Promise<PaymentConfiguration>;
   now(): Promise<ReturnType<typeof almanacAt>>;
   classify(input: unknown): Promise<ReturnType<typeof classifyQuestion>>;
+  dayMaster(input: unknown): Promise<DayMasterResponse>;
   createReading(input: unknown): Promise<PublicReading>;
   /** 起卦因 Arc 网络暂停后继续；六掷本身由服务端在付款后自动完成。 */
   continueCasting(id: string): Promise<PublicReading>;
@@ -183,6 +192,29 @@ export function createSanyiApi(
     },
     async classify(input) {
       return classifyQuestion(questionFrom(input));
+    },
+    async dayMaster(input) {
+      const body = record(input);
+      const sect = body.sect ?? 1;
+      if (sect !== 1 && sect !== 2) {
+        throw new SanyiInputError("换日口径须为 1 或 2");
+      }
+      if (body.birth === undefined || body.birth === null) {
+        throw new SanyiInputError("请先填写生辰", "birth-required");
+      }
+      try {
+        const stem = buildBirthChart(body.birth, sect, clock().getFullYear()).chart.dayMaster;
+        const profile = dayMasterByStem(stem);
+        return {
+          stem: profile.stem,
+          element: profile.element,
+          yinYang: profile.yinYang,
+          slug: profile.slug,
+        };
+      } catch (error) {
+        if (error instanceof SanyiInputError) throw error;
+        throw new SanyiInputError("生辰格式无效，请检查填写内容", "birth-invalid");
+      }
     },
     async createReading(input) {
       const body = record(input);

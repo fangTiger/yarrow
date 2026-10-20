@@ -11,6 +11,7 @@ import { useLang, type Lang } from "../lib/i18n.js";
 import { hexagramEn } from "../lib/result-format.js";
 import { ARC_NETWORK, arcChain } from "../lib/wagmi.js";
 import { HexagramFigure } from "./HexagramFigure.js";
+import { track } from "../lib/metrics.js";
 
 export interface DailyHexagramView {
   primaryName: string;
@@ -87,6 +88,7 @@ export function DailyHexagram(props: {
   const view = buildDailyHexagramView(value, lang);
   const moving = view.moving.map((item) => item.position);
   const verify = async () => {
+    track("daily_hexagram_verify");
     setVerification("running");
     try {
       const result = await verifyDailyHexagram(props.reader ?? browserReader(), value);
@@ -123,7 +125,8 @@ export function DailyHexagram(props: {
       </div>
     </div>
     <div className="daily-hexagram-actions">
-      <a className="button button-primary" href="#/?kind=question">{t("dailyHex.cta")}</a>
+      <a className="button button-primary" href="#/?kind=question"
+        onClick={() => track("daily_hexagram_ask")}>{t("dailyHex.cta")}</a>
       {lang === "en" ? <a className="button" href={hexagramPath(view.primaryNumber)}>
         {t("dailyHex.staticPage")}</a> : null}
       <button className="button" disabled={verification === "running"}

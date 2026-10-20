@@ -11,6 +11,8 @@ import { hexagramPath } from "../web/lib/hexagram-path.js";
 
 export const SITE_ORIGIN = "https://yarrow-six.vercel.app";
 
+const PAGE_VIEW_BEACON = `<script>(()=>{fetch("/api/events",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({event:"hexagram_page_view"}),keepalive:true}).catch(()=>{})})()</script>`;
+
 const CSS = `:root {
   color-scheme: dark;
   --bg: #0f1110;
@@ -192,6 +194,7 @@ function pageFor(number: number): string {
       </div>
       <footer class="site-footer">For reference and self-reflection only; not medical, legal, or investment advice.</footer>
     </main>
+    ${PAGE_VIEW_BEACON}
   </body>
 </html>
 `;

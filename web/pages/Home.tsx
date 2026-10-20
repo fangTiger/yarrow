@@ -12,6 +12,7 @@ import { Luopan } from "../components/Luopan.js";
 import { DailyAlmanac } from "../components/DailyAlmanac.js";
 import { DailyHexagram } from "../components/DailyHexagram.js";
 import { track } from "../lib/metrics.js";
+import { DayMasterFinder } from "../components/DayMasterFinder.js";
 
 export function HomeContent() {
   const { lang, t } = useLang();
@@ -29,6 +30,7 @@ export function HomeContent() {
     </section>
     <DailyAlmanac />
     <DailyHexagram />
+    <DayMasterFinder />
     <section aria-label={t("home.sectionLabel")} className="home-main"><QuestionForm /></section>
     {lang === "en" ? <footer className="hexagram-index-entry">
       <a href="/hexagram/">I Ching hexagrams</a>

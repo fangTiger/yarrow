@@ -8,6 +8,7 @@ import type { DailyHexagram } from "../../src/sanyi/daily-hexagram.js";
 export type PaymentConfiguration = Awaited<ReturnType<SanyiApi["payment"]>>;
 export type NowResponse = Awaited<ReturnType<SanyiApi["now"]>>;
 export type Classification = Awaited<ReturnType<SanyiApi["classify"]>>;
+export type DayMasterResponse = Awaited<ReturnType<SanyiApi["dayMaster"]>>;
 export type AnyPublicReading = Awaited<ReturnType<SanyiApi["getReading"]>>;
 export type PublicReading = Extract<AnyPublicReading, { kind: "question" }>;
 export type ThrowResult = PublicReading["throws"][number];
@@ -81,6 +82,8 @@ export function createApiClient(fetcher: typeof fetch = fetch) {
     getNow: () => request<NowResponse>("/api/now"),
     getDailyHexagram: () => request<DailyHexagram>("/api/daily-hexagram"),
     classify: (question: string) => request<Classification>("/api/classify", { question }),
+    getDayMaster: (birth: import("./birth-profile.js").BirthProfileInput, sect?: 1 | 2) =>
+      request<DayMasterResponse>("/api/day-master", { birth, ...(sect ? { sect } : {}) }),
     createReading: (input: CreateReadingInput) => request<AnyPublicReading>("/api/readings", input),
     continueCasting: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/cast`, {}),
     retrySummary: (id: string) => request<AnyPublicReading>(`/api/readings/${id}/summary/retry`, {}),

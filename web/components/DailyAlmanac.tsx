@@ -211,6 +211,7 @@ export function DailyAlmanac(props: {
             busyLabel={t("share.generating")} closeLabel={t("share.close")}
             dialogTitle={t("daily.shareDialog")} downloadLabel={t("share.download")}
             fileName={`yarrow-almanac-${value.solar.text.slice(0, 10)}.png`}
+            metricEvent="share_image:almanac"
             generateFailed={t("share.generateFailed")} previewAlt={t("daily.sharePreview")}
             shareFailed={t("share.shareFailed")} shareLabel={t("share.share")}
             triggerLabel={t("daily.share")}

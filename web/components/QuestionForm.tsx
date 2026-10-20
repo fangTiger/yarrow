@@ -100,6 +100,9 @@ export function QuestionForm() {
     return observeHashPrefill((value) => {
       setQuestion(value.question ?? "");
       setChoice(value.choice);
+      // 日主卡等首页内入口会先把刚填的生辰存到本机；响应 hash 时同步带入当前表单。
+      const storedBirth = loadBirthProfile();
+      if (storedBirth) setBirthValues(fromBirthInput(storedBirth));
       setView(undefined);
       setClassifying(false);
       setError("");

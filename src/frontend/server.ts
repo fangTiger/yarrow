@@ -203,6 +203,10 @@ export function createFrontendHandler(options: FrontendServerOptions = {}): Fron
         json(response, 200, await api.classify(body));
         return;
       }
+      if (request.method === "POST" && url.pathname === "/api/day-master" && api) {
+        json(response, 200, await api.dayMaster(body));
+        return;
+      }
       if (request.method === "POST" && url.pathname === "/api/readings" && api) {
         json(response, 200, await api.createReading(body));
         return;

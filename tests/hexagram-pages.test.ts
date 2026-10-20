@@ -60,7 +60,11 @@ test("生成器在临时目录产出 64 个完整卦页、索引、站点地图�
       assert.match(html, /<details class="original">/u);
       assert.doesNotMatch(html, /<details class="original" open/u);
       assert.doesNotMatch(withoutChineseDetails(html), /\p{Script=Han}/u);
-      assert.doesNotMatch(html, /<script\b/iu);
+      assert.match(html, /fetch\("\/api\/events"/u);
+      assert.match(html, /"content-type":"application\/json"/u);
+      assert.match(html, /keepalive:true/u);
+      assert.match(html, /hexagram_page_view/u);
+      assert.match(html, /\.catch\(\(\)=>\{\}\)/u);
       const ordered = ["<h1>", "class=\"hexagram-svg\"", "class=\"trigrams\"",
         "Plain-language guide", ">Judgement<", ">Image<", ">Six lines<",
         "class=\"original\"", "class=\"page-nav\"", "class=\"cta\""];

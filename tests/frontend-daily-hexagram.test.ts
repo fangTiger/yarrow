@@ -85,3 +85,9 @@ test("390 像素断点将今日一卦排为单列", () => {
   assert.match(block, /@media\s*\(max-width:\s*620px\)/u);
   assert.match(block, /\.daily-hexagram-main[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/u);
 });
+
+test("问一卦与核对按钮挂接匿名事件", () => {
+  const source = readFileSync(new URL("../web/components/DailyHexagram.tsx", import.meta.url), "utf8");
+  assert.match(source, /track\("daily_hexagram_ask"\)/u);
+  assert.match(source, /track\("daily_hexagram_verify"\)/u);
+});

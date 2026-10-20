@@ -6,7 +6,10 @@ export const PAYMENT_FAILURE_KINDS = ["rejected", "insufficient", "wrong-chain",
 export type PaymentFailureKind = typeof PAYMENT_FAILURE_KINDS[number];
 export type ReadingKind = typeof READING_KINDS[number];
 export type FrontendMetricEvent = "home_view" | "wallet_connect_click" | "pay_click"
-  | `sample_view:${ReadingKind}` | `pay_failed:${PaymentFailureKind}`;
+  | `sample_view:${ReadingKind}` | `pay_failed:${PaymentFailureKind}`
+  | "day_master_lookup" | "share_image:reading" | "share_image:almanac"
+  | "share_image:day-master" | "daily_hexagram_ask" | "daily_hexagram_verify"
+  | "hexagram_page_view" | "bazi_page_view";
 export type MetricEvent = FrontendMetricEvent
   | `reading_created:${ReadingKind}`
   | `reading_done:${ReadingKind}`
@@ -31,6 +34,14 @@ const FRONTEND_EVENTS = new Set<string>([
   "pay_click",
   ...READING_KINDS.map((kind) => `sample_view:${kind}`),
   ...PAYMENT_FAILURE_KINDS.map((kind) => `pay_failed:${kind}`),
+  "day_master_lookup",
+  "share_image:reading",
+  "share_image:almanac",
+  "share_image:day-master",
+  "daily_hexagram_ask",
+  "daily_hexagram_verify",
+  "hexagram_page_view",
+  "bazi_page_view",
 ]);
 
 const ALL_EVENTS = new Set<string>([

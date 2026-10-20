@@ -23,6 +23,7 @@ export function ShareCard(props: { reading: ShareReading; sample?: boolean | und
   return <ShareImageButton key={`${lang}-${props.reading.id}`} busyLabel={t("share.generating")} closeLabel={t("share.close")}
     dataSample={props.sample} dialogTitle={t("share.dialogTitle")} downloadLabel={t("share.download")}
     fileName={`yarrow-${props.reading.kind}.png`} generateFailed={t("share.generateFailed")}
+    metricEvent="share_image:reading"
     previewAlt={t("share.previewAlt")} shareFailed={t("share.shareFailed")}
     shareLabel={t("share.share")} triggerLabel={t("share.generate")}
     draw={(context, assets) => drawShareCard(context, model, {

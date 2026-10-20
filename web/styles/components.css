@@ -1995,6 +1995,57 @@ html:lang(en) .daily-hexagram-head h2 { font-family: var(--serif); }
   .daily-hexagram-actions .button { width: 100%; }
 }
 
+/* 日主查询沿用首页金线卡片语言；身份区用大字，解释区保持阅读密度。 */
+.day-master-finder {
+  display: grid;
+  gap: 18px;
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid var(--line-strong);
+  background: radial-gradient(540px 260px at 0 0, rgb(201 168 102 / .09), transparent 72%),
+    rgb(21 24 22 / .92);
+}
+.day-master-head { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr);
+  align-items: end; gap: 24px; }
+.day-master-head p { margin: 0; color: var(--muted); line-height: 1.65; }
+.day-master-head > div > p { margin-bottom: 5px; color: var(--dim); font-size: 12px; letter-spacing: .06em; }
+.day-master-head h2 { margin: 0; color: var(--gold); font-family: var(--brush); font-size: 30px; font-weight: 400; }
+html:lang(en) .day-master-head h2 { font-family: var(--serif); }
+.day-master-finder > form { display: grid; gap: 12px; }
+.day-master-finder > form > .button { justify-self: start; min-height: 44px; }
+.day-master-finder > .error { margin: 0; }
+.day-master-result { display: grid; grid-template-columns: minmax(170px, .42fr) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 42px); padding-top: 20px; border-top: 1px solid var(--line); }
+.day-master-identity { display: grid; align-content: start; gap: 7px; }
+.day-master-identity p { margin: 0; color: var(--dim); font-size: 11px; letter-spacing: .1em; }
+.day-master-identity strong { color: var(--paper); font-family: var(--brush); font-size: clamp(52px, 8vw, 78px);
+  font-weight: 400; line-height: 1; letter-spacing: .04em; }
+html:lang(en) .day-master-identity strong { font-family: var(--serif); font-size: clamp(42px, 6vw, 66px);
+  letter-spacing: -.03em; }
+.day-master-identity span { color: var(--gold); line-height: 1.5; }
+.day-master-copy { display: grid; gap: 15px; min-width: 0; }
+.day-master-summary { margin: 0; color: var(--paper); font-size: 16px; line-height: 1.78; text-wrap: pretty; }
+.day-master-keywords { display: flex; flex-wrap: wrap; gap: 7px; }
+.day-master-keywords span { padding: 5px 10px; border: 1px solid var(--line-strong); color: var(--gold);
+  font-size: 12px; letter-spacing: .04em; }
+.day-master-lists { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.day-master-lists h3 { margin: 0 0 7px; color: var(--gold); font-size: 13px; font-weight: 500; }
+.day-master-lists ul { display: grid; gap: 5px; margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.55; }
+.day-master-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.day-master-actions > a { text-decoration: none; }
+.day-master-actions .share-card-entry { margin: 0; }
+
+@media (max-width: 620px) {
+  .day-master-finder { gap: 14px; padding: 16px 14px; }
+  .day-master-head { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .day-master-result { grid-template-columns: minmax(0, 1fr); gap: 17px; }
+  .day-master-lists { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .day-master-actions { align-items: stretch; flex-direction: column; }
+  .day-master-actions > *, .day-master-actions .button { width: 100%; text-align: center; }
+  .day-master-finder > form > .button { width: 100%; }
+}
+
 /* 英文问事：中文原文收在页尾，可展开，字号与颜色退后，不抢英译的位置。 */
 .classic-originals { margin-top: 14px; color: var(--dim); font-size: 13px; }
 .classic-originals summary { width: fit-content; cursor: pointer; color: var(--gold); }

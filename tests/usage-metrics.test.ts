@@ -76,7 +76,9 @@ test("指标按北京时间日期原子累加，并只接受事件白名单", as
   for (const event of ["home_view", "sample_view:question", "sample_view:destiny",
     "sample_view:fortune", "sample_view:naming", "wallet_connect_click", "pay_click",
     "pay_failed:rejected", "pay_failed:insufficient", "pay_failed:wrong-chain",
-    "pay_failed:claim", "pay_failed:other"]) {
+    "pay_failed:claim", "pay_failed:other", "day_master_lookup", "share_image:reading",
+    "share_image:almanac", "share_image:day-master", "daily_hexagram_ask",
+    "daily_hexagram_verify", "hexagram_page_view", "bazi_page_view"]) {
     assert.equal(isFrontendMetricEvent(event), true, event);
   }
   for (const event of ["sample_view:other", "reading_done:question", "home_view:0x1234",

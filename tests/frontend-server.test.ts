@@ -19,6 +19,7 @@ function fakeApi(overrides: Partial<SanyiApi> = {}): SanyiApi {
       token: "0x3600000000000000000000000000000000000000", chainId: 5042002 }),
     now: async () => ({ solar: { text: "2026-09-30 20:15:00" } }) as never,
     classify: async () => ({ kind: "question" }) as never,
+    dayMaster: async () => ({ stem: "癸", element: "水", yinYang: "yin", slug: "gui-water" }),
     createReading: async () => reading as never,
     continueCasting: async () => reading as never,
     retrySummary: async () => reading as never,

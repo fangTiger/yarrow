@@ -37,6 +37,15 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
+test("结果页与黄历分享图生成成功后分别挂接分类事件", () => {
+  const button = readFileSync(new URL("../web/components/ShareImageButton.tsx", import.meta.url), "utf8");
+  const reading = readFileSync(new URL("../web/components/ShareCard.tsx", import.meta.url), "utf8");
+  const almanac = readFileSync(new URL("../web/components/DailyAlmanac.tsx", import.meta.url), "utf8");
+  assert.match(button, /track\(props\.metricEvent\)/u);
+  assert.match(reading, /metricEvent="share_image:reading"/u);
+  assert.match(almanac, /metricEvent="share_image:almanac"/u);
+});
+
 test("命理分享模型含画像与八段年龄走势，且不泄露年份、干支或生辰", () => {
   for (const [lang, reading, t] of [
     ["zh", sample("destiny.zh"), zhT],

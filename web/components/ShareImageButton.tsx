@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { FrontendMetricEvent } from "../../src/sanyi/metrics.js";
+import { track } from "../lib/metrics.js";
 
 function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -13,6 +15,7 @@ export function ShareImageButton(props: {
   generateFailed: string; shareFailed: string; fileName: string;
   draw(context: CanvasRenderingContext2D, assets: { mark?: CanvasImageSource }): void;
   dataSample?: boolean | undefined;
+  metricEvent?: FrontendMetricEvent | undefined;
 }) {
   const trigger = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
@@ -72,6 +75,7 @@ export function ShareImageButton(props: {
       if (!mounted.current || generation.current !== active) return URL.revokeObjectURL(nextUrl);
       releaseObjectUrl(); objectUrl.current = nextUrl;
       setFile(nextFile); setUrl(nextUrl); setOpen(true);
+      if (props.metricEvent) track(props.metricEvent);
     } catch {
       if (mounted.current && generation.current === active) setError(props.generateFailed);
     } finally {
