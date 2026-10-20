@@ -33,7 +33,7 @@ export function HomeContent() {
     <DayMasterFinder />
     <section aria-label={t("home.sectionLabel")} className="home-main"><QuestionForm /></section>
     {lang === "en" ? <footer className="hexagram-index-entry">
-      <a href="/hexagram/">I Ching hexagrams</a>
+      <a href="/hexagram/">I Ching hexagrams</a> · <a href="/bazi/">BaZi Day Masters</a>
     </footer> : null}
   </>;
 }

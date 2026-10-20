@@ -88,7 +88,7 @@ test("生成器在临时目录产出 64 个完整卦页、索引、站点地图�
     assert.equal((index.match(/class="hexagram-card"/gu) ?? []).length, 64);
     assert.doesNotMatch(index, /\p{Script=Han}/u);
     const sitemap = await readFile(join(root, "sitemap.xml"), "utf8");
-    assert.equal((sitemap.match(/<url>/gu) ?? []).length, 66);
+    assert.equal((sitemap.match(/<url>/gu) ?? []).length, 87);
     assert.ok(sitemap.includes(`${SITE_ORIGIN}${hexagramPath(50)}`));
     assert.equal(await readFile(join(root, "robots.txt"), "utf8"),
       `User-agent: *\nAllow: /\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`);

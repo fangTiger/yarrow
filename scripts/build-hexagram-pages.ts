@@ -1,17 +1,24 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getDaxiang } from "../src/agent/daxiang-corpus.js";
 import { getZhouyiEnglish } from "../src/agent/zhouyi-en.js";
 import { getHexagramText } from "../src/agent/zhouyi-corpus.js";
 import { HEXAGRAM_GUIDES } from "../src/content/hexagram-guides.js";
+import {
+  DAY_MASTER_GUIDES_EN,
+  TEN_GOD_GUIDES_EN,
+  type DayMasterGuideEn,
+  type TenGodGuideEn,
+} from "../src/content/bazi-guides.en.js";
 import { getHexagramYangLines, getTrigramName } from "../src/oracle/liuyao-chart.js";
-import { HEXAGRAMS_EN, TRIGRAMS_EN } from "../src/sanyi/i18n/glossary.js";
+import { ELEMENTS_EN, HEXAGRAMS_EN, TRIGRAMS_EN } from "../src/sanyi/i18n/glossary.js";
 import { hexagramPath } from "../web/lib/hexagram-path.js";
 
 export const SITE_ORIGIN = "https://yarrow-six.vercel.app";
 
-const PAGE_VIEW_BEACON = `<script>(()=>{fetch("/api/events",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({event:"hexagram_page_view"}),keepalive:true}).catch(()=>{})})()</script>`;
+const HEXAGRAM_PAGE_VIEW_BEACON = `<script>(()=>{fetch("/api/events",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({event:"hexagram_page_view"}),keepalive:true}).catch(()=>{})})()</script>`;
+const BAZI_PAGE_VIEW_BEACON = `<script>(()=>{fetch("/api/events",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({event:"bazi_page_view"}),keepalive:true}).catch(()=>{})})()</script>`;
 
 const CSS = `:root {
   color-scheme: dark;
@@ -73,6 +80,20 @@ h1 { margin: 0; font-size: clamp(42px, 8vw, 76px); font-weight: 400; line-height
 .hexagram-card small { display: block; color: var(--dim); font: 11px/1.4 var(--sans); }
 .hexagram-card strong { display: block; margin-top: 3px; overflow-wrap: anywhere; font-size: 15px; font-weight: 400; line-height: 1.3; }
 .hexagram-card span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.bazi-sections { display: grid; gap: 34px; }
+.bazi-section h2 { margin: 0 0 15px; color: var(--gold); font: 600 13px/1.4 var(--sans); letter-spacing: .1em; text-transform: uppercase; }
+.bazi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.bazi-card { display: block; min-width: 0; padding: 20px; border: 1px solid var(--line); color: var(--paper); text-decoration: none; }
+.bazi-card:hover { border-color: var(--line-strong); background: rgb(201 168 102 / .06); }
+.bazi-card small { display: block; color: var(--gold); font: 11px/1.4 var(--sans); letter-spacing: .07em; text-transform: uppercase; }
+.bazi-card strong { display: block; margin-top: 7px; font-size: 20px; font-weight: 400; }
+.bazi-card span { display: block; margin-top: 6px; color: var(--muted); font: 13px/1.5 var(--sans); }
+.bazi-symbol { display: grid; place-items: center; width: 180px; aspect-ratio: 1; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--gold); font: 18px/1.35 var(--sans); text-align: center; }
+.point-list { display: grid; gap: 12px; margin: 0; padding-left: 20px; color: var(--muted); font-size: 17px; line-height: 1.65; }
+.related-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.related-links a { padding: 9px 12px; border: 1px solid var(--line); font: 13px/1.4 var(--sans); text-decoration: none; }
+.cta-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.button-secondary { color: var(--gold); background: transparent; }
 @media (max-width: 760px) {
   .hexagram-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .classic-grid { grid-template-columns: 1fr; }
@@ -92,6 +113,8 @@ h1 { margin: 0; font-size: clamp(42px, 8vw, 76px); font-weight: 400; line-height
   .cta { align-items: stretch; flex-direction: column; }
   .button { text-align: center; }
   .hexagram-grid { grid-template-columns: 1fr; }
+  .bazi-grid { grid-template-columns: 1fr; }
+  .bazi-symbol { width: 100px; }
 }`;
 
 function escapeText(value: string): string {
@@ -112,8 +135,13 @@ function figureSvg(lines: readonly boolean[], label: string): string {
   return `<svg class="hexagram-svg" role="img" aria-label="${escapeAttribute(label)}" viewBox="0 0 160 150">${marks}</svg>`;
 }
 
-function head(title: string, description: string, canonical: string): string {
-  const image = `${SITE_ORIGIN}/brand/og.png`;
+function head(
+  title: string,
+  description: string,
+  canonical: string,
+  image = `${SITE_ORIGIN}/brand/og.png`,
+  imageAlt = "Yarrow I Ching and BaZi guide",
+): string {
   return `<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f1110">
@@ -126,7 +154,7 @@ function head(title: string, description: string, canonical: string): string {
     <meta property="og:description" content="${escapeAttribute(description)}">
     <meta property="og:url" content="${escapeAttribute(canonical)}">
     <meta property="og:image" content="${image}">
-    <meta property="og:image:alt" content="Yarrow I Ching hexagram guide">
+    <meta property="og:image:alt" content="${escapeAttribute(imageAlt)}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${escapeAttribute(title)}">
     <meta name="twitter:description" content="${escapeAttribute(description)}">
@@ -137,11 +165,17 @@ function head(title: string, description: string, canonical: string): string {
     <link rel="stylesheet" href="/hexagram/hexagram.css">`;
 }
 
+async function previewImage(outputRoot: string, relativePath: string): Promise<string> {
+  const localPath = resolve(outputRoot, `.${relativePath}`);
+  return access(localPath).then(() => `${SITE_ORIGIN}${relativePath}`)
+    .catch(() => `${SITE_ORIGIN}/brand/og.png`);
+}
+
 function lineLabel(position: number): string {
   return ["First line", "Second line", "Third line", "Fourth line", "Fifth line", "Top line"][position - 1]!;
 }
 
-function pageFor(number: number): string {
+function pageFor(number: number, image: string): string {
   const names = HEXAGRAMS_EN[number - 1]!;
   const english = getZhouyiEnglish(number);
   const chinese = getHexagramText(number);
@@ -168,7 +202,8 @@ function pageFor(number: number): string {
   return `<!doctype html>
 <html lang="en">
   <head>
-    ${head(title, description, canonical)}
+    ${head(title, description, canonical, image,
+      `Hexagram ${number}: ${names.pinyin}, ${names.title}`)}
   </head>
   <body>
     <main class="shell">
@@ -194,8 +229,112 @@ function pageFor(number: number): string {
       </div>
       <footer class="site-footer">For reference and self-reflection only; not medical, legal, or investment advice.</footer>
     </main>
-    ${PAGE_VIEW_BEACON}
+    ${HEXAGRAM_PAGE_VIEW_BEACON}
   </body>
+</html>
+`;
+}
+
+function baziCtas(): string {
+  return `<section class="cta"><div><strong>Explore your own BaZi chart</strong><span>Start with a free Day Master lookup or continue to a full reading.</span></div>
+    <div class="cta-actions"><a class="button button-secondary" href="/#/">Find your Day Master (free)</a>
+      <a class="button" href="/#/?kind=destiny">Get a full BaZi reading · 0.05 USDC</a></div></section>`;
+}
+
+function relatedLinks(values: readonly { href: string; label: string }[]): string {
+  return values.map((item) => `<a href="${escapeAttribute(item.href)}">${escapeText(item.label)}</a>`).join("");
+}
+
+function dayMasterPage(guide: DayMasterGuideEn, image: string): string {
+  const title = `${guide.name} Day Master: personality and meaning · Yarrow`;
+  const description = `${guide.name} Day Master explained in plain English: ${guide.tagline} Explore relationships, work style, balance, and self-reflection.`;
+  const path = `/bazi/day-master/${guide.slug}/`;
+  const counterpart = DAY_MASTER_GUIDES_EN.find((item) => (
+    item.element === guide.element && item.slug !== guide.slug
+  ))!;
+  const gods = TEN_GOD_GUIDES_EN.filter((item) => item.relationGroup === "peer");
+  const links = [
+    { href: `/bazi/day-master/${counterpart.slug}/`, label: `${counterpart.name} Day Master` },
+    ...gods.map((item) => ({ href: `/bazi/ten-gods/${item.slug}/`, label: `${item.name} · Ten Gods` })),
+  ];
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    ${head(title, description, `${SITE_ORIGIN}${path}`, image, `${guide.name} Day Master`)}
+  </head>
+  <body><main class="shell">
+    <header class="site-head"><a class="brand" href="/">YARROW</a><a href="/bazi/">BaZi guides</a></header>
+    <section class="hero"><div><p class="eyebrow">BaZi · ${escapeText(guide.yinYang)} ${escapeText(ELEMENTS_EN[guide.element])}</p>
+      <h1>${escapeText(guide.name)}<span class="title-en">Day Master</span></h1></div>
+      <div class="bazi-symbol" aria-label="${escapeAttribute(guide.image)}">${escapeText(guide.image)}</div>
+      <p class="trigrams">${escapeText(guide.tagline)}</p></section>
+    <div class="content">
+      <section class="panel"><h2>Plain-language guide</h2><p>${escapeText(guide.guide)}</p></section>
+      <section class="panel"><h2>Key ideas</h2><ul class="point-list">${guide.points.map((point) => `<li>${escapeText(point)}</li>`).join("")}</ul></section>
+      <section class="panel"><h2>Related guides</h2><nav class="related-links" aria-label="Related BaZi guides">${relatedLinks(links)}</nav></section>
+      ${baziCtas()}
+    </div>
+    <footer class="site-footer">For reference and self-reflection only; not medical, legal, or investment advice.</footer>
+  </main>${BAZI_PAGE_VIEW_BEACON}</body>
+</html>
+`;
+}
+
+function tenGodPage(guide: TenGodGuideEn, image: string): string {
+  const title = `${guide.name} in BaZi: Ten Gods meaning · Yarrow`;
+  const description = `${guide.name} in the BaZi Ten Gods explained in plain English: ${guide.tagline} Learn its relationship, common meanings, and balance.`;
+  const path = `/bazi/ten-gods/${guide.slug}/`;
+  const related = TEN_GOD_GUIDES_EN.filter((item) => (
+    item.relationGroup === guide.relationGroup && item.slug !== guide.slug
+  ));
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    ${head(title, description, `${SITE_ORIGIN}${path}`, image, `${guide.name}, BaZi Ten Gods`)}
+  </head>
+  <body><main class="shell">
+    <header class="site-head"><a class="brand" href="/">YARROW</a><a href="/bazi/">BaZi guides</a></header>
+    <section class="hero"><div><p class="eyebrow">BaZi · Ten Gods</p>
+      <h1>${escapeText(guide.name)}<span class="title-en">Ten Gods relationship</span></h1></div>
+      <div class="bazi-symbol" aria-label="Relationship to the Day Master">${escapeText(guide.relation)}</div>
+      <p class="trigrams">${escapeText(guide.tagline)}</p></section>
+    <div class="content">
+      <section class="panel"><h2>Plain-language guide</h2><p>${escapeText(guide.guide)}</p></section>
+      <section class="panel"><h2>Key ideas</h2><ul class="point-list">${guide.points.map((point) => `<li>${escapeText(point)}</li>`).join("")}</ul></section>
+      <section class="panel"><h2>Related guides</h2><nav class="related-links" aria-label="Related Ten Gods">${relatedLinks(related.map((item) => ({
+        href: `/bazi/ten-gods/${item.slug}/`, label: `${item.name} · Ten Gods`,
+      })))}</nav></section>
+      ${baziCtas()}
+    </div>
+    <footer class="site-footer">For reference and self-reflection only; not medical, legal, or investment advice.</footer>
+  </main>${BAZI_PAGE_VIEW_BEACON}</body>
+</html>
+`;
+}
+
+function baziIndexPage(): string {
+  const title = "BaZi Day Masters and Ten Gods: English guides · Yarrow";
+  const description = "Explore plain-English guides to the 10 BaZi Day Masters and 10 Ten Gods relationships, then find your own Day Master for free.";
+  const dayMasterCards = DAY_MASTER_GUIDES_EN.map((item) => (
+    `<a class="bazi-card" href="/bazi/day-master/${item.slug}/"><small>${escapeText(item.yinYang)} ${escapeText(ELEMENTS_EN[item.element])}</small><strong>${escapeText(item.name)} Day Master</strong><span>${escapeText(item.tagline)}</span></a>`
+  )).join("");
+  const tenGodCards = TEN_GOD_GUIDES_EN.map((item) => (
+    `<a class="bazi-card" href="/bazi/ten-gods/${item.slug}/"><small>Ten Gods · ${escapeText(item.relationGroup)}</small><strong>${escapeText(item.name)}</strong><span>${escapeText(item.tagline)}</span></a>`
+  )).join("");
+  return `<!doctype html>
+<html lang="en">
+  <head>${head(title, description, `${SITE_ORIGIN}/bazi/`)}</head>
+  <body><main class="shell">
+    <header class="site-head"><a class="brand" href="/">YARROW</a><a href="/hexagram/">I Ching hexagrams</a></header>
+    <section class="index-head"><p class="eyebrow">BaZi in plain English</p><h1>Day Masters and Ten Gods</h1>
+      <p>Your Day Master is the heavenly stem at the center of a BaZi chart. The Ten Gods describe how other elements relate to it through producing, controlling, or sharing an element, with yin and yang distinguishing each pair. These guides are reflective vocabulary, not fixed predictions.</p></section>
+    <div class="bazi-sections">
+      <section class="bazi-section"><h2>The 10 Day Masters</h2><nav class="bazi-grid" aria-label="The 10 Day Masters">${dayMasterCards}</nav></section>
+      <section class="bazi-section"><h2>The 10 Ten Gods</h2><nav class="bazi-grid" aria-label="The 10 Ten Gods">${tenGodCards}</nav></section>
+      ${baziCtas()}
+    </div>
+    <footer class="site-footer">For reference and self-reflection only; not medical, legal, or investment advice.</footer>
+  </main>${BAZI_PAGE_VIEW_BEACON}</body>
 </html>
 `;
 }
@@ -225,20 +364,41 @@ function indexPage(): string {
 
 export async function buildHexagramPages(outputRoot = resolve(process.cwd(), "web")): Promise<void> {
   const hexagramRoot = resolve(outputRoot, "hexagram");
-  await mkdir(hexagramRoot, { recursive: true });
+  const baziRoot = resolve(outputRoot, "bazi");
+  await Promise.all([mkdir(hexagramRoot, { recursive: true }), mkdir(baziRoot, { recursive: true })]);
   await Promise.all(Array.from({ length: 64 }, async (_, index) => {
     const number = index + 1;
     const directory = resolve(outputRoot, `.${hexagramPath(number)}`);
     await mkdir(directory, { recursive: true });
-    await writeFile(resolve(directory, "index.html"), pageFor(number), "utf8");
+    const image = await previewImage(outputRoot, `/brand/og/hexagram/${number}.png`);
+    await writeFile(resolve(directory, "index.html"), pageFor(number, image), "utf8");
   }));
+  await Promise.all([
+    ...DAY_MASTER_GUIDES_EN.map(async (guide) => {
+      const directory = resolve(baziRoot, "day-master", guide.slug);
+      const image = await previewImage(outputRoot, `/brand/og/bazi/day-master/${guide.slug}.png`);
+      await mkdir(directory, { recursive: true });
+      await writeFile(resolve(directory, "index.html"), dayMasterPage(guide, image), "utf8");
+    }),
+    ...TEN_GOD_GUIDES_EN.map(async (guide) => {
+      const directory = resolve(baziRoot, "ten-gods", guide.slug);
+      const image = await previewImage(outputRoot, `/brand/og/bazi/ten-gods/${guide.slug}.png`);
+      await mkdir(directory, { recursive: true });
+      await writeFile(resolve(directory, "index.html"), tenGodPage(guide, image), "utf8");
+    }),
+  ]);
+  const sitemapUrls = [
+    `${SITE_ORIGIN}/`, `${SITE_ORIGIN}/hexagram/`,
+    ...Array.from({ length: 64 }, (_, index) => `${SITE_ORIGIN}${hexagramPath(index + 1)}`),
+    `${SITE_ORIGIN}/bazi/`,
+    ...DAY_MASTER_GUIDES_EN.map((item) => `${SITE_ORIGIN}/bazi/day-master/${item.slug}/`),
+    ...TEN_GOD_GUIDES_EN.map((item) => `${SITE_ORIGIN}/bazi/ten-gods/${item.slug}/`),
+  ];
   await Promise.all([
     writeFile(resolve(hexagramRoot, "index.html"), indexPage(), "utf8"),
     writeFile(resolve(hexagramRoot, "hexagram.css"), `${CSS}\n`, "utf8"),
-    writeFile(resolve(outputRoot, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[
-      `${SITE_ORIGIN}/`, `${SITE_ORIGIN}/hexagram/`,
-      ...Array.from({ length: 64 }, (_, index) => `${SITE_ORIGIN}${hexagramPath(index + 1)}`),
-    ].map((url) => `  <url><loc>${url}</loc></url>`).join("\n")}\n</urlset>\n`, "utf8"),
+    writeFile(resolve(baziRoot, "index.html"), baziIndexPage(), "utf8"),
+    writeFile(resolve(outputRoot, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls.map((url) => `  <url><loc>${url}</loc></url>`).join("\n")}\n</urlset>\n`, "utf8"),
     writeFile(resolve(outputRoot, "robots.txt"),
       `User-agent: *\nAllow: /\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`, "utf8"),
   ]);
@@ -246,5 +406,5 @@ export async function buildHexagramPages(outputRoot = resolve(process.cwd(), "we
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   await buildHexagramPages();
-  console.log("64 卦英文静态页生成完成：web/hexagram/");
+  console.log("64 卦与八字英文静态页生成完成：web/hexagram/、web/bazi/");
 }

@@ -25,5 +25,6 @@ __pycache__/
 # Vercel 构建产物与本地链接信息
 .vercel/
 web/hexagram/
+web/bazi/
 web/sitemap.xml
 web/robots.txt

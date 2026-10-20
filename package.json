@@ -30,6 +30,7 @@
     "vercel:build": "npm run frontend:build && node --import tsx scripts/build-vercel.ts",
     "vercel:prune": "node --import tsx scripts/prune-vercel-deployments.ts",
     "brand:icons": "node --import tsx scripts/build-brand-icons.ts",
+    "og:render": "node --import tsx scripts/render-og-images.ts && python3 scripts/compress-og-images.py",
     "frontend:dev": "npm run frontend:build && node --env-file=.env --import tsx src/frontend/server.ts",
     "frontend:start": "node --env-file=.env --import tsx src/frontend/server.ts",
     "frontend:secrets": "node --env-file=.env --import tsx scripts/check-frontend-secrets.ts",
