@@ -177,6 +177,7 @@ export class ReadingService {
         recipient: receipt.recipient,
         transactionHash: receipt.transactionHash,
         feeUsdc6: receipt.feeUsdc6,
+        feePaymentKind: receipt.feePaymentKind,
       },
       throws: [],
       schools: initialSchools(),

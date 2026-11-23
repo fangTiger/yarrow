@@ -220,6 +220,7 @@ export class NamingReadingService {
         recipient: receipt.recipient,
         transactionHash: receipt.transactionHash,
         feeUsdc6: receipt.feeUsdc6,
+        feePaymentKind: receipt.feePaymentKind,
       },
       status: "writing",
       basis: { ...chart, ...favorable, unborn: input.unborn },

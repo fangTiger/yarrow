@@ -65,6 +65,8 @@ export interface StoredQuestionReading {
     recipient: Address;
     transactionHash: Hex;
     feeUsdc6: string;
+    /** 付款方式；本字段上线前的旧存档没有，视为 ERC-20。 */
+    feePaymentKind?: "erc20" | "native";
   };
   throws: readonly RecordedThrow[];
   schools: Record<QuestionSchoolKey, SchoolState>;

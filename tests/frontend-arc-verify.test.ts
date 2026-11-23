@@ -5,7 +5,7 @@ import { keccak256, toHex, type Hex } from "viem";
 import { normalizeQuestion } from "../src/sanyi/classify.js";
 import { deriveThrow } from "../src/sanyi/throws.js";
 import {
-  ARC_USDC, isVerifiablePayment, normalizeCastQuestion, recomputeCoins, verifyOnArc,
+  ARC_NATIVE_USDC, ARC_USDC, isVerifiablePayment, normalizeCastQuestion, recomputeCoins, verifyOnArc,
   type ArcReader, type ThrowEvidence,
 } from "../web/lib/arc-verify.js";
 
@@ -27,12 +27,16 @@ function fixture(question = "Will my new business partnership work out this year
     return { index, blockNumber: number.toString(), blockHash, coins: result.coins };
   });
   blocks.set(100n, hashOf("block-0"));
-  const reader = (overrides: { amount?: bigint; to?: string; status?: "success" | "reverted" } = {}): ArcReader => ({
+  const reader = (overrides: {
+    amount?: bigint; to?: string; status?: "success" | "reverted"; emitter?: string;
+    extra?: ReadonlyArray<{ address: string; topics: readonly string[]; data: string }>;
+  } = {}): ArcReader => ({
     async getTransactionReceipt(hash) {
       if (hash !== payment) throw new Error("not found");
       return {
         status: overrides.status ?? "success", blockNumber: 100n,
-        logs: [{ address: ARC_USDC, topics: [TRANSFER, topic(PAYER), topic(overrides.to ?? RECIPIENT)],
+        logs: [...(overrides.extra ?? []), { address: overrides.emitter ?? ARC_USDC,
+          topics: [TRANSFER, topic(PAYER), topic(overrides.to ?? RECIPIENT)],
           data: toHex(overrides.amount ?? 50_000n, { size: 32 }) }],
       };
     },
@@ -131,4 +135,28 @@ test("验证面板：示例只给说明不显示按钮，真实付款显示按�
   const cast = renderIn("en", createElement(ArcVerify, { paymentHash: hashOf("real"), question: "Q?",
     throws: fixture().throws }));
   assert.match(cast, /recomputes every throw/u);
+});
+
+test("原生 0.05 USDC 付款：浏览器核验通过并按 0.05 显示", async () => {
+  const { payment, throws, reader, question } = fixture();
+  const native = reader({ emitter: ARC_NATIVE_USDC, amount: 50_000_000_000_000_000n });
+  const result = await verifyOnArc(native, { paymentTxHash: payment, recipient: RECIPIENT, question, throws });
+  assert.equal(result.ok, true);
+  assert.equal(result.payment.kind, "native");
+  assert.equal(result.payment.amountUsdc6, 50_000n);
+  const off = await verifyOnArc(reader({ emitter: ARC_NATIVE_USDC, amount: 50_000_000_000_000_001n }),
+    { paymentTxHash: payment, recipient: RECIPIENT });
+  assert.equal(off.payment.reason, "wrong-amount");
+});
+
+test("ERC-20 付款带 0xfffe 镜像与 bundler 补偿时仍认 ERC-20", async () => {
+  const { payment, reader } = fixture();
+  const mirror = { address: ARC_NATIVE_USDC, topics: [TRANSFER, topic(PAYER), topic(RECIPIENT)],
+    data: toHex(50_000_000_000_000_000n, { size: 32 }) };
+  const gas = { address: ARC_NATIVE_USDC,
+    topics: [TRANSFER, topic("0x0000000071727de22e5e9d8baf0edac6f37da032"), topic(PAYER)],
+    data: toHex(10_240_865_000_000_000n, { size: 32 }) };
+  const result = await verifyOnArc(reader({ extra: [gas, mirror] }), { paymentTxHash: payment, recipient: RECIPIENT });
+  assert.equal(result.payment.ok, true);
+  assert.equal(result.payment.kind, "erc20");
 });

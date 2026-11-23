@@ -4,8 +4,12 @@ import { deriveDailyLines, type DailyHexagram } from "../../src/sanyi/daily-hexa
 
 /** Arc 上 USDC 的 ERC-20 接口地址（主网与测试网相同）。 */
 export const ARC_USDC = "0x3600000000000000000000000000000000000000";
+/** EIP-7708 系统地址：原生 USDC 转账的 Transfer 由它发出（18 位小数）。 */
+export const ARC_NATIVE_USDC = "0xfffffffffffffffffffffffffffffffffffffffe";
 /** 每卦卦金 0.05 USDC（6 位小数）。 */
 export const FEE_USDC6 = 50_000n;
+/** 同一卦金按原生 18 位小数表示。 */
+export const FEE_NATIVE18 = FEE_USDC6 * 10n ** 12n;
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const ZERO_HASH = /^0x0*$/u;
 
@@ -44,7 +48,10 @@ export interface PaymentCheck {
   timestamp?: bigint;
   from?: string;
   to?: string;
+  /** 换算到 6 位小数后的金额，供页面显示；原生付款的 18 位尾数在此截去。 */
   amountUsdc6?: bigint;
+  /** 付款方式：ERC-20 `transfer` 或原生 USDC 转账。 */
+  kind?: "erc20" | "native";
   reason?: "not-found" | "reverted" | "no-transfer" | "wrong-recipient" | "wrong-amount";
 }
 
@@ -91,7 +98,7 @@ function topicAddress(topic: string | undefined): string {
   return topic ? `0x${topic.slice(-40)}`.toLowerCase() : "";
 }
 
-/** 核对付款：回执成功，且含一笔转给收款方、金额恰为卦金的 USDC Transfer。 */
+/** 核对付款：回执成功，且含一笔转给收款方、金额恰为卦金的 USDC Transfer（ERC-20 或原生）。 */
 export async function checkPayment(reader: ArcReader, hash: Hex, recipient?: string): Promise<PaymentCheck> {
   let receipt: Awaited<ReturnType<ArcReader["getTransactionReceipt"]>>;
   try {
@@ -100,20 +107,26 @@ export async function checkPayment(reader: ArcReader, hash: Hex, recipient?: str
     return { ok: false, reason: "not-found" };
   }
   if (receipt.status !== "success") return { ok: false, blockNumber: receipt.blockNumber, reason: "reverted" };
-  const transfers = receipt.logs.filter((log) => log.address.toLowerCase() === ARC_USDC
-    && log.topics[0]?.toLowerCase() === TRANSFER_TOPIC);
+  // 先列 ERC-20，再列原生：ERC-20 付款在 0xfffe 的镜像排在后面，不会抢先被认。
+  const transfers = (["erc20", "native"] as const).flatMap((kind) => receipt.logs
+    .filter((log) => log.address.toLowerCase() === (kind === "erc20" ? ARC_USDC : ARC_NATIVE_USDC)
+      && log.topics[0]?.toLowerCase() === TRANSFER_TOPIC)
+    .map((log) => ({
+      kind, from: topicAddress(log.topics[1]), to: topicAddress(log.topics[2]), value: BigInt(log.data),
+    })));
   if (transfers.length === 0) return { ok: false, blockNumber: receipt.blockNumber, reason: "no-transfer" };
   const wanted = recipient?.toLowerCase();
-  const transfer = transfers.find((log) => !wanted || topicAddress(log.topics[2]) === wanted) ?? transfers[0]!;
-  const to = topicAddress(transfer.topics[2]);
-  const amountUsdc6 = BigInt(transfer.data);
+  const exact = (item: typeof transfers[number]) => item.value === (item.kind === "erc20" ? FEE_USDC6 : FEE_NATIVE18);
+  const toWanted = transfers.filter((item) => !wanted || item.to === wanted);
+  const transfer = toWanted.find(exact) ?? toWanted[0] ?? transfers[0]!;
   const block = await reader.getBlock(receipt.blockNumber);
   const base = {
-    blockNumber: receipt.blockNumber, timestamp: block.timestamp,
-    from: topicAddress(transfer.topics[1]), to, amountUsdc6,
+    blockNumber: receipt.blockNumber, timestamp: block.timestamp, from: transfer.from, to: transfer.to,
+    kind: transfer.kind,
+    amountUsdc6: transfer.kind === "erc20" ? transfer.value : transfer.value / 10n ** 12n,
   };
-  if (wanted && to !== wanted) return { ...base, ok: false, reason: "wrong-recipient" };
-  if (amountUsdc6 !== FEE_USDC6) return { ...base, ok: false, reason: "wrong-amount" };
+  if (wanted && transfer.to !== wanted) return { ...base, ok: false, reason: "wrong-recipient" };
+  if (!exact(transfer)) return { ...base, ok: false, reason: "wrong-amount" };
   return { ...base, ok: true };
 }
 

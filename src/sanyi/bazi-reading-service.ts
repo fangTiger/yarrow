@@ -108,7 +108,8 @@ export class BaziReadingService {
     }
     const reading: StoredBaziReading = { id, kind: input.kind, question: input.question,
       createdAt: now.toISOString(), payment: { payer: receipt.payer, recipient: receipt.recipient,
-        transactionHash: receipt.transactionHash, feeUsdc6: receipt.feeUsdc6 },
+        transactionHash: receipt.transactionHash, feeUsdc6: receipt.feeUsdc6,
+        feePaymentKind: receipt.feePaymentKind },
       chart, correction, context, analysis: analyzeBazi(chart),
       tiaohou: lookupQiongtong(chart.dayMaster, chart.pillars.month.branch),
       almanac: almanacAt(BigInt(Math.floor(now.getTime() / 1_000))),
