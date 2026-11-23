@@ -48,3 +48,7 @@ agent 与浏览器共用同一个 `/api/readings` 创建接口。有效请求不
 - `tests/frontend-server.test.ts`：HTTP 状态、响应体、同源与请求体边界。
 - `tests/sanyi-storage.test.ts`：并发付款凭证只能认领一次。
 - `tests/readme.test.ts`：面向用户和 agent 的公开说明边界。
+
+## 原生转账付款（2026-11-23，accept-native-usdc-fee）
+
+- `llms.txt` 第 2 步补充：原生 USDC 转账恰好 0.05（18 位小数 `50000000000000000`）同样有效，其它金额被拒。402 返回体不变。

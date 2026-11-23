@@ -51,3 +51,12 @@
 - `tests/sanyi-bazi-reading-service.test.ts`、`tests/naming-service.test.ts`：付款先于排盘及跨类型复用保护。
 - `tests/sanyi-store.test.ts`、`tests/sanyi-storage.test.ts`：跨实例付款认领原子性。
 - `tests/frontend-wallet.test.ts`、`tests/frontend-fee-plan.test.ts`：切链、余额与费用门禁。
+
+## 原生 USDC 付款（2026-11-23，accept-native-usdc-fee）
+
+- 卦金核验同时读两个发射地址：`0x3600…0000`（ERC-20，6 位小数）与 `0xffff…fffE`（EIP-7708 原生，18 位小数）。其它地址发出的 `Transfer` 一律忽略。
+- 先认 ERC-20，再认原生；每笔交易只接受一条金额恰好相等的转账，不累加。真实主网收据里 `0xfffe` 镜像排在 `0x3600` 之前，所以不能按日志顺序取第一条。
+- 原生金额按 18 位整数比较（`5×10¹⁶`），多付少付一个最小单位都拒绝。不先除以 10¹² 再比，否则 0.05 之后带尾数的金额会被误收。
+- 付款人取日志 `from`。ERC-4337 收据中交易发送者是 bundler，EntryPoint 付给 bundler 的补偿收款方不是卦金地址，不会被认作卦金。
+- 存档 `payment.feePaymentKind` 记录 `erc20` / `native`；旧存档无此字段，视为 ERC-20。
+- 只读核对脚本：`scripts/check-fee-receipt.ts`（服务端逻辑）、`scripts/check-reading-on-arc.mts`（结果页逻辑）。

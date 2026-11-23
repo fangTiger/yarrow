@@ -49,3 +49,8 @@
 - `tests/sanyi-throws.test.ts`：服务端推导公式。
 - `tests/frontend-reading-components.test.ts`：结果页复算材料与区块链接。
 - `tests/sanyi-api.test.ts`：公开 reading 的付款首哈希和逐掷材料。
+
+## 原生付款收据（2026-11-23，accept-native-usdc-fee）
+
+- `checkPayment` 同时读取 `0x3600` 与 `0xfffe` 的 `Transfer`，先列 ERC-20 再列原生，取第一条付给收款方且金额恰好的转账。
+- 显示用的 `amountUsdc6` 对原生金额除以 10¹² 截断；是否通过以各自精度的精确比较为准。`PaymentCheck.kind` 标明付款方式。
